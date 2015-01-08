@@ -1,0 +1,36 @@
+﻿<Window x:Class="XbimXplorer.Dialogs.COBieClassFilter"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="COBie Class Filter" Height="368" Width="746" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Margin="1,1,1,1">
+
+        <ListBox Height="237" Margin="28,30,0,0" VerticalAlignment="Top" ItemsSource="{Binding ClassFilterComponent}" HorizontalAlignment="Left" Width="224">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Path=Item.Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ListBox Height="237" Margin="486,30,0,0" VerticalAlignment="Top" ItemsSource="{Binding ClassFilterAssembly}" HorizontalAlignment="Left" Width="224">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Path=Item.Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ListBox Height="237" Margin="257,30,0,0" VerticalAlignment="Top" ItemsSource="{Binding ClassFilterType}" HorizontalAlignment="Left" Width="224">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Path=Item.Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button x:Name="OK" Click="OK_Click" Content="OK"  IsDefault="True" Margin="555,0,108,10" Height="24" VerticalAlignment="Bottom"/>
+        <Button Content="Cancel" IsCancel="True" Margin="635,0,28,10" Height="24" VerticalAlignment="Bottom"/>
+        <Label Content="Component Sheet Excludes" HorizontalAlignment="Left" Margin="28,4,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="163"/>
+        <Label Content="Ticked items are excluded" HorizontalAlignment="Left" Margin="28,272,0,0" VerticalAlignment="Top" FontStyle="Italic" Height="26" Width="142"/>
+        <Label Content="Type Sheet Excludes" HorizontalAlignment="Left" Margin="257,4,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="163"/>
+        <Label Content="Assembly Sheet Excludes" HorizontalAlignment="Left" Margin="486,4,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="163"/>
+
+    </Grid>
+</Window>

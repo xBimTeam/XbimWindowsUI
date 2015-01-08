@@ -1,0 +1,218 @@
+﻿<UserControl x:Class="Xbim.Presentation.IfcMetaDataControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Xbim.Presentation" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" d:DesignHeight="94" d:DesignWidth="103">
+    <!--<ScrollViewer Name="ScrollView"   VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" CanContentScroll="False">-->
+    <UserControl.Resources>
+        <Style TargetType="{x:Type Hyperlink}" x:Key="HyperlinkStyle">
+            <EventSetter Event="RequestNavigate" Handler="Hyperlink_RequestNavigate"/>
+        </Style>
+    </UserControl.Resources>
+    <TabControl Background="#114682d4" x:Name="TheTabs" FontSize="10">
+        <TabItem Header="Object" x:Name="ObjectTab">
+            <DataGrid ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=ObjectProperties}"  
+                          ToolTip="Attributes of the Object" 
+                          AutoGenerateColumns="False" 
+                          HeadersVisibility="None" BorderThickness="0" SelectionMode="Single" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3F000000">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Image" Width="SizeToCells" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ffff"  Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Path=Value}" Margin="5,0" IsReadOnly="True" BorderThickness="0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </TabItem>
+        <TabItem Header="Type" x:Name="TypeTab">
+            <DataGrid ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=TypeProperties}"  
+                          ToolTip="Attributes of the Object" 
+                          AutoGenerateColumns="False" 
+                          HeadersVisibility="None" BorderThickness="0" SelectionMode="Single" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3F000000">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Image" Width="SizeToCells" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ffff"  Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Path=Value}" Margin="5,0" IsReadOnly="True" BorderThickness="0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </TabItem>
+        <TabItem Header="Materials" x:Name="MaterialTab">
+            <DataGrid ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=MaterialGroups}"  
+                          ToolTip="Attributes of the Object" 
+                          AutoGenerateColumns="False" 
+                          HeadersVisibility="None" BorderThickness="0" SelectionMode="Single" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3F000000">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Image" Width="SizeToCells" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" Margin="5,0"  />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ffff"  Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Path=Value}" Margin="5,0" IsReadOnly="True" BorderThickness="0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+                <DataGrid.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Path=PropertySetName}"  />
+                                </StackPanel>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <Expander IsExpanded="True">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Path=Name}" FontWeight="Bold" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ItemsPresenter />
+                                            </Expander>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </DataGrid.GroupStyle>
+            </DataGrid>
+        </TabItem>
+        <TabItem Header="Properties" x:Name="PropertyTab">
+            <DataGrid Name="PropertiesGrid" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=PropertyGroups}"  
+                          ToolTip="Attributes of the Object" 
+                          AutoGenerateColumns="False" 
+                          HeadersVisibility="None" BorderThickness="0" SelectionMode="Single" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3F000000">
+                <DataGrid.Resources>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Image" Width="SizeToCells" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ffff"  Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentControl>
+                                    <ContentControl.Style>
+                                        <Style TargetType="{x:Type ContentControl}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Path=IsLink}" Value="false">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <TextBox Text="{Binding Path=Value}" Margin="5,0" IsReadOnly="True" BorderThickness="0" />
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Path=IsLink}" Value="true">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <TextBlock>
+                                                                    <Hyperlink NavigateUri="{Binding Path=Value}" Style="{Binding Source={StaticResource HyperlinkStyle}}">
+                                                                        <TextBlock Text="{Binding Path=Value}"/>
+                                                                    </Hyperlink>
+                                                                </TextBlock>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+                <DataGrid.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Path=PropertySetName}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <Expander IsExpanded="True">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Path=Name}" Foreground="Blue" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ItemsPresenter />
+                                            </Expander>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </DataGrid.GroupStyle>
+            </DataGrid>
+        </TabItem>
+        <TabItem Header="Quantities" x:Name="QuantityTab">
+            <DataGrid ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=Quantities}"  
+                          ToolTip="Attributes of the Object" 
+                          AutoGenerateColumns="False" 
+                          HeadersVisibility="None" BorderThickness="0" SelectionMode="Single" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3F000000">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Image" Width="SizeToCells" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ffff"  Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Path=Value}" Margin="5,0" IsReadOnly="True" BorderThickness="0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </TabItem>
+    </TabControl>
+    <!--</ScrollViewer>-->
+</UserControl>

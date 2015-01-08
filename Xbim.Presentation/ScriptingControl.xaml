@@ -1,0 +1,27 @@
+﻿<UserControl x:Class="Xbim.Presentation.ScriptingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="500" d:DesignWidth="500">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Name="ButtonBar" Orientation="Horizontal" Background="LightGray">
+            <Button Name="SaveScript" Content="Save Script" Click="SaveScript_Click" Margin="2"/>
+            <Button Name="LoadScript" Content="Load Script" Click="LoadScript_Click" Margin="2"/>
+            <Button Name="Execute" Content="Execute" FontWeight="Bold" Click="Execute_Click" Margin="2"/>
+        </StackPanel>
+        <TextBlock Name="MsgWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Blue"/>
+        <TextBlock Name="ErrorsWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Red"/>
+        <ScrollViewer DockPanel.Dock="Bottom" Height="150">
+            <TextBlock Name="OutputWindow" Visibility="Visible" TextWrapping="Wrap" />
+        </ScrollViewer>
+        <ScrollViewer>
+            <DockPanel>
+                <TextBlock Name="LineNumbers" Background="LightGray" Padding="2" Text="1" />
+                <TextBox Name="ScriptInput" AcceptsReturn="True" TextChanged="ScriptInput_TextChanged" />
+            </DockPanel>
+        </ScrollViewer>
+        
+    </DockPanel>
+</UserControl>

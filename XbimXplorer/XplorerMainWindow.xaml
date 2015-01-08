@@ -1,0 +1,252 @@
+﻿<Window x:Class="XbimXplorer.XplorerMainWindow"
+    xmlns:System="clr-namespace:System;assembly=mscorlib"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ifc="http://schemas.Xbim.com/ifc"
+    xmlns:xbim="http://schemas.Xbim.com/Presentation"
+    xmlns:xbimView="clr-namespace:Xbim.IO.ViewModels;assembly=Xbim.IO"
+    xmlns:xbimIO="clr-namespace:Xbim.IO;assembly=Xbim.IO"
+    xmlns:local="clr-namespace:XbimXplorer"
+    xmlns:pt="clr-namespace:PropertyTools.Wpf;assembly=PropertyTools.Wpf" 
+    xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+    Title="Xbim Xplorer" Height="600" Width="800" 
+    x:Name="MainWindow"
+        Icon="xBIM.ico">
+    <Window.Resources>
+        <ObjectDataProvider x:Key="ModelProvider"  IsInitialLoadEnabled="False" ></ObjectDataProvider>
+        <DataTemplate DataType="{x:Type xbimView:XbimModelViewModel}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type xbimView:SpatialViewModel}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!--<Image Grid.Column="0" Source="/folder.png" Margin="0 0 4 0"/>-->
+                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type xbimView:ContainedElementsViewModel}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!--<Image Grid.Column="0" Source="/folder.png" Margin="0 0 4 0"/>-->
+                <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type xbimView:IfcProductModelView}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!--<Image Grid.Column="0" Source="/folder.png" Margin="0 0 4 0"/>-->
+                <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="Open"   Executed="CommandBinding_Open" CanExecute="CommandBinding_CanExecute"/>
+        <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CommandBinding_CanExecute"/>
+        <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
+        
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.ExportCOBieCmd}"   Executed="ExportCOBieCmdExecuted" CanExecute="ExportCOBieCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.COBieClassFilter}" Executed="COBieClassFilterCmdExecuted" CanExecute="ExportCOBieCmdCanExecute"/>
+
+    </Window.CommandBindings>
+    <Grid Name="MainFrame" DataContext="{StaticResource ModelProvider}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" MinHeight="24" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" MinHeight="23" />
+        </Grid.RowDefinitions>
+       
+        <Menu Grid.Row="0" >
+            <MenuItem Header="_Model">
+                <MenuItem Header="_Open" Command="Open"/>
+                <MenuItem Header="_SaveAs" Command="SaveAs"/>
+                <MenuItem Header="_Close" Command="Close" />
+                <Separator />
+                <MenuItem Header="Recent files" x:Name="mnuRecent" Click="RecentFileClick" />
+                <Separator />
+                <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
+                <MenuItem Header="S_eparate" Click="SeparateMenuItem_Click" />
+            </MenuItem>
+            <MenuItem Header="_Federate">
+                <MenuItem Header="_Open" Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" />
+                <MenuItem Header="_Edit" Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" />
+            </MenuItem>
+                
+            <MenuItem Header="_View">
+                <MenuItem Header="_Style">
+                    <MenuItem Header="_Model Style Reset" Click="SetDefaultModeStyler" />
+                    <MenuItem Header="Federation style by _Role" Click="SetFederationStylerRole" />
+                    <MenuItem Header="Federation style by _Element type" Click="SetFederationStylerType" />
+            </MenuItem>
+                    
+                <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
+                <MenuItem Header="_Copy" Command="Copy"/>
+                <!--
+                <MenuItem Header="_Layers" ItemsSource="{Binding LayerSet, ElementName=DrawingControl}">
+                    <MenuItem.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="MenuItem.Header" Value="{Binding NameOnMenu}"/>
+                            <Setter Property="MenuItem.Command" Value="{Binding Open}"/>
+                        </Style>
+                    </MenuItem.ItemContainerStyle>
+                </MenuItem>
+                -->
+                <MenuItem IsCheckable="True" Header="Show Gridlines" IsChecked="{Binding ShowGridLines, ElementName=DrawingControl}"/>
+                <MenuItem Header="_Query" Click="OpenQuery" />
+                <MenuItem Header="_Settings" Click="DisplaySettingsPage" />
+            </MenuItem>
+            <MenuItem Header="_Camera">
+                <MenuItem IsCheckable="True" Header="RotateAroundMouseDownPoint" IsChecked="{Binding Viewport.RotateAroundMouseDownPoint, ElementName=DrawingControl}"/>
+                <MenuItem IsCheckable="True" Header="ZoomAroundMouseDownPoint" IsChecked="{Binding Viewport.ZoomAroundMouseDownPoint, ElementName=DrawingControl}"/>
+                <MenuItem IsCheckable="True" Header="Orthographic" IsChecked="{Binding Viewport.Orthographic, ElementName=DrawingControl}"/>
+                <MenuItem IsCheckable="True" Header="InfiniteSpin" IsChecked="{Binding Viewport.InfiniteSpin, ElementName=DrawingControl}"/>
+                <MenuItem IsCheckable="True" Header="IsPanEnabled" IsChecked="{Binding Viewport.IsPanEnabled, ElementName=DrawingControl}" Background="PaleGoldenrod"/>
+                <MenuItem IsCheckable="True" Header="IsRotationEnabled" IsChecked="{Binding Viewport.IsRotationEnabled, ElementName=DrawingControl}"/>
+                <MenuItem IsCheckable="True" Header="IsZoomEnabled" IsChecked="{Binding Viewport.IsZoomEnabled, ElementName=DrawingControl}"/>
+                <MenuItem IsCheckable="True" Header="IsChangeFovEnabled" IsChecked="{Binding Viewport.IsChangeFieldOfViewEnabled, ElementName=DrawingControl}"/>
+                <MenuItem Header="RotationSensitivity">
+                    <StackPanel Orientation="Horizontal">
+                        <Slider Value="{Binding Viewport.RotationSensitivity, ElementName=DrawingControl}" Minimum="0.1" Maximum="5" Width="200"/>
+                        <TextBlock Text="{Binding Viewport.RotationSensitivity, StringFormat='{}{0:0.0}', ElementName=DrawingControl}"/>
+                    </StackPanel>
+                </MenuItem>
+                <MenuItem Header="ZoomSensitivity">
+                    <StackPanel Orientation="Horizontal">
+                        <Slider Value="{Binding Viewport.ZoomSensitivity, ElementName=DrawingControl}" Minimum="0.1" Maximum="5" Width="200"/>
+                        <TextBlock Text="{Binding Viewport.ZoomSensitivity, StringFormat='{}{0:0.0}', ElementName=DrawingControl}"/>
+                    </StackPanel>
+                </MenuItem>
+                <MenuItem Header="CameraInertiaFactor">
+                    <StackPanel Orientation="Horizontal">
+                        <Slider Value="{Binding Viewport.CameraInertiaFactor, ElementName=DrawingControl}" Minimum="0.7" Maximum="1" Width="200"/>
+                        <TextBlock Text="{Binding Viewport.CameraInertiaFactor, StringFormat='{}{0:0.000}', ElementName=DrawingControl}"/>
+                    </StackPanel>
+                </MenuItem>
+                <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraRotationMode, ElementName=DrawingControl}" Header="CameraRotationMode"/>
+                <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraMode, ElementName=DrawingControl}" Header="CameraMode" />
+            </MenuItem>
+            <MenuItem Header="C_OBie">
+                <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.ExportCOBieCmd}" />
+                <MenuItem Header="_ClassFilter" Command="{x:Static local:XplorerMainWindow.COBieClassFilter}" />
+                <Separator />
+                <MenuItem Header="UK Template" IsCheckable="True" Click="UKTemplate_Click" Name="UK" IsChecked="True"/>
+                <MenuItem Header="US Template" IsCheckable="True" Click="USTemplate_Click" Name="US" />
+            </MenuItem>
+            <MenuItem Header="_About" Click="About_Click"/>
+        </Menu>
+       
+        <avalonDock:DockingManager Grid.Row="1" x:Name="dockingManager">
+            <avalonDock:LayoutRoot>
+                <avalonDock:LayoutPanel x:Name="MainPanel" Orientation="Horizontal">
+                    <avalonDock:LayoutAnchorablePaneGroup DockWidth="150" Orientation="Vertical">
+                        <avalonDock:LayoutAnchorablePane >
+                            <avalonDock:LayoutAnchorable Title="Spatial view" CanClose="False" CanHide="False">
+                        <xbim:XbimTreeview x:Name="SpatialControl"    
+                            Indentation="10"
+                            BorderThickness="1"
+                            Model="{Binding}"  
+                            SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow, Mode=TwoWay}"
+                            SelectionMode="Single"
+                            MouseDoubleClick="SpatialControl_MouseDoubleClick"  FontSize="10" />
+                            </avalonDock:LayoutAnchorable>
+                            <avalonDock:LayoutAnchorable Title="Groups" CanClose="False" >
+                        <xbim:XbimTreeview x:Name="GroupControl"    
+                            ViewDefinition ="Groups"
+                            Indentation="10"
+                            BorderThickness="1"
+                            Model="{Binding}"  
+                            SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow, Mode=TwoWay}"
+                            SelectionMode="Single"
+                            MouseDoubleClick="SpatialControl_MouseDoubleClick"  FontSize="10" />
+                            </avalonDock:LayoutAnchorable>
+                            <avalonDock:LayoutAnchorable Title="ScriptResults" CanClose="False" >
+                                <TabControl>
+                    <TabItem Header="Script Results" Visibility="Collapsed" Name="ScriptResults">
+                    </TabItem>
+                </TabControl>
+                            </avalonDock:LayoutAnchorable>
+                        </avalonDock:LayoutAnchorablePane>
+                        <avalonDock:LayoutAnchorablePane>
+                            <avalonDock:LayoutAnchorable Title="Properties" CanClose="False" >
+                <xbim:IfcMetaDataControl x:Name="PropertiesControl" BorderThickness="1" Grid.Row="2"  
+                                                         SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow}"
+                                         Model="{Binding}"
+                />
+                            </avalonDock:LayoutAnchorable>
+                        </avalonDock:LayoutAnchorablePane>
+                    </avalonDock:LayoutAnchorablePaneGroup>
+                    <avalonDock:LayoutDocumentPane x:Name="MainDocPane">
+                        <avalonDock:LayoutDocument  CanClose="False" Title="3D View">
+                            <xbim:DrawingControl3D 
+                                x:Name="DrawingControl" 
+                                x:FieldModifier="public"
+                                   SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow, Mode=TwoWay}"    
+                                   Model ="{Binding}" 
+                                   Grid.Column="2" 
+                                   Focusable="True" 
+                                   Width="Auto" 
+                                   Height="Auto" 
+                                   MouseDoubleClick="SpatialControl_MouseDoubleClick"
+                                   ModelOpacity="0.75"
+                                   >
+                <xbim:DrawingControl3D.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                        <GradientStop Color="#FFB9B1B1" Offset="1"/>
+                        <GradientStop Color="#FFFAF8FF"/>
+                    </LinearGradientBrush>
+                </xbim:DrawingControl3D.Background>
+            </xbim:DrawingControl3D>
+                        </avalonDock:LayoutDocument>
+                    </avalonDock:LayoutDocumentPane>
+                </avalonDock:LayoutPanel>
+            </avalonDock:LayoutRoot>
+        </avalonDock:DockingManager>
+        <StatusBar Grid.Row="2" Height="23"  Name="statusBar" VerticalAlignment="Top" >
+            <StatusBarItem>
+                <TextBlock Name="ProjectName"></TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Separator/>
+            </StatusBarItem>
+            <TextBlock Name="EntityLabel"></TextBlock>
+            <StatusBarItem>
+                <Separator/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Slider x:Name="ModelOpacity"  Minimum="0.1" Maximum="1.0" Value="{Binding Path=ModelOpacity, ElementName=DrawingControl}" Width="100" LargeChange=".01"></Slider>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Separator/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right" Name="StatusBar" Visibility="Hidden">
+                <Grid>
+                    
+                    <ProgressBar  Name="ProgressBar"  Height="20" Maximum="100" Minimum="0" Width="150"  HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressBar>
+                    <TextBlock Name="StatusMsg" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">Parsing</TextBlock>
+                    
+                </Grid>
+            </StatusBarItem>
+        </StatusBar>
+       
+    </Grid>
+</Window>

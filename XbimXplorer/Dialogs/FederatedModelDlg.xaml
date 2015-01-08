@@ -1,0 +1,38 @@
+﻿<Window x:Class="XbimXplorer.FederatedModelDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:xbim="http://schemas.Xbim.com/Presentation/FederatedModel"
+        Title="Manage federation" Height="500" Width="750"
+        Name="window">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Label Content="Project Name" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <TextBox x:Name="ProjectName" HorizontalAlignment="Stretch" Height="23" 
+                 Margin="10,41,10,0" TextWrapping="Wrap" 
+                 Text="{Binding Path=FederatedModel.Project, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=window}" VerticalAlignment="Top"/>
+
+        <Label Content="Created By" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.Column="1"/>
+
+        <Label Content="Author" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <TextBox x:Name="CreatedPersonTextBox" HorizontalAlignment="Stretch" Height="23" 
+                 Margin="93,41,10,0" TextWrapping="Wrap" 
+                 Text="{Binding Path=FederatedModel.Author, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=window}" VerticalAlignment="Top" Grid.Column="1"/>
+
+        <Label Content="Organization" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <TextBox x:Name="CreatedOrgTextBox" HorizontalAlignment="Stretch" Height="23" 
+                 Margin="93,72,10,0" TextWrapping="Wrap" 
+                 Text="{Binding Path=FederatedModel.Organization, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=window}" VerticalAlignment="Top" Grid.Column="1"/>
+
+
+        <xbim: x:Name="FederatedList" Grid.Row="0" Margin="5,100,5,5" Grid.ColumnSpan="2" ToolTip="Add: fill in the data and press &lt;Enter&gt;&#x0a;Remove: select row(s) and press &lt;Delete&gt;"></xbim:>
+        <!--Button x:Name="Modifiy" Margin="10,0,5,5" Height="25" Click="Modify_Click" IsEnabled="False" VerticalAlignment="Bottom" Visibility="Collapsed">Modify Model</>
+        <Button x:Name="Add" Margin="5,0,10,5" Height="25" Click="Add_Click" Grid.Column="1" VerticalAlignment="Bottom" Visibility="Collapsed">Add Model</Button-->
+    </Grid>
+</Window>
