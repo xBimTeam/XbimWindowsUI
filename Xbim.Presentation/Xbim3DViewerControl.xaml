@@ -27,10 +27,10 @@
         <HelixToolkit:HelixViewport3D.DefaultCamera>
             <PerspectiveCamera Position="100,-100,30" LookDirection="-100,100,-30" UpDirection="0,0,1" FieldOfView="95" NearPlaneDistance="125"/>
         </HelixToolkit:HelixViewport3D.DefaultCamera>
-        <local:XbimCuttingPlaneGroup x:Name="cuttingGroup" IsEnabled="False">
-            <local:XbimCuttingPlaneGroup.CuttingPlanes>
+        <HelixToolkit:CuttingPlaneGroup x:Name="cuttingGroup" IsEnabled="False">
+            <HelixToolkit:CuttingPlaneGroup.CuttingPlanes>
                 <HelixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
-            </local:XbimCuttingPlaneGroup.CuttingPlanes>
+            </HelixToolkit:CuttingPlaneGroup.CuttingPlanes>
             <ModelVisual3D x:Name="BuildingModel">
                 <ModelVisual3D.Children>
                     <ModelVisual3D x:Name="Opaques">
@@ -39,7 +39,7 @@
                     </ModelVisual3D>
                 </ModelVisual3D.Children>
             </ModelVisual3D>
-        </local:XbimCuttingPlaneGroup>
+        </HelixToolkit:CuttingPlaneGroup>
 
         <ModelVisual3D x:Name="Extras"></ModelVisual3D>
 

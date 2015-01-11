@@ -285,7 +285,7 @@ namespace Xbim.Presentation
         public Plane3D GetCutPlane()
         {
             object p = this.FindName("cuttingGroup");
-            XbimCuttingPlaneGroup cpg = p as XbimCuttingPlaneGroup;
+            var cpg = p as CuttingPlaneGroup;
             if (cpg == null || cpg.IsEnabled == false) 
                 return null;
             if (cpg.CuttingPlanes.Count == 1)
@@ -302,7 +302,7 @@ namespace Xbim.Presentation
         private void SetNamedCutPlane(double PosX, double PosY, double PosZ, double NrmX, double NrmY, double NrmZ, string cuttingGroupName)
         {
             object p = this.FindName(cuttingGroupName);
-            XbimCuttingPlaneGroup cpg = p as XbimCuttingPlaneGroup;
+            CuttingPlaneGroup cpg = p as CuttingPlaneGroup;
             if (cpg != null)
             {
                 cpg.IsEnabled = false;
@@ -325,7 +325,7 @@ namespace Xbim.Presentation
         private void ClearNamedCutPlane(string name)
         {
             object p = this.FindName(name);
-            XbimCuttingPlaneGroup cpg = p as XbimCuttingPlaneGroup;
+            CuttingPlaneGroup cpg = p as CuttingPlaneGroup;
             if (cpg != null)
             {
                 cpg.IsEnabled = false;
@@ -814,13 +814,14 @@ namespace Xbim.Presentation
                 foreach (var item in Selection)
                 {
                     var fromModel = item.ModelOf as XbimModel;
-                    if (fromModel != null)
+                    if (fromModel != null && newVal is IfcProduct)
                     {
                         short modelId = fromModel.UserDefinedId;
                         double metre = fromModel.ModelFactors.OneMetre;
                         wcsTransform = XbimMatrix3D.CreateTranslation(_modelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
            
                         Xbim3DModelContext context = new Xbim3DModelContext(fromModel);
+                        
                         List<XbimShapeInstance> productShape = context.ShapeInstancesOf((IfcProduct)newVal).Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
                         if (productShape.Any())
                         {
