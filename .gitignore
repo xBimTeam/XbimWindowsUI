@@ -188,6 +188,7 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 /Output
-*/Xbim.Geometry.Engine[0-9]*.dll
+Xbim.Geometry.Engine[0-9]*.dll
 */Classifications/
 */Templates/
+/Xbim.Presentation/x86

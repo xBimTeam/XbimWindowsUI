@@ -26,7 +26,6 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
     <_ResolveReferenceDependencies>true</_ResolveReferenceDependencies>
     <PublishUrl>ClickOnce\</PublishUrl>
     <Install>true</Install>
@@ -204,7 +203,7 @@
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Geometry.3.0.0-Prerelease\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.3.0.2-Prerelease\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc.Extensions, Version=3.0.5484.32682, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -218,9 +217,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Xbim.Essentials.3.0.1-Alpha\lib\net45\Xbim.IO.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5485.26834, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5489.24572, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Geometry.3.0.0-Prerelease\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.3.0.2-Prerelease\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Script, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -338,10 +337,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Content Include="Xbim.Geometry.Engine32.dll">
+    <Content Include="x86\Xbim.Geometry.Engine32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Xbim.Geometry.Engine64.dll">
+    <Content Include="x64\Xbim.Geometry.Engine64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="xBIM.ico" />
@@ -490,5 +489,4 @@
       <Output TaskParameter="Include" ItemName="_DeploymentManifestFiles" />
     </CreateItem>
   </Target>
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
 </Project>
