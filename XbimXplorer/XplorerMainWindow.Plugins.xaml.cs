@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Controls;
+using Xbim.ModelGeometry.Scene;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
 
@@ -27,6 +28,16 @@ namespace XbimXplorer
 
         public void RefreshPlugins()
         {
+
+            //try
+            //{
+            //    Xbim3DModelContext context = new Xbim3DModelContext(null);
+            //}
+            //catch (Exception)
+            //{
+
+            //}
+
             string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             if (!string.IsNullOrWhiteSpace(path))
                 path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -47,6 +58,10 @@ namespace XbimXplorer
 
         internal void LoadPlugin(string fullAssemblyName)
         {
+
+            
+            
+
             Debug.WriteLine(string.Format("Attempting to load: {0}", fullAssemblyName));
             if (!File.Exists(fullAssemblyName))
                 return;
