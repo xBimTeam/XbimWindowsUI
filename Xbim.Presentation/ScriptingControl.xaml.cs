@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Xbim.IO;
 using Xbim.Script;
 using System.IO;
@@ -20,7 +11,7 @@ namespace Xbim.Presentation
     /// <summary>
     /// Interaction logic for ScriptingWindow.xaml
     /// </summary>
-    public partial class ScriptingControl : System.Windows.Controls.UserControl
+    public partial class ScriptingControl
     {
         public ScriptingControl()
         {
@@ -93,7 +84,7 @@ namespace Xbim.Presentation
             string script = ScriptInput.Text;
             if (String.IsNullOrEmpty(script))
             {
-                System.Windows.MessageBox.Show("There is no script to save.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("There is no script to save.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             System.Windows.Forms.SaveFileDialog dlg = new System.Windows.Forms.SaveFileDialog();
@@ -102,7 +93,7 @@ namespace Xbim.Presentation
             dlg.Title = "Set file name of the script...";
             dlg.OverwritePrompt = true;
             dlg.ValidateNames = true;
-            dlg.FileOk += delegate(object s, System.ComponentModel.CancelEventArgs eArg)
+            dlg.FileOk += delegate
             {
                 var name = dlg.FileName;
                 StreamWriter file = null;
@@ -113,7 +104,7 @@ namespace Xbim.Presentation
                 }
                 catch (Exception)
                 {
-                    System.Windows.MessageBox.Show("Saving script to file failed. Check if the location is writable.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Saving script to file failed. Check if the location is writable.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 finally
                 {
@@ -132,7 +123,8 @@ namespace Xbim.Presentation
             dlg.DefaultExt = ".bql";
             dlg.Title = "Specify the script file...";
             dlg.ValidateNames = true;
-            dlg.FileOk += delegate(object s, System.ComponentModel.CancelEventArgs eArg) {
+            dlg.FileOk += delegate
+            {
                 Stream file = null;
                 try
                 {
@@ -143,7 +135,7 @@ namespace Xbim.Presentation
                 }
                 catch (Exception)
                 {
-                    System.Windows.MessageBox.Show("Loading script from file failed. Check if the file exist and is readable.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Loading script from file failed. Check if the file exist and is readable.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 finally
                 {

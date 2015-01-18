@@ -1,0 +1,55 @@
+﻿Code; Description; Parent
+NRM; New Rules of Measurement
+01; Substructure; NRM
+01.01; Foundations; 01
+01.02; Basement Excavation; 01
+01.03; Basement Retaining Walls; 01
+01.04; Ground Floor Construction; 01
+02; Superstructure; NRM
+02.01; Frame; 02
+02.01.01; Steel Frames; 02.01
+02.01.02; Space Frames/Decks; 02.01
+02.01.03; Concrete Casings to Steel Frames; 02.01
+02.01.04; Concrete Frames; 02.01
+02.01.05; Timber Frames; 02.01
+02.01.06; Specialist Frames; 02.01
+02.02; Upper Floors; 02
+02.03; Roof; 02
+02.04; Stairs and Ramps; 02
+02.05; External Walls; 02
+02.05.01; External walls above ground floor; 02.05
+02.05.02; External Walls below ground level; 02.05
+02.05.03; Solar/Rainscreen Cladding; 02.05
+02.05.04; External Soffits; 02.05
+02.05.05; Subsidiary Walls, balustrades, handrails, railings and propriety balconies; 02.05
+02.05.06; Façade access/cleaning systems; 02.05
+02.06; Windows and External Doors; 02
+02.07; Internal Walls and Partitions; 02
+02.08; Internal Doors; 02
+03; Internal finishes; NRM
+03.01; Wall finishes; 03
+03.02; Floor finishes; 03
+03.03; Ceiling finishes; 03
+04; Fittings, furnishing and equipment; NRM
+04.01; General fittings, furnishings and equipment; 04
+04.02; Special fittings, furnishings and equipment; 04
+04.03; Internal planting; 04
+04.04; Bird and vermin control; 04
+05; Services; NRM
+05.01; Sanitary appliances; 05
+05.02; Services equipment; 05
+05.03; Disposal installations; 05
+05.04; Mains water supply; 05
+05.05; Heat source; 05
+05.06; Space heating and air conditioning; 05
+05.07; Ventilation systems; 05
+05.08; Electrical installations; 05
+05.09; Gas and other fuel installations; 05
+05.10; Lift and conveyor installations; 05
+05.11; Fire and lightning protection; 05
+05.12; Communication, security and control systems; 05
+05.13; Specialist installations; 05
+05.14; Builder's work in connection with services; 05
+05.15; Testing and commissioning of services; 05
+08; External Works; NRM
+08.02; Roads, Paths, Pavings and Surfacings; 08

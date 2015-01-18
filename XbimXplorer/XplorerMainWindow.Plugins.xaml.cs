@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Controls;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -52,56 +50,51 @@ namespace XbimXplorer
                 return;
             var ContPath = Path.GetDirectoryName(fullAssemblyName);
             AssemblyLoadFolder = ContPath;
-            try
-            {
-                var assembly = Assembly.LoadFile(fullAssemblyName);
-                foreach (var refReq in assembly.GetReferencedAssemblies())
-                {
-                    //check if the assembly is loaded
-                    Assembly[] asms = AppDomain.CurrentDomain.GetAssemblies();
-                    bool reqFound = false;
-                    foreach (Assembly asm in asms)
-                    {
-                        AssemblyName asmName = asm.GetName();
-                        if (asmName.FullName.Equals(refReq.FullName))
-                        {
-                            reqFound = true;
-                            break;
-                        }
-                        else if (asmName.Name.Equals(refReq.Name))
-                        {
-                            Debug.WriteLine(string.Format("Versioning issues: \r\na -> {0} \r\nb -> {1}", refReq.FullName, asmName.FullName));
-                        }
-                    };
-                    if (!reqFound)
-                    {
-                        Debug.WriteLine(string.Format("Will need to load: {0}", refReq.FullName));
-                        AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-                        Assembly.Load(refReq);
-                        AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
-                    }
-                }
 
-                var UserControls = assembly.GetTypes().Where(x => x.BaseType == typeof(UserControl));
-                foreach (var tp in UserControls)
+            var assembly = Assembly.LoadFile(fullAssemblyName);
+            foreach (var refReq in assembly.GetReferencedAssemblies())
+            {
+                //check if the assembly is loaded
+                Assembly[] asms = AppDomain.CurrentDomain.GetAssemblies();
+                bool reqFound = false;
+                foreach (Assembly asm in asms)
                 {
-                    Debug.WriteLine("Looping " + tp.Name);
-                    object instance = Activator.CreateInstance(tp);
-                    xBimXplorerPluginWindow asPWin = instance as xBimXplorerPluginWindow;
-                    if (asPWin != null)
+                    AssemblyName asmName = asm.GetName();
+                    if (asmName.FullName.Equals(refReq.FullName))
                     {
-                        if (!PluginWindows.Contains(asPWin))
-                        {
-                            ShowPluginWindow(asPWin);
-                            PluginWindows.Add(asPWin);
-                        }   
+                        reqFound = true;
+                        break;
+                    }
+                    else if (asmName.Name.Equals(refReq.Name))
+                    {
+                        Debug.WriteLine(string.Format("Versioning issues: \r\na -> {0} \r\nb -> {1}", refReq.FullName, asmName.FullName));
+                    }
+                };
+                if (!reqFound)
+                {
+                    Debug.WriteLine(string.Format("Will need to load: {0}", refReq.FullName));
+                    AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+                    Assembly.Load(refReq);
+                    AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+                }
+            }
+
+            var UserControls = assembly.GetTypes().Where(x => x.BaseType == typeof(UserControl));
+            foreach (var tp in UserControls)
+            {
+                Debug.WriteLine("Looping " + tp.Name);
+                object instance = Activator.CreateInstance(tp);
+                xBimXplorerPluginWindow asPWin = instance as xBimXplorerPluginWindow;
+                if (asPWin != null)
+                {
+                    if (!PluginWindows.Contains(asPWin))
+                    {
+                        ShowPluginWindow(asPWin);
+                        PluginWindows.Add(asPWin);
                     }
                 }
             }
-            catch (Exception ex)
-            {
 
-            }
         }
 
         PluginWindowCollection PluginWindows = new PluginWindowCollection();

@@ -14,26 +14,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug CarveCSG|Any CPU = Debug CarveCSG|Any CPU
 		Debug|Any CPU = Debug|Any CPU
-		Release CarveCSG|Any CPU = Release CarveCSG|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{89F98E53-DE4E-4427-8244-D5934AD08849}.Debug CarveCSG|Any CPU.ActiveCfg = Debug|Any CPU
-		{89F98E53-DE4E-4427-8244-D5934AD08849}.Debug CarveCSG|Any CPU.Build.0 = Debug|Any CPU
 		{89F98E53-DE4E-4427-8244-D5934AD08849}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{89F98E53-DE4E-4427-8244-D5934AD08849}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{89F98E53-DE4E-4427-8244-D5934AD08849}.Release CarveCSG|Any CPU.ActiveCfg = Release|Any CPU
-		{89F98E53-DE4E-4427-8244-D5934AD08849}.Release CarveCSG|Any CPU.Build.0 = Release|Any CPU
 		{89F98E53-DE4E-4427-8244-D5934AD08849}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89F98E53-DE4E-4427-8244-D5934AD08849}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Debug CarveCSG|Any CPU.ActiveCfg = Debug CarveCSG|Any CPU
-		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Debug CarveCSG|Any CPU.Build.0 = Debug CarveCSG|Any CPU
 		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Release CarveCSG|Any CPU.ActiveCfg = Release CarveCSG|Any CPU
-		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Release CarveCSG|Any CPU.Build.0 = Release CarveCSG|Any CPU
 		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
