@@ -54,6 +54,7 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using XbimGeometry.Interfaces;
 using Xbim.Presentation.LayerStyling;
+using Xbim.Presentation.LayerStylingV2;
 
 #endregion
 
@@ -271,7 +272,7 @@ namespace Xbim.Presentation
 
         // protected RayMeshGeometry3DHitTestResult _hitResult;
        
-        private XbimRect3D modelBounds;
+        public XbimRect3D ModelBounds;
         private XbimRect3D viewBounds;
         // private int? _currentProduct;
         private List<Material> _materials = new List<Material>();
@@ -1220,7 +1221,7 @@ namespace Xbim.Presentation
         public static readonly DependencyProperty PercentageLoadedProperty =
             DependencyProperty.Register("PercentageLoaded", typeof(double), typeof(DrawingControl3D),
                                         new UIPropertyMetadata(0.0));
-        private XbimVector3D _modelTranslation;
+        public XbimVector3D _modelTranslation;
         public XbimMatrix3D wcsTransform;
 
 
@@ -1246,7 +1247,7 @@ namespace Xbim.Presentation
             if (!((options & ModelRefreshOptions.ViewPreserveCuttingPlane) == ModelRefreshOptions.ViewPreserveCuttingPlane))
             this.ClearCutPlane();
 
-            modelBounds = XbimRect3D.Empty;
+            ModelBounds = XbimRect3D.Empty;
             viewBounds = new XbimRect3D(0, 0, 0, 10, 10, 5);    
             scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
             if (!((options & ModelRefreshOptions.ViewPreserveCameraPosition) == ModelRefreshOptions.ViewPreserveCameraPosition))
@@ -1278,6 +1279,8 @@ namespace Xbim.Presentation
             ViewPreserveCuttingPlane = 4,
             ViewPreserveAll = 7
         }
+
+        public ILayerStylerV2 GeomSupport2LayerStyler = null;
 
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
@@ -1337,10 +1340,19 @@ namespace Xbim.Presentation
             LayerStyler.SetFederationEnvironment(null);
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
-            if ( geometrySupportLevel == 1)
+
+
+
+            if (geometrySupportLevel == 1)
                 scene = BuildScene(model, EntityLabels, LayerStyler);
-            else  //assume we are the latest level (2)
-                scene = BuildScene2(model, context, _exclude);
+            else //assume we are the latest level (2)
+            {
+                if (GeomSupport2LayerStyler == null)
+                    GeomSupport2LayerStyler = new SurfeceLayerStyler();
+                GeomSupport2LayerStyler.Control = this;
+                GeomSupport2LayerStyler.SetFederationEnvironment(null);
+                scene = GeomSupport2LayerStyler.BuildScene(model, context, _exclude);
+            }
             if(scene.Layers.Count() > 0)
                 scenes.Add(scene);
             foreach (var refModel in model.ReferencedModels)
@@ -1349,8 +1361,9 @@ namespace Xbim.Presentation
                     scenes.Add(BuildRefModelScene(refModel.Model, refModel.DocumentInformation));
                 else  //assume we are the latest level (2)
                 {
+                    GeomSupport2LayerStyler.SetFederationEnvironment(refModel);
                     Xbim3DModelContext refContext = new Xbim3DModelContext(refModel.Model);
-                    scenes.Add(BuildScene2(refModel.Model, refContext, _exclude));
+                    scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, refContext, _exclude));
                 }
             }
             ShowSpaces = false;
@@ -1375,8 +1388,8 @@ namespace Xbim.Presentation
 
         private void RecalculateView(XbimModel model, ModelRefreshOptions options = ModelRefreshOptions.None)
         {
-            if (!modelBounds.IsEmpty) //we have  geometry so create view box
-                viewBounds = modelBounds;
+            if (!ModelBounds.IsEmpty) //we have  geometry so create view box
+                viewBounds = ModelBounds;
           
             // Assumes a NearPlaneDistance of 1/8 of meter.
             //all models are now in metres
@@ -1470,8 +1483,8 @@ namespace Xbim.Presentation
             {
                 scene.Add(layer);
 
-                if (modelBounds.IsEmpty) modelBounds = layer.BoundingBoxHidden();
-                else modelBounds.Union(layer.BoundingBoxHidden());
+                if (ModelBounds.IsEmpty) ModelBounds = layer.BoundingBoxHidden();
+                else ModelBounds.Union(layer.BoundingBoxHidden());
 
             }
 
@@ -1490,248 +1503,7 @@ namespace Xbim.Presentation
         /// </summary>
         public ILayerStyler FederationLayerStyler = null;
 
-        /// <summary>
-        /// This version uses the new Geometry representation
-        /// </summary>
-        /// <param name="model"></param>
-        /// <param name="context"></param>
-        /// <param name="exclude">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
-        /// <returns></returns>
-        private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene2(XbimModel model, Xbim3DModelContext context,
-            List<Type> exclude = null)
-        {
-
-            var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
-
-            if (context == null)
-                return scene;
-
-            //get a list of all the unique styles
-            var styles = new Dictionary<int, WpfMaterial>();
-            var shapeGeometries = new Dictionary<int, MeshGeometry3D>();
-            var meshSets = new Dictionary<int, WpfMeshGeometry3D>();
-            var opaques = new Model3DGroup();
-            var transparents = new Model3DGroup();
-
-            var sstyles = context.SurfaceStyles();
-            if (sstyles == null)
-                return scene;
-
-            foreach (var style in sstyles)
-            {
-                var wpfMaterial = new WpfMaterial();
-                wpfMaterial.CreateMaterial(style);
-                styles.Add(style.DefinedObjectId, wpfMaterial);
-                var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
-                mg.WpfModel.SetValue(TagProperty, mg);
-                meshSets.Add(style.DefinedObjectId, mg);
-                if (style.IsTransparent)
-                    transparents.Children.Add(mg);
-                else
-                    opaques.Children.Add(mg);
-            }
-
-
-            if (!styles.Any()) return scene; //this should always return something
-            double metre = model.ModelFactors.OneMetre;
-            wcsTransform = XbimMatrix3D.CreateTranslation(_modelTranslation)*XbimMatrix3D.CreateScale(1/metre);
-
-            foreach (var shapeInstance in context.ShapeInstances()
-                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
-                            !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
-                        !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/))
-            {
-                int styleId = shapeInstance.StyleLabel > 0 ? shapeInstance.StyleLabel : shapeInstance.IfcTypeId*-1;
-
-                //GET THE ACTUAL GEOMETRY 
-                MeshGeometry3D wpfMesh;
-                //see if we have already read it
-                if (shapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
-                {
-                    GeometryModel3D mg = new GeometryModel3D(wpfMesh, styles[styleId]);
-                    mg.SetValue(TagProperty,
-                        new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
-                    mg.BackMaterial = mg.Material;
-                    mg.Transform =
-                        XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform).ToMatrixTransform3D();
-                    if (styles[styleId].IsTransparent)
-                        transparents.Children.Add(mg);
-                    else
-                        opaques.Children.Add(mg);
-                }
-                else //we need to get the shape geometry
-                {
-
-                    XbimShapeGeometry shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                    if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
-                    {
-                        wpfMesh = new MeshGeometry3D();
-                        wpfMesh.Read(shapeGeom.ShapeData);
-                        shapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
-                        GeometryModel3D mg = new GeometryModel3D(wpfMesh, styles[styleId]);
-                        mg.SetValue(TagProperty,
-                            new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
-                        mg.BackMaterial = mg.Material;
-                        mg.Transform =
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform).ToMatrixTransform3D();
-                        if (styles[styleId].IsTransparent)
-                            transparents.Children.Add(mg);
-                        else
-                            opaques.Children.Add(mg);
-                    }
-                    else //it is a one off, merge it with shapes of a similar material
-                    {
-                        WpfMeshGeometry3D mg = meshSets[styleId];
-                        mg.Add(shapeGeom.ShapeData,
-                            shapeInstance.IfcTypeId,
-                            shapeInstance.IfcProductLabel,
-                            shapeInstance.InstanceLabel,
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform), 0);
-
-                    }
-                }
-
-            }
-
-            //foreach (var shapeGeom in context.ShapeGeometries().Where(sg=>sg.ReferenceCount>1))
-            //{
-            //    MeshGeometry3D wpfMesh = new MeshGeometry3D();          
-            //    wpfMesh.Read(shapeGeom.ShapeData);
-            //    foreach (var shapeInstance in context.ShapeInstancesOf(shapeGeom)
-            //        .Where(s=>s.RepresentationType==XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded && 
-            //            !typeof(IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) &&
-            //            !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))))
-            //    {
-            //        int styleId = shapeInstance.StyleLabel > 0 ? shapeInstance.StyleLabel : shapeInstance.IfcTypeId * -1;
-            //        GeometryModel3D mg = new GeometryModel3D(wpfMesh, styles[styleId]);
-            //        mg.SetValue(TagProperty, new XbimInstanceHandle(model, shapeInstance.IfcProductLabel,shapeInstance.IfcTypeId));
-            //        mg.BackMaterial = mg.Material;
-            //        mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation,wcsTransform).ToMatrixTransform3D();
-            //        if( styles[styleId].IsTransparent)
-            //            transparents.Children.Add(mg);
-            //        else
-            //            opaques.Children.Add(mg);
-            //    }
-
-
-
-            //}
-            if (opaques.Children.Any())
-            {
-                ModelVisual3D mv = new ModelVisual3D();
-                mv.Content = opaques;
-                Opaques.Children.Add(mv);
-                modelBounds = mv.Content.Bounds.ToXbimRect3D();
-            }
-            if (transparents.Children.Any())
-            {
-                ModelVisual3D mv = new ModelVisual3D();
-                mv.Content = transparents;
-                Transparents.Children.Add(mv);
-                if (modelBounds.IsEmpty) modelBounds = mv.Content.Bounds.ToXbimRect3D();
-                else modelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
-            }
-            //  modelBounds = modelBounds.Transform(wcsTransform);
-
-            //   Stopwatch sw = new Stopwatch(); sw.Start();
-            //   Dictionary<int, XbimShapeGeometry> shapeGeometries = context.ShapeGeometries().ToDictionary(s=>s.ShapeLabel);
-            //   Debug.WriteLine(shapeGeometries.Count + " geometries in " + sw.ElapsedMilliseconds);
-            //   sw.Restart();
-            ////   List<XbimShapeInstance> si =  context.ShapeInstances(true).ToList();
-            //   //Debug.WriteLine(si.Count + " instances in " + sw.ElapsedMilliseconds);
-            //   //get the world coordinate transform and scale
-            //   double metre = model.ModelFactors.OneMetre;
-            //   wcsTransform = XbimMatrix3D.CreateTranslation(_modelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
-            //   //set up a scene and a 3D context
-
-
-            //   //set a colour map, using the standard one
-
-            ////   if (context.IsGenerated) //if we have generated the context then use, else nothing to draw
-            //   {
-
-            //       if (LayerStylerV2 == null)
-            //       {
-            //           LayerStylerV2 = new LayerStyling.LayerStylerV2TypeAndStyle();
-
-            //       }
-            //       LayerStylerV2.Init();
-            //       //get each product and draw its shapes
-            //       ParallelOptions pOpts = new ParallelOptions();
-            //       if (exclude == null) //by default exclude openings and additions in their own right and exclude spaces
-            //       {
-            //           exclude = new List<Type>(1);
-            //           exclude.Add(typeof(IfcFeatureElement));
-            //           exclude.Add(typeof(IfcSpace));
-            //       }
-            //       XbimColourMap colourMap = new XbimColourMap(StandardColourMaps.IfcProductTypeMap);
-            //       foreach (var styleGroup in context.ShapeInstancesGroupByStyle())
-            //       {
-            //           XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> shapeLayer;
-            //           if (styleGroup.Key>0) //we have a style defined in Ifc
-            //           {
-            //               IfcSurfaceStyle ifcStyle = model.Instances[styleGroup.Key] as IfcSurfaceStyle;
-            //               XbimTexture shapeTexture = new XbimTexture().CreateTexture(ifcStyle);
-            //               shapeLayer = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(shapeTexture);
-            //           }
-            //           else
-            //           {
-            //               Type productType = IfcMetaData.GetType((short)Math.Abs(styleGroup.Key));
-            //               XbimTexture texture = new XbimTexture().CreateTexture(colourMap[productType.Name]); //get the colour to use
-            //               shapeLayer =  new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(texture);
-            //           }
-
-            //           foreach (var instance in styleGroup)
-            //           {
-            //               XbimShapeGeometry sg;
-            //               if (shapeGeometries.TryGetValue(instance.ShapeLabel, out sg))
-            //               {
-            //                   shapeLayer.Add(sg.ShapeData, IfcMetaData.GetType(instance.IfcTypeId), instance.IfcProductLabel, instance.InstanceLabel, XbimMatrix3D.Multiply(instance.Transformation, wcsTransform), context.Model.UserDefinedId);
-            //               }
-
-            //               else
-            //                   throw new Exception("Shape Geometry not found");
-            //           }
-            //           scene.Add(shapeLayer);
-            //           if (modelBounds.IsEmpty) modelBounds = shapeLayer.BoundingBoxHidden();
-            //           else modelBounds.Union(shapeLayer.BoundingBoxHidden());
-            //           AddLayerToDrawingControl(shapeLayer);
-
-            //       }
-
-
-            //   List<XbimProductShape> productShapes = context.ProductShapes.Where(p => IsIncluded(p, exclude)).ToList();
-
-            ////  Parallel.ForEach<XbimProductShape>(productShapes, pOpts, productShape =>
-            //  foreach (var productShape in productShapes)
-            //   {
-            //       XbimMatrix3D prodTransform = productShape.Placement * wcsTransform;
-            //       foreach (var shape in productShape.Shapes)
-            //       {
-            //           XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> shapeLayer = LayerStylerV2.GetLayer(model, shape, productShape);
-            //           if (shapeLayer == null)
-            //               continue;
-
-            //           XbimMatrix3D? shapeTransform = shape.Transform;
-            //           if (shapeTransform.HasValue)
-            //               //add the shape to the right layer
-            //               shapeLayer.Add(shape.MeshString, productShape.ProductType, productShape.ProductLabel, shape.GeometryLabel, shapeTransform.Value * prodTransform, context.Model.UserDefinedId);
-            //           else
-            //               //add the shape to the right layer
-            //               shapeLayer.Add(shape.MeshString, productShape.ProductType, productShape.ProductLabel, shape.GeometryLabel, prodTransform, context.Model.UserDefinedId);
-            //       }
-            //   }
-            // );
-            //    Debug.WriteLine("Time to load mesh " + sw.ElapsedMilliseconds);
-            // foreach (var layer in LayerStylerV2.Layers.Values)
-
-            //  Debug.WriteLine("Time to render mesh " + sw.ElapsedMilliseconds);
-
-            //  }
-
-            return scene;
-        }
-
+        
 
         private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, IEnumerable<int> LoadLabels, ILayerStyler layerStyler)
         {
@@ -1785,8 +1557,8 @@ namespace Xbim.Presentation
                 {
                     scene.Add(layer);
 
-                    if (modelBounds.IsEmpty) modelBounds = layer.BoundingBoxHidden();
-                    else modelBounds.Union(layer.BoundingBoxHidden());
+                    if (ModelBounds.IsEmpty) ModelBounds = layer.BoundingBoxHidden();
+                    else ModelBounds.Union(layer.BoundingBoxHidden());
                 }
             }
             );

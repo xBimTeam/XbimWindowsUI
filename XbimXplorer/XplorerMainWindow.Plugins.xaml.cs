@@ -56,10 +56,6 @@ namespace XbimXplorer
 
         internal void LoadPlugin(string fullAssemblyName)
         {
-
-            
-            
-
             Debug.WriteLine(string.Format("Attempting to load: {0}", fullAssemblyName));
             if (!File.Exists(fullAssemblyName))
                 return;

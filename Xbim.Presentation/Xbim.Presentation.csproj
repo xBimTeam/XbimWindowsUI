@@ -182,6 +182,8 @@
     <Compile Include="FederatedModel\FederatedModelsGrid.xaml.cs">
       <DependentUpon>FederatedModelsGrid.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LayerStylingV2\ILayerStylerV2.cs" />
+    <Compile Include="LayerStylingV2\SurfeceLayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylerPerEntity.cs" />
     <Compile Include="LayerStyling\ILayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylerEvenOdd.cs" />
