@@ -1,0 +1,40 @@
+﻿<UserControl
+        xmlns:local="clr-namespace:Xbim.BCF"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:UI="clr-namespace:Xbim.BCF.UI" x:Class="Xbim.BCF.MainWindow"
+        >
+    <!-- 
+    Height="350" Width="525" 
+    -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="5" >
+            <GroupBox Header="Markup" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed">
+                <StackPanel>
+                    <Button Content="Load" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Markup_Load_Click"/>
+                    <Button Content="Save" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Markup_Save_Click"/>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="Visinfo" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed">
+                <StackPanel>
+                    <Button Content="Load" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Visinfo_Load_Click"/>
+                    <Button Content="Save" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Visinfo_Save_Click"/>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="BCFFIle" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,3">
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Start thread" Click="newComment" Margin="4,3" Width="120" />
+                    <Button Command="{x:Static local:BCFFileCommands.Load}" Content="Load" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="4,0,4,4" />
+                    <Button Command="{x:Static local:BCFFileCommands.Save}" Content="Save" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="4,3" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+        <UI:BCFFileUI VerticalAlignment="Stretch" Margin="5" Grid.Row="1" x:Name="selFile" />
+    </Grid>
+</UserControl>

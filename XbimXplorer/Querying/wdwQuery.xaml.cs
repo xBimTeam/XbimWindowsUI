@@ -38,6 +38,8 @@ namespace XbimXplorer.Querying
     /// </summary>
     public partial class wdwQuery : UserControl, xBimXplorerPluginWindow
     {
+        
+
         public wdwQuery()
         {
             InitializeComponent();
