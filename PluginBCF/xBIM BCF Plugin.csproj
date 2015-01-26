@@ -157,10 +157,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\markup.bcf" />
-    <None Include="Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\viewpoint.bcfv" />
     <None Include="Examples\FromRevit.bcfzip" />
-    <None Include="Examples\RevitProj.ifc" />
+    <None Include="Examples\FromTekla.bcfzip" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -176,9 +174,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\snapshot.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj">
