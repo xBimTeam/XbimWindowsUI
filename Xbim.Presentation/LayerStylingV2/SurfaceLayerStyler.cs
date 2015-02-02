@@ -12,7 +12,7 @@ using Xbim.Ifc2x3.ProductExtension;
 
 namespace Xbim.Presentation.LayerStylingV2
 {
-    public class SurfeceLayerStyler : ILayerStylerV2
+    public class SurfaceLayerStyler : ILayerStylerV2
     {
 
         /// <summary>
@@ -33,14 +33,13 @@ namespace Xbim.Presentation.LayerStylingV2
 
             //get a list of all the unique styles
             var styles = new Dictionary<int, WpfMaterial>();
-            var shapeGeometries = new Dictionary<int, MeshGeometry3D>();
-            var meshSets = new Dictionary<int, WpfMeshGeometry3D>();
-            var opaques = new Model3DGroup();
-            var transparents = new Model3DGroup();
+            var repeatedShapeGeometries = new Dictionary<int, MeshGeometry3D>();
+            var styleMeshSets = new Dictionary<int, WpfMeshGeometry3D>();
+            var tmpOpaquesGroup = new Model3DGroup();
+            var tmpTransparentsGroup = new Model3DGroup();
 
             var sstyles = context.SurfaceStyles();
-            if (sstyles == null)
-                return scene;
+            
 
             foreach (var style in sstyles)
             {
@@ -49,17 +48,16 @@ namespace Xbim.Presentation.LayerStylingV2
                 styles.Add(style.DefinedObjectId, wpfMaterial);
                 var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
                 mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
-                meshSets.Add(style.DefinedObjectId, mg);
+                styleMeshSets.Add(style.DefinedObjectId, mg);
                 if (style.IsTransparent)
-                    transparents.Children.Add(mg);
+                    tmpTransparentsGroup.Children.Add(mg);
                 else
-                    opaques.Children.Add(mg);
+                    tmpOpaquesGroup.Children.Add(mg);
             }
 
 
             if (!styles.Any()) return scene; //this should always return something
-            double metre = model.ModelFactors.OneMetre;
-            Control.wcsTransform = XbimMatrix3D.CreateTranslation(Control._modelTranslation) * XbimMatrix3D.CreateScale(1 / metre);
+            
 
             foreach (var shapeInstance in context.ShapeInstances()
                 .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
@@ -71,63 +69,64 @@ namespace Xbim.Presentation.LayerStylingV2
                 //GET THE ACTUAL GEOMETRY 
                 MeshGeometry3D wpfMesh;
                 //see if we have already read it
-                if (shapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
+                if (repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
                 {
-                    GeometryModel3D mg = new GeometryModel3D(wpfMesh, styles[styleId]);
+                    var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
                     mg.SetValue(FrameworkElement.TagProperty,
                         new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                     mg.BackMaterial = mg.Material;
                     mg.Transform =
                         XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform).ToMatrixTransform3D();
                     if (styles[styleId].IsTransparent)
-                        transparents.Children.Add(mg);
+                        tmpTransparentsGroup.Children.Add(mg);
                     else
-                        opaques.Children.Add(mg);
+                        tmpOpaquesGroup.Children.Add(mg);
                 }
                 else //we need to get the shape geometry
                 {
-
-                    XbimShapeGeometry shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    var shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                     if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
                         wpfMesh.Read(shapeGeom.ShapeData);
-                        shapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
-                        GeometryModel3D mg = new GeometryModel3D(wpfMesh, styles[styleId]);
+                        repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
+                        var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
                         mg.SetValue(FrameworkElement.TagProperty,
                             new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                         mg.BackMaterial = mg.Material;
                         mg.Transform =
                             XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform).ToMatrixTransform3D();
                         if (styles[styleId].IsTransparent)
-                            transparents.Children.Add(mg);
+                            tmpTransparentsGroup.Children.Add(mg);
                         else
-                            opaques.Children.Add(mg);
+                            tmpOpaquesGroup.Children.Add(mg);
                     }
                     else //it is a one off, merge it with shapes of a similar material
                     {
-                        WpfMeshGeometry3D mg = meshSets[styleId];
-                        mg.Add(shapeGeom.ShapeData,
+                        var targetMergeMeshByStyle = styleMeshSets[styleId];
+                        targetMergeMeshByStyle.Add(
+                            shapeGeom.ShapeData,
                             shapeInstance.IfcTypeId,
                             shapeInstance.IfcProductLabel,
                             shapeInstance.InstanceLabel,
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform), 0);
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform), 
+                            0 );
                     }
                 }
             }
 
             //}
-            if (opaques.Children.Any())
+            if (tmpOpaquesGroup.Children.Any())
             {
                 ModelVisual3D mv = new ModelVisual3D();
-                mv.Content = opaques;
+                mv.Content = tmpOpaquesGroup;
                 Control.Opaques.Children.Add(mv);
                 Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
             }
-            if (transparents.Children.Any())
+            if (tmpTransparentsGroup.Children.Any())
             {
                 ModelVisual3D mv = new ModelVisual3D();
-                mv.Content = transparents;
+                mv.Content = tmpTransparentsGroup;
                 Control.Transparents.Children.Add(mv);
                 if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
                 else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());

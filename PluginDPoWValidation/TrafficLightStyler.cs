@@ -107,18 +107,18 @@ namespace Validation
         {
             if (LayerKey == "Red")
             {
-                XbimColour colour = new XbimColour("Red", 1.0, 0.0, 0.0, 0.8);
+                var colour = new XbimColour("Red", 1.0, 0.0, 0.0, 0.8);
                 return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = LayerKey };
             }
             else if (LayerKey == "Amber")
             {
                 //FFA500
-                XbimColour colour = new XbimColour("Amber", 1.0, 0.64, 0.0, 0.8);
+                var colour = new XbimColour("Amber", 1.0, 0.64, 0.0, 0.8);
                 return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = LayerKey };
             }
             else
             {
-                XbimColour colour = new XbimColour("Green", 0.0, 1.0, 0.0, 0.8);
+                var colour = new XbimColour("Green", 0.0, 1.0, 0.0, 0.8);
                 return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = LayerKey };
             }
         }

@@ -1332,6 +1332,11 @@ namespace Xbim.Presentation
             XbimPoint3D p = bb.Centroid();
             _modelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
 
+            // model scaling
+            double metre = model.ModelFactors.OneMetre;
+            this.wcsTransform = XbimMatrix3D.CreateTranslation(this._modelTranslation) * XbimMatrix3D.CreateScale(1 / metre);
+
+
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
 
             // prepare grouping and layering behaviours
@@ -1341,18 +1346,19 @@ namespace Xbim.Presentation
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
 
-
+            
 
             if (geometrySupportLevel == 1)
                 scene = BuildScene(model, EntityLabels, LayerStyler);
             else //assume we are the latest level (2)
             {
                 if (GeomSupport2LayerStyler == null)
-                    GeomSupport2LayerStyler = new SurfeceLayerStyler();
+                    GeomSupport2LayerStyler = new SurfaceLayerStyler();
                 GeomSupport2LayerStyler.Control = this;
                 GeomSupport2LayerStyler.SetFederationEnvironment(null);
                 scene = GeomSupport2LayerStyler.BuildScene(model, context, _exclude);
             }
+
             if(scene.Layers.Count() > 0)
                 scenes.Add(scene);
             foreach (var refModel in model.ReferencedModels)

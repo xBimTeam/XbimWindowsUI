@@ -19,6 +19,7 @@ using Validation.mvdXML;
 using Xbim.COBieLite;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.IO.GroupingAndStyling;
+using XbimXplorer.Plugins.DPoWValidation.ValidationObjects;
 using XbimXplorer.PluginSystem;
 using XbimXplorer;
 using Xbim.XbimExtensions.Interfaces;
@@ -35,6 +36,7 @@ using System.Xml.Serialization;
 using Validation.MV;
 using Validation.ValidationObjects;
 using Path = System.IO.Path;
+using XbimXplorer.Plugins.DPoWValidation;
 
 namespace Validation
 {
@@ -128,18 +130,17 @@ namespace Validation
         {
             if (lstClassifications.SelectedItem == null)
                 return;
-            string selectedType = lstClassifications.SelectedItem.ToString();
+            var selectedType = lstClassifications.SelectedItem.ToString();
 
             var vm = lstClassifications.SelectedItem as AssetTypeInfoTypeVM;
             
-            List<ReportResult> rep = new List<ReportResult>();
-            if (ModelFacilityType != null && vm != null)
+            var rep = new List<ReportResult>();
+            if (ModelFacility != null && vm != null)
             {
-                CobieAssetTypeRequirement creq = new CobieAssetTypeRequirement(vm.DataModel);
-                StringBuilder sb = new StringBuilder();
-                rep.AddRange(creq.Validate(ModelFacilityType, -1, sb));
+                var creq = new CobieAssetTypeRequirement(vm.DataModel);
+                var sb = new StringBuilder();
+                rep.AddRange(creq.Validate(ModelFacility, -1, sb));
                 report.Text = sb.ToString();
-
             }
             lstClassResults.ItemsSource = rep;
         }
@@ -207,7 +208,7 @@ namespace Validation
             DependencyProperty.Register("Model", typeof(IModel), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                                                                       new PropertyChangedCallback(OnSelectedEntityChanged)));
 
-        internal FacilityType ModelFacilityType = null;
+        internal FacilityType ModelFacility = null;
         internal FacilityType ReqFacility = null;
 
         
@@ -224,55 +225,47 @@ namespace Validation
                     {
                         try
                         {
-                            var cobieModelFileName = Path.ChangeExtension(model.DatabaseName, "CobieLite.xml");
-                            if (File.Exists(cobieModelFileName))
-                            {
-                                var x = new XmlSerializer(typeof (FacilityType));
-                                var reader = new XmlTextReader(cobieModelFileName);
-                                var theFacility = (FacilityType) x.Deserialize(reader);
-                                reader.Close();
-                                ctrl.ModelFacilityType = theFacility;
-                            }
-                            else
-                            {
-                                var helper = new CoBieLiteHelper(model, "UniClass");
-                                var facilities = helper.GetFacilities();
-                                ctrl.ModelFacilityType = facilities.FirstOrDefault();
-                            }
-
+                            var helper = new CoBieLiteHelper(model, "UniClass");
+                            var facilities = helper.GetFacilities();
+                            ctrl.ModelFacility = facilities.FirstOrDefault();
                         }
                         catch (Exception ex)
                         {
-                            ctrl.ModelFacilityType = null;
+                            ctrl.ModelFacility = null;
                         }
                     }
                     else
-                        ctrl.ModelFacilityType = null;
+                        ctrl.ModelFacility = null;
                 }
                 else if (e.Property.Name == "SelectedEntity")
                 {
                     var selectedEnt = e.NewValue as Xbim.Ifc2x3.Kernel.IfcProduct;
-                    if (selectedEnt != null)
+                    if (selectedEnt == null) 
+                        return;
+
+                    
+
+                    var type = selectedEnt.GetDefiningType();
+                    if (type == null || ctrl.ReqFacility == null) 
+                        return;
+
+                    var result = selectedEnt.Validates(ctrl.ReqFacility);
+
+
+                    var spec =
+                        ctrl.ModelFacility.AssetTypes.AssetType.FirstOrDefault(
+                            x => x.externalID == type.EntityLabel.ToString());
+
+                    var req =
+                        ctrl.ReqFacility.AssetTypes.AssetType.FirstOrDefault(x => spec != null && x.AssetTypeCategory == spec.AssetTypeCategory);
+
+                    if (req != null)
                     {
-                        var type = selectedEnt.GetDefiningType();
-                        if (type != null && ctrl.ReqFacility != null)
-                        {
-                            var spec =
-                                ctrl.ModelFacilityType.AssetTypes.AssetType.FirstOrDefault(
-                                    x => x.externalID == type.EntityLabel.ToString());
-
-                            var req =
-                                ctrl.ReqFacility.AssetTypes.AssetType.FirstOrDefault(x => spec != null && x.AssetTypeCategory == spec.AssetTypeCategory);
-
-                            if (req != null)
-                            {
-                                CobieAssetTypeRequirement creq = new CobieAssetTypeRequirement(req);
-                                StringBuilder b = new StringBuilder();
-                                int cnt = creq.Validate(ctrl.ModelFacilityType, selectedEnt.EntityLabel, b).Count();
-                                string rep = b.ToString();
-                                ctrl.report.Text = rep;
-                            }
-                        }
+                        var creq = new CobieAssetTypeRequirement(req);
+                        StringBuilder b = new StringBuilder();
+                        creq.Validate(ctrl.ModelFacility, selectedEnt.EntityLabel, b);
+                        var rep = b.ToString();
+                        ctrl.report.Text = rep;
                     }
                 }
             }
@@ -313,6 +306,9 @@ namespace Validation
             var ls = new TrafficLightStyler((XbimModel)this.Model, this);
             ls.UseAmber = UseAmber;
             xpWindow.DrawingControl.LayerStyler = ls;
+
+            var newLayerStyler = new ValidationResultStyler();
+            xpWindow.DrawingControl.GeomSupport2LayerStyler = newLayerStyler;
 
             xpWindow.DrawingControl.ReloadModel(Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
         }
@@ -398,29 +394,27 @@ namespace Validation
                 #endregion
             }
 
-            if (false)
+            var atClassifications = new HashSet<string>();
+
+            for (var i = 0; i < ModelFacility.AssetTypes.AssetType.Count; i++)
             {
-                HashSet<string> atClassifications = new HashSet<string>();
+                string thisCat = ModelFacility.AssetTypes.AssetType[i].AssetTypeCategory;
 
-                for (int i = 0; i < ModelFacilityType.AssetTypes.AssetType.Length; i++)
+                if (atClassifications.Contains(thisCat))
                 {
-                    string thisCat = ModelFacilityType.AssetTypes.AssetType[i].AssetTypeCategory;
+                    ModelFacility.AssetTypes.AssetType[i] = null;
+                }
+                else
+                {
+                    atClassifications.Add(thisCat);
 
-                    if (atClassifications.Contains(thisCat))
+                    for (int j = 1; j < ModelFacility.AssetTypes.AssetType[i].Assets.Asset.Count; j++)
                     {
-                        ModelFacilityType.AssetTypes.AssetType[i] = null;
-                    }
-                    else
-                    {
-                        atClassifications.Add(thisCat);
-
-                        for (int j = 1; j < ModelFacilityType.AssetTypes.AssetType[i].Assets.Asset.Length; j++)
-                        {
-                            ModelFacilityType.AssetTypes.AssetType[i].Assets.Asset[j] = null;
-                        }
+                        ModelFacility.AssetTypes.AssetType[i].Assets.Asset[j] = null;
                     }
                 }
             }
+            
         }
 
         private void AddComment(object sender, RoutedEventArgs e)

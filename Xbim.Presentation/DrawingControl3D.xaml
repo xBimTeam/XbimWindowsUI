@@ -36,7 +36,7 @@
             <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                 <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
-                    <ModelVisual3D x:Name="Opaques">
+            <ModelVisual3D x:Name="Opaques" x:FieldModifier="public" >
                     </ModelVisual3D>
         </helixToolkit:CuttingPlaneGroup>
         

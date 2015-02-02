@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Xbim.WindowsUI</id>
-        <version>3.0.3-Prerelease</version>
+        <version>3.0.4-Prerelease</version>
         <title>xBIM WindowsUI</title>
         <authors>xBIM team</authors>
         <owners>Steve Lockley</owners>
@@ -20,9 +20,9 @@ IOS and Android versions are under development.</description>
         <language>en-GB</language>
         <tags>BIM, IFC, IfcXml, IfcZip, COBie, COBieLite, BIMQL, BIM Query Langauge, .Net, C#, BuildingSmart</tags>
         <dependencies>
-            <dependency id="Xbim.Scripting" version="3.0.4-Prerelease" />
-            <dependency id="HelixToolkit" version="2015.1.453" />
-          <dependency id="PropertyTools.Wpf" version="2015.1.34" />
+			<dependency id="Xbim.Scripting" version="3.0.4-Prerelease" />
+			<dependency id="HelixToolkit" version="2015.1.453" />
+			<dependency id="PropertyTools.Wpf" version="2013.1.12.1" />
         </dependencies>
       </metadata>
       <files>

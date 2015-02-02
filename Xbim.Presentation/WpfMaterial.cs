@@ -34,20 +34,25 @@ namespace Xbim.Presentation
                 {
                     if (!colour.IsTransparent) transparent = false; //only transparent if everything is transparent
                     _Description += " " + colour.ToString();
-                    ((MaterialGroup)Material).Children.Add(CreateMaterial(colour));
+                    ((MaterialGroup)Material).Children.Add(MaterialFromColour(colour));
                 }
                 IsTransparent = transparent;
             }
             else if(texture.ColourMap.Count == 1)
             {
                 XbimColour colour = texture.ColourMap[0];
-                Material = CreateMaterial(colour);
+                Material = MaterialFromColour(colour);
                 _Description = "Texture " + colour.ToString();
                 IsTransparent = colour.IsTransparent;
             }
         }
 
-        private Material CreateMaterial(XbimColour colour)
+        public void CreateMaterial(XbimColour colour)
+        {
+            Material = MaterialFromColour(colour);
+        }
+
+        private Material MaterialFromColour(XbimColour colour)
         {
             _Description = "Colour " + colour.ToString();
             Color col = Color.FromScRgb(colour.Alpha, colour.Red, colour.Green, colour.Blue);

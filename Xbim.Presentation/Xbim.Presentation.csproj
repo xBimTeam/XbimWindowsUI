@@ -41,7 +41,7 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <SccAuxPath>SAK</SccAuxPath>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <NuGetPackageImportStamp>660fa16a</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>9542ec05</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -134,41 +134,41 @@
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="Xbim.COBie, Version=3.0.5503.36071, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.COBie, Version=3.0.5510.18527, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Exchange.3.0.5-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.10-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.COBieLite, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Exchange.3.0.5-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.10-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.Common, Version=3.0.5492.31081, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.Common, Version=3.0.5505.16507, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.3\lib\net45\Xbim.Common.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.3.0.4-prerelease\lib\net45\Xbim.Common.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Geometry.3.0.4-Prerelease\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.3.0.5-Prerelease\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.Ifc.Extensions, Version=3.0.5492.31083, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.Ifc.Extensions, Version=3.0.5505.16510, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.3\lib\net45\Xbim.Ifc.Extensions.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.3.0.4-prerelease\lib\net45\Xbim.Ifc.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.Ifc2x3, Version=3.0.5492.31082, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.Ifc2x3, Version=3.0.5505.16508, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.3\lib\net45\Xbim.Ifc2x3.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.3.0.4-prerelease\lib\net45\Xbim.Ifc2x3.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.IO, Version=3.0.5492.31083, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.IO, Version=3.0.5505.16510, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.3\lib\net45\Xbim.IO.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.3.0.4-prerelease\lib\net45\Xbim.IO.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5500.20432, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5505.18908, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Geometry.3.0.4-Prerelease\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.3.0.5-Prerelease\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.Script">
-      <HintPath>..\packages\Xbim.Scripting.3.0.4-Prerelease\lib\net45\Xbim.Script.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.Script, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Scripting.3.0.5-Prerelease\lib\net45\Xbim.Script.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -187,8 +187,9 @@
     <Compile Include="FederatedModel\FederatedModelsGrid.xaml.cs">
       <DependentUpon>FederatedModelsGrid.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LayerStylingV2\AlternateColourStyler.cs" />
     <Compile Include="LayerStylingV2\ILayerStylerV2.cs" />
-    <Compile Include="LayerStylingV2\SurfeceLayerStyler.cs" />
+    <Compile Include="LayerStylingV2\SurfaceLayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylerPerEntity.cs" />
     <Compile Include="LayerStyling\ILayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylerEvenOdd.cs" />
@@ -298,12 +299,12 @@
     <None Include="XbimIfcKey.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Xbim.Geometry.3.0.4-Prerelease\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.4-Prerelease\build\net45\Xbim.Geometry.targets')" />
+  <Import Project="..\packages\Xbim.Geometry.3.0.5-Prerelease\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.5-Prerelease\build\net45\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xbim.Geometry.3.0.4-Prerelease\build\net45\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.3.0.4-Prerelease\build\net45\Xbim.Geometry.targets'))" />
+    <Error Condition="!Exists('..\packages\Xbim.Geometry.3.0.5-Prerelease\build\net45\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.3.0.5-Prerelease\build\net45\Xbim.Geometry.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
