@@ -31,7 +31,12 @@ namespace XbimXplorer.Dialogs
         public ExportWindow(XplorerMainWindow callingWindow) : this()
         {
             mainWindow = callingWindow;
-            TxtFolderName.Text = new FileInfo(mainWindow.GetOpenedModelFileName()).DirectoryName;
+
+            TxtFolderName.Text =
+                Path.Combine(
+                    new FileInfo(mainWindow.GetOpenedModelFileName()).DirectoryName,
+                    "Export"
+                    );
 
         }
 
@@ -39,21 +44,39 @@ namespace XbimXplorer.Dialogs
 
         private void DoExport(object sender, RoutedEventArgs e)
         {
-            // file preparation
-            //
-            string wexbimFileName = Path.Combine(TxtFolderName.Text, new FileInfo(mainWindow.GetOpenedModelFileName()).Name + ".wexbim");
-            
-            var m3D = new Xbim3DModelContext(mainWindow.Model);
-            try
+            if (!Directory.Exists(TxtFolderName.Text))
             {
-                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
-                var bw = new BinaryWriter(new FileStream(wexbimFileName, FileMode.Create));
-                m3D.Write(bw);
-                bw.Close();
+                try
+                {
+                    Directory.CreateDirectory(TxtFolderName.Text);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Error creating directory. Select a different location.");
+                }
+                
             }
-            catch (Exception ce)
+            if (chkWexbim.IsChecked.HasValue && chkWexbim.IsChecked.Value)
             {
-                Console.WriteLine("Error compiling geometry\n" + ce.Message);
+                // file preparation
+                //
+                var basefile = new FileInfo(mainWindow.GetOpenedModelFileName());
+                var wexbimFileName = Path.Combine(TxtFolderName.Text, basefile.Name);
+                wexbimFileName = Path.ChangeExtension(wexbimFileName, "wexbim");
+
+
+                var m3D = new Xbim3DModelContext(mainWindow.Model);
+                try
+                {
+                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
+                    var bw = new BinaryWriter(new FileStream(wexbimFileName, FileMode.Create));
+                    m3D.Write(bw);
+                    bw.Close();
+                }
+                catch (Exception ce)
+                {
+                    Console.WriteLine("Error compiling web geometry.\n" + ce.Message);
+                }
             }
         }
     }
