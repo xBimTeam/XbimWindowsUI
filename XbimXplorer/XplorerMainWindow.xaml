@@ -67,6 +67,7 @@
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.COBieClassFilter}" Executed="COBieClassFilterCmdExecuted" CanExecute="ExportCOBieCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" Executed="OpenExportWindow" CanExecute="CommandBinding_CanExecute"/>
 
     </Window.CommandBindings>
     <Grid Name="MainFrame" DataContext="{StaticResource ModelProvider}">
@@ -84,6 +85,8 @@
                 <Separator />
                 <MenuItem Header="Recent files" x:Name="mnuRecent" Click="RecentFileClick" />
                 <Separator />
+                <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
+                    
                 <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
                 <MenuItem Header="S_eparate" Click="SeparateMenuItem_Click" />
             </MenuItem>

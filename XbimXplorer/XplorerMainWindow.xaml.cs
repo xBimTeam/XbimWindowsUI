@@ -69,6 +69,7 @@ namespace XbimXplorer
         public static RoutedCommand CreateFederationCmd = new RoutedCommand();
         public static RoutedCommand EditFederationCmd = new RoutedCommand();
         public static RoutedCommand OpenFederationCmd = new RoutedCommand();
+        public static RoutedCommand OpenExportWindowCmd = new RoutedCommand();
         public static RoutedCommand ExportCOBieCmd = new RoutedCommand();
         public static RoutedCommand COBieClassFilter = new RoutedCommand();
         private string _openedModelFileName;
@@ -76,6 +77,12 @@ namespace XbimXplorer
         // private string _defaultFileName;
         const string _UKTemplate = "COBie-UK-2012-template.xls";
         const string _USTemplate = "COBie-US-2_4-template.xls";
+
+        public string GetOpenedModelFileName()
+        {
+            return _openedModelFileName;
+        }
+        
 
         private FilterValues UserFilters { get; set; }
         public string COBieTemplate { get; set; }
@@ -551,7 +558,7 @@ namespace XbimXplorer
                 e.CanExecute = false;
             else
             {
-                if (e.Command == ApplicationCommands.Close || e.Command == ApplicationCommands.SaveAs)
+                if (e.Command == ApplicationCommands.Close || e.Command == ApplicationCommands.SaveAs || e.Command == OpenExportWindowCmd)
                 {
                     XbimModel model = ModelProvider.ObjectInstance as XbimModel;
                     e.CanExecute = (model != null);
@@ -771,6 +778,12 @@ namespace XbimXplorer
             serialiser.Excludes = UserFilters;
             builder.Export(serialiser);
             Process.Start(outputFile);
+        }
+
+        private void OpenExportWindow(object sender, ExecutedRoutedEventArgs executedRoutedEventArgs)
+        {
+            var wndw = new XbimXplorer.Dialogs.ExportWindow(this);
+            wndw.ShowDialog();
         }
 
         // CanExecuteRoutedEventHandler for the custom color command.

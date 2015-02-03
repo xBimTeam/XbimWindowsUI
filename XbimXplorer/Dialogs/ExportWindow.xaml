@@ -1,0 +1,40 @@
+﻿<Window x:Class="XbimXplorer.Dialogs.ExportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Export" Height="315.2" Width="421.6">
+    <Grid>
+        <TabControl Margin="5,10,4.6,42.4">
+            <TabItem Header="General">
+                <Grid Background="#FFE5E5E5" Margin="0,0,-0.4,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="51*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="100*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Grid.Row="0" Content="Folder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" />
+                    <TextBox x:Name="TxtFolderName" Grid.Row="0" Grid.Column="1" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Margin="5"  />
+                    
+                    <Button Grid.Column="1" HorizontalAlignment="Right" Grid.Row="1" Content="Select folder" Height="23" Margin="5"  />
+
+                    <Label Grid.Column="0" Grid.Row="2" Content="Active exports" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" />
+                    <StackPanel Grid.Column="1" Grid.Row="2" Margin="5">
+                        <CheckBox Content="Wexbim" IsChecked="True" />
+                        <CheckBox Content="Other" />
+                    </StackPanel>
+                    
+                </Grid>
+            </TabItem>
+            <TabItem Header="wexbim">
+                <Grid Background="#FFE5E5E5" Margin="0,0,-0.4,0" />
+            </TabItem>
+
+        </TabControl>
+        <Button Content="Export" Margin="0,0,9.6,10.4" HorizontalAlignment="Right" Width="123" Height="27" VerticalAlignment="Bottom" Click="DoExport" />
+
+    </Grid>
+</Window>
