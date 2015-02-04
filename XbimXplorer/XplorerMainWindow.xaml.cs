@@ -558,10 +558,15 @@ namespace XbimXplorer
                 e.CanExecute = false;
             else
             {
-                if (e.Command == ApplicationCommands.Close || e.Command == ApplicationCommands.SaveAs || e.Command == OpenExportWindowCmd)
+                if (e.Command == ApplicationCommands.Close || e.Command == ApplicationCommands.SaveAs)
                 {
-                    XbimModel model = ModelProvider.ObjectInstance as XbimModel;
+                    var model = ModelProvider.ObjectInstance as XbimModel;
                     e.CanExecute = (model != null);
+                }
+                else if (e.Command == OpenExportWindowCmd)
+                {
+                    var model = ModelProvider.ObjectInstance as XbimModel;
+                    e.CanExecute = (model != null) && (!string.IsNullOrEmpty(GetOpenedModelFileName()));
                 }
                 else
                     e.CanExecute = true; //for everything else

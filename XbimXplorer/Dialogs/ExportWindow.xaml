@@ -16,15 +16,16 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="100*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" Grid.Row="0" Content="Folder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" />
+                    <Label Grid.Column="0" Grid.Row="0" Content="Export folder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" />
                     <TextBox x:Name="TxtFolderName" Grid.Row="0" Grid.Column="1" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Margin="5"  />
                     
                     <Button Grid.Column="1" HorizontalAlignment="Right" Grid.Row="1" Content="Select folder" Height="23" Margin="5"  />
 
                     <Label Grid.Column="0" Grid.Row="2" Content="Active exports" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" />
                     <StackPanel Grid.Column="1" Grid.Row="2" Margin="5">
-                        <CheckBox x:Name="chkWexbim"  Content="Xbim web geometry format (Wexbim)" IsChecked="True" />
-                        <CheckBox Content="Other" />
+                        <CheckBox x:Name="ChkWexbim" Content="Xbim web geometry format (Wexbim)" IsChecked="True" />
+                        <CheckBox x:Name="ChkCobileLiteXml" Content="COBIeLite (XML)" IsChecked="True" />
+                        <CheckBox x:Name="ChkCobileLiteJson" Content="COBIeLite (json)" IsChecked="True" />
                     </StackPanel>
                     
                 </Grid>

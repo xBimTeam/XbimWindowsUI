@@ -11,7 +11,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-
+using Xbim.COBieLite;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using XbimGeometry.Interfaces;
@@ -44,6 +44,15 @@ namespace XbimXplorer.Dialogs
 
         private void DoExport(object sender, RoutedEventArgs e)
         {
+            int totExports =
+                (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value ? 1 : 0) +
+                (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value ? 1 : 0) +
+                (ChkCobileLiteJson.IsChecked.HasValue && ChkCobileLiteJson.IsChecked.Value ? 1 : 0);
+            if (totExports == 0)
+                return;
+
+            this.Cursor = Cursors.Wait;
+
             if (!Directory.Exists(TxtFolderName.Text))
             {
                 try
@@ -54,17 +63,13 @@ namespace XbimXplorer.Dialogs
                 {
                     MessageBox.Show("Error creating directory. Select a different location.");
                 }
-                
             }
-            if (chkWexbim.IsChecked.HasValue && chkWexbim.IsChecked.Value)
+
+            if (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value)
             {
                 // file preparation
                 //
-                var basefile = new FileInfo(mainWindow.GetOpenedModelFileName());
-                var wexbimFileName = Path.Combine(TxtFolderName.Text, basefile.Name);
-                wexbimFileName = Path.ChangeExtension(wexbimFileName, "wexbim");
-
-
+                var wexbimFileName = GetExportName("wexbim");
                 var m3D = new Xbim3DModelContext(mainWindow.Model);
                 try
                 {
@@ -75,8 +80,104 @@ namespace XbimXplorer.Dialogs
                 }
                 catch (Exception ce)
                 {
-                    Console.WriteLine("Error compiling web geometry.\n" + ce.Message);
+                    if (CancelAfterNotification("Error exporting Wexbim file.", ce, totExports))
+                    {
+                        this.Cursor = Cursors.Arrow;
+                        return;
+                    }
                 }
+                totExports--;
+            }
+            if (
+                (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value) ||
+                (ChkCobileLiteJson.IsChecked.HasValue && ChkCobileLiteJson.IsChecked.Value)
+                )
+            {
+
+                var helper = new CoBieLiteHelper(mainWindow.Model, "UniClass");
+                var facilities = helper.GetFacilities();
+
+                if (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value)
+                {
+                    try
+                    {
+                        var i = 0;
+                        foreach (var facilityType in facilities)
+                        {
+                            var xportname = GetExportName(".CobieLite.XML", i);
+                            using (TextWriter writer = File.CreateText(xportname))
+                            {
+                                CoBieLiteHelper.WriteXml(writer, facilityType);
+                            }
+                        }
+                    }
+                    catch (Exception ce)
+                    {
+                        if (CancelAfterNotification("Error exporting CobieLite.XML file.", ce, totExports))
+                        {
+                            this.Cursor = Cursors.Arrow;
+                            return;
+                        }
+                    }
+                    totExports--;
+                }
+                if (ChkCobileLiteJson.IsChecked.HasValue && ChkCobileLiteJson.IsChecked.Value)
+                {
+                    try
+                    {
+                        var i = 0;
+                        foreach (var facilityType in facilities)
+                        {
+                            var xportname = GetExportName(".CobieLite.json", i);
+                            using (TextWriter writer = File.CreateText(xportname))
+                            {
+                                CoBieLiteHelper.WriteJson(writer, facilityType);
+                            }
+                        }
+                    }
+                    catch (Exception ce)
+                    {
+                        if (CancelAfterNotification("Error exporting CobieLite.json file.", ce, totExports))
+                        {
+                            this.Cursor = Cursors.Arrow;
+                            return;
+                        }
+                    }
+                    totExports--;
+                }
+            }
+            this.Cursor = Cursors.Arrow;
+            this.Close();
+        }
+
+        private string GetExportName(string extension, int progressive = 0)
+        {
+            var basefile = new FileInfo(mainWindow.GetOpenedModelFileName());
+            var wexbimFileName = Path.Combine(TxtFolderName.Text, basefile.Name);
+            if (progressive != 0)
+                extension = progressive + "." + extension;
+            wexbimFileName = Path.ChangeExtension(wexbimFileName, extension);
+            return wexbimFileName;
+        }
+
+        private bool CancelAfterNotification(string errorZoneMessage, Exception ce, int totExports)
+        {
+            var tasksLeft = totExports - 1;
+            var message = errorZoneMessage + "\r\n" + ce.Message + "\r\n";
+
+            if (tasksLeft > 0)
+            {
+                message += "\r\n" +
+                           string.Format(
+                               "Do you wish to continue exporting other formats?", tasksLeft
+                               );
+                var ret = MessageBox.Show(message, "Error", MessageBoxButton.YesNoCancel);
+                return ret != MessageBoxResult.Yes;
+            }
+            else
+            {
+                var ret = MessageBox.Show(message, "Error", MessageBoxButton.OK);
+                return ret != MessageBoxResult.Yes;
             }
         }
     }
