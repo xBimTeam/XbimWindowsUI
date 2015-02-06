@@ -46,7 +46,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
                             !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                         !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/))
             {
-                var shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                 
                 WpfMeshGeometry3D targetMergeMesh;
                 switch (i++%3)
@@ -66,9 +66,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
                     shapeInstance.IfcTypeId,
                     shapeInstance.IfcProductLabel,
                     shapeInstance.InstanceLabel,
-                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform), 
-                    0
-                    );
+                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform));
                 
             }
 

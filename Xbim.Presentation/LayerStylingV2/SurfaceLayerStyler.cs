@@ -84,7 +84,7 @@ namespace Xbim.Presentation.LayerStylingV2
                 }
                 else //we need to get the shape geometry
                 {
-                    var shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                     if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
@@ -109,8 +109,8 @@ namespace Xbim.Presentation.LayerStylingV2
                             shapeInstance.IfcTypeId,
                             shapeInstance.IfcProductLabel,
                             shapeInstance.InstanceLabel,
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform), 
-                            0 );
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform),
+                            0);
                     }
                 }
             }
@@ -118,14 +118,14 @@ namespace Xbim.Presentation.LayerStylingV2
             //}
             if (tmpOpaquesGroup.Children.Any())
             {
-                ModelVisual3D mv = new ModelVisual3D();
+                var mv = new ModelVisual3D();
                 mv.Content = tmpOpaquesGroup;
                 Control.Opaques.Children.Add(mv);
                 Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
             }
             if (tmpTransparentsGroup.Children.Any())
             {
-                ModelVisual3D mv = new ModelVisual3D();
+                var mv = new ModelVisual3D();
                 mv.Content = tmpTransparentsGroup;
                 Control.Transparents.Children.Add(mv);
                 if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();

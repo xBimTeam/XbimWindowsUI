@@ -48,6 +48,7 @@ using Xbim.COBie.Serialisers;
 using Xbim.COBie;
 using Xbim.COBie.Contracts;
 using Xbim.ModelGeometry.Converter;
+using XbimGeometry.Interfaces;
 using XbimXplorer.Dialogs;
 using System.Windows.Media.Imaging;
 using Xbim.Presentation.FederatedModel;
@@ -191,7 +192,7 @@ namespace XbimXplorer
 
                 model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true, false);
                 Xbim3DModelContext context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
-                context.CreateContext(progDelegate: worker.ReportProgress);
+                context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress);
             
                 if (worker.CancellationPending == true) //if a cancellation has been requested then don't open the resulting file
                 {
@@ -894,7 +895,7 @@ namespace XbimXplorer
             {
                 ModelProvider.ObjectInstance = null;
                 var m3D = new Xbim3DModelContext(arg.NewModel);
-                m3D.CreateContext();
+                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
                 ModelProvider.ObjectInstance = arg.NewModel;
                 ModelProvider.Refresh();
             };

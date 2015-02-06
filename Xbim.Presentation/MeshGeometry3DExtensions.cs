@@ -3,16 +3,136 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
+using Xbim.Common.XbimExtensions;
 
 namespace Xbim.Presentation
 {
     public static class MeshGeometry3DExtensions
     {
+        /// <summary>
+        /// Reads a triangulated model from an array of bytes and adds the mesh to the current state
+        ///  </summary>
+        /// <param name="m3D"></param>
+        /// <param name="mesh">byte array of XbimGeometryType.PolyhedronBinary  Data</param>
+        /// <param name="transform">Transforms the mesh to the new position if not null</param>
+        public static void Read(this MeshGeometry3D m3D, byte[] mesh, XbimMatrix3D? transform = null)
+        {
+            int indexBase = m3D.Positions.Count;
+            var qrd = new RotateTransform3D();
+            Matrix3D? matrix3D = null;
+            if (transform.HasValue)
+            {
+                var xq = transform.Value.GetRotationQuaternion();
+                qrd.Rotation = new QuaternionRotation3D(new Quaternion(xq.X, xq.Y, xq.Z, xq.W));
+                matrix3D = transform.Value.ToMatrix3D();
+            }
+            using (var ms = new MemoryStream(mesh))
+            {
+                using (var br = new BinaryReader(ms))
+                {
+// ReSharper disable once UnusedVariable
+                    var version = br.ReadByte(); //stream format version
+                    var numVertices = br.ReadInt32();
+                    var numTriangles = br.ReadInt32();
+                   
+                    var uniqueVertices = new List<Point3D>(numVertices);
+                    var vertices = new List<Point3D>(numVertices * 4); //approx the size
+                    var triangleIndices = new List<Int32>(numTriangles*3);
+                    var normals = new List<Vector3D>(numVertices * 4);
+                    for (var i = 0; i < numVertices; i++)
+                    {
+                        double x = br.ReadSingle();
+                        double y = br.ReadSingle();
+                        double z = br.ReadSingle();
+                        var p = new Point3D(x, y, z);
+                        if (matrix3D.HasValue)
+                            p = matrix3D.Value.Transform(p);
+                        uniqueVertices.Add(p);
+                    }
+                    var numFaces = br.ReadInt32();
+                   
+                    for (var i = 0; i < numFaces; i++)
+                    {
+                        var numTrianglesInFace = br.ReadInt32();
+                        if (numTrianglesInFace == 0) continue;
+                        var isPlanar = numTrianglesInFace > 0;
+                        numTrianglesInFace = Math.Abs(numTrianglesInFace);
+                        if (isPlanar)
+                        {
+                            var normal = br.ReadPackedNormal().Normal;
+                            var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                            if (matrix3D.HasValue) //transform the normal if we have to
+                                wpfNormal = qrd.Transform(wpfNormal);
+                            var uniqueIndices = new Dictionary<int, int>();
+                            for (var j = 0; j < numTrianglesInFace; j++)
+                            {
+                                for (int k = 0; k < 3; k++)
+                                {
+                                    int idx = ReadIndex(br, numVertices);
+                                    int writtenIdx;
+                                    if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
+                                    {
+                                        writtenIdx = vertices.Count;
+                                        vertices.Add(uniqueVertices[idx]);
+                                        uniqueIndices.Add(idx, writtenIdx);
+                                        //add a matching normal
+                                        normals.Add(wpfNormal);
+                                    }
+                                    triangleIndices.Add(indexBase + writtenIdx);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var uniqueIndices = new Dictionary<int, int>();
+                            for (var j = 0; j < numTrianglesInFace; j++)
+                            {
+                                for (int k = 0; k < 3; k++)
+                                {
+                                    int idx = ReadIndex(br, numVertices);
+                                    var normal = br.ReadPackedNormal().Normal;
+                                    int writtenIdx;
+                                    if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
+                                    {
+                                        writtenIdx = vertices.Count;
+                                        vertices.Add(uniqueVertices[idx]);
+                                        uniqueIndices.Add(idx, writtenIdx);
+                                        var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                                        if (matrix3D.HasValue) //transform the normal if we have to
+                                            wpfNormal = qrd.Transform(wpfNormal);
+                                        normals.Add(wpfNormal); 
+                                    }
+                                    triangleIndices.Add(indexBase + writtenIdx);
+                                }
+                            }
+                        }
+                    }
 
+                    m3D.Positions = new Point3DCollection(m3D.Positions.Concat(vertices));
+                    m3D.TriangleIndices = new Int32Collection(m3D.TriangleIndices.Concat(triangleIndices));
+                    m3D.Normals = new Vector3DCollection(m3D.Normals.Concat(normals));
+                }
+              // if(m3D.CanFreeze) m3D.Freeze(); //freeze the mesh to improve performance
+            }
+        }
+
+        /// <summary>
+        /// Reads a packed Xbim Triangle index from a stream
+        /// </summary>
+        /// <param name="br"></param>
+        /// <param name="maxVertexCount">The size of the maximum number of vertices in the stream, i.e. the biggest index value</param>
+        /// <returns></returns>
+        private static int ReadIndex(BinaryReader br, int maxVertexCount)
+        {
+            if (maxVertexCount <= 0xFF)
+                return br.ReadByte();
+            if (maxVertexCount <= 0xFFFF)
+                return br.ReadUInt16();
+            return (int)br.ReadUInt32(); //this should never go over int32
+        }
         public static void Read(this MeshGeometry3D m3D, string shapeData, XbimMatrix3D? transform = null)
         {
             
@@ -41,7 +161,7 @@ namespace Xbim.Presentation
                 while ((line = sr.ReadLine()) != null)
                 {
 
-                    string[] tokens = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] tokens = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (tokens.Length > 0) //we need a command
                     {
                         string command = tokens[0].Trim().ToUpper();
@@ -76,15 +196,15 @@ namespace Xbim.Presentation
                             case "T": //process triangulated meshes
                                 Vector3D currentNormal = new Vector3D(0,0,0);
                                 //each time we start a new mesh face we have to duplicate the vertices to ensure that we get correct shading of planar and non planar faces
-                                Dictionary<int, int> writtenVertices = new Dictionary<int, int>();
+                                var writtenVertices = new Dictionary<int, int>();
 
                                 for (int i = 1; i < tokens.Length; i++)
                                 {
-                                    string[] indices = tokens[i].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                    string[] indices = tokens[i].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                                     if (indices.Length != 3) throw new Exception("Invalid triangle definition");
                                     for (int t = 0; t < 3; t++)
                                     {
-                                        string[] indexNormalPair = indices[t].Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                                        string[] indexNormalPair = indices[t].Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
                                         if (indexNormalPair.Length > 1) //we have a normal defined
                                         {
@@ -123,7 +243,7 @@ namespace Xbim.Presentation
                                         //now add the index
                                         int index = int.Parse(indexNormalPair[0]);
 
-                                        int alreadyWrittenAt = index; //in case it is the first mesh
+                                        int alreadyWrittenAt; //in case it is the first mesh
                                         if (!writtenVertices.TryGetValue(index, out alreadyWrittenAt)) //if we haven't  written it in this mesh pass, add it again unless it is the first one which we know has been written
                                         {
                                             //all vertices will be unique and have only one normal

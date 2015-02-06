@@ -804,8 +804,8 @@ namespace Xbim.Presentation
         /// <param name="newVal"></param>
         private void HighlighSelected(IPersistIfcEntity newVal)
         {
-          
-            XbimMeshGeometry3D m = new XbimMeshGeometry3D();
+
+            var m = new MeshGeometry3D();
 
             // 1. get the geometry first
             if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
@@ -819,7 +819,7 @@ namespace Xbim.Presentation
                         double metre = fromModel.ModelFactors.OneMetre;
                         wcsTransform = XbimMatrix3D.CreateTranslation(_modelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
            
-                        Xbim3DModelContext context = new Xbim3DModelContext(fromModel);
+                        var context = new Xbim3DModelContext(fromModel);
                         
                         List<XbimShapeInstance> productShape = context.ShapeInstancesOf((IfcProduct)newVal).Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
                         if (productShape.Any())
@@ -827,8 +827,8 @@ namespace Xbim.Presentation
 
                             foreach (var shapeInstance in productShape)
                             {
-                                XbimShapeGeometry shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                                m.Add(shapeGeom.ShapeData, shapeInstance.IfcTypeId, shapeInstance.IfcProductLabel, shapeInstance.InstanceLabel, XbimMatrix3D.Multiply(shapeInstance.Transformation,wcsTransform), modelId);
+                                IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                m.Read(shapeGeom.ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation,wcsTransform));
                         }
                     }
                 }
@@ -841,7 +841,7 @@ namespace Xbim.Presentation
 
                 if (fromModel != null && newVal is IfcProduct)
                 {
-                    Xbim3DModelContext context = new Xbim3DModelContext(fromModel);
+                    var context = new Xbim3DModelContext(fromModel);
                     short modelId = fromModel.UserDefinedId;
                     double metre = fromModel.ModelFactors.OneMetre;
                     wcsTransform = XbimMatrix3D.CreateTranslation(_modelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
@@ -853,8 +853,7 @@ namespace Xbim.Presentation
                         foreach (var shapeInstance in productShape)
                     {
                             XbimShapeGeometry shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                            m.Add(shapeGeom.ShapeData, shapeInstance.IfcTypeId, shapeInstance.IfcProductLabel, shapeInstance.InstanceLabel, XbimMatrix3D.Multiply(shapeInstance.Transformation,wcsTransform), modelId);
-
+                            m.Read(shapeGeom.ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation,wcsTransform));
                         }
                     }
                 }
@@ -863,15 +862,9 @@ namespace Xbim.Presentation
             // 2. then determine how to highlight it
             //
             if (SelectionHighlightMode == SelectionHighlightModes.WholeMesh)
-            {
-                List<Point3D> ps = new List<Point3D>(m.PositionCount);
-                foreach (var item in m.Positions)
-                {
-                    ps.Add(new Point3D(item.X, item.Y, item.Z));
-                }
+            {              
                 // Highlighted is defined in the XAML of drawingcontrol3d
-                Highlighted.Mesh = new Mesh3D(ps, m.TriangleIndices);
-                
+                Highlighted.Mesh = new Mesh3D(m.Positions, m.TriangleIndices);           
             }
             else if (SelectionHighlightMode == SelectionHighlightModes.Normals)
             {
@@ -885,7 +878,7 @@ namespace Xbim.Presentation
 
                     if (m.Normals[p1] == m.Normals[p2] && m.Normals[p1] == m.Normals[p3]) // same normals
                     {
-                        var cnt = FindCentroid(new XbimPoint3D[] { m.Positions[p1], m.Positions[p2], m.Positions[p3] });
+                        var cnt = FindCentroid(new [] { m.Positions[p1], m.Positions[p2], m.Positions[p3] });
                         CreateNormal(cnt, m.Normals[p1], axesMeshBuilder);
                     }
                     else
@@ -916,7 +909,7 @@ namespace Xbim.Presentation
                     }
 
                     double bl = box.Length();
-                    double LineThickness = bl / 1000; // 0.01;
+                    double lineThickness = bl / 1000; // 0.01;
 
                     for (int i = 0; i < m.TriangleIndices.Count; i += 3)
                     {
@@ -925,13 +918,13 @@ namespace Xbim.Presentation
                         int p3 = m.TriangleIndices[i + 2];
                         
 
-                        List<Point3D> path = new List<Point3D>();
+                        var path = new List<Point3D>();
                         path.Add(new Point3D(m.Positions[p1].X, m.Positions[p1].Y, m.Positions[p1].Z));
                         path.Add(new Point3D(m.Positions[p2].X, m.Positions[p2].Y, m.Positions[p2].Z));
                         path.Add(new Point3D(m.Positions[p3].X, m.Positions[p3].Y, m.Positions[p3].Z));
 
                         
-                        axesMeshBuilder.AddTube(path, LineThickness, 9, true);
+                        axesMeshBuilder.AddTube(path, lineThickness, 9, true);
 
                     }
                     
@@ -1137,7 +1130,7 @@ namespace Xbim.Presentation
         public static readonly DependencyProperty ViewportProperty =
             DependencyProperty.Register("Viewport", typeof(HelixToolkit.Wpf.HelixViewport3D), typeof(DrawingControl3D), new PropertyMetadata(null));
 
-        public XbimPoint3D FindCentroid(XbimPoint3D[] p)
+        public Point3D FindCentroid(Point3D[] p)
         {
             double x = 0;
             double y = 0;
@@ -1156,26 +1149,23 @@ namespace Xbim.Presentation
                 y /= n;
                 z /= n;
             }
-            return new XbimPoint3D(x, y, z);
+            return new Point3D(x, y, z);
         }
 
-        private void CreateNormal(XbimPoint3D cnt, XbimVector3D xbimVector3D, MeshBuilder axesMeshBuilder)
+        private void CreateNormal(Point3D cnt, Vector3D vector3D, MeshBuilder axesMeshBuilder)
         {
-            List<Point3D> path = new List<Point3D>();
-            path.Add(
-                new Point3D(cnt.X, cnt.Y, cnt.Z)
-                );
-
-            double nrmRatio = .2;
+            var path = new List<Point3D>();
+            path.Add(cnt);
+            const double nrmRatio = .2;
             path.Add(
                 new Point3D(
-                cnt.X + xbimVector3D.X * nrmRatio,
-                cnt.Y + xbimVector3D.Y * nrmRatio,
-                cnt.Z + xbimVector3D.Z * nrmRatio
+                cnt.X + vector3D.X * nrmRatio,
+                cnt.Y + vector3D.Y * nrmRatio,
+                cnt.Z + vector3D.Z * nrmRatio
                 ));
 
-            double LineThickness = 0.01;
-            axesMeshBuilder.AddTube(path, LineThickness, 9, false);
+            const double lineThickness = 0.01;
+            axesMeshBuilder.AddTube(path, lineThickness, 9, false);
             return;
         }
 

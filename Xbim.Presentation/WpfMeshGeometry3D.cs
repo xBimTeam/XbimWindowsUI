@@ -16,20 +16,20 @@ namespace Xbim.Presentation
     public class WpfMeshGeometry3D : IXbimMeshGeometry3D
     {
         public GeometryModel3D WpfModel;
-        XbimMeshFragmentCollection meshes = new XbimMeshFragmentCollection();
+        XbimMeshFragmentCollection _meshes = new XbimMeshFragmentCollection();
         private TriangleType _meshType;
 
         uint _previousToLastIndex;
         uint _lastIndex;
         uint _pointTally;
         uint _fanStartIndex;
-        uint indexOffset;
+        uint _indexOffset;
      
 #region standard calls
 
         private void Init()
         {
-            indexOffset = (uint)Mesh.Positions.Count;
+            _indexOffset = (uint)Mesh.Positions.Count;
         }
 
         private void StandardBeginPolygon(TriangleType meshType)
@@ -79,7 +79,7 @@ namespace Xbim.Presentation
             Mesh.Positions = new WpfPoint3DCollection(mesh.Positions);
             Mesh.Normals = new WpfVector3DCollection(mesh.Normals);
             Mesh.TriangleIndices = new Int32Collection (mesh.TriangleIndices);
-            meshes = new XbimMeshFragmentCollection(mesh.Meshes);
+            _meshes = new XbimMeshFragmentCollection(mesh.Meshes);
         }
 
         public WpfMeshGeometry3D(WpfMaterial material, WpfMaterial backMaterial = null)
@@ -122,10 +122,10 @@ namespace Xbim.Presentation
 
         public XbimMeshFragmentCollection Meshes
         {
-            get { return meshes; }
+            get { return _meshes; }
             set
             {
-                meshes = new XbimMeshFragmentCollection(value);
+                _meshes = new XbimMeshFragmentCollection(value);
             }
         }
 
@@ -167,15 +167,15 @@ namespace Xbim.Presentation
 
         public void MoveTo(IXbimMeshGeometry3D toMesh)
         {
-            if (meshes.Any()) //if no meshes nothing to move
+            if (_meshes.Any()) //if no meshes nothing to move
             {
                 toMesh.BeginUpdate();
                 
-                toMesh.Positions = new List<XbimPoint3D>(this.Positions); 
-                toMesh.Normals = new List<XbimVector3D>(this.Normals); 
-                toMesh.TriangleIndices = new List<int>(this.TriangleIndices);
+                toMesh.Positions = new List<XbimPoint3D>(Positions); 
+                toMesh.Normals = new List<XbimVector3D>(Normals); 
+                toMesh.TriangleIndices = new List<int>(TriangleIndices);
 
-                toMesh.Meshes = new XbimMeshFragmentCollection(this.Meshes); this.meshes.Clear();
+                toMesh.Meshes = new XbimMeshFragmentCollection(Meshes); _meshes.Clear();
                 WpfModel.Geometry = new MeshGeometry3D();
                 toMesh.EndUpdate();
             }
@@ -200,31 +200,31 @@ namespace Xbim.Presentation
 
         public MeshGeometry3D GetWpfMeshGeometry3D(XbimMeshFragment frag)
         {
-            MeshGeometry3D m3d = new MeshGeometry3D();
+            var m3D = new MeshGeometry3D();
             var m = Mesh;
             if (m != null)
             {
                 for (int i = frag.StartPosition; i <= frag.EndPosition; i++)
                 {   
                     Point3D p = m.Positions[i];
-                    m3d.Positions.Add(p);
+                    m3D.Positions.Add(p);
                     if (m.Normals != null)
                     {
                         Vector3D v = m.Normals[i];
-                        m3d.Normals.Add(v);
+                        m3D.Normals.Add(v);
                     }
                 }
                 for (int i = frag.StartTriangleIndex; i <= frag.EndTriangleIndex; i++)
                 {
-                    m3d.TriangleIndices.Add(m.TriangleIndices[i] - frag.StartPosition);
+                    m3D.TriangleIndices.Add(m.TriangleIndices[i] - frag.StartPosition);
                 }
             }
-            return m3d;
+            return m3D;
         }
 
         public IXbimMeshGeometry3D GetMeshGeometry3D(XbimMeshFragment frag)
         { 
-            XbimMeshGeometry3D m3d = new XbimMeshGeometry3D();
+            var m3D = new XbimMeshGeometry3D();
             var m = Mesh;
             if (m != null)
             {
@@ -232,21 +232,21 @@ namespace Xbim.Presentation
                 {
                     Point3D p = m.Positions[i];
                     Vector3D v = m.Normals[i];
-                    m3d.Positions.Add(new XbimPoint3D(p.X, p.Y, p.Z));
-                    m3d.Normals.Add(new XbimVector3D(v.X, v.Y, v.Z));
+                    m3D.Positions.Add(new XbimPoint3D(p.X, p.Y, p.Z));
+                    m3D.Normals.Add(new XbimVector3D(v.X, v.Y, v.Z));
                 }
                 for (int i = frag.StartTriangleIndex; i <= frag.EndTriangleIndex; i++)
                 {
-                    m3d.TriangleIndices.Add(m.TriangleIndices[i] - frag.StartPosition);
+                    m3D.TriangleIndices.Add(m.TriangleIndices[i] - frag.StartPosition);
                 }
-                m3d.Meshes.Add(new XbimMeshFragment(0, 0,0)
+                m3D.Meshes.Add(new XbimMeshFragment(0, 0,0)
                 {
-                    EndPosition = m3d.PositionCount - 1,
-                    StartTriangleIndex = frag.StartTriangleIndex - m3d.PositionCount - 1,
-                    EndTriangleIndex = frag.EndTriangleIndex - m3d.PositionCount - 1
+                    EndPosition = m3D.PositionCount - 1,
+                    StartTriangleIndex = frag.StartTriangleIndex - m3D.PositionCount - 1,
+                    EndTriangleIndex = frag.EndTriangleIndex - m3D.PositionCount - 1
                 });
             }
-            return m3d;
+            return m3D;
         }
 
         public XbimRect3D GetBounds()
@@ -316,7 +316,7 @@ namespace Xbim.Presentation
 
         private int Offset(uint index)
         {
-            return (int)(index + indexOffset);
+            return (int)(index + _indexOffset);
         }
 
         public void AddTriangleIndex(uint index)
@@ -352,8 +352,6 @@ namespace Xbim.Presentation
                         TriangleIndices.Add(Offset(_fanStartIndex));
                         TriangleIndices.Add(Offset(_lastIndex));
                         TriangleIndices.Add(Offset(index));
-                        break;
-                    default:
                         break;
                 }
             }
@@ -398,7 +396,7 @@ namespace Xbim.Presentation
             Read(mesh, transform);
             frag.EndPosition = PositionCount - 1;
             frag.EndTriangleIndex = TriangleIndexCount - 1;
-            meshes.Add(frag);
+            _meshes.Add(frag);
         }
 
         public void Add(string mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null,short modelId=0)
@@ -406,17 +404,21 @@ namespace Xbim.Presentation
             Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
         }
 
+        public void Add(byte[] mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
+        {
+            Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
+        }
         public bool Read(String data, XbimMatrix3D? tr = null)
         {
            
             
             using (StringReader sr = new StringReader(data))
             {
-                Matrix3D? m3d = null;
-                RotateTransform3D r = new RotateTransform3D();
+                Matrix3D? m3D = null;
+                var r = new RotateTransform3D();
                 if (tr.HasValue) //set up the windows media transforms
                 {
-                    m3d = new Matrix3D(tr.Value.M11, tr.Value.M12, tr.Value.M13, tr.Value.M14,
+                    m3D = new Matrix3D(tr.Value.M11, tr.Value.M12, tr.Value.M13, tr.Value.M14,
                                                   tr.Value.M21, tr.Value.M22, tr.Value.M23, tr.Value.M24,
                                                   tr.Value.M31, tr.Value.M32, tr.Value.M33, tr.Value.M34,
                                                   tr.Value.OffsetX, tr.Value.OffsetY, tr.Value.OffsetZ, tr.Value.M44);
@@ -429,7 +431,7 @@ namespace Xbim.Presentation
                 // the data is reached.
                 while ((line = sr.ReadLine()) != null)
                 {
-                    string[] tokens = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] tokens = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (tokens.Length > 1) //we need a command and some data
                     {
                         string command = tokens[0].Trim().ToUpper();
@@ -437,11 +439,15 @@ namespace Xbim.Presentation
                         {
                             case "P":
                                 int pointCount = 512;
+// ReSharper disable once NotAccessedVariable
                                 int faceCount = 128;
+// ReSharper disable once NotAccessedVariable
                                 int triangleCount = 256;
                                 int normalCount = 512;
                                 if (tokens.Length > 1) pointCount = Int32.Parse(tokens[2]);
+// ReSharper disable once RedundantAssignment
                                 if (tokens.Length > 2) faceCount = Int32.Parse(tokens[3]);
+// ReSharper disable once RedundantAssignment
                                 if (tokens.Length > 3) triangleCount = Int32.Parse(tokens[4]);
                                 if (tokens.Length > 4) normalCount = Math.Max(Int32.Parse(tokens[5]),pointCount); //can't really have less normals than points
                                 vertexList = new Point3DCollection(pointCount);
@@ -460,8 +466,8 @@ namespace Xbim.Presentation
                                     Point3D p = new Point3D(Convert.ToDouble(xyz[0], CultureInfo.InvariantCulture),
                                                                       Convert.ToDouble(xyz[1], CultureInfo.InvariantCulture),
                                                                       Convert.ToDouble(xyz[2], CultureInfo.InvariantCulture));
-                                    if (m3d.HasValue)
-                                        p = m3d.Value.Transform(p);
+                                    if (m3D.HasValue)
+                                        p = m3D.Value.Transform(p);
                                     vertexList.Add(p);
                                 }
                                 break;
@@ -482,11 +488,11 @@ namespace Xbim.Presentation
 
                                 for (int i = 1; i < tokens.Length; i++)
                                 {
-                                    string[] triangleIndices = tokens[i].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                    string[] triangleIndices = tokens[i].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                                     if (triangleIndices.Length != 3) throw new Exception("Invalid triangle definition");
                                     for (int t = 0; t < 3; t++)
                                     {
-                                        string[] indexNormalPair = triangleIndices[t].Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                                        string[] indexNormalPair = triangleIndices[t].Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
                                         if (indexNormalPair.Length > 1) //we have a normal defined
                                         {
@@ -524,18 +530,18 @@ namespace Xbim.Presentation
                                         //now add the index
                                         int index = int.Parse(indexNormalPair[0]);
 
-                                        int alreadyWrittenAt = index; //in case it is the first mesh
+                                        int alreadyWrittenAt; //in case it is the first mesh
                                         if (!writtenVertices.TryGetValue(index, out alreadyWrittenAt)) //if we haven't  written it in this mesh pass, add it again unless it is the first one which we know has been written
                                         {
                                             //all vertices will be unique and have only one normal
-                                            writtenVertices.Add(index, this.PositionCount);
-                                            this.Mesh.TriangleIndices.Add(this.PositionCount);
-                                            this.Mesh.Positions.Add(vertexList[index]);
-                                            this.Mesh.Normals.Add(currentNormal);
+                                            writtenVertices.Add(index, PositionCount);
+                                            Mesh.TriangleIndices.Add(PositionCount);
+                                            Mesh.Positions.Add(vertexList[index]);
+                                            Mesh.Normals.Add(currentNormal);
                                         }
                                         else //just add the index reference
                                         {
-                                            this.Mesh.TriangleIndices.Add(alreadyWrittenAt);
+                                            Mesh.TriangleIndices.Add(alreadyWrittenAt);
                                         }
                                     }
                                 }
@@ -550,5 +556,27 @@ namespace Xbim.Presentation
             }
             return true;
         }
+
+        public void Add(byte[] mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
+        {
+            var frag = new XbimMeshFragment(PositionCount, TriangleIndexCount, productTypeId, productLabel, geometryLabel, modelId);
+            Read(mesh, transform);
+            frag.EndPosition = PositionCount - 1;
+            frag.EndTriangleIndex = TriangleIndexCount - 1;
+            _meshes.Add(frag);
+        }
+
+     
+        
+        /// <summary>
+        /// Reads a triangulated mesh from a byte array 
+        /// </summary>
+        /// <param name="mesh">the binary data of the mesh</param>
+        /// <param name="transform">transforms the mesh if the matrix is not null</param>
+        public void Read(byte[] mesh, XbimMatrix3D? transform = null)
+        {
+            Mesh.Read(mesh,transform);
+        }
+
     }
 }

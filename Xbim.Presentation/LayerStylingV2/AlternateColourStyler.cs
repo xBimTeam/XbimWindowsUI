@@ -41,7 +41,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             !typeof(IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                         !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/))
             {
-                var shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                 WpfMeshGeometry3D targetMergeMesh;
                 switch (i++ % 2)
                 {
