@@ -24,11 +24,18 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     public partial class ExportWindow : Window
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public ExportWindow()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callingWindow"></param>
         public ExportWindow(XplorerMainWindow callingWindow) : this()
         {
             mainWindow = callingWindow;
@@ -208,7 +215,8 @@ namespace XbimXplorer.Dialogs
                     }
                 }
             }
-            catch (Exception e)
+// ReSharper disable once EmptyGeneralCatchClause
+            catch (Exception)
             {
                 
             }

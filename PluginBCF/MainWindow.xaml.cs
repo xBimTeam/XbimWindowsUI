@@ -1,22 +1,14 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Xbim.Common.Geometry;
 using Xbim.Presentation;
 using Xbim.XbimExtensions.Interfaces;
@@ -28,25 +20,25 @@ namespace Xbim.BCF
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : UserControl, xBimXplorerPluginWindow, IxBimXplorerPluginWindowMessaging
+    public partial class MainWindow : xBimXplorerPluginWindow, IxBimXplorerPluginWindowMessaging
     {
         string baseFolder = @"..\..\Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\";
 
         public MainWindow()
         {
             InitializeComponent();
-            this.CommandBindings.Add(new CommandBinding(BCFFileCommands.Load, ExecuteLoad, CanExecuteLoad));
-            this.CommandBindings.Add(new CommandBinding(BCFFileCommands.Save, ExecuteSave, CanExecuteSave));
+            CommandBindings.Add(new CommandBinding(BCFFileCommands.Load, ExecuteLoad, CanExecuteLoad));
+            CommandBindings.Add(new CommandBinding(BCFFileCommands.Save, ExecuteSave, CanExecuteSave));
 
-            this.CommandBindings.Add(new CommandBinding(BCFInstanceCommands.GotoCameraPosition, ExecuteCamera, CanExecuteLoad));
+            CommandBindings.Add(new CommandBinding(BCFInstanceCommands.GotoCameraPosition, ExecuteCamera, CanExecuteLoad));
         }
 
         private void ExecuteSave(object sender, ExecutedRoutedEventArgs e)
         {
-            SaveFileDialog ofd = new SaveFileDialog();
+            var ofd = new SaveFileDialog();
             ofd.Filter = @"BIM Collaboration Format|*.bcfzip";
             var v = ofd.ShowDialog();
-            if (v.HasValue && v.Value == true)
+            if (v.HasValue && v.Value)
             {
                 selFile.Save(ofd.FileName);
             }
@@ -60,10 +52,10 @@ namespace Xbim.BCF
 
         public void ExecuteLoad(object sender, ExecutedRoutedEventArgs e)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
+            var ofd = new OpenFileDialog();
             ofd.Filter = @"BIM Collaboration Format|*.bcfzip";
             var v = ofd.ShowDialog();
-            if (v.HasValue && v.Value == true)
+            if (v.HasValue && v.Value)
             {
                 selFile.Load(ofd.FileName);
             }
@@ -73,19 +65,19 @@ namespace Xbim.BCF
         {
             if (selFile.t == null)
                 return;
-            BCFInstance inst = selFile.t.SelectedItem as BCFInstance;
+            var inst = selFile.t.SelectedItem as BCFInstance;
             if (inst == null)
                 return;
             var v = inst.VisualizationInfo;
             if (v == null)
                 return;
 
-            XbimPoint3D position = new XbimPoint3D();
-            XbimPoint3D direction = new XbimPoint3D();
-            XbimPoint3D upDirection = new XbimPoint3D();
+            var position = new XbimPoint3D();
+            var direction = new XbimPoint3D();
+            var upDirection = new XbimPoint3D();
 
-            XbimVector3D directionV = new XbimVector3D();
-            XbimVector3D upDirectionV = new XbimVector3D();
+            XbimVector3D directionV;
+            XbimVector3D upDirectionV;
 
             if (v.PerspectiveCamera != null)
             {
@@ -94,56 +86,42 @@ namespace Xbim.BCF
                 direction = new XbimPoint3D(pc.CameraDirection.X, pc.CameraDirection.Y, pc.CameraDirection.Z);
                 upDirection = new XbimPoint3D(pc.CameraUpVector.X, pc.CameraUpVector.Y, pc.CameraUpVector.Z);
 
-                xpWindow.DrawingControl.Viewport.Orthographic = false;
-                var pCam = xpWindow.DrawingControl.Viewport.Camera as System.Windows.Media.Media3D.PerspectiveCamera;
+                _xpWindow.DrawingControl.Viewport.Orthographic = false;
+                var pCam = _xpWindow.DrawingControl.Viewport.Camera as System.Windows.Media.Media3D.PerspectiveCamera;
                 if (pCam != null)
                     pCam.FieldOfView = pc.FieldOfView;
             }
             else if (v.OrthogonalCamera != null)
             {
                 var pc = v.OrthogonalCamera;
-                xpWindow.DrawingControl.Viewport.Orthographic = true;
+                _xpWindow.DrawingControl.Viewport.Orthographic = true;
                 position = new XbimPoint3D(pc.CameraViewPoint.X, pc.CameraViewPoint.Y, pc.CameraViewPoint.Z);
                 direction = new XbimPoint3D(pc.CameraDirection.X, pc.CameraDirection.Y, pc.CameraDirection.Z);
                 upDirection = new XbimPoint3D(pc.CameraUpVector.X, pc.CameraUpVector.Y, pc.CameraUpVector.Z);
 
-                var pCam = xpWindow.DrawingControl.Viewport.Camera as System.Windows.Media.Media3D.OrthographicCamera;
+                var pCam = _xpWindow.DrawingControl.Viewport.Camera as OrthographicCamera;
                 if (pCam != null)
                     pCam.Width = pc.ViewToWorldScale;
+            }
+            directionV = new XbimVector3D(direction.X, direction.Y, direction.Z);
+            upDirectionV = new XbimVector3D(upDirection.X, upDirection.Y, upDirection.Z);
 
-            }
-            if (false)
-            {
-                XbimMatrix3D mcp = XbimMatrix3D.Copy(xpWindow.DrawingControl.wcsTransform);
-                position = mcp.Transform(position);
-                var zero = mcp.Transform(new XbimPoint3D(0, 0, 0));
-                directionV = mcp.Transform(direction) - zero;
-                directionV.Normalize();
-                upDirectionV = mcp.Transform(upDirection) - zero;
-                upDirectionV.Normalize();
-            }
-            else
-            {
-                directionV = new XbimVector3D(direction.X, direction.Y, direction.Z);
-                upDirectionV = new XbimVector3D(upDirection.X, upDirection.Y, upDirection.Z);
-            }
-
-            Point3D Pos = new Point3D(position.X, position.Y, position.Z);
-            Vector3D Dir = new Vector3D(directionV.X, directionV.Y, directionV.Z);
-            Vector3D UpDir = new Vector3D(upDirectionV.X, upDirectionV.Y, upDirectionV.Z);
-            xpWindow.DrawingControl.Viewport.SetView(Pos, Dir, UpDir, 500);
+            var pos = new Point3D(position.X, position.Y, position.Z);
+            var dir = new Vector3D(directionV.X, directionV.Y, directionV.Z);
+            var upDir = new Vector3D(upDirectionV.X, upDirectionV.Y, upDirectionV.Z);
+            _xpWindow.DrawingControl.Viewport.SetView(pos, dir, upDir, 500);
 
             if (v.ClippingPlanes.Any())
             {
                 var curP = v.ClippingPlanes[0];
-                xpWindow.DrawingControl.SetCutPlane(
+                _xpWindow.DrawingControl.SetCutPlane(
                     curP.Location.X, curP.Location.Y, curP.Location.Z,
                     curP.Direction.X, curP.Direction.Y, curP.Direction.Z
                     );
             }
             else
             {
-                xpWindow.DrawingControl.ClearCutPlane();
+                _xpWindow.DrawingControl.ClearCutPlane();
             }
 
             // xpWindow.DrawingControl.Viewport.FieldOfViewText
@@ -154,46 +132,44 @@ namespace Xbim.BCF
             e.CanExecute = true;
         }
 
-        private string filename(string s)
+        internal string Filename(string s)
         {
-            return System.IO.Path.Combine(baseFolder, s);
+            return Path.Combine(baseFolder, s);
         }
 
 
         private void Markup_Load_Click(object sender, RoutedEventArgs e)
         {
-            var m = Markup.LoadFromFile(filename(@"viewpoint.bcfv"));
-            string a = "";
+            Markup.LoadFromFile(Filename(@"viewpoint.bcfv"));
         }
 
 
         private void Markup_Save_Click(object sender, RoutedEventArgs e)
         {
-            Markup m = new Markup();
+            var m = new Markup();
             m.Topic = new Topic();
             m.Topic.Guid = "fdb92063-a353-4882-a4a9-b333fe0b2985";
             m.Topic.ReferenceLink = "referecne 1";
             m.Topic.Title = "topic1";
-            m.SaveToFile(filename(@"markup.generated.bcf"));
+            m.SaveToFile(Filename(@"markup.generated.bcf"));
         }
 
         private void Visinfo_Load_Click(object sender, RoutedEventArgs e)
         {
-            var m = VisualizationInfo.LoadFromFile(filename(@"viewpoint.bcfv"));
-            string a = "";
+            VisualizationInfo.LoadFromFile(Filename(@"viewpoint.bcfv"));
         }
 
         private void Visinfo_Save_Click(object sender, RoutedEventArgs e)
         {
             var m = new VisualizationInfo();
-            Component c = new Component();
+            var c = new Component();
             c.IfcGuid = "1gF16zAF1DSPP1$Ex04e4k";
             c.OriginatingSystem = "DDS-CAD";
 
 
             m.Components.Add(c);
 
-            PerspectiveCamera p = new PerspectiveCamera();
+            var p = new PerspectiveCamera();
             p.CameraViewPoint.X = -732.062499964083;
             p.CameraViewPoint.Y = -1152.1249999640554;
             p.CameraViewPoint.Z = 1452.1249999640554;
@@ -214,24 +190,21 @@ namespace Xbim.BCF
             m.Lines = null;
             m.ClippingPlanes = null;
 
-            m.SaveToFile(filename(@"viewpoint.generated.bcfv"));
+            m.SaveToFile(Filename(@"viewpoint.generated.bcfv"));
         }
-
-        string baseBcfFile = @"..\..\Examples\FromRevit.bcfzip";
-
 
 
         // ---------------------------
         // plugin system related stuff
         //
 
-        XplorerMainWindow xpWindow;
+        XplorerMainWindow _xpWindow;
 
-        public void BindUI(XplorerMainWindow MainWindow)
+        public void BindUI(XplorerMainWindow mainWindow)
         {
-            xpWindow = MainWindow;
-            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = MainWindow, Mode = BindingMode.OneWay });
-            this.SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
+            _xpWindow = mainWindow;
+            SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
+            SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
         }
 
         // SelectedEntity
@@ -243,7 +216,7 @@ namespace Xbim.BCF
 
         public static DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnSelectedEntityChanged)));
+                                                                      OnSelectedEntityChanged));
 
         // Model
         public IModel Model
@@ -254,12 +227,12 @@ namespace Xbim.BCF
 
         public static DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof(IModel), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnSelectedEntityChanged)));
+                                                                      OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // if any UI event should happen it needs to be specified here
-            MainWindow ctrl = d as MainWindow;
+            var ctrl = d as MainWindow;
             if (ctrl != null)
             {
                 if (e.Property.Name == "Model")
@@ -284,31 +257,31 @@ namespace Xbim.BCF
             get { return "BCF Viewer"; }
         }
 
-        public static RenderTargetBitmap get3DVisual(FrameworkElement element)
+        public static RenderTargetBitmap Get3DVisual(FrameworkElement element)
         {
-            double width = element.ActualWidth;
-            double height = element.ActualHeight;
-            RenderTargetBitmap bmpCopied = new RenderTargetBitmap((int)Math.Round(width), (int)Math.Round(height), 96, 96, PixelFormats.Default);
-            DrawingVisual dv = new DrawingVisual();
-            using (DrawingContext dc = dv.RenderOpen())
+            var width = element.ActualWidth;
+            var height = element.ActualHeight;
+            var bmpCopied = new RenderTargetBitmap((int)Math.Round(width), (int)Math.Round(height), 96, 96, PixelFormats.Default);
+            var dv = new DrawingVisual();
+            using (var dc = dv.RenderOpen())
             {
-                VisualBrush vb = new VisualBrush(element);
+                var vb = new VisualBrush(element);
                 dc.DrawRectangle(vb, null, new Rect(new System.Windows.Point(), new Size(width, height)));
             }
             bmpCopied.Render(dv);
             return bmpCopied;
         }
 
-        private void newComment(object sender, RoutedEventArgs e)
+        private void NewComment(object sender, RoutedEventArgs e)
         {
-            VisualizationInfo vi = new VisualizationInfo(xpWindow.DrawingControl);
-            var bitmapImage = GetSnapshotImage(xpWindow.DrawingControl);
+            var vi = new VisualizationInfo(_xpWindow.DrawingControl);
+            var bitmapImage = GetSnapshotImage(_xpWindow.DrawingControl);
             selFile.NewInstance(@"New thread", bitmapImage, vi);
         }
 
         private BitmapImage GetSnapshotImage(DrawingControl3D control)
         {
-            var renderTargetBitmap = get3DVisual(control);
+            var renderTargetBitmap = Get3DVisual(control);
             var bitmapImage = new BitmapImage();
             var bitmapEncoder = new PngBitmapEncoder();
             bitmapEncoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
@@ -333,28 +306,28 @@ namespace Xbim.BCF
         public PluginWindowDefaultUIContainerEnum DefaultUIContainer
         { get { return PluginWindowDefaultUIContainerEnum.LayoutAnchorable; } }
 
-        public void ProcessMessage(object Sender, string MessageTypeString, object MessageData)
+        public void ProcessMessage(object sender, string messageTypeString, object messageData)
         {
-            if (MessageTypeString == "BcfAddInstance" && MessageData is Dictionary<string, object>)
+            if (messageTypeString == "BcfAddInstance" && messageData is Dictionary<string, object>)
             {
-                Dictionary<string, object> data = MessageData as Dictionary<string, object>;
-                VisualizationInfo vi = new VisualizationInfo(xpWindow.DrawingControl);
-                var bitmapImage = GetSnapshotImage(xpWindow.DrawingControl);
-                string InstanceTitle = (string)data["InstanceTitle"];
-                string DestinationEmail = (string)data["DestinationEmail"];
-                string CommentVerbalStatus = (string)data["CommentVerbalStatus"];
-                string CommentAuthor = (string)data["CommentAuthor"];
-                string CommentText = (string)data["CommentText"];
+                var data = messageData as Dictionary<string, object>;
+                var vi = new VisualizationInfo(_xpWindow.DrawingControl);
+                var bitmapImage = GetSnapshotImage(_xpWindow.DrawingControl);
+                var instanceTitle = (string)data["InstanceTitle"];
+                var destinationEmail = (string)data["DestinationEmail"];
+                var commentVerbalStatus = (string)data["CommentVerbalStatus"];
+                var commentAuthor = (string)data["CommentAuthor"];
+                var commentText = (string)data["CommentText"];
                 
-                var instance = selFile.NewInstance(InstanceTitle, bitmapImage, vi);
+                var instance = selFile.NewInstance(instanceTitle, bitmapImage, vi);
 
-                Comment cmt = new Comment();
+                var cmt = new Comment();
 
-                cmt.Author = CommentAuthor;
+                cmt.Author = commentAuthor;
                 cmt.Date = DateTime.Now;
-                cmt.VerbalStatus = CommentVerbalStatus;
-                cmt.Comment1 = CommentText;
-                instance.Markup.Topic.ReferenceLink = DestinationEmail;
+                cmt.VerbalStatus = commentVerbalStatus;
+                cmt.Comment1 = commentText;
+                instance.Markup.Topic.ReferenceLink = destinationEmail;
                 instance.Markup.Comment.Add(cmt);
             }
             

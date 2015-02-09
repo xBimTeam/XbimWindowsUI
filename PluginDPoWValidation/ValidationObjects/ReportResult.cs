@@ -13,7 +13,6 @@ namespace Validation.ValidationObjects
         public IValidationRequirement Requirement;
         public int EntityLabel;
         public bool BoolResult;
-        string Report;
 
         public ReportResult(IValidationRequirement requirement, int entityLabel, bool bPassed)
         {

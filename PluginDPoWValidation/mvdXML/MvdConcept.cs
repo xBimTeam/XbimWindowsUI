@@ -87,13 +87,7 @@ namespace Validation.mvdXML
                     }
                 }
             }
-            if (false)
-            {
-                if (t != null)
-                    sb.Append(t.StringReport());
-                else
-                    sb.AppendLine("template missing");
-            }
+            
             return sb.ToString();
         }
 
