@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Xml.XPath;
 using System.Diagnostics;
 using System.Xml;
+using Newtonsoft.Json;
 using Validation.mvdXML;
 using Xbim.COBieLite;
 using Xbim.Ifc2x3.Extensions;
@@ -57,47 +58,55 @@ namespace Validation
         private void OpenFile(object sender, RoutedEventArgs e)
         {
             var openFile = new OpenFileDialog();
-            openFile.Filter = @"CobieLite XML|*.xml";
+            openFile.Filter = @"All supprted files|*.xml;*.json|CobieLite XML|*.xml|CobieLite Json|*.json";
             var res = openFile.ShowDialog();
 
             if (res.HasValue && res.Value)
             {
                 // Model Deserialisation 
                 //
-                
+                var cobieModelFileInfo = new FileInfo(openFile.FileName);
+
+                FacilityType t = null;
                 try
                 {
-                    var cobieModelFileName = openFile.FileName;
-
-                    var x = new XmlSerializer(typeof(FacilityType));
-                    var reader = new XmlTextReader(cobieModelFileName);
-                    ReqFacility = (FacilityType)x.Deserialize(reader);
-                    reader.Close();
-
-                    var assets = new List<AssetTypeInfoTypeVM>();
-                    var spaces = new List<SpaceTypeVM>();
-
-                    foreach (var asset in ReqFacility.AssetTypes.AssetType)
+                    switch (cobieModelFileInfo.Extension.ToLowerInvariant())
                     {
-                        assets.Add(new AssetTypeInfoTypeVM(asset));
+                        case ".xml":
+                            var x = FacilityType.GetSerializer();
+                            var reader = new XmlTextReader(cobieModelFileInfo.FullName);
+                            t = (FacilityType)x.Deserialize(reader);
+                            reader.Close();
+                            break;
+                        case ".json":
+                            var data = File.ReadAllText(cobieModelFileInfo.FullName);
+                            t = JsonConvert.DeserializeObject<FacilityType>(data);
+                            break;
                     }
-
-                   
-
-
-                    lstClassifications.ItemsSource = assets;
-                    lstSpaces.ItemsSource = spaces;
-                    IsFileOpen = true;
-
                 }
                 catch (Exception)
                 {
-                    // return (int)ReturnCodes.ErrorDesirializingModel;
                 }
-
-                
-                
+                if (t != null)
+                {
+                    SetFacility(t);
+                }
             }
+        }
+
+        private void SetFacility(FacilityType facility)
+        {
+            ReqFacility = facility;
+            var assets = new List<AssetTypeInfoTypeVM>();
+            var spaces = new List<SpaceTypeVM>();
+
+            foreach (var asset in ReqFacility.AssetTypes.AssetType)
+            {
+                assets.Add(new AssetTypeInfoTypeVM(asset));
+            }
+            lstClassifications.ItemsSource = assets;
+            lstSpaces.ItemsSource = spaces;
+            IsFileOpen = true;
         }
 
         private bool IsFileOpen
