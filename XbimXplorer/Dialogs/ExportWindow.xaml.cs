@@ -52,16 +52,6 @@ namespace XbimXplorer.Dialogs
 
         private void DoExport(object sender, RoutedEventArgs e)
         {
-
-
-            if (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value &&
-                !(mainWindow.GetOpenedModelFileName().EndsWith(".ifc", true, CultureInfo.InvariantCulture)))
-            {
-                MessageBox.Show("Wexbim only supported for IFC files at the moment.", "Warning", MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                ChkWexbim.IsChecked = false;
-            }
-
             int totExports =
                 (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value ? 1 : 0) +
                 (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value ? 1 : 0) +
@@ -91,26 +81,22 @@ namespace XbimXplorer.Dialogs
 
                 try
                 {
-                    DoSpecial(mainWindow.GetOpenedModelFileName(), wexbimFileName);
-                    //using (var wexBimFile = new FileStream(wexbimFileName, FileMode.Create))
-                    //{
-                    //    using (var binaryWriter = new BinaryWriter(wexBimFile))
-                    //    {
-                    //        try
-                    //        {
-                    // NOTE: Here we need to make sure that the version is PolyhedronBinary only, if the model has been meshed with normal poly it launches an exception.
-                    //            var geomContext = new Xbim3DModelContext(mainWindow.Model);
-                    //            // var geomContext = new Xbim3DModelContext(mainWindow.Model);
-                    //            // geomContext.CreateContext(XbimGeometryType.PolyhedronBinary);
-                    //            geomContext.Write(binaryWriter);
-                    //        }
-                    //        finally
-                    //        {
-                    //            binaryWriter.Flush();
-                    //            wexBimFile.Close();
-                    //        }
-                    //    }
-                    //}
+                    using (var wexBimFile = new FileStream(wexbimFileName, FileMode.Create))
+                    {
+                        using (var binaryWriter = new BinaryWriter(wexBimFile))
+                        {
+                            try
+                            {
+                                var geomContext = new Xbim3DModelContext(mainWindow.Model);
+                                geomContext.Write(binaryWriter);
+                            }
+                            finally
+                            {
+                                binaryWriter.Flush();
+                                wexBimFile.Close();
+                            }
+                        }
+                    }
                 }
                 catch (Exception ce)
                 {
@@ -183,44 +169,7 @@ namespace XbimXplorer.Dialogs
             this.Cursor = Cursors.Arrow;
             this.Close();
         }
-
-        private void DoSpecial(string ifcFileFullName, string wexBimFileName)
-        {
-            var fileName = Path.GetFileName(ifcFileFullName);
-            var xbimFile = Path.GetTempFileName();
-            try
-            {
-
-                using (var wexBimFile = new FileStream(wexBimFileName, FileMode.Create))
-                {
-                    using (var binaryWriter = new BinaryWriter(wexBimFile))
-                    {
-
-                        using (var model = new XbimModel())
-                        {
-                            try
-                            {
-                                model.CreateFrom(ifcFileFullName, xbimFile, null, true);
-                                var geomContext = new Xbim3DModelContext(model);
-                                geomContext.CreateContext(XbimGeometryType.PolyhedronBinary);
-                                geomContext.Write(binaryWriter);
-                            }
-                            finally
-                            {
-                                model.Close();
-                                binaryWriter.Flush();
-                                wexBimFile.Close();
-                            }
-                        }
-                    }
-                }
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
-            {
                 
-            }
-        }
 
         private string GetExportName(string extension, int progressive = 0)
         {

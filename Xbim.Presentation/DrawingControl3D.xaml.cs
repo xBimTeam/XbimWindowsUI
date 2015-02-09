@@ -251,7 +251,7 @@ namespace Xbim.Presentation
             {
                 snd.Camera.FarPlaneDistance = farPlaneDistance;    // Debug.WriteLine("Far: " + FarPlane);
             }
-        }
+            }
 
         void DrawingControl3D_Loaded(object sender, RoutedEventArgs e)
         {
@@ -485,7 +485,7 @@ namespace Xbim.Presentation
             }
         }
 
-
+        
         private PointGeomInfo GetClosestPoint(RayMeshGeometry3DHitTestResult hit)
         {
             var pts = new[] {
@@ -772,7 +772,6 @@ namespace Xbim.Presentation
         /// <param name="newVal"></param>
         private void HighlighSelected(IPersistIfcEntity newVal)
         {
-
             var m = new MeshGeometry3D();
 
             // 1. get the geometry first
@@ -803,9 +802,9 @@ namespace Xbim.Presentation
                                     case XbimGeometryType.Polyhedron:
                                         m.Read(((XbimShapeGeometry)shapeGeom).ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
                                         break;
-                                }
-                            }
+                        }
                     }
+                }
                 }
 
             }
@@ -852,7 +851,7 @@ namespace Xbim.Presentation
 
                     if (m.Normals[p1] == m.Normals[p2] && m.Normals[p1] == m.Normals[p3]) // same normals
                     {
-                        var cnt = FindCentroid(new [] { m.Positions[p1], m.Positions[p2], m.Positions[p3] });
+                        var cnt = FindCentroid(new[] {m.Positions[p1], m.Positions[p2], m.Positions[p3]});
                         CreateNormal(cnt, m.Normals[p1], axesMeshBuilder);
                     }
                     else
@@ -1333,7 +1332,7 @@ namespace Xbim.Presentation
                 var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
                 return regions.MostPopulated();
             }
-            return null;
+                return null;
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1377,11 +1376,11 @@ namespace Xbim.Presentation
                 if (Scenes.Count == 0) //need to calculate extents
                 {
                     if (refModel != null)
-                    {
+                {
                         var largest = GetLargestRegion(refModel.Model);
                         var bb = XbimRect3D.Empty;
-                        if (largest != null)
-                            bb = new XbimRect3D(largest.Centre, largest.Centre);
+                    if (largest != null)
+                        bb = new XbimRect3D(largest.Centre, largest.Centre);
                         var p = bb.Centroid();
                         ModelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
                     }
