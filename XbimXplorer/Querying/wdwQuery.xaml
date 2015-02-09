@@ -11,7 +11,7 @@
         d:DesignWidth="288.5" d:DesignHeight="216.5"
     
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        mc:Ignorable="d" x:Class="XbimXplorer.Querying.wdwQuery"
+        mc:Ignorable="d" x:Class="XbimXplorer.Querying.WdwQuery"
         
         MinWidth="300"
         >

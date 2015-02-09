@@ -12,6 +12,7 @@ using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStylingV2;
+using XbimGeometry.Interfaces;
 
 namespace XbimXplorer.Plugins.DPoWValidation
 {
@@ -61,12 +62,32 @@ namespace XbimXplorer.Plugins.DPoWValidation
                         targetMergeMesh = Amber;
                         break;
                 }
-                targetMergeMesh.Add(
-                    shapeGeom.ShapeData,
-                    shapeInstance.IfcTypeId,
-                    shapeInstance.IfcProductLabel,
-                    shapeInstance.InstanceLabel,
-                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform));
+
+                switch ((XbimGeometryType)shapeGeom.Format)
+                {
+                    case XbimGeometryType.Polyhedron:
+                        var shapePoly = (XbimShapeGeometry)shapeGeom;
+                        targetMergeMesh.Add(
+                   shapePoly.ShapeData,
+                   shapeInstance.IfcTypeId,
+                   shapeInstance.IfcProductLabel,
+                   shapeInstance.InstanceLabel,
+                   XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                        break;
+
+                    case XbimGeometryType.PolyhedronBinary:
+                        targetMergeMesh.Add(
+                  shapeGeom.ShapeData,
+                  shapeInstance.IfcTypeId,
+                  shapeInstance.IfcProductLabel,
+                  shapeInstance.InstanceLabel,
+                  XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+               
                 
             }
 

@@ -25,7 +25,7 @@ namespace XbimXplorer.PluginSystem
     {
         string MenuText { get; }
         string WindowTitle { get; }
-        void BindUI(XplorerMainWindow MainWindow);
+        void BindUI(XplorerMainWindow mainWindow);
         PluginWindowDefaultUIContainerEnum DefaultUIContainer { get; }
         PluginWindowDefaultUIShow DefaultUIActivation { get; }
     }

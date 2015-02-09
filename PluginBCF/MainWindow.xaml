@@ -29,7 +29,7 @@
 
             <GroupBox Header="BCFFIle" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,3">
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="Start thread" Click="newComment" Margin="4,3" Width="120" />
+                    <Button Content="Start thread" Click="NewComment" Margin="4,3" Width="120" />
                     <Button Command="{x:Static local:BCFFileCommands.Load}" Content="Load" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="4,0,4,4" />
                     <Button Command="{x:Static local:BCFFileCommands.Save}" Content="Save" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="4,3" />
                 </StackPanel>
