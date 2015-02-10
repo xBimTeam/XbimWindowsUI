@@ -87,6 +87,15 @@ namespace Xbim.Presentation.LayerStylingV2
                     if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
+                        switch ((XbimGeometryType)shapeGeom.Format)
+                        {
+                            case XbimGeometryType.PolyhedronBinary:
+                                wpfMesh.Read(shapeGeom.ShapeData);
+                                break;
+                            case XbimGeometryType.Polyhedron:
+                                wpfMesh.Read(((XbimShapeGeometry)shapeGeom).ShapeData);
+                                break;
+                        }
                         wpfMesh.Read(shapeGeom.ShapeData);
                         repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                         var mg = new GeometryModel3D(wpfMesh, styles[styleId]);

@@ -681,7 +681,7 @@ namespace Xbim.Presentation
             Normals,
             WireFrame
         }
-        public SelectionHighlightModes SelectionHighlightMode = SelectionHighlightModes.Normals;
+        public SelectionHighlightModes SelectionHighlightMode = SelectionHighlightModes.WholeMesh;
 
         public enum SelectionBehaviours
         {
@@ -784,9 +784,9 @@ namespace Xbim.Presentation
                     {
                         var metre = fromModel.ModelFactors.OneMetre;
                         WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
-           
+
                         var context = new Xbim3DModelContext(fromModel);
-                        
+
                         var productShape = context.ShapeInstancesOf((IfcProduct)newVal).Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
                         if (productShape.Any())
                         {
@@ -794,20 +794,20 @@ namespace Xbim.Presentation
                             foreach (var shapeInstance in productShape)
                             {
                                 IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                                switch ((XbimGeometryType) shapeGeom.Format)
+                                switch ((XbimGeometryType)shapeGeom.Format)
                                 {
                                     case XbimGeometryType.PolyhedronBinary:
-                                        m.Read(shapeGeom.ShapeData,XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                        m.Read(shapeGeom.ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
                                         break;
                                     case XbimGeometryType.Polyhedron:
                                         m.Read(((XbimShapeGeometry)shapeGeom).ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
                                         break;
+                                }
+                            }
                         }
                     }
-                }
-                }
 
-            }
+                }
             }
             else if (newVal != null)
             {
@@ -891,12 +891,14 @@ namespace Xbim.Presentation
                         var p3 = m.TriangleIndices[i + 2];
                         
 
-                        var path = new List<Point3D>();
-                        path.Add(new Point3D(m.Positions[p1].X, m.Positions[p1].Y, m.Positions[p1].Z));
-                        path.Add(new Point3D(m.Positions[p2].X, m.Positions[p2].Y, m.Positions[p2].Z));
-                        path.Add(new Point3D(m.Positions[p3].X, m.Positions[p3].Y, m.Positions[p3].Z));
+                        var path = new List<Point3D>
+                        {
+                            new Point3D(m.Positions[p1].X, m.Positions[p1].Y, m.Positions[p1].Z),
+                            new Point3D(m.Positions[p2].X, m.Positions[p2].Y, m.Positions[p2].Z),
+                            new Point3D(m.Positions[p3].X, m.Positions[p3].Y, m.Positions[p3].Z)
+                        };
 
-                        
+
                         axesMeshBuilder.AddTube(path, lineThickness, 9, true);
 
                     }
