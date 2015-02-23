@@ -925,7 +925,7 @@ namespace XbimXplorer.Querying
 
                         var topParent = ot.IfcSuperType;
                         string sTopParent = "";
-                        while (topParent != null && topParent.IfcProperties.Where(x => x.Value.PropertyInfo.Name == item.PropertyInfo.Name).Count() > 0)
+                        while (topParent != null && topParent.IfcProperties.Any(x => x.Value.PropertyInfo.Name == item.PropertyInfo.Name))
                         {
                             sTopParent = " \tfrom: " + topParent.ToString();
                             topParent = topParent.IfcSuperType;
@@ -945,7 +945,7 @@ namespace XbimXplorer.Querying
         {
                         var topParent = ot.IfcSuperType;
                         string sTopParent = "";
-                        while (topParent != null && topParent.IfcInverses.Where(x => x.PropertyInfo.Name == item.PropertyInfo.Name).Count() > 0)
+                        while (topParent != null && topParent.IfcInverses.Any(x => x.PropertyInfo.Name == item.PropertyInfo.Name))
                         {
                             sTopParent = " \tfrom: " + topParent.ToString();
                             topParent = topParent.IfcSuperType;
