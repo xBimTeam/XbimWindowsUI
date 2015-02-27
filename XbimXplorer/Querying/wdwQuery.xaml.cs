@@ -7,28 +7,19 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProfileResource;
-using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
-using Xbim.ModelGeometry.Converter;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
-using Xbim.Presentation.LayerStyling;
 using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
 using XbimXplorer.PluginSystem;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xbim.Ifc2x3.Extensions;
 using XbimGeometry.Interfaces;
 
 namespace XbimXplorer.Querying
@@ -36,17 +27,20 @@ namespace XbimXplorer.Querying
     /// <summary>
     /// Interaction logic for wdwQuery.xaml
     /// </summary>
-    public partial class wdwQuery : UserControl, xBimXplorerPluginWindow
+    public partial class WdwQuery : xBimXplorerPluginWindow
     {
         
 
-        public wdwQuery()
+        /// <summary>
+        /// 
+        /// </summary>
+        public WdwQuery()
         {
             InitializeComponent();
             DisplayHelp();
 #if DEBUG
             // loads the last commands stored
-            var fname = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "xbimquerying.txt");
+            var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
             if (File.Exists(fname))
             {
                 using (StreamReader reader = File.OpenText(fname))
@@ -58,19 +52,19 @@ namespace XbimXplorer.Querying
 #endif
         }
 
-        private XplorerMainWindow ParentWindow;
+        private XplorerMainWindow _parentWindow;
 
-        private bool bDoClear = true; 
+        private bool _bDoClear = true; 
 
         private void txtCommand_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Enter && 
+            if (e.Key == Key.Enter && 
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 )
             {
 #if DEBUG
                 // stores the commands being launched
-                var fname = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "xbimquerying.txt");
+                var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
                 using (StreamWriter writer = File.CreateText(fname))
                 {
                     writer.Write(txtCommand.Text);
@@ -80,18 +74,18 @@ namespace XbimXplorer.Querying
 #endif
 
                 e.Handled = true;
-                if (bDoClear)
+                if (_bDoClear)
                     txtOut.Document = new FlowDocument();
 
-                string[] CommandArray = txtCommand.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                string[] commandArray = txtCommand.Text.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                 if (txtCommand.SelectedText != string.Empty)
-                    CommandArray = txtCommand.SelectedText.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    commandArray = txtCommand.SelectedText.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (var cmd_f in CommandArray)
+                foreach (var cmdF in commandArray)
                 {
-                    ReportAdd("> " + cmd_f, Brushes.ForestGreen);
-                    var cmd = cmd_f;
-                    int i = cmd.IndexOf("//");
+                    ReportAdd("> " + cmdF, Brushes.ForestGreen);
+                    var cmd = cmdF;
+                    int i = cmd.IndexOf("//", StringComparison.Ordinal);
                     if (i > 0)
                     {
                         cmd = cmd.Substring(0, i);
@@ -110,21 +104,21 @@ namespace XbimXplorer.Querying
                     mdbclosed = Regex.Match(cmd, @"RefreshPlugins", RegexOptions.IgnoreCase);
                     if (mdbclosed.Success)
                     {
-                        if (ParentWindow != null)
-                            ParentWindow.RefreshPlugins();
+                        if (_parentWindow != null)
+                            _parentWindow.RefreshPlugins();
                         continue;
                     }
 
                     mdbclosed = Regex.Match(cmd, @"xplorer", RegexOptions.IgnoreCase);
                     if (mdbclosed.Success)
                     {
-                        if (ParentWindow != null)
-                            ParentWindow.Focus();
+                        if (_parentWindow != null)
+                            _parentWindow.Focus();
                         else
                         {
                             // todo: bonghi: open the model in xplorer if needed.
                             XplorerMainWindow xp = new XplorerMainWindow();
-                            ParentWindow = xp;
+                            _parentWindow = xp;
                             xp.Show();
                         }
                         continue;
@@ -142,10 +136,10 @@ namespace XbimXplorer.Querying
                                 txtOut.Document = new FlowDocument();
                                 continue;
                             }
-                            else if (option == "on")
-                                bDoClear = true;
+                            if (option == "on")
+                                _bDoClear = true;
                             else if (option == "off")
-                                bDoClear = false;
+                                _bDoClear = false;
                             else
                             {
                                 ReportAdd(string.Format("Autoclear not changed ({0} is not a valid option).", option));
@@ -154,7 +148,8 @@ namespace XbimXplorer.Querying
                             ReportAdd(string.Format("Autoclear set to {0}", option.ToLower()));
                             continue;
                         }
-                        catch (Exception)
+// ReSharper disable once EmptyGeneralCatchClause
+                        catch
                         {
                         }
                         txtOut.Document = new FlowDocument();
@@ -179,7 +174,8 @@ namespace XbimXplorer.Querying
                         {
                             recursion = Convert.ToInt32(m.Groups["recursion"].Value);
                         }
-                        catch (Exception)
+// ReSharper disable once EmptyGeneralCatchClause
+                        catch
                         {
                         }
 
@@ -241,17 +237,17 @@ namespace XbimXplorer.Querying
                         if (mode == "normals")
                         {
                             ReportAdd("Selection visual style set to 'Normals'");
-                            ParentWindow.DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.Normals;
+                            _parentWindow.DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.Normals;
                         }
                         else if (mode == "wholemesh")
                         {
                             ReportAdd("Selection visual style set to 'WholeMesh'");
-                            ParentWindow.DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.WholeMesh;
+                            _parentWindow.DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.WholeMesh;
                         }
                         else if (mode == "wireframe")
                         {
                             ReportAdd("Selection visual style set to 'WireFrame'");
-                            ParentWindow.DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.WireFrame;
+                            _parentWindow.DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.WireFrame;
                         }
                         continue;
                     }
@@ -272,29 +268,29 @@ namespace XbimXplorer.Querying
                         else
                             type = PrepareRegex(type);
 
-                        var TypeList = MatchingTypes(type);
+                        var typeList = MatchingTypes(type);
                         
 
                         if (mode.ToLower() == "list ")
                         {
-                            foreach (var item in TypeList)
+                            foreach (var item in typeList)
                                 ReportAdd(item);
                         }
                         else if (mode.ToLower() == "count ")
                         {
-                            ReportAdd("count: " + TypeList.Count());
+                            ReportAdd("count: " + typeList.Count());
                         }
                         else
                         {
                             // report
-                            int  BeVerbose = 1;
+                            int  beVerbose = 1;
                             if (mode.ToLower() == "short ")
-                                BeVerbose = 0;
+                                beVerbose = 0;
                             if (mode.ToLower() == "full ")
-                                BeVerbose = 2;
-                            foreach (var item in TypeList)
+                                beVerbose = 2;
+                            foreach (var item in typeList)
                             {
-                                ReportAdd(ReportType(item, BeVerbose));
+                                ReportAdd(ReportType(item, beVerbose));
                             }
                         }
                         continue;
@@ -307,11 +303,11 @@ namespace XbimXplorer.Querying
                         IEnumerable<int> labels = toIntarray(start, ',');
                         if (labels.Count() > 0)
                         {
-                            ParentWindow.DrawingControl.LoadGeometry(Model, labels);
+                            _parentWindow.DrawingControl.LoadGeometry(Model, labels);
                         }
                         else
                         {
-                            ParentWindow.DrawingControl.LoadGeometry(Model);
+                            _parentWindow.DrawingControl.LoadGeometry(Model);
                         }
                         continue;
                     }
@@ -324,9 +320,9 @@ namespace XbimXplorer.Querying
                         IEnumerable<int> labels = toIntarray(start, ',');
                         foreach (var item in labels)
                         {
-                            ReportAdd("Geometry for: " + item.ToString(), Brushes.Green);
+                            ReportAdd("Geometry for: " + item, Brushes.Green);
                             ReportAdd(GeomQuerying.GeomInfoBoundBox(Model, item));
-                            ReportAdd(GeomQuerying.GeomLayers(Model, item, ParentWindow.DrawingControl.scenes));
+                            ReportAdd(GeomQuerying.GeomLayers(Model, item, _parentWindow.DrawingControl.Scenes));
                             if (mode == "binary ")
                             {
                                 ReportAdd(GeomQuerying.GeomInfoMesh(Model, item));
@@ -334,7 +330,7 @@ namespace XbimXplorer.Querying
                             if (mode == "viewer ")
                             {
                                 ReportAdd(
-                                    GeomQuerying.Viewerdata(ParentWindow.DrawingControl, Model, item)
+                                    GeomQuerying.Viewerdata(_parentWindow.DrawingControl, Model, item)
                                     );
                             }
                         }
@@ -354,14 +350,14 @@ namespace XbimXplorer.Querying
                         if (transverse != "")
                             transverseT = true;
                         
-                        bool Highlight = false;
+                        bool highlight = false;
                         string HighlightT = m.Groups["hi"].Value;
                         if (HighlightT != "")
-                            Highlight = true;                        
+                            highlight = true;                        
 
                         IEnumerable<int> labels = toIntarray(start, ',');
                         IEnumerable<int> ret = null;
-                        if (labels.Count() == 0)
+                        if (!labels.Any())
                         {
                             // see if it's a type string instead;
                             Regex SubRe = new Regex(@"[\+\-]*([A-Za-z0-9\[\]]+)");
@@ -372,7 +368,7 @@ namespace XbimXplorer.Querying
                                 if (submatch.Value.Contains("-"))
                                     modeAdd = false;
                                 // the syntax could be IfcWall[10]
-                                SquareBracketIndexer sbi = new SquareBracketIndexer(submatch.Groups[1].Value);
+                                var sbi = new SquareBracketIndexer(submatch.Groups[1].Value);
                                 IEnumerable<int> ThisLabels = QueryEngine.EntititesForType(sbi.Property, Model);
                                 ThisLabels = sbi.getItem(ThisLabels);
                                 if (modeAdd)
@@ -415,14 +411,14 @@ namespace XbimXplorer.Querying
                             }
                         }
                         // visual selection
-                        if (Highlight)
+                        if (highlight)
                         {
                             EntitySelection s = new EntitySelection();
                             foreach (var item in ret)
                             {
                                 s.Add(Model.Instances[item]);
                             }
-                            ParentWindow.DrawingControl.Selection = s;
+                            _parentWindow.DrawingControl.Selection = s;
                         }
                         continue;
                     }
@@ -442,7 +438,7 @@ namespace XbimXplorer.Querying
                         var reg = regions.Where(x => x.Name == RName).FirstOrDefault();
                         if (reg != null)
                         {
-                            XbimMatrix3D mcp = XbimMatrix3D.Copy(ParentWindow.DrawingControl.wcsTransform);
+                            XbimMatrix3D mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
                             var bb = reg.Centre;
                             var tC = mcp.Transform(reg.Centre);
                             var tS = mcp.Transform(reg.Size);
@@ -450,8 +446,8 @@ namespace XbimXplorer.Querying
                                 tC.X - tS.X / 2, tC.Y - tS.Y / 2, tC.Z - tS.Z / 2,
                                 tS.X, tS.X, tS.Z
                                 );
-                            ParentWindow.DrawingControl.ZoomTo(r3d);
-                            ParentWindow.Activate();
+                            _parentWindow.DrawingControl.ZoomTo(r3d);
+                            _parentWindow.Activate();
                             continue;
                         }
                         else
@@ -469,9 +465,9 @@ namespace XbimXplorer.Querying
                     m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
                     if (m.Success)
                     {
-                        ParentWindow.DrawingControl.ClearCutPlane();
+                        _parentWindow.DrawingControl.ClearCutPlane();
                         ReportAdd("Clip removed");
-                        ParentWindow.Activate();
+                        _parentWindow.Activate();
                         continue;
                     }
 
@@ -508,7 +504,7 @@ namespace XbimXplorer.Querying
                                 if (geomdata != null)
                                 {
                                     Xbim.Common.Geometry.XbimPoint3D pt = new Xbim.Common.Geometry.XbimPoint3D(0, 0, XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
-                                    Xbim.Common.Geometry.XbimMatrix3D mcp = Xbim.Common.Geometry.XbimMatrix3D.Copy(ParentWindow.DrawingControl.wcsTransform);
+                                    Xbim.Common.Geometry.XbimMatrix3D mcp = Xbim.Common.Geometry.XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
                                     var transformed = mcp.Transform(pt);
                                     msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z, transformed.Z + 1);
                                     pz = transformed.Z + 1;
@@ -538,28 +534,28 @@ namespace XbimXplorer.Querying
                         }
                         
 
-                        ParentWindow.DrawingControl.ClearCutPlane();
-                        ParentWindow.DrawingControl.SetCutPlane(
+                        _parentWindow.DrawingControl.ClearCutPlane();
+                        _parentWindow.DrawingControl.SetCutPlane(
                             px, py, pz,
                             nx, ny, nz
                             );
 
                         ReportAdd("Clip command sent");
-                        ParentWindow.Activate();
+                        _parentWindow.Activate();
                         continue;
                     }
 
                     m = Regex.Match(cmd, @"^Styler (?<command>.+)", RegexOptions.IgnoreCase);
                     if (m.Success)
                     {
-                        var st = ParentWindow.DrawingControl.LayerStyler as Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyleExtended;
+                        var st = _parentWindow.DrawingControl.LayerStyler as Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyleExtended;
                         if (st != null)
                         { 
                             string command = m.Groups["command"].Value;
                             ReportAdd(
-                                st.SendCommand(command, ParentWindow.DrawingControl.Selection)
+                                st.SendCommand(command, _parentWindow.DrawingControl.Selection)
                                 );
-                            ParentWindow.DrawingControl.ReloadModel();
+                            _parentWindow.DrawingControl.ReloadModel();
                         }
                         else
                         {
@@ -574,14 +570,14 @@ namespace XbimXplorer.Querying
                         string Name = m.Groups["Name"].Value;
                         if (m.Groups["action"].Value.ToLowerInvariant() == "list")
                         {
-                            foreach (var item in ParentWindow.DrawingControl.ListItems(Name))
+                            foreach (var item in _parentWindow.DrawingControl.ListItems(Name))
                             {
                                 ReportAdd(item);
                             }
                         }
                         else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
                         {
-                            foreach (var item in ParentWindow.DrawingControl.LayersTree())
+                            foreach (var item in _parentWindow.DrawingControl.LayersTree())
                             {
                                 ReportAdd(item);
                             }
@@ -592,26 +588,26 @@ namespace XbimXplorer.Querying
                             if (t == "type")
                             {
                                 ReportAdd("Visual mode set to EntityType.");
-                                ParentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyle();
-                                ParentWindow.DrawingControl.ReloadModel(Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyle();
+                                _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else if (t == "entity")
                             {
                                 ReportAdd("Visual mode set to EntityLabel.");
-                                ParentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerPerEntity();
-                                ParentWindow.DrawingControl.ReloadModel(Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerPerEntity();
+                                _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else if (t == "oddeven")
                             {
                                 ReportAdd("Visual mode set to Odd/Even.");
-                                ParentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerEvenOdd();
-                                ParentWindow.DrawingControl.ReloadModel(Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerEvenOdd();
+                                _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else if (t == "demo")
                             {
                                 ReportAdd("Visual mode set to Demo.");
-                                ParentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyleExtended();
-                                ParentWindow.DrawingControl.ReloadModel(Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyleExtended();
+                                _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else
                                 ReportAdd(string.Format("mode not understood: {0}.", t));
@@ -621,7 +617,7 @@ namespace XbimXplorer.Querying
                             bool bVis = false;
                             if (m.Groups["action"].Value.ToLowerInvariant() == "on")
                                 bVis = true;
-                            ParentWindow.DrawingControl.SetVisibility(Name, bVis);
+                            _parentWindow.DrawingControl.SetVisibility(Name, bVis);
                         }
                         continue;
                         }
@@ -1216,11 +1212,11 @@ namespace XbimXplorer.Querying
         /// <summary>
         /// All bindings are to be established in this call
         /// </summary>
-        /// <param name="MainWindow"></param>
-        public void BindUI(XplorerMainWindow MainWindow)
+        /// <param name="mainWindow"></param>
+        public void BindUI(XplorerMainWindow mainWindow)
         {
-            ParentWindow = MainWindow;
-            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = MainWindow, Mode = BindingMode.OneWay });
+            _parentWindow = mainWindow;
+            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
             this.SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
         }
 
@@ -1232,7 +1228,7 @@ namespace XbimXplorer.Querying
         }
 
         public static DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(wdwQuery), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
+            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(WdwQuery), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                                                                       new PropertyChangedCallback(OnSelectedEntityChanged)));
 
 
@@ -1244,13 +1240,13 @@ namespace XbimXplorer.Querying
         }
 
         public static DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(XbimModel), typeof(wdwQuery), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
+            DependencyProperty.Register("Model", typeof(XbimModel), typeof(WdwQuery), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                                                                       new PropertyChangedCallback(OnSelectedEntityChanged)));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // if any UI event should happen it needs to be specified here
-            wdwQuery ctrl = d as wdwQuery;
+            WdwQuery ctrl = d as WdwQuery;
             if (ctrl != null)
             {
                 if (e.Property.Name == "Model")

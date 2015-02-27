@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Xml.XPath;
 using System.Diagnostics;
 using System.Xml;
+using Newtonsoft.Json;
 using Validation.mvdXML;
 using Xbim.COBieLite;
 using Xbim.Ifc2x3.Extensions;
@@ -57,47 +58,55 @@ namespace Validation
         private void OpenFile(object sender, RoutedEventArgs e)
         {
             var openFile = new OpenFileDialog();
-            openFile.Filter = @"CobieLite XML|*.xml";
+            openFile.Filter = @"All supprted files|*.xml;*.json|CobieLite XML|*.xml|CobieLite Json|*.json";
             var res = openFile.ShowDialog();
 
             if (res.HasValue && res.Value)
             {
                 // Model Deserialisation 
                 //
-                
+                var cobieModelFileInfo = new FileInfo(openFile.FileName);
+
+                FacilityType t = null;
                 try
                 {
-                    var cobieModelFileName = openFile.FileName;
-
-                    var x = new XmlSerializer(typeof(FacilityType));
-                    var reader = new XmlTextReader(cobieModelFileName);
-                    ReqFacility = (FacilityType)x.Deserialize(reader);
-                    reader.Close();
-
-                    var assets = new List<AssetTypeInfoTypeVM>();
-                    var spaces = new List<SpaceTypeVM>();
-
-                    foreach (var asset in ReqFacility.AssetTypes.AssetType)
+                    switch (cobieModelFileInfo.Extension.ToLowerInvariant())
                     {
-                        assets.Add(new AssetTypeInfoTypeVM(asset));
+                        case ".xml":
+                            var x = FacilityType.GetSerializer();
+                            var reader = new XmlTextReader(cobieModelFileInfo.FullName);
+                            t = (FacilityType)x.Deserialize(reader);
+                            reader.Close();
+                            break;
+                        case ".json":
+                            var data = File.ReadAllText(cobieModelFileInfo.FullName);
+                            t = JsonConvert.DeserializeObject<FacilityType>(data);
+                            break;
                     }
-
-                   
-
-
-                    lstClassifications.ItemsSource = assets;
-                    lstSpaces.ItemsSource = spaces;
-                    IsFileOpen = true;
-
                 }
                 catch (Exception)
                 {
-                    // return (int)ReturnCodes.ErrorDesirializingModel;
                 }
-
-                
-                
+                if (t != null)
+                {
+                    SetFacility(t);
+                }
             }
+        }
+
+        private void SetFacility(FacilityType facility)
+        {
+            ReqFacility = facility;
+            var assets = new List<AssetTypeInfoTypeVM>();
+            var spaces = new List<SpaceTypeVM>();
+
+            foreach (var asset in ReqFacility.AssetTypes.AssetType)
+            {
+                assets.Add(new AssetTypeInfoTypeVM(asset));
+            }
+            lstClassifications.ItemsSource = assets;
+            lstSpaces.ItemsSource = spaces;
+            IsFileOpen = true;
         }
 
         private bool IsFileOpen
@@ -179,10 +188,10 @@ namespace Validation
         // plugin system related stuff
         //
 
-        public void BindUI(XplorerMainWindow MainWindow)
+        public void BindUI(XplorerMainWindow mainWindow)
         {
-            xpWindow = MainWindow;
-            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = MainWindow, Mode = BindingMode.OneWay });
+            xpWindow = mainWindow;
+            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
             this.SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
         }
 
@@ -229,7 +238,7 @@ namespace Validation
                             var facilities = helper.GetFacilities();
                             ctrl.ModelFacility = facilities.FirstOrDefault();
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             ctrl.ModelFacility = null;
                         }
@@ -310,7 +319,7 @@ namespace Validation
             var newLayerStyler = new ValidationResultStyler();
             xpWindow.DrawingControl.GeomSupport2LayerStyler = newLayerStyler;
 
-            xpWindow.DrawingControl.ReloadModel(Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+            xpWindow.DrawingControl.ReloadModel(/*Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll*/);
         }
 
 
@@ -330,69 +339,7 @@ namespace Validation
 
         private void FixCobieProp(object sender, RoutedEventArgs e)
         {
-            if (false)
-            {
-                #region obsolete
-
-                XbimModel m = this.Model as XbimModel;
-                if (m == null)
-                    return;
-                if (xpWindow.SelectedItem == null)
-                    return;
-
-                using (XbimReadWriteTransaction txn = m.BeginTransaction("AddProp"))
-                {
-                    Random rnd = new Random();
-                    var prop1 = m.Instances.New<IfcPropertySingleValue>();
-                    prop1.Name = "TagNumber";
-                    prop1.Description = "The tag number assigned to an occurrence of a product by the occupier.";
-                    prop1.NominalValue = new IfcLabel(
-                        rnd.Next(1000000, 9999999).ToString()
-                        );
-
-                    //AssetIdentifier
-                    var prop2 = m.Instances.New<IfcPropertySingleValue>();
-                    prop2.Name = "AssetIdentifier";
-                    prop2.Description =
-                        "The asset identifier assigned to an occurrence of a product (prior to handover).";
-                    prop2.NominalValue = new IfcLabel(
-                        Guid.NewGuid().ToString()
-                        );
-
-                    //AcquisitionDate
-                    var prop3 = m.Instances.New<IfcPropertySingleValue>();
-                    prop3.Name = "AcquisitionDate";
-                    prop3.Description = "The date that the manufactured item was purchased or installed.";
-                    prop3.NominalValue = new IfcLabel(
-                        "n/a"
-                        );
-
-                    //WarrantyStartDate
-                    var prop4 = m.Instances.New<IfcPropertySingleValue>();
-                    prop4.Name = "WarrantyStartDate";
-                    prop4.Description = "The date on which the warranty commences.";
-                    prop4.NominalValue = new IfcLabel(
-                        "n/a"
-                        );
-
-                    var ps = m.Instances.New<IfcPropertySet>();
-                    ps.Name = "Pset_ManufacturerOccurrence";
-                    ps.Description = "Properties for Component found in COBie";
-                    ps.HasProperties.Add(prop1);
-                    ps.HasProperties.Add(prop2);
-                    ps.HasProperties.Add(prop3);
-                    ps.HasProperties.Add(prop4);
-
-                    var rel = m.Instances.New<IfcRelDefinesByProperties>();
-                    rel.Name = "Associated COBie Attributes Rel Defines By Properties";
-                    rel.Description = "Associated COBie Attributes";
-                    rel.RelatedObjects.Add((IfcObject) xpWindow.SelectedItem);
-                    rel.RelatingPropertyDefinition = ps;
-                    txn.Commit();
-                }
-
-                #endregion
-            }
+           
 
             var atClassifications = new HashSet<string>();
 

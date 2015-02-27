@@ -7,6 +7,6 @@ namespace XbimXplorer.PluginSystem
 {
     public interface IxBimXplorerPluginWindowMessaging
     {
-        void ProcessMessage(object Sender, string MessageTypeString, object MessageData);
+        void ProcessMessage(object sender, string messageTypeString, object messageData);
     }
 }

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using System.Windows;
 using Xbim.Ifc2x3.ProductExtension;
+using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation.LayerStylingV2
 {
@@ -76,7 +75,7 @@ namespace Xbim.Presentation.LayerStylingV2
                         new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                     mg.BackMaterial = mg.Material;
                     mg.Transform =
-                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform).ToMatrixTransform3D();
+                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
                     if (styles[styleId].IsTransparent)
                         tmpTransparentsGroup.Children.Add(mg);
                     else
@@ -88,6 +87,15 @@ namespace Xbim.Presentation.LayerStylingV2
                     if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
+                        switch ((XbimGeometryType)shapeGeom.Format)
+                        {
+                            case XbimGeometryType.PolyhedronBinary:
+                                wpfMesh.Read(shapeGeom.ShapeData);
+                                break;
+                            case XbimGeometryType.Polyhedron:
+                                wpfMesh.Read(((XbimShapeGeometry)shapeGeom).ShapeData);
+                                break;
+                        }
                         wpfMesh.Read(shapeGeom.ShapeData);
                         repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                         var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
@@ -95,7 +103,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                         mg.BackMaterial = mg.Material;
                         mg.Transform =
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform).ToMatrixTransform3D();
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
                         if (styles[styleId].IsTransparent)
                             tmpTransparentsGroup.Children.Add(mg);
                         else
@@ -104,13 +112,29 @@ namespace Xbim.Presentation.LayerStylingV2
                     else //it is a one off, merge it with shapes of a similar material
                     {
                         var targetMergeMeshByStyle = styleMeshSets[styleId];
-                        targetMergeMeshByStyle.Add(
-                            shapeGeom.ShapeData,
-                            shapeInstance.IfcTypeId,
-                            shapeInstance.IfcProductLabel,
-                            shapeInstance.InstanceLabel,
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.wcsTransform),
-                            0);
+                        switch ((XbimGeometryType)shapeGeom.Format)
+                        {
+                            case XbimGeometryType.Polyhedron:
+                                var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                targetMergeMeshByStyle.Add(
+                           shapePoly.ShapeData,
+                           shapeInstance.IfcTypeId,
+                           shapeInstance.IfcProductLabel,
+                           shapeInstance.InstanceLabel,
+                           XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                break;
+
+                            case XbimGeometryType.PolyhedronBinary:
+                                targetMergeMeshByStyle.Add(
+                          shapeGeom.ShapeData,
+                          shapeInstance.IfcTypeId,
+                          shapeInstance.IfcProductLabel,
+                          shapeInstance.InstanceLabel,
+                          XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
                     }
                 }
             }

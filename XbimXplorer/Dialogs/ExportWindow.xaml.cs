@@ -24,11 +24,18 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     public partial class ExportWindow : Window
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public ExportWindow()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callingWindow"></param>
         public ExportWindow(XplorerMainWindow callingWindow) : this()
         {
             mainWindow = callingWindow;
@@ -162,7 +169,7 @@ namespace XbimXplorer.Dialogs
             this.Cursor = Cursors.Arrow;
             this.Close();
         }
-
+                
 
         private string GetExportName(string extension, int progressive = 0)
         {

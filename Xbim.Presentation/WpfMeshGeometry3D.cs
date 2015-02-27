@@ -133,6 +133,7 @@ namespace Xbim.Presentation
         /// Do not use this rather create a XbimMeshGeometry3D first and construct this from it, appending WPF collections is slow
         /// </summary>
         /// <param name="geometryMeshData"></param>
+        /// <param name="modelId"></param>
         public bool Add(XbimGeometryData geometryMeshData, short modelId)
         {
             throw new NotImplementedException();
