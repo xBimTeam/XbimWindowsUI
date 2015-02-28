@@ -100,9 +100,12 @@ namespace Validation
             var assets = new List<AssetTypeInfoTypeVM>();
             var spaces = new List<SpaceTypeVM>();
 
-            foreach (var asset in ReqFacility.AssetTypes.AssetType)
+            if (ReqFacility.AssetTypes.Any())
             {
-                assets.Add(new AssetTypeInfoTypeVM(asset));
+                foreach (var asset in ReqFacility.AssetTypes)
+                {
+                    assets.Add(new AssetTypeInfoTypeVM(asset));
+                }
             }
             lstClassifications.ItemsSource = assets;
             lstSpaces.ItemsSource = spaces;
@@ -234,11 +237,10 @@ namespace Validation
                     {
                         try
                         {
-                            var helper = new CoBieLiteHelper(model, "UniClass");
-                            var facilities = helper.GetFacilities();
-                            ctrl.ModelFacility = facilities.FirstOrDefault();
+                            var helper = new CoBieLiteHelper(model, "UniClass2015");
+                            ctrl.ModelFacility = helper.GetFacilities().FirstOrDefault();
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
                             ctrl.ModelFacility = null;
                         }
