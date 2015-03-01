@@ -16,9 +16,12 @@ namespace Validation.MV
 
         public override string ToString()
         {
+            const string undeterminedString = @"N/D";
             if (DataModel == null)
-                return @"N/D";
-            return DataModel.AssetTypeCategory;
+                return undeterminedString;
+            return String.IsNullOrEmpty(DataModel.AssetTypeName) 
+                ? undeterminedString 
+                : DataModel.AssetTypeName;
         }
 
         internal AssetTypeInfoType DataModel;

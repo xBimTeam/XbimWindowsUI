@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Controls;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -96,7 +97,14 @@ namespace XbimXplorer
                 {
                     Debug.WriteLine(string.Format("Will need to load: {0}", refReq.FullName));
                     AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-                    Assembly.Load(refReq);
+                    try
+                    {
+                        Assembly.Load(refReq);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Problem loading assembly " + refReq + " for " + fullAssemblyName);
+                    }
                     AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
                 }
             }

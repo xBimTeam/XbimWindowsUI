@@ -18,9 +18,10 @@ using System.Xml;
 using Newtonsoft.Json;
 using Validation.mvdXML;
 using Xbim.COBieLite;
+using Xbim.COBieLite.Validation;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.IO.GroupingAndStyling;
-using XbimXplorer.Plugins.DPoWValidation.ValidationObjects;
+using XbimXplorer.Plugins.DPoWValidation.MV;
 using XbimXplorer.PluginSystem;
 using XbimXplorer;
 using Xbim.XbimExtensions.Interfaces;
@@ -35,7 +36,6 @@ using Xbim.Ifc2x3.MeasureResource;
 using Xbim.Ifc2x3.Kernel;
 using System.Xml.Serialization;
 using Validation.MV;
-using Validation.ValidationObjects;
 using Path = System.IO.Path;
 using XbimXplorer.Plugins.DPoWValidation;
 
@@ -84,8 +84,9 @@ namespace Validation
                             break;
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Debug.WriteLine(ex.Message);
                 }
                 if (t != null)
                 {
@@ -98,7 +99,7 @@ namespace Validation
         {
             ReqFacility = facility;
             var assets = new List<AssetTypeInfoTypeVM>();
-            var spaces = new List<SpaceTypeVM>();
+            var projs = new List<ProjectReqVM>();
 
             if (ReqFacility.AssetTypes.Any())
             {
@@ -107,8 +108,14 @@ namespace Validation
                     assets.Add(new AssetTypeInfoTypeVM(asset));
                 }
             }
+            if (!string.IsNullOrEmpty(facility.ProjectAssignment.ProjectName))
+            {
+                projs.Add( 
+                    new ProjectReqVM(ReqFacility)
+                    );
+            }
             lstClassifications.ItemsSource = assets;
-            lstSpaces.ItemsSource = spaces;
+            lstProject.ItemsSource = projs;
             IsFileOpen = true;
         }
 
@@ -144,16 +151,28 @@ namespace Validation
                 return;
             var selectedType = lstClassifications.SelectedItem.ToString();
 
-            var vm = lstClassifications.SelectedItem as AssetTypeInfoTypeVM;
             
+            var sb = new StringBuilder();
             var rep = new List<ReportResult>();
-            if (ModelFacility != null && vm != null)
+            
+            var vm = lstClassifications.SelectedItem as AssetTypeInfoTypeVM;
+            if (vm == null)
             {
-                var creq = new CobieAssetTypeRequirement(vm.DataModel);
-                var sb = new StringBuilder();
-                rep.AddRange(creq.Validate(ModelFacility, -1, sb));
-                report.Text = sb.ToString();
+                sb.AppendLine(@"Unexpected selection.");
             }
+            else
+            {
+                sb.AppendLine(vm.ToString());
+                sb.AppendFormat("Classification: {0}", vm.DataModel.AssetTypeCategory);
+                var creq = new CobieAssetTypeRequirementSet(vm.DataModel);
+
+                if (ModelFacility != null)
+                {
+                    rep.AddRange(creq.Validate(ModelFacility, -1, sb));
+                }
+
+            }
+            report.Text = sb.ToString();
             lstClassResults.ItemsSource = rep;
         }
 
@@ -173,15 +192,31 @@ namespace Validation
 
         private void lstSpaces_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            report.Text = "";
-            if (lstSpaces.SelectedItem == null)
+            if (lstProject.SelectedItem == null)
                 return;
-
-            List<ReportResult> rep = new List<ReportResult>();
-                
-
-            LstSpaceResults.ItemsSource = rep;
             
+            var sb = new StringBuilder();
+            var rep = new List<ReportResult>();
+
+            var vm = lstProject.SelectedItem as ProjectReqVM;
+            if (vm == null)
+            {
+                sb.AppendLine(@"Unexpected selection.");
+            }
+            else
+            {
+                sb.AppendLine(vm.ToString());
+                // sb.AppendFormat("Classification: {0}", vm.DataModel.AssetTypeCategory);
+                var creq = new CobieProjectRequirementSet(vm.DataModel);
+
+                if (ModelFacility != null)
+                {
+                    rep.AddRange(creq.Validate(ModelFacility, -1, sb));
+                }
+
+            }
+            report.Text = sb.ToString();
+            LstProjectResults.ItemsSource = rep;
         }
 
 
@@ -254,8 +289,6 @@ namespace Validation
                     if (selectedEnt == null) 
                         return;
 
-                    
-
                     var type = selectedEnt.GetDefiningType();
                     if (type == null || ctrl.ReqFacility == null) 
                         return;
@@ -272,7 +305,7 @@ namespace Validation
 
                     if (req != null)
                     {
-                        var creq = new CobieAssetTypeRequirement(req);
+                        var creq = new CobieAssetTypeRequirementSet(req);
                         StringBuilder b = new StringBuilder();
                         creq.Validate(ctrl.ModelFacility, selectedEnt.EntityLabel, b);
                         var rep = b.ToString();
@@ -307,8 +340,10 @@ namespace Validation
                 //    s.Add(Model.Instances[item]);
                 //}
                 //ParentWindow.DrawingControl.Selection = s;
-                int selectedLabel = ((ReportResult)lstClassResults.SelectedItem).EntityLabel;
+                var rres = lstClassResults.SelectedItem as ReportResult;
+                var selectedLabel = rres.EntityLabel;
                 xpWindow.SelectedItem = Model.Instances[selectedLabel];
+                report.Text = rres.Notes;
             }
         }
 
@@ -335,19 +370,17 @@ namespace Validation
         {
             Doc = null;
             lstClassifications.ItemsSource = null;
-            lstSpaces.ItemsSource = null;
+            lstProject.ItemsSource = null;
             IsFileOpen = false;
         }
 
         private void FixCobieProp(object sender, RoutedEventArgs e)
         {
-           
-
             var atClassifications = new HashSet<string>();
 
             for (var i = 0; i < ModelFacility.AssetTypes.AssetType.Count; i++)
             {
-                string thisCat = ModelFacility.AssetTypes.AssetType[i].AssetTypeCategory;
+                var thisCat = ModelFacility.AssetTypes.AssetType[i].AssetTypeCategory;
 
                 if (atClassifications.Contains(thisCat))
                 {
@@ -373,10 +406,10 @@ namespace Validation
             {
                 ReportResult res = null;
                 string title = "";
-                if (h.ToolTip.ToString() == "Create ER comment" && LstSpaceResults.SelectedItem != null)
+                if (h.ToolTip.ToString() == "Create ER comment" && LstProjectResults.SelectedItem != null)
                 {
-                    res = LstSpaceResults.SelectedItem as ReportResult;
-                    title = lstSpaces.SelectedItem.ToString() + " ";
+                    res = LstProjectResults.SelectedItem as ReportResult;
+                    title = LstProjectResults.SelectedItem.ToString() + " ";
                     title += (res.BoolResult) ? "validation passed" : "validation failed";
                 }
                 else if (h.ToolTip.ToString() == "Create Class comment" && lstClassResults.SelectedItem != null)
@@ -386,7 +419,7 @@ namespace Validation
                 }
                 if (res != null)
                 {
-                    Dictionary<string, object> MessageData = new Dictionary<string, object>();
+                    var MessageData = new Dictionary<string, object>();
                     string VerbalStatus = (res.BoolResult) ? "Information" : "Error";
                     string commentText =
                         string.Format("Entity {0} ({1}) {2} request {3}",
@@ -396,7 +429,10 @@ namespace Validation
                             res.ConceptName
                             );
 
+                    commentText += "\r\n\r\n" + res.Notes;
+
                     MessageData.Add("InstanceTitle", title);
+                    MessageData.Add("DestinationEmail", "claudio.benghi@gmail.com");
                     MessageData.Add("CommentVerbalStatus", VerbalStatus);
                     MessageData.Add("CommentAuthor", "CB");
                     MessageData.Add("CommentText", commentText);

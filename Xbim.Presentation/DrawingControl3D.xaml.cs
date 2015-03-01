@@ -817,16 +817,29 @@ namespace Xbim.Presentation
                 {
                     var context = new Xbim3DModelContext(fromModel);
                     var metre = fromModel.ModelFactors.OneMetre;
-                    WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
-           
-                    var productShape = context.ShapeInstancesOf((IfcProduct)newVal).Where(s=>s.RepresentationType!=XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
+                    WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
+                                   XbimMatrix3D.CreateScale((float) (1/metre));
+
+                    var productShape =
+                        context.ShapeInstancesOf((IfcProduct) newVal)
+                            .Where(
+                                s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                            .ToList();
                     if (productShape.Any())
-                {
+                    {
 
                         foreach (var shapeInstance in productShape)
-                    {
-                            var shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                            m.Read(shapeGeom.ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation,WcsTransform));
+                        {
+                            IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                            switch ((XbimGeometryType)shapeGeom.Format)
+                            {
+                                case XbimGeometryType.PolyhedronBinary:
+                                    m.Read(shapeGeom.ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                    break;
+                                case XbimGeometryType.Polyhedron:
+                                    m.Read(((XbimShapeGeometry)shapeGeom).ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                    break;
+                            }
                         }
                     }
                 }

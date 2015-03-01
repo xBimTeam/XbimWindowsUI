@@ -6,19 +6,21 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using Xbim.XbimExtensions.Interfaces;
 
-namespace Validation.ValidationObjects
+namespace Xbim.COBieLite.Validation
 {
-    class ReportResult
+    public class ReportResult
     {
-        public IValidationRequirement Requirement;
+        public IValidationRequirementSet Requirement;
         public int EntityLabel;
         public bool BoolResult;
+        public string Notes;
 
-        public ReportResult(IValidationRequirement requirement, int entityLabel, bool bPassed)
+        public ReportResult(IValidationRequirementSet requirement, int entityLabel, bool passed, string notes)
         {
-            this.Requirement = requirement;
-            this.EntityLabel = entityLabel;
-            this.BoolResult = bPassed;
+            Requirement = requirement;
+            EntityLabel = entityLabel;
+            BoolResult = passed;
+            Notes = notes;
         }
 
         public string EntityDesc 

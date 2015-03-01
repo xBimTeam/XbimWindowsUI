@@ -18,7 +18,32 @@
 
 
             <TabControl Grid.Row="0" Margin="5,5,5,10" >
-                <TabItem Header="Asset classification">
+                <TabItem Header="Project">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <GridSplitter Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="5" />
+                        <ListBox Grid.Column="0" x:Name="lstProject" SelectionChanged="lstSpaces_SelectionChanged"  Margin="0,0,5,0"/>
+                        <ListView Grid.Column="1" x:Name="LstProjectResults" Margin="0,0,0,20">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <WrapPanel>
+                                        <Ellipse Width="10" Height="10" Fill="{Binding CircleBrush}" />
+                                        <TextBlock Text="{Binding EntityDesc}" Margin="3,0" />
+                                        <TextBlock Text="{Binding ResultSummary}" FontStyle="Oblique" Margin="3,0" />
+                                        <TextBlock Text="{Binding ConceptName}" Margin="3,0" />
+                                    </WrapPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <Label Grid.Column="1" VerticalAlignment="Bottom">
+                            <Hyperlink Click="AddComment" ToolTip="Create ER comment" >Create Comment</Hyperlink>
+                        </Label>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Assets">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
@@ -41,35 +66,6 @@
                         <Label Grid.Column="1" VerticalAlignment="Bottom">
                             <Hyperlink ToolTip="Create Class comment" Click="AddComment" >Create Comment</Hyperlink>
                         </Label>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Spaces">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <GridSplitter Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="5" />
-                        <ListBox Grid.Column="0" x:Name="lstSpaces" SelectionChanged="lstSpaces_SelectionChanged"  Margin="0,0,5,0"/>
-                        <ListView Grid.Column="1" x:Name="LstSpaceResults" Margin="0,0,0,20">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <WrapPanel>
-                                        <Ellipse Width="10" Height="10" Fill="{Binding CircleBrush}" />
-                                        <TextBlock Text="{Binding EntityDesc}" Margin="3,0" />
-                                        <TextBlock Text="{Binding ResultSummary}" FontStyle="Oblique" Margin="3,0" />
-                                        <TextBlock Text="{Binding ConceptName}" Margin="3,0" />
-                                    </WrapPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                        <Label Grid.Column="1" VerticalAlignment="Bottom">
-                            <Hyperlink Click="AddComment" ToolTip="Create ER comment" >Create Comment</Hyperlink>
-                        </Label>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Documents">
-                    <Grid>
                     </Grid>
                 </TabItem>
                 <TabItem Header="Commands">

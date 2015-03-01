@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Validation.ValidationObjects;
 using Xbim.COBieLite;
 using Xbim.Ifc2x3.Kernel;
 
 
-namespace XbimXplorer.Plugins.DPoWValidation.ValidationObjects
+namespace Xbim.COBieLite.Validation
 {
     static class ValidationExtensions
     {
