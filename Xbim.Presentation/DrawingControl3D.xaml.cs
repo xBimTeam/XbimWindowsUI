@@ -1318,7 +1318,7 @@ namespace Xbim.Presentation
                 scene = GeomSupport2LayerStyler.BuildScene(model, context, _exclude);
             }
 
-            if(scene.Layers.Count() > 0)
+            if(scene.Layers.Any())
                 Scenes.Add(scene);
             foreach (var refModel in model.ReferencedModels)
             {

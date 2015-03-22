@@ -13,7 +13,7 @@
         <Grid x:Name="UI" Visibility="{Binding UIVisibility}" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="7*" />
-                <RowDefinition Height="0*" />
+                <RowDefinition Height="5*" />
             </Grid.RowDefinitions>
 
 
