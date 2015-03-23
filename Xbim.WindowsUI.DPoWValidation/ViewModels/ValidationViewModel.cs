@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Windows;
+using Xbim.COBieLiteUK;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.WindowsUI.DPoWValidation.Commands;
@@ -36,6 +36,34 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 Validate.ChangesHappened();
             }
         }
+
+        private Facility _requirementFacility;
+
+        internal Facility RequirementFacility
+        {
+            get { return _requirementFacility; }
+            set
+            {
+                _requirementFacility = value; 
+                _requirementFacilityVM = new DPoWFacilityViewModel(_requirementFacility);
+                
+                if (PropertyChanged == null)
+                    return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"RequirementFacilityVM"));
+            }
+        }
+
+
+        private DPoWFacilityViewModel _requirementFacilityVM;
+        public DPoWFacilityViewModel RequirementFacilityVM
+        {
+            get { return _requirementFacilityVM; }
+        }
+
+        private Facility submissionFacility;
+
+        private Facility validationFacility;
+
 
         public string SubmissionFileSource
         {
@@ -77,18 +105,54 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             SelectRequirement.ChangesHappened();
             SelectSubmission.ChangesHappened();
 
-            LoadAnyModel(SubmissionFileSource);
+            // LoadSubmissionFile(SubmissionFileSource);
+            LoadRequirementFile(RequirementFileSource);
+        }
 
-            var m = new XbimModel();
+        private void LoadRequirementFile(string cobieFilename)
+        {
+         
             
+            if (string.IsNullOrEmpty(cobieFilename))
+                return;
+            if (!File.Exists(cobieFilename))
+                return;
 
-
+            switch (Path.GetExtension(cobieFilename.ToLowerInvariant()))
+            {
+                case ".json":
+                    RequirementFacility = Facility.ReadJson(cobieFilename);
+                    break;
+                case ".xml":
+                    RequirementFacility = Facility.ReadXml(cobieFilename);
+                    break;
+            }
         }
 
         private string _openedModelFileName;
         private string _temporaryXbimFileName;
 
         private BackgroundWorker _worker;
+
+        private void OpenSubmissionCobiFile(object s, DoWorkEventArgs args)
+        {
+            var worker = s as BackgroundWorker;
+            var cobieFilename = args.Argument as string;
+            if (string.IsNullOrEmpty(cobieFilename))
+                return;
+            if (!File.Exists(cobieFilename))
+                return;
+            
+            switch (Path.GetExtension(cobieFilename.ToLowerInvariant()))
+            {
+                case ".json": 
+                    submissionFacility = Facility.ReadJson(cobieFilename);
+                    break;
+                case ".xml":
+                    submissionFacility = Facility.ReadXml(cobieFilename);
+                    break;
+            }
+        }
 
         private void OpenIfcFile(object s, DoWorkEventArgs args)
         {
@@ -138,11 +202,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     ex = ex.InnerException;
                     indent += "\t";
                 }
-
                 args.Result = new Exception(sb.ToString());
             }
         }
-
 
         private void OpenXbimFile(object s, DoWorkEventArgs args)
         {
@@ -163,7 +225,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                         model.Open(fileName, XbimDBAccess.ReadWrite, worker.ReportProgress);
                         // federations need to be opened in read/write for the editor to work
 
-
                         // sets a convenient integer to all children for model identification
                         // this is used by the federated model selection mechanisms.
                         var i = 0;
@@ -173,7 +234,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                         }
                     }
                 }
-
                 args.Result = model;
             }
             catch (Exception ex)
@@ -187,7 +247,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     ex = ex.InnerException;
                     indent += "\t";
                 }
-
                 args.Result = new Exception(sb.ToString());
             }
         }
@@ -216,13 +275,18 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         }
         public string ActivityDescription { get; set; }
 
+        
+
+
         private XbimModel _model;
 
         private void CreateWorker()
         {
-            _worker = new BackgroundWorker();
-            _worker.WorkerReportsProgress = true;
-            _worker.WorkerSupportsCancellation = true;
+            _worker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true, 
+                WorkerSupportsCancellation = true
+            };
             _worker.ProgressChanged += delegate(object s, ProgressChangedEventArgs args)
             {
                 ActivityProgress = args.ProgressPercentage;
@@ -235,13 +299,14 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 if (args.Result is XbimModel) //all ok
                 {
                     _model = args.Result as XbimModel;
-                    // ActivityProgress = 0;
+                    ActivityProgress = 0;
                 }
                 else //we have a problem
                 {
                     var errMsg = args.Result as String;
                     if (!string.IsNullOrEmpty(errMsg))
                     {
+                        ActivityStatus = "Error Opening File";
                         // MessageBox.Show(this, errMsg, "Error Opening File", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.None);
                     }
                     if (args.Result is Exception)
@@ -267,23 +332,50 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             };
         }
 
-        public void LoadAnyModel(string modelFileName)
+        private void CloseAndDeleteTemporaryFiles()
+        {
+            try
+            {
+                if (_worker != null && _worker.IsBusy)
+                    _worker.CancelAsync(); //tell it to stop
+                
+                _openedModelFileName = null;
+                if (_model == null) 
+                    return;
+                _model.Dispose();
+                _model = null;
+            }
+            finally
+            {
+                if (!(_worker != null && _worker.IsBusy && _worker.CancellationPending)) //it is still busy but has been cancelled 
+                {
+                    if (!string.IsNullOrWhiteSpace(_temporaryXbimFileName) && File.Exists(_temporaryXbimFileName))
+                        File.Delete(_temporaryXbimFileName);
+                    _temporaryXbimFileName = null;
+                } //else do nothing it will be cleared up in the worker thread
+            }
+        }
+
+        public void LoadSubmissionFile(string modelFileName)
         {
             var fInfo = new FileInfo(modelFileName);
             if (!fInfo.Exists) // file does not exist; do nothing
                 return;
             
             // there's no going back; if it fails after this point the current file should be closed anyway
-            // todo: restore
-            // CloseAndDeleteTemporaryFiles();
-
-            // _openedModelFileName = modelFileName.ToLower();
+            CloseAndDeleteTemporaryFiles();
+            _openedModelFileName = modelFileName.ToLower();
             
             CreateWorker();
 
             var ext = fInfo.Extension.ToLower();
             switch (ext)
             {
+                case ".json": 
+                case ".xml": 
+                    _worker.DoWork += OpenSubmissionCobiFile;
+                    _worker.RunWorkerAsync(modelFileName);
+                    break;
                 case ".ifc": //it is an Ifc File
                 case ".ifcxml": //it is an IfcXml File
                 case ".ifczip": //it is a xip file containing xbim or ifc File
@@ -298,7 +390,5 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     break;
             }
         }
-
-
     }
 }

@@ -1,7 +1,8 @@
 ﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:viewModels="clr-namespace:Xbim.WindowsUI.DPoWValidation.ViewModels" 
+        xmlns:viewModels="clr-namespace:Xbim.WindowsUI.DPoWValidation.ViewModels"
+        xmlns:controls="clr-namespace:Xbim.WindowsUI.DPoWValidation.Controls"
         x:Class="Xbim.WindowsUI.DPoWValidation.MainWindow"
         Title="Digital Plan of Work - Validation (Powered by Xbim)" Height="350" Width="525"
         >
@@ -13,6 +14,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="6*"/>
+            <RowDefinition Height="3*"/>
             <RowDefinition Height="3*"/>
         </Grid.RowDefinitions>
         <Grid >
@@ -47,5 +49,15 @@
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ActivityStatus}" />
             </Grid>
         </Grid>
+        <Grid Grid.Row="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+        </Grid>
+        <controls:DPoWFacilityViewer Grid.Row="2" DataContext="{Binding RequirementFacilityVM}" />
+            
+        
     </Grid>
 </Window>
