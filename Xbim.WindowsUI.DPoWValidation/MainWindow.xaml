@@ -1,0 +1,51 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:viewModels="clr-namespace:Xbim.WindowsUI.DPoWValidation.ViewModels" 
+        x:Class="Xbim.WindowsUI.DPoWValidation.MainWindow"
+        Title="Digital Plan of Work - Validation (Powered by Xbim)" Height="350" Width="525"
+        >
+
+    <Window.DataContext>
+        <viewModels:ValidationViewModel/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="6*"/>
+            <RowDefinition Height="3*"/>
+        </Grid.RowDefinitions>
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="5*"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Column="0" Grid.Row="0" Content="Requirement file:" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <Label Grid.Column="0" Grid.Row="1" Content="Submission file:" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+            <TextBox Grid.Column="1" Grid.Row="0" Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding RequirementFileSource, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Column="1" Grid.Row="1" Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}" />
+
+            <Button Grid.Column="2" Grid.Row="0" Height="24" Margin="5" Content="Select" Command="{Binding SelectRequirement}" />
+            <Button Grid.Column="2" Grid.Row="1" Height="24" Margin="5" Content="Select" Command="{Binding SelectSubmission}"/>
+
+        </Grid>
+        <Grid Grid.Row="1"  Background="DarkGray">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="5*"/>
+            </Grid.RowDefinitions>
+            <Button Grid.Row="0" Height="30" Width="Auto" Margin="20,10" Content="Verify" Command="{Binding Validate}" />
+            <Grid Grid.Row="1" Margin="20,10" >
+                <ProgressBar Value="{Binding ActivityProgress}" />
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ActivityStatus}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
