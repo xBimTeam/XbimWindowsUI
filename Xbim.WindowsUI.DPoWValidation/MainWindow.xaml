@@ -43,7 +43,7 @@
                 <RowDefinition Height="5*"/>
                 <RowDefinition Height="5*"/>
             </Grid.RowDefinitions>
-            <Button Grid.Row="0" Height="30" Width="Auto" Margin="20,10" Content="Verify" Command="{Binding Validate}" />
+            <Button Grid.Row="0" Height="30" Width="Auto" Margin="20,10" Content="Verify" Command="{Binding Validate}" Click="Button_Click" />
             <Grid Grid.Row="1" Margin="20,10" >
                 <ProgressBar Value="{Binding ActivityProgress}" />
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ActivityStatus}" />
@@ -55,8 +55,12 @@
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
+            <controls:DPoWFacilityViewer Grid.Column="0" DataContext="{Binding RequirementFacilityVM}" />
+            <controls:DPoWFacilityViewer Grid.Column="1" DataContext="{Binding SubmissionFacilityVM}" />
+            <controls:DPoWFacilityViewer Grid.Column="2" DataContext="{Binding val}" />
         </Grid>
-        <controls:DPoWFacilityViewer Grid.Row="2" DataContext="{Binding RequirementFacilityVM}" />
+        
+        
             
         
     </Grid>
