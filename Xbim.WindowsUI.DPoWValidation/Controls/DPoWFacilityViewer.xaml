@@ -31,9 +31,9 @@
                     </StackPanel>
                 </DataTemplate>
             </TreeView.Resources>
-            <TreeViewItem Header="Main" IsExpanded="True">
-                <TreeViewItem Header="P1" ItemsSource="{Binding AssetTypes}" />
-                <TreeViewItem Header="P2" />
+            <TreeViewItem Header="Facility" IsExpanded="True">
+                <TreeViewItem Header="Asset Types" ItemsSource="{Binding AssetTypes}" />
+                <TreeViewItem Header="Spaces" />
             </TreeViewItem >
         </TreeView>
     </Grid>
