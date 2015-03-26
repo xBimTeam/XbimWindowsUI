@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
@@ -9,7 +10,9 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.XbimExtensions;
+using XbimExchanger.IfcToCOBieLiteUK;
 using XbimGeometry.Interfaces;
+using cobieUKValidation = Xbim.CobieLiteUK.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
@@ -45,7 +48,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             set
             {
                 _requirementFacility = value; 
-                _requirementFacilityVM = new DPoWFacilityViewModel(_requirementFacility);
+                RequirementFacilityVM = new DPoWFacilityViewModel(_requirementFacility);
                 
                 if (PropertyChanged == null)
                     return;
@@ -54,16 +57,43 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         }
 
 
-        private DPoWFacilityViewModel _requirementFacilityVM;
-        public DPoWFacilityViewModel RequirementFacilityVM
+        public DPoWFacilityViewModel RequirementFacilityVM { get; private set; }
+
+        private Facility _submissionFacility;
+
+        internal Facility SubmissionFacility
         {
-            get { return _requirementFacilityVM; }
+            get { return _submissionFacility; }
+            set
+            {
+                _submissionFacility = value;
+                SubmissionFacilityVM = new DPoWFacilityViewModel(_submissionFacility);
+                
+                if (PropertyChanged == null)
+                    return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"SubmissionFacilityVM"));
+            }
         }
 
-        private Facility submissionFacility;
+        public DPoWFacilityViewModel SubmissionFacilityVM { get; private set; }
 
-        private Facility validationFacility;
+        private Facility _validationFacility;
 
+        internal Facility ValidationFacility
+        {
+            get { return _validationFacility; }
+            set
+            {
+                _validationFacility = value;
+                ValidationFacilityVM = new DPoWFacilityViewModel(_validationFacility);
+
+                if (PropertyChanged == null)
+                    return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ValidationFacilityVM"));
+            }
+        }
+
+        public DPoWFacilityViewModel ValidationFacilityVM { get; private set; }
 
         public string SubmissionFileSource
         {
@@ -104,9 +134,11 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
             SelectRequirement.ChangesHappened();
             SelectSubmission.ChangesHappened();
-
-            // LoadSubmissionFile(SubmissionFileSource);
+            
             LoadRequirementFile(RequirementFileSource);
+            LoadSubmissionFile(SubmissionFileSource);
+            
+
         }
 
         private void LoadRequirementFile(string cobieFilename)
@@ -146,12 +178,13 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             switch (Path.GetExtension(cobieFilename.ToLowerInvariant()))
             {
                 case ".json": 
-                    submissionFacility = Facility.ReadJson(cobieFilename);
+                    SubmissionFacility = Facility.ReadJson(cobieFilename);
                     break;
                 case ".xml":
-                    submissionFacility = Facility.ReadXml(cobieFilename);
+                    SubmissionFacility = Facility.ReadXml(cobieFilename);
                     break;
             }
+            args.Result = SubmissionFacility;
         }
 
         private void OpenIfcFile(object s, DoWorkEventArgs args)
@@ -300,6 +333,14 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 {
                     _model = args.Result as XbimModel;
                     ActivityProgress = 0;
+                    // prepare the facility
+                    var helper = new CoBieLiteUkHelper(_model, "NBS Code");
+                    SubmissionFacility = helper.GetFacilities().FirstOrDefault();
+                    ValidateLoadedFacilities();
+                }
+                else if (args.Result is Facility) //all ok; this is the model facility
+                {
+                    ValidateLoadedFacilities();
                 }
                 else //we have a problem
                 {
@@ -330,6 +371,12 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 // todo: restore
                 // FireLoadingComplete(s, args);
             };
+        }
+
+        private void ValidateLoadedFacilities()
+        {
+            var f = new cobieUKValidation.FacilityValidator();
+            ValidationFacility = f.Validate(RequirementFacility, SubmissionFacility);
         }
 
         private void CloseAndDeleteTemporaryFiles()

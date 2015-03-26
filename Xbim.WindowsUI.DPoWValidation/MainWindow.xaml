@@ -57,11 +57,7 @@
             </Grid.ColumnDefinitions>
             <controls:DPoWFacilityViewer Grid.Column="0" DataContext="{Binding RequirementFacilityVM}" />
             <controls:DPoWFacilityViewer Grid.Column="1" DataContext="{Binding SubmissionFacilityVM}" />
-            <controls:DPoWFacilityViewer Grid.Column="2" DataContext="{Binding val}" />
-        </Grid>
-        
-        
-            
-        
+            <controls:DPoWFacilityViewer Grid.Column="2" DataContext="{Binding ValidationFacilityVM}" />
+        </Grid>        
     </Grid>
 </Window>
