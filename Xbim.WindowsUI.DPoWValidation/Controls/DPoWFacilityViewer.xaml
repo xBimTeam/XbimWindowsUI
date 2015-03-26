@@ -22,14 +22,33 @@
                         <TextBlock Text="]" Foreground="Blue" />
                     </StackPanel>
                 </HierarchicalDataTemplate>
-                <DataTemplate DataType="{x:Type COBieLiteUK:AssetType}">
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:ClassifiedAssetTypesViewModel}" ItemsSource="{Binding AssetTypes}" >
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding CategoryCode}" />
                         <TextBlock Text=" (" Foreground="Green" />
-                        <TextBlock Text="{Binding ExternalEntity}" Foreground="Green" />
-                        <TextBlock Text=" years)" Foreground="Green" />
+                        <TextBlock Text="{Binding CategoryClassification}" Foreground="Green" />
+                        <TextBlock Text=")" Foreground="Green" />
                     </StackPanel>
-                </DataTemplate>
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:AssetTypeViewModel}" ItemsSource="{Binding Assets}" >
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="10" Height="10" Margin="5,0" Fill="{Binding CircleBrush}" />
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:AssetViewModel}" ItemsSource="{Binding Requirements}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="10" Height="10" Margin="5,0" Fill="{Binding CircleBrush}"  />
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:RequirementViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="10" Height="10" Margin="5,0" Fill="{Binding CircleBrush}"  />
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
             </TreeView.Resources>
             <TreeViewItem Header="Facility" IsExpanded="True">
                 <TreeViewItem Header="Asset Types" ItemsSource="{Binding AssetTypes}" />

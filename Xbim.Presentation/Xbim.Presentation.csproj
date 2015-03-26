@@ -134,33 +134,33 @@
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="Xbim.COBie">
-      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.COBie, Version=3.0.5563.7116, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Exchange.3.0.37-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.COBieLite">
-      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.COBieLite, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Exchange.3.0.37-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.COBieLiteUK">
-      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBieLiteUK.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.COBieLiteUK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Exchange.3.0.37-Prerelease\lib\net45\Xbim.COBieLiteUK.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.COBieLiteUK.Validation">
-      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBieLiteUK.Validation.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.COBieLiteUK.Validation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Exchange.3.0.37-Prerelease\lib\net45\Xbim.COBieLiteUK.Validation.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Common, Version=3.0.5561.20914, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Xbim.Essentials.3.0.16\lib\net45\Xbim.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.DPoW">
-      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.DPoW.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.DPoW, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Exchange.3.0.37-Prerelease\lib\net45\Xbim.DPoW.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.Exchanger">
-      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.Exchanger.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Xbim.Exchanger, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Xbim.Exchange.3.0.37-Prerelease\lib\net45\Xbim.Exchanger.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
