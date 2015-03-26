@@ -63,8 +63,6 @@ namespace Xbim.COBieLite.Validation
                 var assetLevelRequirements = MissingFrom(typeToTest);
                 if (assetLevelRequirements.Any())
                 {
-                    
-
                     foreach (var modelAsset in assetList)
                     {
                         if (reporter != null)

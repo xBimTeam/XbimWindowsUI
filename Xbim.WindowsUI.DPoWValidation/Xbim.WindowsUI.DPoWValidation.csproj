@@ -81,19 +81,19 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="Xbim.COBie">
-      <HintPath>..\packages\Xbim.Exchange.3.0.33-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLite">
-      <HintPath>..\packages\Xbim.Exchange.3.0.33-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLiteUK">
-      <HintPath>..\packages\Xbim.Exchange.3.0.33-Prerelease\lib\net45\Xbim.COBieLiteUK.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBieLiteUK.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLiteUK.Validation">
-      <HintPath>..\packages\Xbim.Exchange.3.0.33-Prerelease\lib\net45\Xbim.COBieLiteUK.Validation.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.COBieLiteUK.Validation.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Common">
@@ -101,11 +101,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.DPoW">
-      <HintPath>..\packages\Xbim.Exchange.3.0.33-Prerelease\lib\net45\Xbim.DPoW.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.DPoW.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Exchanger">
-      <HintPath>..\packages\Xbim.Exchange.3.0.33-Prerelease\lib\net45\Xbim.Exchanger.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.0.35-Prerelease\lib\net45\Xbim.Exchanger.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop">

@@ -12,33 +12,28 @@
     </Window.DataContext>
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="6*"/>
-            <RowDefinition Height="3*"/>
-            <RowDefinition Height="3*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="5*"/>
         </Grid.RowDefinitions>
-        <Grid >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5*"/>
-                <RowDefinition Height="5*"/>
-            </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <Label Content="Requirement file:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding RequirementFileSource, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Height="24" Margin="5" Content="Select" Command="{Binding SelectRequirement}" />
+        </StackPanel>
 
-            <Label Grid.Column="0" Grid.Row="0" Content="Requirement file:" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-            <Label Grid.Column="0" Grid.Row="1" Content="Submission file:" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-
-            <TextBox Grid.Column="1" Grid.Row="0" Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding RequirementFileSource, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBox Grid.Column="1" Grid.Row="1" Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}" />
-
-            <Button Grid.Column="2" Grid.Row="0" Height="24" Margin="5" Content="Select" Command="{Binding SelectRequirement}" />
-            <Button Grid.Column="2" Grid.Row="1" Height="24" Margin="5" Content="Select" Command="{Binding SelectSubmission}"/>
-
-        </Grid>
-        <Grid Grid.Row="1"  Background="DarkGray">
+        <StackPanel Grid.Row="0" Grid.Column="1">
+            <Label Content="Submission file:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Height="24" Margin="5" Content="Select" Command="{Binding SelectSubmission}"/>
+        </StackPanel>
+        
+        <Grid Grid.Row="0" Grid.Column="2"  Background="DarkGray">
             <Grid.RowDefinitions>
                 <RowDefinition Height="5*"/>
                 <RowDefinition Height="5*"/>
@@ -46,18 +41,18 @@
             <Button Grid.Row="0" Height="30" Width="Auto" Margin="20,10" Content="Verify" Command="{Binding Validate}" Click="Button_Click" />
             <Grid Grid.Row="1" Margin="20,10" >
                 <ProgressBar Value="{Binding ActivityProgress}" />
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ActivityStatus}" />
+                
             </Grid>
         </Grid>
-        <Grid Grid.Row="2" >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
-            </Grid.ColumnDefinitions>
-            <controls:DPoWFacilityViewer Grid.Column="0" DataContext="{Binding RequirementFacilityVM}" />
-            <controls:DPoWFacilityViewer Grid.Column="1" DataContext="{Binding SubmissionFacilityVM}" />
-            <controls:DPoWFacilityViewer Grid.Column="2" DataContext="{Binding ValidationFacilityVM}" />
-        </Grid>        
+
+        <Grid Grid.Row="1" Column="0" Background="DarkGray">
+            <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding RequirementFacilityVM}" />
+        </Grid>
+        <Grid Grid.Row="1" Column="1" Background="DarkGray">
+            <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding SubmissionFacilityVM}" />
+        </Grid>
+        <Grid Grid.Row="1" Column="2" Background="DarkGray">
+            <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding ValidationFacilityVM}" />
+        </Grid>
     </Grid>
 </Window>
