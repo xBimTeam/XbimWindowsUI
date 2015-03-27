@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
@@ -17,14 +18,24 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             this._asset = asset;
             if (_asset.Attributes == null)
             {
-                Requirements = new ObservableCollection<RequirementViewModel>();
+                RequirementResults = new ObservableCollection<RequirementViewModel>();
                 return;
             }
             var lst = _asset.Attributes.Select(att => new RequirementViewModel(att)).ToList();
-            Requirements = new ObservableCollection<RequirementViewModel>(lst);
+            RequirementResults = new ObservableCollection<RequirementViewModel>(lst);
         }
 
-        public ObservableCollection<RequirementViewModel> Requirements { get; private set; }
+        public Visibility CircleVisibility
+        {
+            get
+            {
+                return CircleBrush.Equals(Brushes.Transparent)
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+            }
+        }
+
+        public ObservableCollection<RequirementViewModel> RequirementResults { get; private set; }
 
         public string Name
         {

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using NPOI.OpenXml4Net.OPC.Internal;
 using System.Collections.ObjectModel;
+using Xbim.CobieLiteUK.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
@@ -16,13 +18,22 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public AssetTypeViewModel(COBieLiteUK.AssetType assetType)
         {
             _assetType = assetType;
-            if (_assetType.Assets == null)
+            var v = new AssetTypeValidator(_assetType);
+            if (v.HasRequirements)
             {
-                Assets = new ObservableCollection<AssetViewModel>();
+                // display requirements instead of assets.
+                Children = new ObservableCollection<object>(v.RequirementDetails.Select(x=> new RequirementViewModel(x.Attribute)));
                 return;
             }
+            if (_assetType.Assets == null)
+            {
+                // no assets available
+                Children = new ObservableCollection<object>();
+                return;
+            }
+            // show available assets
             var l = _assetType.Assets.Select(asset => new AssetViewModel(asset)).ToList();
-            Assets = new ObservableCollection<AssetViewModel>(l);
+            Children = new ObservableCollection<object>(l);
         }
 
         public string Name
@@ -30,7 +41,17 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             get { return _assetType.Name; }
         }
 
-        public ObservableCollection<AssetViewModel> Assets { get; set; }
+        public ObservableCollection<object> Children { get; set; }
+
+        public Visibility CircleVisibility
+        {
+            get
+            {
+                return CircleBrush.Equals(Brushes.Transparent)
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+            }
+        }
 
         public Brush CircleBrush
         {

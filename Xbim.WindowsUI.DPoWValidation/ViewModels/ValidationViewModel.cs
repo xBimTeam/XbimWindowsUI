@@ -308,9 +308,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         }
         public string ActivityDescription { get; set; }
 
-        
-
-
         private XbimModel _model;
 
         private void CreateWorker()
@@ -336,6 +333,12 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     // prepare the facility
                     var helper = new CoBieLiteUkHelper(_model, "NBS Code");
                     SubmissionFacility = helper.GetFacilities().FirstOrDefault();
+                    if (SubmissionFacility == null)
+                        return;
+                    var jsonFileName = Path.ChangeExtension(SubmissionFileSource, "json");
+                    if (!File.Exists(jsonFileName))
+                        SubmissionFacility.WriteJson(jsonFileName);
+
                     ValidateLoadedFacilities();
                 }
                 else if (args.Result is Facility) //all ok; this is the model facility

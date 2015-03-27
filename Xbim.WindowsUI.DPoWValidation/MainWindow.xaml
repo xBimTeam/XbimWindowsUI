@@ -46,13 +46,34 @@
         </Grid>
 
         <Grid Grid.Row="1" Column="0" Background="DarkGray">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="0*" />
+            </Grid.RowDefinitions>
             <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding RequirementFacilityVM}" />
+            <GridSplitter ResizeDirection="Rows" Grid.Column="0" Grid.Row="1" Width="Auto" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
+            <TextBox Grid.Row="2" />
         </Grid>
         <Grid Grid.Row="1" Column="1" Background="DarkGray">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="0*" />
+            </Grid.RowDefinitions>
             <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding SubmissionFacilityVM}" />
+            <GridSplitter ResizeDirection="Rows" Grid.Column="0" Grid.Row="1" Width="Auto" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
+            <TextBox Grid.Row="2" />
         </Grid>
         <Grid Grid.Row="1" Column="2" Background="DarkGray">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="0*" />
+            </Grid.RowDefinitions>
             <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding ValidationFacilityVM}" />
+            <GridSplitter ResizeDirection="Rows" Grid.Column="0" Grid.Row="1" Width="Auto" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
+            <TextBox Grid.Row="2" />
         </Grid>
     </Grid>
 </Window>
