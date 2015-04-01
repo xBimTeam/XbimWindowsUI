@@ -73,7 +73,7 @@ namespace XbimXplorer.Dialogs
             SetExcludes(ClassFilterAssembly, UserFilters.ObjectType.Assembly);
             
             DialogResult = true;
-            this.Close();
+            Close();
         }
 
         /// <summary>

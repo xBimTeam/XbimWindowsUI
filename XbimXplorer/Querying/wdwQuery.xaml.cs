@@ -13,14 +13,17 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
+using Xbim.Presentation.LayerStyling;
 using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
 using XbimXplorer.PluginSystem;
 using XbimGeometry.Interfaces;
+using XbimXplorer.Simplify;
 
 namespace XbimXplorer.Querying
 {
@@ -496,15 +499,15 @@ namespace XbimXplorer.Querying
                         {
                             string msg = "";
                             string storName = m.Groups["StoreyName"].Value;
-                            var storey = Model.Instances.OfType<Xbim.Ifc2x3.ProductExtension.IfcBuildingStorey>().Where(x => x.Name == storName).FirstOrDefault();
+                            var storey = Model.Instances.OfType<IfcBuildingStorey>().Where(x => x.Name == storName).FirstOrDefault();
                             if (storey != null)
                             {
                                 //get the object position data (should only be one)
-                                XbimGeometryData geomdata = Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly).FirstOrDefault();
+                                var geomdata = Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly).FirstOrDefault();
                                 if (geomdata != null)
                                 {
-                                    Xbim.Common.Geometry.XbimPoint3D pt = new Xbim.Common.Geometry.XbimPoint3D(0, 0, XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
-                                    Xbim.Common.Geometry.XbimMatrix3D mcp = Xbim.Common.Geometry.XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
+                                    var pt = new XbimPoint3D(0, 0, XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
+                                    var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
                                     var transformed = mcp.Transform(pt);
                                     msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z, transformed.Z + 1);
                                     pz = transformed.Z + 1;
@@ -514,7 +517,7 @@ namespace XbimXplorer.Querying
                             {
                                 ReportAdd(string.Format("Something wrong with storey name: '{0}'", storName));
                                 ReportAdd("Names that should work are: ");
-                                var strs = Model.Instances.OfType<Xbim.Ifc2x3.ProductExtension.IfcBuildingStorey>();
+                                var strs = Model.Instances.OfType<IfcBuildingStorey>();
                                 foreach (var str in strs)
                                 {
                                     ReportAdd(string.Format(" - '{0}'", str.Name));
@@ -548,7 +551,7 @@ namespace XbimXplorer.Querying
                     m = Regex.Match(cmd, @"^Styler (?<command>.+)", RegexOptions.IgnoreCase);
                     if (m.Success)
                     {
-                        var st = _parentWindow.DrawingControl.LayerStyler as Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyleExtended;
+                        var st = _parentWindow.DrawingControl.LayerStyler as LayerStylerTypeAndIFCStyleExtended;
                         if (st != null)
                         { 
                             string command = m.Groups["command"].Value;
@@ -588,25 +591,25 @@ namespace XbimXplorer.Querying
                             if (t == "type")
                             {
                                 ReportAdd("Visual mode set to EntityType.");
-                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyle();
+                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIFCStyle();
                                 _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else if (t == "entity")
                             {
                                 ReportAdd("Visual mode set to EntityLabel.");
-                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerPerEntity();
+                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerPerEntity();
                                 _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else if (t == "oddeven")
                             {
                                 ReportAdd("Visual mode set to Odd/Even.");
-                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerEvenOdd();
+                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerEvenOdd();
                                 _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else if (t == "demo")
                             {
                                 ReportAdd("Visual mode set to Demo.");
-                                _parentWindow.DrawingControl.LayerStyler = new Xbim.Presentation.LayerStyling.LayerStylerTypeAndIFCStyleExtended();
+                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIFCStyleExtended();
                                 _parentWindow.DrawingControl.ReloadModel(options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
                             else
@@ -624,7 +627,7 @@ namespace XbimXplorer.Querying
                     m = Regex.Match(cmd, @"^SimplifyGUI$", RegexOptions.IgnoreCase);
                     if (m.Success)  
                     {
-                        XbimXplorer.Simplify.IfcSimplify s = new Simplify.IfcSimplify();
+                        IfcSimplify s = new IfcSimplify();
                         s.Show();
                         continue;
                     }
@@ -801,9 +804,9 @@ namespace XbimXplorer.Querying
         private IEnumerable<string> MatchingTypes(string RegExString)
         {
             Regex re = new Regex(RegExString, RegexOptions.IgnoreCase);
-            foreach (System.Reflection.AssemblyName an in System.Reflection.Assembly.GetExecutingAssembly().GetReferencedAssemblies())
+            foreach (AssemblyName an in Assembly.GetExecutingAssembly().GetReferencedAssemblies())
             {
-                System.Reflection.Assembly asm = System.Reflection.Assembly.Load(an.ToString());
+                Assembly asm = Assembly.Load(an.ToString());
                 foreach (Type type in asm.GetTypes().Where(
                     t =>
                         t.Namespace != null &&
@@ -1216,8 +1219,8 @@ namespace XbimXplorer.Querying
         public void BindUI(XplorerMainWindow mainWindow)
         {
             _parentWindow = mainWindow;
-            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
-            this.SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
+            SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
+            SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
         }
 
         // SelectedEntity

@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Bonghi.FileIO;
+using Microsoft.Win32;
 
 namespace XbimXplorer.Simplify
 {
@@ -221,7 +222,7 @@ namespace XbimXplorer.Simplify
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             // Configure open file dialog box
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            OpenFileDialog dlg = new OpenFileDialog();
             dlg.FileName = ""; // Default file name
             dlg.DefaultExt = ".ifc"; // Default file extension
             dlg.Filter = "Ifc files (.ifc)|*.ifc"; // Filter files by extension 

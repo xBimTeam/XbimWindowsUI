@@ -147,8 +147,8 @@ namespace XbimXplorer
             {
                 // preparing user control
                 UserControl uc = pluginWindow as UserControl;
-                uc.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
-                uc.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+                uc.HorizontalAlignment = HorizontalAlignment.Stretch;
+                uc.VerticalAlignment = VerticalAlignment.Stretch;
                 //set data binding
                 pluginWindow.BindUI(MainWindow);
 

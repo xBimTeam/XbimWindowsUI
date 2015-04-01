@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Bonghi.FileIO
 {
@@ -17,7 +19,7 @@ namespace Bonghi.FileIO
                 _iLineNumber = 0;
             }
             catch (SystemException exc){
-                System.Diagnostics.Debug.WriteLine("Err: " + exc.Message);
+                Debug.WriteLine("Err: " + exc.Message);
                 _srReader = null;
             }
         }
@@ -76,7 +78,7 @@ namespace Bonghi.FileIO
                 _srReader.Dispose();
             }
             catch {
-                System.Diagnostics.Debug.WriteLine("Warning: already closed?");
+                Debug.WriteLine("Warning: already closed?");
                 }
             finally {
                 _srReader = null;
@@ -89,10 +91,10 @@ namespace Bonghi.FileIO
 
         public string ReadUntil(string MatchRegex, string ExitCondition) {
             string tOut = null;
-            System.Text.RegularExpressions.Regex reMatch = new System.Text.RegularExpressions.Regex(MatchRegex);
-            System.Text.RegularExpressions.Regex reExit = null;
+            Regex reMatch = new Regex(MatchRegex);
+            Regex reExit = null;
             if (ExitCondition != "") {
-                reExit = new System.Text.RegularExpressions.Regex(ExitCondition);
+                reExit = new Regex(ExitCondition);
             }
             string lastread;
             while ((lastread = NextLine()) != null)

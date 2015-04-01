@@ -12,7 +12,9 @@
 
 #region Directives
 
+using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -31,7 +33,7 @@ namespace XbimXplorer
     public partial class App : Application
     {
         #region JumpList
-        private void JumpList_JumpItemsRejected(object sender, System.Windows.Shell.JumpItemsRejectedEventArgs e)
+        private void JumpList_JumpItemsRejected(object sender, JumpItemsRejectedEventArgs e)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("{0} Jump Items Rejected:\n", e.RejectionReasons.Count);
@@ -46,7 +48,7 @@ namespace XbimXplorer
             MessageBox.Show(sb.ToString());
         }
 
-        private void JumpList_JumpItemsRemovedByUser(object sender, System.Windows.Shell.JumpItemsRemovedEventArgs e)
+        private void JumpList_JumpItemsRemovedByUser(object sender, JumpItemsRemovedEventArgs e)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("{0} Jump Items Removed by the user:\n", e.RemovedItems.Count);
@@ -70,8 +72,8 @@ namespace XbimXplorer
                 if (string.Compare("/AccessMode", thisArg, true) == 0)
                 {
                     string StringMode = e.Args[++i];
-                    XbimDBAccess mode = (XbimDBAccess)System.Enum.Parse(typeof(XbimDBAccess), StringMode);
-                    if (System.Enum.TryParse(StringMode, out mode))
+                    XbimDBAccess mode = (XbimDBAccess)Enum.Parse(typeof(XbimDBAccess), StringMode);
+                    if (Enum.TryParse(StringMode, out mode))
                     {
                         mainView.FileAccessMode = mode;
                     }
@@ -84,7 +86,7 @@ namespace XbimXplorer
                 else if (string.Compare("/select", thisArg, true) == 0)
                 {
                     string SelLabel = e.Args[++i];
-                    System.Diagnostics.Debug.Write("Select " + SelLabel + "... ");
+                    Debug.Write("Select " + SelLabel + "... ");
                     mainView.LoadingComplete += delegate(object s, RunWorkerCompletedEventArgs args)
                     {
                         int iSel;

@@ -59,7 +59,7 @@ namespace XbimXplorer.Dialogs
             if (totExports == 0)
                 return;
 
-            this.Cursor = Cursors.Wait;
+            Cursor = Cursors.Wait;
 
             if (!Directory.Exists(TxtFolderName.Text))
             {
@@ -102,7 +102,7 @@ namespace XbimXplorer.Dialogs
                 {
                     if (CancelAfterNotification("Error exporting Wexbim file.", ce, totExports))
                     {
-                        this.Cursor = Cursors.Arrow;
+                        Cursor = Cursors.Arrow;
                         return;
                     }
                 }
@@ -135,7 +135,7 @@ namespace XbimXplorer.Dialogs
                     {
                         if (CancelAfterNotification("Error exporting CobieLite.XML file.", ce, totExports))
                         {
-                            this.Cursor = Cursors.Arrow;
+                            Cursor = Cursors.Arrow;
                             return;
                         }
                     }
@@ -159,15 +159,15 @@ namespace XbimXplorer.Dialogs
                     {
                         if (CancelAfterNotification("Error exporting CobieLite.json file.", ce, totExports))
                         {
-                            this.Cursor = Cursors.Arrow;
+                            Cursor = Cursors.Arrow;
                             return;
                         }
                     }
                     totExports--;
                 }
             }
-            this.Cursor = Cursors.Arrow;
-            this.Close();
+            Cursor = Cursors.Arrow;
+            Close();
         }
                 
 

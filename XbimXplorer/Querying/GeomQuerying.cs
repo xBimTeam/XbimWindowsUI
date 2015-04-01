@@ -153,7 +153,7 @@ namespace XbimXplorer.Querying
         //    return sb.ToString();
         //}
 
-        internal static string GeomLayers(XbimModel Model, int item, List<Xbim.ModelGeometry.Scene.XbimScene<Xbim.Presentation.WpfMeshGeometry3D, Xbim.Presentation.WpfMaterial>> scenes)
+        internal static string GeomLayers(XbimModel Model, int item, List<XbimScene<WpfMeshGeometry3D, WpfMaterial>> scenes)
         {
             StringBuilder sb = new StringBuilder();
             // XbimMeshGeometry3D geometry = new XbimMeshGeometry3D();

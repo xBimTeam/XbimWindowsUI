@@ -83,9 +83,9 @@ namespace XbimXplorer.Querying
             Bits = new List<ReportComponent>();
         }
 
-        internal void DropInto(System.Windows.Documents.FlowDocument flowDocument)
+        internal void DropInto(FlowDocument flowDocument)
         {
-            flowDocument.Blocks.AddRange(this.ToBlocks());
+            flowDocument.Blocks.AddRange(ToBlocks());
         }
 
         private IEnumerable<Block> ToBlocks()

@@ -26,9 +26,9 @@ namespace XbimXplorer.Dialogs
         {
             public SettingWindowVM()
             {
-                this.SelFileAccessMode = Settings.Default.FileAccessMode;
-                this.NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
-                this.PluginStartupLoad = Settings.Default.PluginStartupLoad;
+                SelFileAccessMode = Settings.Default.FileAccessMode;
+                NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
+                PluginStartupLoad = Settings.Default.PluginStartupLoad;
             }
 
             List<XbimDBAccess> _FileAccessModes = null;
@@ -82,12 +82,12 @@ namespace XbimXplorer.Dialogs
         {
             _vm.SaveSettings();
             _SettingsChanged = true;
-            this.Close();            
+            Close();            
         }
 
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();            
+            Close();            
         }
 
         private bool _SettingsChanged = false;
@@ -106,7 +106,7 @@ namespace XbimXplorer.Dialogs
             {
                 Settings.Default.Reset();
                 _SettingsChanged = true;
-                this.Close();
+                Close();
             }
         }
 

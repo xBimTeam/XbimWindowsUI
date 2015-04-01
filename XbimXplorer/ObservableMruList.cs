@@ -55,7 +55,7 @@ namespace XbimXplorer
 
         public new void Add(T item)
         {
-            int indexOfMatch = this.IndexOf(item);
+            int indexOfMatch = IndexOf(item);
             if (indexOfMatch < 0)
             {
                 base.Insert(0, item);
@@ -77,7 +77,7 @@ namespace XbimXplorer
             int indexOfMatch = -1;
             if (_itemComparer != null)
             {
-                for (int idx = 0; idx < this.Count; idx++)
+                for (int idx = 0; idx < Count; idx++)
                 {
                     if (_itemComparer.Equals(item, this[idx]))
                     {
@@ -96,10 +96,10 @@ namespace XbimXplorer
         {
             bool opResult = false;
 
-            int targetIndex = this.IndexOf(item);
+            int targetIndex = IndexOf(item);
             if (targetIndex > -1)
             {
-                this.RemoveAt(targetIndex);
+                RemoveAt(targetIndex);
                 opResult = true;
             }
 
@@ -108,11 +108,11 @@ namespace XbimXplorer
 
         private void RemoveOverflow()
         {
-            if (this.MaxSize > 0)
+            if (MaxSize > 0)
             {
-                while (this.Count > this.MaxSize)
+                while (Count > MaxSize)
                 {
-                    this.RemoveAt(this.Count - 1);
+                    RemoveAt(Count - 1);
                 }
             }
         }
