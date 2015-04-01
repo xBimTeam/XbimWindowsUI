@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -331,8 +332,10 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     _model = args.Result as XbimModel;
                     ActivityProgress = 0;
                     // prepare the facility
-                    var helper = new CoBieLiteUkHelper(_model, "NBS Code");
-                    SubmissionFacility = helper.GetFacilities().FirstOrDefault();
+                    var facilities = new List<Facility>();
+                    var ifcToCoBieLiteUkExchanger = new IfcToCOBieLiteUkExchanger(_model, facilities);
+                    facilities = ifcToCoBieLiteUkExchanger.Convert();
+                    SubmissionFacility = facilities.FirstOrDefault();
                     if (SubmissionFacility == null)
                         return;
                     var jsonFileName = Path.ChangeExtension(SubmissionFileSource, "json");

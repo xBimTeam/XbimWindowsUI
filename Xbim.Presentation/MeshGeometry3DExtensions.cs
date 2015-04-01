@@ -26,7 +26,11 @@ namespace Xbim.Presentation
             if (transform.HasValue)
             {
                 var xq = transform.Value.GetRotationQuaternion();
-                qrd.Rotation = new QuaternionRotation3D(new Quaternion(xq.X, xq.Y, xq.Z, xq.W));
+                var quaternion = new Quaternion(xq.X, xq.Y, xq.Z, xq.W);
+                if (!quaternion.IsIdentity)
+                    qrd.Rotation = new QuaternionRotation3D(quaternion);
+                else
+                    qrd = null;
                 matrix3D = transform.Value.ToMatrix3D();
             }
             using (var ms = new MemoryStream(mesh))
@@ -64,7 +68,7 @@ namespace Xbim.Presentation
                         {
                             var normal = br.ReadPackedNormal().Normal;
                             var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                            if (matrix3D.HasValue) //transform the normal if we have to
+                            if (qrd!=null) //transform the normal if we have to
                                 wpfNormal = qrd.Transform(wpfNormal);
                             var uniqueIndices = new Dictionary<int, int>();
                             for (var j = 0; j < numTrianglesInFace; j++)
@@ -101,10 +105,11 @@ namespace Xbim.Presentation
                                         vertices.Add(uniqueVertices[idx]);
                                         uniqueIndices.Add(idx, writtenIdx);
                                         var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                                        if (matrix3D.HasValue) //transform the normal if we have to
+                                        if (qrd!=null) //transform the normal if we have to
                                             wpfNormal = qrd.Transform(wpfNormal);
-                                        normals.Add(wpfNormal); 
+                                        normals.Add(wpfNormal);
                                     }
+                                   
                                     triangleIndices.Add(indexBase + writtenIdx);
                                 }
                             }
