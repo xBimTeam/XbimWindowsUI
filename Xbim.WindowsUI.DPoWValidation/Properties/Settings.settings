@@ -8,5 +8,8 @@
     <Setting Name="LastOpenedSubmission" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="PreferredClassification" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Uniclass2015</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

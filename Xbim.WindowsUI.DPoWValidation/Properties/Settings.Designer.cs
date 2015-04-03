@@ -46,5 +46,17 @@ namespace Xbim.WindowsUI.DPoWValidation.Properties {
                 this["LastOpenedSubmission"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Uniclass2015")]
+        public string PreferredClassification {
+            get {
+                return ((string)(this["PreferredClassification"]));
+            }
+            set {
+                this["PreferredClassification"] = value;
+            }
+        }
     }
 }

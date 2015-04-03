@@ -12,7 +12,14 @@
         <viewModels:DPoWFacilityViewModel/>
     </UserControl.DataContext>
     <Grid>
-        <TreeView Name="trvMenu">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition  Height="*"/>
+        </Grid.RowDefinitions>
+            <ComboBox Grid.Row="0" VerticalAlignment="Top" ItemsSource="{Binding AvailableClassifications}" SelectedItem="{Binding SelectedClassification}" />
+
+
+        <TreeView Grid.Row="1" Name="trvMenu">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:DocumentViewModel}">
                     <StackPanel Orientation="Horizontal">
@@ -69,5 +76,6 @@
                 <TreeViewItem Header="Spaces" />
             </TreeViewItem >
         </TreeView>
+        
     </Grid>
 </UserControl>
