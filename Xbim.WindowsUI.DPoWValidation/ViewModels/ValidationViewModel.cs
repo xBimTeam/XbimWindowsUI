@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
 using Xbim.WindowsUI.DPoWValidation.Commands;
@@ -12,7 +13,6 @@ using Xbim.WindowsUI.DPoWValidation.Extensions;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.XbimExtensions;
 using XbimExchanger.IfcToCOBieLiteUK;
-
 using cobieUKValidation = Xbim.CobieLiteUK.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
@@ -23,6 +23,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public SelectFileCommand SelectSubmission { get; set; }
 
         public ValidateCommand Validate { get; set; }
+
+        public FacilitySaveCommand ExportFacility { get; set; }
 
         public bool IsWorking { get; set; }
 
@@ -87,12 +89,14 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             {
                 _validationFacility = value;
                 ValidationFacilityVM = new DPoWFacilityViewModel(_validationFacility);
+                ExportFacility = new FacilitySaveCommand(this);
                 
                 if (PropertyChanged == null)
                     return;
 
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ValidationFacilityVM")); // notiffy that the VM has also changed
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ValidationFacility"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ExportFacility"));
             }
         }
 
@@ -131,6 +135,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             SelectReport = new SelectReportFileCommand(ReportFileInfo, this);
             
             Validate = new ValidateCommand(this);
+            ExportFacility = new FacilitySaveCommand(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -149,21 +154,19 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         {
             
             IsWorking = true;
-            //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
-            //SelectRequirement.ChangesHappened();
-            //SelectSubmission.ChangesHappened();
-            //SelectReport.ChangesHappened();
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
+            SelectRequirement.ChangesHappened();
+            SelectSubmission.ChangesHappened();
+            SelectReport.ChangesHappened();
 
-            //ActivityStatus = "Loading requirement file";
+            ActivityStatus = "Loading requirement file";
             LoadRequirementFile(RequirementFileSource);
-            //ActivityStatus = "Loading submission file";
+            ActivityStatus = "Loading submission file";
             LoadSubmissionFile(SubmissionFileSource);
         }
 
         private void LoadRequirementFile(string cobieFilename)
         {
-         
-            
             if (string.IsNullOrEmpty(cobieFilename))
                 return;
             if (!File.Exists(cobieFilename))
@@ -185,7 +188,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         private BackgroundWorker _worker;
 
-        private void OpenSubmissionCobiFile(object s, DoWorkEventArgs args)
+        private void OpenSubmissionCobieFile(object s, DoWorkEventArgs args)
         {
             var worker = s as BackgroundWorker;
             var cobieFilename = args.Argument as string;
@@ -406,14 +409,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             var f = new cobieUKValidation.FacilityValidator();
             ValidationFacility = f.Validate(RequirementFacility, SubmissionFacility);
             ActivityStatus = "Validation completed";
-            //ActivityStatus = "Export in progress";
-            //_validationFacility.ExportFacility(ReportFileInfo.FileInfo);
-            //CanSaveReport = true;
-            //if (PropertyChanged != null)
-            //    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"CanSaveReport"));
         }
-
-        public bool CanSaveReport { get; private set; }
 
         private void CloseAndDeleteTemporaryFiles()
         {
@@ -456,7 +452,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             {
                 case ".json": 
                 case ".xml": 
-                    _worker.DoWork += OpenSubmissionCobiFile;
+                    _worker.DoWork += OpenSubmissionCobieFile;
                     _worker.RunWorkerAsync(modelFileName);
                     break;
                 case ".ifc": //it is an Ifc File
@@ -471,6 +467,25 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     _worker.DoWork += OpenXbimFile;
                     _worker.RunWorkerAsync(modelFileName);
                     break;
+            }
+        }
+
+        internal void ExportValidatedFacility()
+        {
+            var thread = new Thread(new ThreadStart(WorkThreadFunction));
+            thread.Start();
+            thread.Join();
+        }
+
+        public void WorkThreadFunction()
+        {
+            try
+            {
+                ActivityStatus = ValidationFacility.ExportFacility(ReportFileInfo.FileInfo);
+            }
+            catch (Exception ex)
+            {
+                ActivityStatus = @"Error.";
             }
         }
     }

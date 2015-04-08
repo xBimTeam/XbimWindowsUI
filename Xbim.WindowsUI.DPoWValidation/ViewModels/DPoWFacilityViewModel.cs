@@ -70,7 +70,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 Documents = new ObservableCollection<object>();
 
             // command
-            SaveCommand = new FacilitySaveCommand(_model);
+            // SaveCommand = new FacilitySaveCommand(_model, this);
         }
 
         private void RefreshAssetsTree()
@@ -115,5 +115,10 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public ObservableCollection<ClassifiedAssetTypesViewModel> AssetTypes { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        internal void ExportFacility()
+        {
+            
+        }
     }
 }
