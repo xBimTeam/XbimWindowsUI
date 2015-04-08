@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Input;
 using Microsoft.Win32;
@@ -7,14 +8,14 @@ using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
 namespace Xbim.WindowsUI.DPoWValidation.Commands
 {
-    class SelectFileCommand : ICommand
+    class SelectReportFileCommand : ICommand
     {
         private readonly SourceFile _currentFile;
         private readonly ValidationViewModel _vm;
         public bool IncludeIfc = false;
 
 
-        public SelectFileCommand(SourceFile tb, ValidationViewModel model)
+        public SelectReportFileCommand(SourceFile tb, ValidationViewModel model)
         {
             _currentFile = tb;
             _vm = model;
@@ -37,23 +38,15 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
 
         public void Execute(object parameter)
         {
-            const string modelExtensions = @";*.ifc;*.ifcxml;*.xbim;*.ifczip";
+            var filters = new List<string>();
+            filters.Add("Validation report|*.xlsx");
+            filters.Add("Validation report|*.xls");
+            filters.Add(@"Automation format|*.json");
+            filters.Add(@"Automation format|*.xml");
 
-            var filter = IncludeIfc
-                ? @"All model files|*.xls;*.xslx;*.json" + modelExtensions + "|" +
-                    "COBie files|*.xls;*.xslx|" +
-                    "CobieLite files|*.json;*.xml|" +
-                    "IFC Files|*.Ifc;*.ifcxml;*.xbim;*.ifczip"
-                : @"All model files|*.xls;*.xslx;*.json" +  "|" +
-                    "COBie files|*.xls;*.xslx|" +
-                    "CobieLite files|*.json;*.xml"
-                ;
-
-            filter = @"All files|*.*|" + filter;
-
-            var dlg = new OpenFileDialog
+            var dlg = new SaveFileDialog
             {
-                Filter = filter
+                Filter = string.Join("|", filters.ToArray())
             };
             if (_currentFile.Exists)
             {

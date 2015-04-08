@@ -7,12 +7,12 @@ using System.Linq;
 using System.Text;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
-using Xbim.ModelGeometry.Scene;
 using Xbim.WindowsUI.DPoWValidation.Commands;
+using Xbim.WindowsUI.DPoWValidation.Extensions;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.XbimExtensions;
 using XbimExchanger.IfcToCOBieLiteUK;
-using XbimGeometry.Interfaces;
+
 using cobieUKValidation = Xbim.CobieLiteUK.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
@@ -87,10 +87,12 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             {
                 _validationFacility = value;
                 ValidationFacilityVM = new DPoWFacilityViewModel(_validationFacility);
-
+                
                 if (PropertyChanged == null)
                     return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ValidationFacilityVM"));
+
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ValidationFacilityVM")); // notiffy that the VM has also changed
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ValidationFacility"));
             }
         }
 
@@ -106,15 +108,28 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
+        public string ReportFileSource
+        {
+            get { return ReportFileInfo.File; }
+            set
+            {
+                ReportFileInfo.File = value;
+                Validate.ChangesHappened();
+            }
+        }
+
         internal SourceFile RequirementFileInfo = new SourceFile();
         internal SourceFile SubmissionFileInfo = new SourceFile();
+        internal SourceFile ReportFileInfo = new SourceFile();
+
         
         public ValidationViewModel()
         {
             IsWorking = false;
             SelectRequirement = new SelectFileCommand(RequirementFileInfo, this);
             SelectSubmission = new SelectFileCommand(SubmissionFileInfo, this) {IncludeIfc = true};
-
+            SelectReport = new SelectReportFileCommand(ReportFileInfo, this);
+            
             Validate = new ValidateCommand(this);
         }
 
@@ -126,20 +141,23 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 return;
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"RequirementFileSource"));
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"SubmissionFileSource"));
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ReportFileSource"));
             Validate.ChangesHappened();
         }
 
         internal void ExecuteValidation()
         {
+            
             IsWorking = true;
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
             SelectRequirement.ChangesHappened();
             SelectSubmission.ChangesHappened();
-            
-            LoadRequirementFile(RequirementFileSource);
-            LoadSubmissionFile(SubmissionFileSource);
-            
+            SelectReport.ChangesHappened();
 
+            ActivityStatus = "Loading requirement file";
+            LoadRequirementFile(RequirementFileSource);
+            ActivityStatus = "Loading submission file";
+            LoadSubmissionFile(SubmissionFileSource);
         }
 
         private void LoadRequirementFile(string cobieFilename)
@@ -188,6 +206,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             args.Result = SubmissionFacility;
         }
 
+        public SelectReportFileCommand SelectReport { get; private set; }
+
         private void OpenIfcFile(object s, DoWorkEventArgs args)
         {
             var worker = s as BackgroundWorker;
@@ -202,9 +222,10 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 if (worker != null)
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
+#if Geometry
                     var context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
                     context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: worker.ReportProgress);
-
+#endif
                     if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                     {
                         try
@@ -215,10 +236,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                             _temporaryXbimFileName = null;
                             _openedModelFileName = null;
                         }
-                        // ReSharper disable once EmptyGeneralCatchClause
-                        catch
+                        catch (Exception ex)
                         {
-
+                            Debug.WriteLine(ex.Message);
                         }
                         return;
                     }
@@ -304,7 +324,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             set
             {
                 _activityProgress = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ActivityProgress"));
+                if (PropertyChanged != null)
+                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ActivityProgress"));
             }
         }
         public string ActivityDescription { get; set; }
@@ -381,9 +402,18 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         private void ValidateLoadedFacilities()
         {
+            ActivityStatus = "Validation in progress";
             var f = new cobieUKValidation.FacilityValidator();
             ValidationFacility = f.Validate(RequirementFacility, SubmissionFacility);
+            ActivityStatus = "Validation completed";
+            //ActivityStatus = "Export in progress";
+            //_validationFacility.ExportFacility(ReportFileInfo.FileInfo);
+            //CanSaveReport = true;
+            //if (PropertyChanged != null)
+            //    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"CanSaveReport"));
         }
+
+        public bool CanSaveReport { get; private set; }
 
         private void CloseAndDeleteTemporaryFiles()
         {

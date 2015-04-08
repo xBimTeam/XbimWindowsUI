@@ -7,13 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using NPOI.SS.Formula.Functions;
 using Xbim.COBieLiteUK;
+using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Properties;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
     internal class DPoWFacilityViewModel: INotifyPropertyChanged
     {
-        private Facility _model;
+        private readonly Facility _model;
 
         public DPoWFacilityViewModel()
         { }
@@ -34,6 +35,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
+        public FacilitySaveCommand SaveCommand { get; private set; }
+
         public DPoWFacilityViewModel(Facility model)
         {
             _model = model;
@@ -42,10 +45,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             //
             if (_model.AssetTypes != null)
             {
-                
                 // prepare Avalable classifications
                 //
-
                 var s = _model.AssetTypes.Where(at => at.Categories != null)
                     .SelectMany(x => x.Categories)
                     .Select(c => c.Classification)
@@ -67,6 +68,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
             else
                 Documents = new ObservableCollection<object>();
+
+            // command
+            SaveCommand = new FacilitySaveCommand(_model);
         }
 
         private void RefreshAssetsTree()

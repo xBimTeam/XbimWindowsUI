@@ -15,10 +15,9 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition  Height="*"/>
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-            <ComboBox Grid.Row="0" VerticalAlignment="Top" ItemsSource="{Binding AvailableClassifications}" SelectedItem="{Binding SelectedClassification}" />
-
-
+        <ComboBox Grid.Row="0" VerticalAlignment="Top" ItemsSource="{Binding AvailableClassifications}" SelectedItem="{Binding SelectedClassification}" />
         <TreeView Grid.Row="1" Name="trvMenu">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:DocumentViewModel}">
@@ -76,6 +75,8 @@
                 <TreeViewItem Header="Spaces" />
             </TreeViewItem >
         </TreeView>
-        
+        <Button Grid.Row="2" Visibility="Visible" Command="{Binding SaveCommand}" >
+                Save
+        </Button>
     </Grid>
 </UserControl>

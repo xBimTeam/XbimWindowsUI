@@ -13,67 +13,55 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="7*"/>
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="5*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Grid.Column="0">
-            <Label Content="Requirement file:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding RequirementFileSource, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Height="24" Margin="5" Content="Select" Command="{Binding SelectRequirement}" />
-        </StackPanel>
 
-        <StackPanel Grid.Row="0" Grid.Column="1">
-            <Label Content="Submission file:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Height="24" Margin="5" Content="Select" Command="{Binding SelectSubmission}"/>
-        </StackPanel>
-        
-        <Grid Grid.Row="0" Grid.Column="2"  Background="DarkGray">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5*"/>
-                <RowDefinition Height="5*"/>
-            </Grid.RowDefinitions>
-            <Button Grid.Row="0" Height="30" Width="Auto" Margin="20,10" Content="Verify" Command="{Binding Validate}" Click="Button_Click" />
-            <Grid Grid.Row="1" Margin="20,10" >
-                <ProgressBar Value="{Binding ActivityProgress}" />
+        <GroupBox Grid.Row="0" Grid.Column="0" Header="Requirement file:" Margin="10,5">
+            <Grid>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding RequirementFileSource, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Select" Command="{Binding SelectRequirement}" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Grid.Column="0" Header="Submission file:" Margin="10,5">
+            <Grid>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Select" Command="{Binding SelectSubmission}"/>
+                </StackPanel>
                 
             </Grid>
-        </Grid>
+        </GroupBox>
 
-        <Grid Grid.Row="1" Column="0" Background="DarkGray">
+        <GroupBox Grid.Row="2" Grid.Column="0" Header="Validation report to save:" Margin="10,5">
+            <Grid>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding ReportFileSource, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Select" Command="{Binding SelectReport}"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <Grid Grid.Row="0" Grid.Column="1" RowSpan="3" Background="DarkGray">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="0*" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding RequirementFacilityVM}" />
-            <GridSplitter ResizeDirection="Rows" Grid.Column="0" Grid.Row="1" Width="Auto" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
-            <TextBox Grid.Row="2" />
-        </Grid>
-        <Grid Grid.Row="1" Column="1" Background="DarkGray">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="0*" />
-            </Grid.RowDefinitions>
-            <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding SubmissionFacilityVM}" />
-            <GridSplitter ResizeDirection="Rows" Grid.Column="0" Grid.Row="1" Width="Auto" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
-            <TextBox Grid.Row="2" />
-        </Grid>
-        <Grid Grid.Row="1" Column="2" Background="DarkGray">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="0*" />
-            </Grid.RowDefinitions>
-            <controls:DPoWFacilityViewer Margin="5" DataContext="{Binding ValidationFacilityVM}" />
-            <GridSplitter ResizeDirection="Rows" Grid.Column="0" Grid.Row="1" Width="Auto" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"/>
-            <TextBox Grid.Row="2" />
+            <StackPanel>
+                <Button Height="30" Width="Auto" Margin="5" Content="Validate" Command="{Binding Validate}" Click="Button_Click" />
+                <ProgressBar Value="{Binding ActivityProgress}" Height="10"  Margin="5"/>
+                <Button Margin="5" Content="Save report" Click="Button_Click_2"/>
+            </StackPanel>
+            <TextBox Margin="5" Grid.Row="1" Text="{Binding ActivityStatus}" />
+            
         </Grid>
     </Grid>
 </Window>

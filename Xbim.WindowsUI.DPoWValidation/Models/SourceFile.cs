@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,5 +18,15 @@ namespace Xbim.WindowsUI.DPoWValidation.Models
         {
             get { return System.IO.File.Exists(File); }
         }
+
+        public FileInfo FileInfo
+        {
+            get
+            {
+                return  new FileInfo(File);
+            }
+        }
+
+
     }
 }

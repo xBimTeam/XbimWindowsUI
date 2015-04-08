@@ -13,6 +13,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Xbim.COBieLiteUK;
+using Xbim.CobieLiteUK.Validation;
+using Xbim.CobieLiteUK.Validation.Reporting;
+using Xbim.WindowsUI.DPoWValidation.Extensions;
 using Xbim.WindowsUI.DPoWValidation.Properties;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
@@ -52,6 +56,12 @@ namespace Xbim.WindowsUI.DPoWValidation
             Settings.Default.LastOpenedRequirement = vm.RequirementFileSource;
             Settings.Default.LastOpenedSubmission = vm.SubmissionFileSource;
             Settings.Default.Save();
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as ValidationViewModel;
+            vm.ValidationFacility.ExportFacility(vm.ReportFileInfo.FileInfo);
         }
     }
 }
