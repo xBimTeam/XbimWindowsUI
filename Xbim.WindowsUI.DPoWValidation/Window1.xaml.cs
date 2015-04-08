@@ -61,10 +61,10 @@ namespace Xbim.WindowsUI.DPoWValidation
             
             Thread.Sleep(400);
             SetStatus("Ready to save report.", 0);
-            //SetButtonsToSaveReport();
+            SetButtonsToSaveReport();
             SaveReportButton.IsEnabled = true;
-            if (File.Exists(ReportFileName.Text))
-                File.Delete(ReportFileName.Text);
+            OutFileName = ReportFileName.Text;
+
         }
 
         private void SetButtonsToSaveReport()
@@ -74,16 +74,34 @@ namespace Xbim.WindowsUI.DPoWValidation
             SaveReportButton.Visibility = Visibility.Visible;
         }
 
+        private string OutFileName;
+        private string Result;
+        // private string OutFileName;
+
+        public void WorkThreadFunction()
+        {
+            try
+            {
+                var outFilInfo = new FileInfo(OutFileName);
+                //SetStatus("Exporting report.", 80);
+                Result = validated.ExportFacility(outFilInfo);
+            }
+            catch (Exception ex)
+            {
+                Result = @"Error.";
+            }
+        }
+
         private void ReportSave_Click(object sender, RoutedEventArgs e)
         {
-            
-
             this.Cursor = Cursors.Wait;
-            var outfile = ReportFileName.Text;
-            var outFilInfo = new FileInfo(outfile);
-            //SetStatus("Exporting report.", 80);
-            var result = validated.ExportFacility(outFilInfo);
-            SetStatus(result, 0);
+
+
+            var thread = new Thread(new ThreadStart(WorkThreadFunction));
+            thread.Start();
+            thread.Join();
+            
+            SetStatus(Result, 0);
 
             var f = new FileInfo(ReportFileName.Text);
             if (f.Exists && f.Length > 0)
@@ -163,5 +181,9 @@ namespace Xbim.WindowsUI.DPoWValidation
             ReportFileName.Text = dlg.FileName;
         }
 
+        private void OpenReport_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start(OutFileName);
+        }
     }
 }

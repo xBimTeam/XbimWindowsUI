@@ -51,7 +51,7 @@
                 <Button Margin="5" Content="Validate" Click="Validate_Click" />
                 <ProgressBar x:Name="ProgressBar" Height="10"  Margin="5"/>
                 <Button Margin="5" Content="Save report" IsEnabled="False" Click="ReportSave_Click" x:Name="SaveReportButton" />
-                <Button Margin="5" Content="Open report" IsEnabled="True" Visibility="Collapsed" Click="ReportSave_Click" x:Name="OpenReportButton" />
+                <Button Margin="5" Content="Open report" IsEnabled="True" Visibility="Collapsed" Click="OpenReport_Click" x:Name="OpenReportButton" />
             </StackPanel>
             <TextBox x:Name="ReportText"  Margin="5" Grid.Row="1" />
         </Grid>

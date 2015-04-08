@@ -58,7 +58,7 @@
             <StackPanel>
                 <Button Height="30" Width="Auto" Margin="5" Content="Validate" Command="{Binding Validate}" Click="Button_Click" />
                 <ProgressBar Value="{Binding ActivityProgress}" Height="10"  Margin="5"/>
-                <Button Margin="5" Content="Save report" Click="Button_Click_2"/>
+                <Button Margin="5" Content="Save report" Command=""/>
             </StackPanel>
             <TextBox Margin="5" Grid.Row="1" Text="{Binding ActivityStatus}" />
             

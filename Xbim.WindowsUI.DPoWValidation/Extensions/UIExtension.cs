@@ -14,7 +14,7 @@ namespace Xbim.WindowsUI.DPoWValidation.Extensions
 
         public static void Refresh(this UIElement uiElement)
         {
-            uiElement.Dispatcher.Invoke(DispatcherPriority.Render, EmptyDelegate);
+            //uiElement.Dispatcher.Invoke(DispatcherPriority.Render, EmptyDelegate);
         }
     }
 }
