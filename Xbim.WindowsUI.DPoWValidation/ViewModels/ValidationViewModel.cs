@@ -149,14 +149,14 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         {
             
             IsWorking = true;
-            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
-            SelectRequirement.ChangesHappened();
-            SelectSubmission.ChangesHappened();
-            SelectReport.ChangesHappened();
+            //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
+            //SelectRequirement.ChangesHappened();
+            //SelectSubmission.ChangesHappened();
+            //SelectReport.ChangesHappened();
 
-            ActivityStatus = "Loading requirement file";
+            //ActivityStatus = "Loading requirement file";
             LoadRequirementFile(RequirementFileSource);
-            ActivityStatus = "Loading submission file";
+            //ActivityStatus = "Loading submission file";
             LoadSubmissionFile(SubmissionFileSource);
         }
 
