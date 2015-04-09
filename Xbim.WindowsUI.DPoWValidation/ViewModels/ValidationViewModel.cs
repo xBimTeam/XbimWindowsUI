@@ -205,6 +205,11 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 case ".xml":
                     SubmissionFacility = Facility.ReadXml(cobieFilename);
                     break;
+                case ".xls":
+                case ".xlsx":
+                    string msg;
+                    SubmissionFacility = Facility.ReadCobie(cobieFilename, out msg);
+                    break;
             }
             args.Result = SubmissionFacility;
         }
