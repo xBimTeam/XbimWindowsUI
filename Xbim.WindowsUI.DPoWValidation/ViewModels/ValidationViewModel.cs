@@ -24,6 +24,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         public ValidateCommand Validate { get; set; }
 
+        public ValidateAndSaveCommand ValidateAndSave { get; set; }
+
         public FacilitySaveCommand ExportFacility { get; set; }
 
         public bool IsWorking { get; set; }
@@ -133,9 +135,13 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             SelectRequirement = new SelectFileCommand(RequirementFileInfo, this);
             SelectSubmission = new SelectFileCommand(SubmissionFileInfo, this) {IncludeIfc = true};
             SelectReport = new SelectReportFileCommand(ReportFileInfo, this);
-            
+
+            ExportOnValidated = false;
+            OpenOnExported = false;
+
             Validate = new ValidateCommand(this);
             ExportFacility = new FacilitySaveCommand(this);
+            ValidateAndSave = new ValidateAndSaveCommand(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -148,11 +154,11 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"SubmissionFileSource"));
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ReportFileSource"));
             Validate.ChangesHappened();
+            ValidateAndSave.ChangesHappened();
         }
 
         internal void ExecuteValidation()
         {
-            
             IsWorking = true;
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
             SelectRequirement.ChangesHappened();
@@ -180,6 +186,11 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 case ".xml":
                     RequirementFacility = Facility.ReadXml(cobieFilename);
                     break;
+                case ".xls":
+                case ".xlsx":
+                    string msg;
+                    RequirementFacility = Facility.ReadCobie(cobieFilename, out msg);
+                    break;
             }
         }
 
@@ -190,7 +201,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         private void OpenSubmissionCobieFile(object s, DoWorkEventArgs args)
         {
-            var worker = s as BackgroundWorker;
             var cobieFilename = args.Argument as string;
             if (string.IsNullOrEmpty(cobieFilename))
                 return;
@@ -383,7 +393,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     if (!string.IsNullOrEmpty(errMsg))
                     {
                         ActivityStatus = "Error Opening File";
-                        // MessageBox.Show(this, errMsg, "Error Opening File", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.None);
                     }
                     if (args.Result is Exception)
                     {
@@ -396,15 +405,11 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                             ex = ex.InnerException;
                             indent += "\t";
                         }
-                        // todo: restore
-                        // MessageBox.Show(this, sb.ToString(), "Error Opening Ifc File", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.None);
+                        ActivityStatus = "Error Opening Ifc File\r\n\r\n" + sb;
                     }
                     ActivityProgress = 0;
-                    // todo: restore
-                    // StatusMsg.Text = "Error/Ready";
+                    ActivityStatus = "Error/Ready";
                 }
-                // todo: restore
-                // FireLoadingComplete(s, args);
             };
         }
 
@@ -414,6 +419,10 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             var f = new cobieUKValidation.FacilityValidator();
             ValidationFacility = f.Validate(RequirementFacility, SubmissionFacility);
             ActivityStatus = "Validation completed";
+            if (ExportOnValidated)
+            {
+                ExportValidatedFacility();
+            }
         }
 
         private void CloseAndDeleteTemporaryFiles()
@@ -456,7 +465,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             switch (ext)
             {
                 case ".json": 
-                case ".xml": 
+                case ".xml":
+                case ".xls":
+                case ".xlsx": 
                     _worker.DoWork += OpenSubmissionCobieFile;
                     _worker.RunWorkerAsync(modelFileName);
                     break;
@@ -477,9 +488,15 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         internal void ExportValidatedFacility()
         {
-            var thread = new Thread(new ThreadStart(WorkThreadFunction));
+            if (File.Exists(ReportFileInfo.FileInfo.FullName))
+                File.Delete(ReportFileInfo.FileInfo.FullName);
+            var thread = new Thread(WorkThreadFunction);
             thread.Start();
             thread.Join();
+            if (OpenOnExported && File.Exists(ReportFileInfo.FileInfo.FullName))
+            {
+                Process.Start(ReportFileInfo.FileInfo.FullName);
+            }
         }
 
         public void WorkThreadFunction()
@@ -490,8 +507,12 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
             catch (Exception ex)
             {
-                ActivityStatus = @"Error.";
+                ActivityStatus = @"Error.\r\n\r\n" + ex.Message;
             }
         }
+
+        public bool ExportOnValidated { get; set; }
+
+        public bool OpenOnExported { get; set; }
     }
 }

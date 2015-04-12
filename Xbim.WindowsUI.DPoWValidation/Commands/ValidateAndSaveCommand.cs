@@ -9,7 +9,7 @@ using Xbim.WindowsUI.DPoWValidation.ViewModels;
 namespace Xbim.WindowsUI.DPoWValidation.Commands
 {
     
-    class ValidateCommand : ICommand
+    class ValidateAndSaveCommand : ICommand
     {
         private ValidationViewModel _vm;
 
@@ -21,9 +21,8 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
         }
 
         public event EventHandler CanExecuteChanged;
-        
 
-        public ValidateCommand(ValidationViewModel validationViewModel)
+        public ValidateAndSaveCommand(ValidationViewModel validationViewModel)
         {
             this._vm = validationViewModel;
         }
@@ -38,8 +37,8 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
 
         public void Execute(object parameter)
         {
-            _vm.ExportOnValidated = false;
-            _vm.OpenOnExported = false;
+            _vm.ExportOnValidated = true;
+            _vm.OpenOnExported = true;
             _vm.ExecuteValidation();
         }
     }

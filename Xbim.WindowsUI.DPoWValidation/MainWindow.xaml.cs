@@ -57,22 +57,5 @@ namespace Xbim.WindowsUI.DPoWValidation
             Settings.Default.LastOpenedSubmission = vm.SubmissionFileSource;
             Settings.Default.Save();
         }
-
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            var vm = DataContext as ValidationViewModel;
-
-            var fv = new FacilityValidator();
-            var fac = fv.Validate(vm.RequirementFacility, vm.SubmissionFacility);
-
-            var xRep = new ExcelValidationReport();
-            var ret = xRep.Create(fac, vm.ReportFileInfo.File);
-
-
-            // vm.ValidationFacility.ExportFacility(vm.ReportFileInfo.FileInfo);
-
-
-
-        }
     }
 }

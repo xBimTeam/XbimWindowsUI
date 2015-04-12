@@ -143,6 +143,7 @@
     </ApplicationDefinition>
     <Compile Include="Commands\FacilitySaveCommand.cs" />
     <Compile Include="Commands\SelectReportFileCommand.cs" />
+    <Compile Include="Commands\ValidateAndSaveCommand.cs" />
     <Compile Include="Commands\ValidateCommand.cs" />
     <Compile Include="Controls\DPoWFacilityViewer.xaml.cs">
       <DependentUpon>DPoWFacilityViewer.xaml</DependentUpon>

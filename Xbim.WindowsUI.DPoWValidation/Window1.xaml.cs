@@ -131,12 +131,12 @@ namespace Xbim.WindowsUI.DPoWValidation
             const string modelExtensions = @";*.ifc;*.ifcxml;*.xbim;*.ifczip";
 
             var filter = includeIfc 
-                ? @"All model files|*.xls;*.xslx;*.json" + modelExtensions + "|" +
-                    "COBie files|*.xls;*.xslx|" +
+                ? @"All model files|*.xls;*.xlsx;*.json" + modelExtensions + "|" +
+                    "COBie files|*.xls;*.xlsx|" +
                     "CobieLite files|*.json;*.xml|" +
                     "IFC Files|*.Ifc;*.ifcxml;*.xbim;*.ifczip"
-                : @"All model files|*.xls;*.xslx;*.json" + "|" +
-                    "COBie files|*.xls;*.xslx|" +
+                : @"All model files|*.xls;*.xlsx;*.json" + "|" +
+                    "COBie files|*.xls;*.xlsx|" +
                     "CobieLite files|*.json;*.xml"
                 ;
 
