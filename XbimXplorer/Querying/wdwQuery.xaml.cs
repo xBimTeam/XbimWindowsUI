@@ -19,7 +19,6 @@ using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
-using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
 using XbimXplorer.PluginSystem;

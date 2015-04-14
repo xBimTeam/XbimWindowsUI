@@ -26,8 +26,8 @@ using System.Windows.Data;
 using System.Windows.Input;
 using Gat.Controls;
 using Microsoft.Win32;
-using Xbim.IO;
 using Xbim.Ifc2x3.ProductExtension;
+using Xbim.IO;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
@@ -46,6 +46,7 @@ using Xbim.Presentation.FederatedModel;
 using XbimXplorer.Querying;
 using XbimXplorer.Scripting;
 using XbimXplorer.Properties;
+
 #endregion
 
 namespace XbimXplorer
