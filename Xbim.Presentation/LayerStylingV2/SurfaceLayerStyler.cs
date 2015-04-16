@@ -48,6 +48,7 @@ namespace Xbim.Presentation.LayerStylingV2
                 var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
                 mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
                 styleMeshSets.Add(style.DefinedObjectId, mg);
+                mg.BeginUpdate();
                 if (style.IsTransparent)
                     tmpTransparentsGroup.Children.Add(mg);
                 else
@@ -96,7 +97,7 @@ namespace Xbim.Presentation.LayerStylingV2
                                 wpfMesh.Read(((XbimShapeGeometry)shapeGeom).ShapeData);
                                 break;
                         }
-                        wpfMesh.Read(shapeGeom.ShapeData);
+                       
                         repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                         var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
                         mg.SetValue(FrameworkElement.TagProperty,
@@ -138,7 +139,10 @@ namespace Xbim.Presentation.LayerStylingV2
                     }
                 }
             }
-
+            foreach (var wpfMeshGeometry3D in styleMeshSets.Values)
+            {
+                wpfMeshGeometry3D.EndUpdate();
+            }
             //}
             if (tmpOpaquesGroup.Children.Any())
             {

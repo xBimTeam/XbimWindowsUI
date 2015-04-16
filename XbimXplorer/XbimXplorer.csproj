@@ -24,6 +24,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <_ResolveReferenceDependencies>true</_ResolveReferenceDependencies>
+    <NuGetPackageImportStamp>77eed552</NuGetPackageImportStamp>
     <PublishUrl>ClickOnce\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -34,7 +35,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://xBIM.codeplex.com/releases/clickonce/</InstallUrl>
+    <InstallUrl>http://openbim.blob.core.windows.net/clickonce/</InstallUrl>
     <SupportUrl>http://www.openBIM.org</SupportUrl>
     <ProductName>xBIM Xplorer</ProductName>
     <PublisherName>xBIM Team</PublisherName>
@@ -43,12 +44,11 @@
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>3.0.0.0</ApplicationVersion>
+    <ApplicationVersion>3.1.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NuGetPackageImportStamp>77eed552</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>xBIM.ico</ApplicationIcon>
@@ -78,14 +78,13 @@
     <NoWarn>1591;1572;1573;1574</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>EB892F33557BFBBDCEC234A4E501999EDCE2A41B</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>CEE70F4E70E4A01BC6E9D3AEB8A70DFB58215C3F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestKeyFile>XbimXplorer_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>false</GenerateManifests>
+    <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>true</SignManifests>
@@ -410,6 +409,7 @@
     <None Include="Templates\ClassifyModelToNRM.bql" />
     <None Include="Templates\EmbeddedNRM.bql" />
     <None Include="Xbim.Script.dll.config" />
+    <None Include="XbimXplorer_1_TemporaryKey.pfx" />
     <None Include="XbimXplorer_TemporaryKey.pfx" />
     <Resource Include="xBimQueryLogo.png" />
   </ItemGroup>
@@ -451,38 +451,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <PublishFile Include="Esent.Interop">
-      <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="ICSharpCode.SharpZipLib">
-      <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="log4net">
-      <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup />
   <ItemGroup>
     <FileAssociation Include=".xBIM">
@@ -500,22 +469,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <GeomEnginePublishFile Include="..\Xbim.Geometry.Engine.Interop\bin\$(Configuration)\Xbim.Geometry.Engine32.dll;..\Xbim.Geometry.Engine.Interop\bin\$(Configuration)\Xbim.Geometry.Engine64.dll">
-      <Visible>False</Visible>
-    </GeomEnginePublishFile>
-  </ItemGroup>
-  <Target Name="BeforeBuild">
-    <CreateItem Include="@(GeomEnginePublishFile)" AdditionalMetadata="IsDataFile=false">
-      <Output TaskParameter="Include" ItemName="_DeploymentManifestFiles" />
-    </CreateItem>
-  </Target>
-  <Target Name="BeforePublish">
-    <Touch Files="@(IntermediateAssembly)" />
-    <CreateItem Include="@(GeomEnginePublishFile)" AdditionalMetadata="IsDataFile=false">
-      <Output TaskParameter="Include" ItemName="_DeploymentManifestFiles" />
-    </CreateItem>
-  </Target>
   <Import Project="..\packages\Xbim.Geometry.3.0.15-Alpha\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.15-Alpha\build\net45\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

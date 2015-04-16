@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
+using Xbim.Common.XbimExtensions;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.XbimExtensions;
@@ -16,6 +17,9 @@ namespace Xbim.Presentation
     public class WpfMeshGeometry3D : IXbimMeshGeometry3D
     {
         public GeometryModel3D WpfModel;
+        private List<Point3D> _unfrozenPositions;
+        private List<Int32> _unfrozenIndices;
+        private List<Vector3D> _unfrozenNormals;
         XbimMeshFragmentCollection _meshes = new XbimMeshFragmentCollection();
         private TriangleType _meshType;
 
@@ -182,17 +186,7 @@ namespace Xbim.Presentation
             }
         }
 
-        public void BeginUpdate()
-        {
-            if (WpfModel == null)
-                WpfModel = new GeometryModel3D();
-            WpfModel.Geometry = new MeshGeometry3D();
-        }
-
-        public void EndUpdate()
-        {
-            WpfModel.Geometry.Freeze();
-        }
+        
 
         public GeometryModel3D ToGeometryModel3D()
         {
@@ -272,12 +266,12 @@ namespace Xbim.Presentation
 
         public int PositionCount
         {
-            get { return Mesh.Positions.Count; }
+            get { return Mesh==null ? _unfrozenPositions.Count: Mesh.Positions.Count; }
         }
 
         public int TriangleIndexCount
         {
-            get { return Mesh.TriangleIndices.Count; }
+            get { return Mesh == null ? _unfrozenIndices.Count : Mesh.TriangleIndices.Count; }
         }
 
         public XbimMeshFragment Add(IXbimGeometryModel geometryModel, Ifc2x3.Kernel.IfcProduct product, XbimMatrix3D transform, double? deflection = null, short modelId=0)
@@ -576,8 +570,138 @@ namespace Xbim.Presentation
         /// <param name="transform">transforms the mesh if the matrix is not null</param>
         public void Read(byte[] mesh, XbimMatrix3D? transform = null)
         {
-            Mesh.Read(mesh,transform);
-        }
+            int indexBase = _unfrozenPositions.Count;
+            var qrd = new RotateTransform3D();
+            Matrix3D? matrix3D = null;
+            if (transform.HasValue)
+            {
+                var xq = transform.Value.GetRotationQuaternion();
+                var quaternion = new Quaternion(xq.X, xq.Y, xq.Z, xq.W);
+                if (!quaternion.IsIdentity)
+                    qrd.Rotation = new QuaternionRotation3D(quaternion);
+                else
+                    qrd = null;
+                matrix3D = transform.Value.ToMatrix3D();
+            }
+            using (var ms = new MemoryStream(mesh))
+            {
+                using (var br = new BinaryReader(ms))
+                {
+                    // ReSharper disable once UnusedVariable
+                    var version = br.ReadByte(); //stream format version
+                    var numVertices = br.ReadInt32();
+                    var numTriangles = br.ReadInt32();
 
+                    var uniqueVertices = new List<Point3D>(numVertices);
+                    var vertices = new List<Point3D>(numVertices * 4); //approx the size
+                    var triangleIndices = new List<Int32>(numTriangles * 3);
+                    var normals = new List<Vector3D>(numVertices * 4);
+                    for (var i = 0; i < numVertices; i++)
+                    {
+                        double x = br.ReadSingle();
+                        double y = br.ReadSingle();
+                        double z = br.ReadSingle();
+                        var p = new Point3D(x, y, z);
+                        if (matrix3D.HasValue)
+                            p = matrix3D.Value.Transform(p);
+                        uniqueVertices.Add(p);
+                    }
+                    var numFaces = br.ReadInt32();
+
+                    for (var i = 0; i < numFaces; i++)
+                    {
+                        var numTrianglesInFace = br.ReadInt32();
+                        if (numTrianglesInFace == 0) continue;
+                        var isPlanar = numTrianglesInFace > 0;
+                        numTrianglesInFace = Math.Abs(numTrianglesInFace);
+                        if (isPlanar)
+                        {
+                            var normal = br.ReadPackedNormal().Normal;
+                            var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                            if (qrd != null) //transform the normal if we have to
+                                wpfNormal = qrd.Transform(wpfNormal);
+                            var uniqueIndices = new Dictionary<int, int>();
+                            for (var j = 0; j < numTrianglesInFace; j++)
+                            {
+                                for (int k = 0; k < 3; k++)
+                                {
+                                    int idx = ReadIndex(br, numVertices);
+                                    int writtenIdx;
+                                    if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
+                                    {
+                                        writtenIdx = vertices.Count;
+                                        vertices.Add(uniqueVertices[idx]);
+                                        uniqueIndices.Add(idx, writtenIdx);
+                                        //add a matching normal
+                                        normals.Add(wpfNormal);
+                                    }
+                                    triangleIndices.Add(indexBase + writtenIdx);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var uniqueIndices = new Dictionary<int, int>();
+                            for (var j = 0; j < numTrianglesInFace; j++)
+                            {
+                                for (int k = 0; k < 3; k++)
+                                {
+                                    int idx = ReadIndex(br, numVertices);
+                                    var normal = br.ReadPackedNormal().Normal;
+                                    int writtenIdx;
+                                    if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
+                                    {
+                                        writtenIdx = vertices.Count;
+                                        vertices.Add(uniqueVertices[idx]);
+                                        uniqueIndices.Add(idx, writtenIdx);
+                                        var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                                        if (qrd != null) //transform the normal if we have to
+                                            wpfNormal = qrd.Transform(wpfNormal);
+                                        normals.Add(wpfNormal);
+                                    }
+
+                                    triangleIndices.Add(indexBase + writtenIdx);
+                                }
+                            }
+                        }
+                    }
+
+                    _unfrozenPositions.AddRange(vertices);
+                    _unfrozenIndices.AddRange(triangleIndices);
+                    _unfrozenNormals.AddRange(normals);
+                }
+                // if(m3D.CanFreeze) m3D.Freeze(); //freeze the mesh to improve performance
+            }
+        }
+        private static int ReadIndex(BinaryReader br, int maxVertexCount)
+        {
+            if (maxVertexCount <= 0xFF)
+                return br.ReadByte();
+            if (maxVertexCount <= 0xFFFF)
+                return br.ReadUInt16();
+            return (int)br.ReadUInt32(); //this should never go over int32
+        }
+        /// <summary>
+        /// Ends an update and freezes the geometry
+        /// </summary>
+        public void EndUpdate()
+        {
+            WpfModel.Geometry = new MeshGeometry3D();
+            Mesh.Positions = new Point3DCollection(_unfrozenPositions);
+            _unfrozenPositions = null;
+            Mesh.TriangleIndices = new Int32Collection(_unfrozenIndices);
+            _unfrozenIndices = null;
+            Mesh.Normals = new Vector3DCollection(_unfrozenNormals);
+            _unfrozenNormals = null;
+            Mesh.Freeze();
+        }
+        public void BeginUpdate()
+        {
+            _unfrozenPositions = new List<Point3D>(Mesh.Positions);
+            _unfrozenIndices = new List<int>(Mesh.TriangleIndices);
+            _unfrozenNormals = new List<Vector3D>(Mesh.Normals);
+            WpfModel.Geometry = null;
+        }
+     
     }
 }
