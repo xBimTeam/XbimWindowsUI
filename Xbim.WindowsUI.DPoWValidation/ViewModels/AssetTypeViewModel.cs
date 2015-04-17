@@ -18,20 +18,20 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public AssetTypeViewModel(COBieLiteUK.AssetType assetType)
         {
             _assetType = assetType;
-            var v = new AssetTypeValidator(_assetType);
-            if (v.HasRequirements)
-            {
-                // display requirements instead of assets.
-                Children = new ObservableCollection<object>(v.RequirementDetails.Select(x=> new RequirementViewModel(x.Attribute)));
-                return;
-            }
-            if (_assetType.Assets == null)
-            {
-                // no assets available
-                Children = new ObservableCollection<object>();
-                return;
-            }
-            // show available assets
+            //var v = new AssetTypeValidator(_assetType);
+            //if (v.HasRequirements)
+            //{
+            //    // display requirements instead of assets.
+            //    Children = new ObservableCollection<object>(v.RequirementDetails.Select(x=> new RequirementViewModel(x.Attribute)));
+            //    return;
+            //}
+            //if (_assetType.Assets == null)
+            //{
+            //    // no assets available
+            //    Children = new ObservableCollection<object>();
+            //    return;
+            //}
+            //// show available assets
             var l = _assetType.Assets.Select(asset => new AssetViewModel(asset)).ToList();
             Children = new ObservableCollection<object>(l);
         }
