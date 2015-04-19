@@ -31,6 +31,7 @@ using Xbim.IO;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
+using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Script;
 using Xbim.XbimExtensions;
 using Xbim.ModelGeometry.Scene;
@@ -54,7 +55,7 @@ namespace XbimXplorer
     /// <summary>
     ///   Interaction logic for Window1.xaml
     /// </summary>
-    public partial class XplorerMainWindow
+    public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow
     {
         private BackgroundWorker _worker;
         /// <summary>
@@ -997,6 +998,11 @@ namespace XbimXplorer
         {
             DrawingControl.FederationLayerStyler = new LayerStylerTypeAndIFCStyle();
             DrawingControl.ReloadModel();
+        }
+
+        DrawingControl3D IXbimXplorerPluginMasterWindow.DrawingControl
+        {
+            get { return DrawingControl; }
         }
     }
 }

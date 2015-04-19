@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using Xbim.Presentation;
-using Xbim.XbimExtensions.Interfaces;
-
-namespace XbimXplorer.PluginSystem
+﻿namespace Xbim.Presentation.XplorerPluginSystem
 {
     public enum PluginWindowDefaultUIContainerEnum
     {
@@ -21,11 +12,12 @@ namespace XbimXplorer.PluginSystem
         onLoad
     }
 
-    public interface xBimXplorerPluginWindow 
+    [System.Obsolete("The plugin system is in alpha version, it will likely require a substantial redesign.", false)]
+    public interface IXbimXplorerPluginWindow 
     {
         string MenuText { get; }
         string WindowTitle { get; }
-        void BindUI(XplorerMainWindow mainWindow);
+        void BindUI(IXbimXplorerPluginMasterWindow mainWindow);
         PluginWindowDefaultUIContainerEnum DefaultUIContainer { get; }
         PluginWindowDefaultUIShow DefaultUIActivation { get; }
     }

@@ -183,10 +183,6 @@
       <Project>{89f98e53-de4e-4427-8244-d5934ad08849}</Project>
       <Name>Xbim.Presentation</Name>
     </ProjectReference>
-    <ProjectReference Include="..\XbimXplorer\XbimXplorer.csproj">
-      <Project>{d6ced5d7-be37-4a32-90a5-1444c9ffdd91}</Project>
-      <Name>XbimXplorer</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

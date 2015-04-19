@@ -11,16 +11,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Presentation;
+using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.XbimExtensions.Interfaces;
-using XbimXplorer;
-using XbimXplorer.PluginSystem;
+
 
 namespace Xbim.BCF
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : xBimXplorerPluginWindow, IxBimXplorerPluginWindowMessaging
+    public partial class MainWindow : IXbimXplorerPluginWindow, IXbimXplorerPluginMessageReceiver
     {
         string baseFolder = @"..\..\Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\";
 
@@ -198,9 +198,9 @@ namespace Xbim.BCF
         // plugin system related stuff
         //
 
-        XplorerMainWindow _xpWindow;
+        private IXbimXplorerPluginMasterWindow _xpWindow;
 
-        public void BindUI(XplorerMainWindow mainWindow)
+        public void BindUI(IXbimXplorerPluginMasterWindow mainWindow)
         {
             _xpWindow = mainWindow;
             SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });

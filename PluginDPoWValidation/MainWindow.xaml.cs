@@ -21,8 +21,8 @@ using Xbim.COBieLite;
 using Xbim.COBieLite.Validation;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.IO.GroupingAndStyling;
+using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.Plugins.DPoWValidation.MV;
-using XbimXplorer.PluginSystem;
 using XbimXplorer;
 using Xbim.XbimExtensions.Interfaces;
 using System.IO;
@@ -44,7 +44,7 @@ namespace Validation
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : UserControl, xBimXplorerPluginWindow 
+    public partial class MainWindow : UserControl, IXbimXplorerPluginWindow 
     {
         public MainWindow()
         {
@@ -220,13 +220,13 @@ namespace Validation
         }
 
 
-        private XplorerMainWindow xpWindow;
+        private IXbimXplorerPluginMasterWindow xpWindow;
 
         // ---------------------------
         // plugin system related stuff
         //
 
-        public void BindUI(XplorerMainWindow mainWindow)
+        public void BindUI(IXbimXplorerPluginMasterWindow mainWindow)
         {
             xpWindow = mainWindow;
             this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });

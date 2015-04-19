@@ -202,7 +202,6 @@
                         <avalonDock:LayoutDocument  CanClose="False" Title="3D View">
                             <xbim:DrawingControl3D 
                                 x:Name="DrawingControl" 
-                                x:FieldModifier="public"
                                    SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow, Mode=TwoWay}"    
                                    Model ="{Binding}" 
                                    Grid.Column="2" 

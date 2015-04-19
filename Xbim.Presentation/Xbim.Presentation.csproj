@@ -184,7 +184,7 @@
     </Reference>
     <Reference Include="Xbim.Script, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Scripting.3.0.8-Prerelease\lib\net45\Xbim.Script.dll</HintPath>
+      <HintPath>..\packages\Xbim.Scripting.3.0.9-Prerelease\lib\net45\Xbim.Script.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -258,6 +258,9 @@
     <Compile Include="XbimMouseClickActions.cs" />
     <Compile Include="XbimTreeview.cs" />
     <Compile Include="XbimViewType.cs" />
+    <Compile Include="XplorerPluginSystem\IXbimXplorerPluginMessageReceiver.cs" />
+    <Compile Include="XplorerPluginSystem\IXbimXplorerPluginMasterWindow.cs" />
+    <Compile Include="XplorerPluginSystem\IXbimXplorerPluginWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DrawingControl3D.xaml">
@@ -320,6 +323,7 @@
     <None Include="Xbim.Script.dll.config" />
     <None Include="XbimIfcKey.pfx" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Xbim.Geometry.3.0.15-Alpha\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.15-Alpha\build\net45\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

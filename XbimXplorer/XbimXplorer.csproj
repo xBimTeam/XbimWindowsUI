@@ -245,7 +245,7 @@
     </Reference>
     <Reference Include="Xbim.Script, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Scripting.3.0.8-Prerelease\lib\net45\Xbim.Script.dll</HintPath>
+      <HintPath>..\packages\Xbim.Scripting.3.0.9-Prerelease\lib\net45\Xbim.Script.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -277,8 +277,10 @@
     <Compile Include="Dialogs\ExportWindow.xaml.cs">
       <DependentUpon>ExportWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PluginSystem\PluginWindowCollection.cs" />
-    <Compile Include="XplorerMainWindow.Plugins.xaml.cs" />
+    <Compile Include="XplorerMainWindow.Plugins.xaml.cs">
+      <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Page Include="Dialogs\COBieClassFilter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -335,8 +337,6 @@
       <DependentUpon>ModelSeparation.xaml</DependentUpon>
     </Compile>
     <Compile Include="ObservableMruList.cs" />
-    <Compile Include="PluginSystem\IxBimXplorerPluginWindowMessaging.cs" />
-    <Compile Include="PluginSystem\xBimXplorerPluginWindow.cs" />
     <Compile Include="Querying\GeomQuerying.cs" />
     <Compile Include="Querying\SquareBracketIndexer.cs" />
     <Compile Include="Querying\TextHighliter.cs" />

@@ -19,9 +19,9 @@ using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
+using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
-using XbimXplorer.PluginSystem;
 using XbimGeometry.Interfaces;
 using XbimXplorer.Simplify;
 
@@ -30,7 +30,7 @@ namespace XbimXplorer.Querying
     /// <summary>
     /// Interaction logic for wdwQuery.xaml
     /// </summary>
-    public partial class WdwQuery : xBimXplorerPluginWindow
+    public partial class WdwQuery : IXbimXplorerPluginWindow
     {
         public WdwQuery()
         {
@@ -50,7 +50,7 @@ namespace XbimXplorer.Querying
 #endif
         }
 
-        private XplorerMainWindow _parentWindow;
+        private IXbimXplorerPluginMasterWindow _parentWindow;
 
         private bool _bDoClear = true;
 
@@ -1243,7 +1243,7 @@ namespace XbimXplorer.Querying
         /// All bindings are to be established in this call
         /// </summary>
         /// <param name="mainWindow"></param>
-        public void BindUI(XplorerMainWindow mainWindow)
+        public void BindUI(IXbimXplorerPluginMasterWindow mainWindow)
         {
             _parentWindow = mainWindow;
             SetBinding(SelectedItemProperty,

@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using XbimXplorer.PluginSystem;
+using Xbim.Presentation.XplorerPluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
 
 namespace XbimXplorer
@@ -22,7 +23,7 @@ namespace XbimXplorer
         {
             foreach (var window in PluginWindows)
             {
-                var msging = window as IxBimXplorerPluginWindowMessaging;
+                var msging = window as IXbimXplorerPluginMessageReceiver;
                 if (msging != null)
                 {
                     msging.ProcessMessage(sender, messageTypeString, messageData);
@@ -114,7 +115,7 @@ namespace XbimXplorer
             {
                 Debug.WriteLine("Looping " + tp.Name);
                 object instance = Activator.CreateInstance(tp);
-                xBimXplorerPluginWindow asPWin = instance as xBimXplorerPluginWindow;
+                IXbimXplorerPluginWindow asPWin = instance as IXbimXplorerPluginWindow;
                 if (asPWin != null)
                 {
                     if (!PluginWindows.Contains(asPWin))
@@ -127,7 +128,11 @@ namespace XbimXplorer
 
         }
 
-        PluginWindowCollection PluginWindows = new PluginWindowCollection();
+        private class PluginWindowCollection : ObservableCollection<IXbimXplorerPluginWindow>
+        {
+        }
+
+        readonly PluginWindowCollection PluginWindows = new PluginWindowCollection();
 
         Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
@@ -141,7 +146,7 @@ namespace XbimXplorer
             return null;
         }
 
-        private void ShowPluginWindow(xBimXplorerPluginWindow pluginWindow)
+        private void ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow)
         {
             if (pluginWindow is UserControl)
             {
