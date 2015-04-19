@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace XbimXplorer.Plugins.DPoWValidation.Properties {
+namespace XplorerPlugins.DPoWValidation.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

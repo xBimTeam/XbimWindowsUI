@@ -7,8 +7,8 @@
     <ProjectGuid>{845161EC-C065-413E-8B0B-C4C1D2C6449D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>XbimXplorer.Plugins.DPoWValidation</RootNamespace>
-    <AssemblyName>DPoWValidation</AssemblyName>
+    <RootNamespace>XplorerPlugins.DPoWValidation</RootNamespace>
+    <AssemblyName>XplorerPlugins.DPoWValidation</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -87,10 +87,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Xbim.Exchange.3.0.64-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.COBieLite, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Exchange.3.0.64-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>
-    </Reference>
     <Reference Include="Xbim.COBieLiteUK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Xbim.Exchange.3.0.64-Prerelease\lib\net45\Xbim.COBieLiteUK.dll</HintPath>
@@ -141,20 +137,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="mvdXML\MvdPropertyRuleValue.cs" />
-    <Compile Include="MV\AssetTypeInfoTypeVM.cs" />
-    <Compile Include="MV\ProjectReqVM.cs" />
-    <Compile Include="MV\SpaceTypeVM.cs" />
-    <Compile Include="TrafficLightStyler.cs" />
-    <Compile Include="ValidationExtensions\IPersistIfcEntityExtension.cs" />
-    <Compile Include="Validation\CobieAssetTypeRequirementSet.cs" />
-    <Compile Include="Validation\CobieAssetTypeRequirementDetail.cs" />
-    <Compile Include="Validation\CobieProjectRequirementSet.cs" />
-    <Compile Include="Validation\CompoundClassificationString.cs" />
-    <Compile Include="Validation\IValidationRequirementDetail.cs" />
-    <Compile Include="Validation\IValidationRequirementSet.cs" />
-    <Compile Include="Validation\ReportResult.cs" />
-    <Compile Include="Validation\ValidationExtensions.cs" />
     <Compile Include="ValidationResultStyler.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -170,15 +152,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="mvdXML\MvdConceptERReference.cs" />
-    <Compile Include="mvdXML\MvdConceptTemplate.cs" />
-    <Compile Include="mvdXML\MvdExchangeRequirement.cs" />
-    <Compile Include="mvdXML\MVDNamedIdentifiedItem.cs" />
-    <Compile Include="mvdXML\MvdConcept.cs" />
-    <Compile Include="mvdXML\MvdConceptRoot.cs" />
-    <Compile Include="mvdXML\MvdRule.cs" />
-    <Compile Include="mvdXML\MvdRulePropertySet.cs" />
-    <Compile Include="mvdXML\MvdXMLDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -210,6 +183,10 @@
     <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj">
       <Project>{89f98e53-de4e-4427-8244-d5934ad08849}</Project>
       <Name>Xbim.Presentation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xbim.WindowsUI.DPoWValidation\Xbim.WindowsUI.DPoWValidation.csproj">
+      <Project>{1E708A3F-4EB6-4BFD-98AE-FF3EFB60B78B}</Project>
+      <Name>Xbim.WindowsUI.DPoWValidation</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

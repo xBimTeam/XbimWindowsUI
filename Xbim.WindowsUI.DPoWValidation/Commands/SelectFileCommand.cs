@@ -7,7 +7,7 @@ using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
 namespace Xbim.WindowsUI.DPoWValidation.Commands
 {
-    class SelectFileCommand : ICommand
+    public class SelectFileCommand : ICommand
     {
         private readonly SourceFile _currentFile;
         private readonly ValidationViewModel _vm;

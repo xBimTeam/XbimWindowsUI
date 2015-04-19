@@ -12,7 +12,7 @@
         onLoad
     }
 
-    [System.Obsolete("The plugin system is in alpha version, it will likely require a substantial redesign.", false)]
+    
     public interface IXbimXplorerPluginWindow 
     {
         string MenuText { get; }

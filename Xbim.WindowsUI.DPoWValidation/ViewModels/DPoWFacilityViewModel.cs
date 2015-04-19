@@ -12,7 +12,7 @@ using Xbim.WindowsUI.DPoWValidation.Properties;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
-    internal class DPoWFacilityViewModel: INotifyPropertyChanged
+    public class DPoWFacilityViewModel: INotifyPropertyChanged
     {
         private readonly Facility _model;
 
@@ -40,6 +40,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public DPoWFacilityViewModel(Facility model)
         {
             _model = model;
+            if (_model == null)
+                return;
 
             // asset types
             //

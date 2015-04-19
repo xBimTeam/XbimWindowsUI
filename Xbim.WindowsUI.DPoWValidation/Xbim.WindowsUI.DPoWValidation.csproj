@@ -149,6 +149,8 @@
     </Compile>
     <Compile Include="Extensions\FacilityExtensions.cs" />
     <Compile Include="Extensions\UIExtension.cs" />
+    <Compile Include="IO\FacilityFromIfcConverter.cs" />
+    <Compile Include="IO\FacilityReader.cs" />
     <Compile Include="Models\SourceFile.cs" />
     <Compile Include="ViewModels\AssetTypeViewModel.cs" />
     <Compile Include="ViewModels\AssetViewModel.cs" />

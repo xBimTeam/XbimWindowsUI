@@ -8,7 +8,7 @@ using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
 namespace Xbim.WindowsUI.DPoWValidation.Commands
 {
-    class FacilitySaveCommand : ICommand
+    public class FacilitySaveCommand : ICommand
     {
         public event EventHandler CanExecuteChanged;
 

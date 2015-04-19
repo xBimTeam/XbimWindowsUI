@@ -1,8 +1,8 @@
 ﻿<UserControl x:Class="Validation.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-        >
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:controls="clr-namespace:Xbim.WindowsUI.DPoWValidation.Controls;assembly=Xbim.WindowsUI.DPoWValidation">
     <!-- Height="350" Width="525" -->
     <Grid>
         <Button x:Name="OpenButton" 
@@ -15,69 +15,15 @@
                 <RowDefinition Height="7*" />
                 <RowDefinition Height="5*" />
             </Grid.RowDefinitions>
-
-
             <TabControl Grid.Row="0" Margin="5,5,5,10" >
-                <TabItem Header="Project">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <GridSplitter Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="5" />
-                        <ListBox Grid.Column="0" x:Name="lstProject" SelectionChanged="lstSpaces_SelectionChanged"  Margin="0,0,5,0"/>
-                        <ListView Grid.Column="1" x:Name="LstProjectResults" Margin="0,0,0,20">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <WrapPanel>
-                                        <Ellipse Width="10" Height="10" Fill="{Binding CircleBrush}" />
-                                        <TextBlock Text="{Binding EntityDesc}" Margin="3,0" />
-                                        <TextBlock Text="{Binding ResultSummary}" FontStyle="Oblique" Margin="3,0" />
-                                        <TextBlock Text="{Binding ConceptName}" Margin="3,0" />
-                                    </WrapPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                        <Label Grid.Column="1" VerticalAlignment="Bottom">
-                            <Hyperlink Click="AddComment" ToolTip="Create ER comment" >Create Comment</Hyperlink>
-                        </Label>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Assets">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <GridSplitter Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="5" />
-                        <ListBox x:Name="lstClassifications" SelectionChanged="lstTypes_SelectionChanged" Grid.Column="0" Margin="0,0,5,0" />
-                        <ListView Grid.Column="1" x:Name="lstClassResults" MouseDoubleClick="LstClassResults_OnMouseDoubleClick" SelectionChanged="lstClassResults_SelectionChanged" Margin="0,0,0,25">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <WrapPanel>
-                                        <Ellipse Width="10" Height="10" Fill="{Binding CircleBrush}" />
-                                        <TextBlock Text="{Binding EntityDesc}" Margin="3,0" />
-                                        <TextBlock Text="{Binding ResultSummary}" FontStyle="Oblique" Margin="3,0" />
-                                        <TextBlock Text="{Binding ConceptName}" Margin="3,0" />
-                                    </WrapPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                        <Label Grid.Column="1" VerticalAlignment="Bottom">
-                            <Hyperlink ToolTip="Create Class comment" Click="AddComment" >Create Comment</Hyperlink>
-                        </Label>
-                    </Grid>
+                <TabItem Header="Results">
+                    <controls:DPoWFacilityViewer x:Name="FacilityViewer" />
+                        
+                    
                 </TabItem>
                 <TabItem Header="Commands">
                     <StackPanel>
-                        <!--
-                            
-                            <Button Margin="4,2" Content="Books" Click="BooksTest"/>
-                            <Button Margin="4,2" Content="Props (all ConceptRoots)" Click="docPropsAllConceptRoots"/>
-                            <Button Margin="4,2" Content="Model info" Click="ModelInfo"/>
-                            
-                            -->
-                        <Button Margin="4,2" Content="Traffic Light" Click="TrafficLight"/>
+                        <Button Margin="4,2" Content="Set validation styler" Click="TrafficLight"/>
                         <GroupBox Header="Legenda" Margin="4,2" >
                             <Grid MouseLeftButtonDown="TranspToggle">
                                 <Rectangle Fill="Red" Width="24" Height="14" Margin="5,5,5,5" HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -89,17 +35,6 @@
                             </Grid>
                         </GroupBox>
                         <Button Margin="4,2" Content="Close file" Click="CloseFile"/>
-                        <Button Margin="4,2" Content="Fix selected element (dev only)" Click="FixCobieProp">
-                            <Button.ToolTip>
-                                <ToolTip>
-                                    <StackPanel>
-                                        <TextBlock FontWeight="Bold">Demo</TextBlock>
-                                        <TextBlock>This command adds the missing properties for failing furniture elements; it requires the selection of an element at a time.</TextBlock>
-                                    </StackPanel>
-                                </ToolTip>
-                            </Button.ToolTip>
-                        </Button>
-                            
                     </StackPanel>
                 </TabItem>
             </TabControl>

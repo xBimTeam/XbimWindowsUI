@@ -8,7 +8,7 @@ using Xbim.COBieLiteUK;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
-    class ClassifiedAssetTypesViewModel
+    public class ClassifiedAssetTypesViewModel
     {
         public string CategoryCode { get; private set; }
         public string CategoryDescription { get; private set; }

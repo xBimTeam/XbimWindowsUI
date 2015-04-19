@@ -20,7 +20,7 @@ using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation.XplorerPluginSystem
 {
-    [System.Obsolete("The plugin system is in alpha version, it will likely require a substantial redesign.", false)]
+    
     public interface IXbimXplorerPluginMasterWindow
     {
 

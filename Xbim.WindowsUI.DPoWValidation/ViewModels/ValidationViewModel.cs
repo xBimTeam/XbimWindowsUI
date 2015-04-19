@@ -10,6 +10,7 @@ using Xbim.COBieLiteUK;
 using Xbim.IO;
 using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Extensions;
+using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.XbimExtensions;
 using XbimExchanger.IfcToCOBieLiteUK;
@@ -17,7 +18,7 @@ using cobieUKValidation = Xbim.CobieLiteUK.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
-    class ValidationViewModel: INotifyPropertyChanged
+    public class ValidationViewModel: INotifyPropertyChanged
     {
         public SelectFileCommand SelectRequirement { get; set; }
         public SelectFileCommand SelectSubmission { get; set; }
@@ -166,32 +167,11 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             SelectReport.ChangesHappened();
 
             ActivityStatus = "Loading requirement file";
-            LoadRequirementFile(RequirementFileSource);
+            var fReader = new FacilityReader();
+            RequirementFacility = fReader.LoadFacility(RequirementFileSource);
+            
             ActivityStatus = "Loading submission file";
             LoadSubmissionFile(SubmissionFileSource);
-        }
-
-        private void LoadRequirementFile(string cobieFilename)
-        {
-            if (string.IsNullOrEmpty(cobieFilename))
-                return;
-            if (!File.Exists(cobieFilename))
-                return;
-
-            switch (Path.GetExtension(cobieFilename.ToLowerInvariant()))
-            {
-                case ".json":
-                    RequirementFacility = Facility.ReadJson(cobieFilename);
-                    break;
-                case ".xml":
-                    RequirementFacility = Facility.ReadXml(cobieFilename);
-                    break;
-                case ".xls":
-                case ".xlsx":
-                    string msg;
-                    RequirementFacility = Facility.ReadCobie(cobieFilename, out msg);
-                    break;
-            }
         }
 
         private string _openedModelFileName;
@@ -371,10 +351,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                     _model = args.Result as XbimModel;
                     ActivityProgress = 0;
                     // prepare the facility
-                    var facilities = new List<Facility>();
-                    var ifcToCoBieLiteUkExchanger = new IfcToCOBieLiteUkExchanger(_model, facilities);
-                    facilities = ifcToCoBieLiteUkExchanger.Convert();
-                    SubmissionFacility = facilities.FirstOrDefault();
+                    SubmissionFacility = FacilityFromIfcConverter.FacilityFromModel(_model);
+
                     if (SubmissionFacility == null)
                         return;
                     var jsonFileName = Path.ChangeExtension(SubmissionFileSource, "json");
@@ -412,7 +390,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 }
             };
         }
-
+        
         private void ValidateLoadedFacilities()
         {
             ActivityStatus = "Validation in progress";

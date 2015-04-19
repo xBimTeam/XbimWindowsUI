@@ -8,8 +8,8 @@ using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
 namespace Xbim.WindowsUI.DPoWValidation.Commands
 {
-    
-    class ValidateAndSaveCommand : ICommand
+
+    public class ValidateAndSaveCommand : ICommand
     {
         private ValidationViewModel _vm;
 

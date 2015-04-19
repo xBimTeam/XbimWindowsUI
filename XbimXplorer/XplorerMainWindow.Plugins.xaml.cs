@@ -110,22 +110,31 @@ namespace XbimXplorer
                 }
             }
 
-            var userControls = assembly.GetTypes().Where(x => x.BaseType == typeof(UserControl));
-            foreach (var tp in userControls)
+            try
             {
-                Debug.WriteLine("Looping " + tp.Name);
-                object instance = Activator.CreateInstance(tp);
-                IXbimXplorerPluginWindow asPWin = instance as IXbimXplorerPluginWindow;
-                if (asPWin != null)
+                var userControls = assembly.GetTypes().Where(x => x.BaseType == typeof(UserControl));
+                foreach (var tp in userControls)
                 {
-                    if (!PluginWindows.Contains(asPWin))
+                    Debug.WriteLine("Looping " + tp.Name);
+                    object instance = Activator.CreateInstance(tp);
+                    var asPWin = instance as IXbimXplorerPluginWindow;
+                    if (asPWin != null)
                     {
-                        ShowPluginWindow(asPWin);
-                        PluginWindows.Add(asPWin);
+                        if (!PluginWindows.Contains(asPWin))
+                        {
+                            ShowPluginWindow(asPWin);
+                            PluginWindows.Add(asPWin);
+                        }
                     }
                 }
+                
             }
+            catch (ReflectionTypeLoadException ex)
+            {
+                MessageBox.Show(ex.Message);
 
+                throw ex;
+            }
         }
 
         private class PluginWindowCollection : ObservableCollection<IXbimXplorerPluginWindow>
