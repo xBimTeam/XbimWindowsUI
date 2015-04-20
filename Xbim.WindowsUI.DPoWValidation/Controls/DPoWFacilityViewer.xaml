@@ -71,8 +71,8 @@
             </TreeView.Resources>
             <TreeViewItem Header="Facility" IsExpanded="True">
                 <TreeViewItem Header="Asset Types" ItemsSource="{Binding AssetTypes}" />
+                <TreeViewItem Header="Zones" />
                 <TreeViewItem Header="Documents" ItemsSource="{Binding Documents}" />
-                <TreeViewItem Header="Spaces" />
             </TreeViewItem >
         </TreeView>
         <Button Grid.Row="2" Visibility="Visible" Command="{Binding SaveCommand}" >

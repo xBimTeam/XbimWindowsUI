@@ -261,6 +261,7 @@
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginMessageReceiver.cs" />
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginMasterWindow.cs" />
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginWindow.cs" />
+    <Compile Include="XplorerPluginSystem\UIAttributes.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DrawingControl3D.xaml">

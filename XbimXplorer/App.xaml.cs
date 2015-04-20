@@ -80,7 +80,10 @@ namespace XbimXplorer
                 }
                 else if (string.Compare("/plugin", thisArg, true) == 0)
                 {
-                    string PluginName = e.Args[++i];
+                    var PluginName = e.Args[++i];
+                    if (!File.Exists(PluginName))
+                        MessageBox.Show(PluginName + " not found.");
+                    Debug.Write(string.Format("Xplorer trying to load plugin from CommandLine"));
                     mainView.LoadPlugin(PluginName);
                 }
                 else if (string.Compare("/select", thisArg, true) == 0)

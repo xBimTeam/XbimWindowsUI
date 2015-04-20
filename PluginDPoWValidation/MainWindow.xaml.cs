@@ -20,6 +20,7 @@ namespace Validation
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    [XplorerUiElement]
     public partial class MainWindow : UserControl, IXbimXplorerPluginWindow 
     {
         public MainWindow()
@@ -63,6 +64,7 @@ namespace Validation
             }
             ReqFacility = facility;
             // todo: initialise component viewmodel 
+            FacilityViewer.DataContext = new DPoWFacilityViewModel(ReqFacility);
             IsFileOpen = true;
         }
 

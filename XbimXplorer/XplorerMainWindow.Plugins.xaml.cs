@@ -116,16 +116,14 @@ namespace XbimXplorer
                 foreach (var tp in userControls)
                 {
                     Debug.WriteLine("Looping " + tp.Name);
-                    object instance = Activator.CreateInstance(tp);
+                    var instance = Activator.CreateInstance(tp);
                     var asPWin = instance as IXbimXplorerPluginWindow;
-                    if (asPWin != null)
-                    {
-                        if (!PluginWindows.Contains(asPWin))
-                        {
-                            ShowPluginWindow(asPWin);
-                            PluginWindows.Add(asPWin);
-                        }
-                    }
+                    if (asPWin == null) 
+                        continue;
+                    if (PluginWindows.Contains(asPWin)) 
+                        continue;
+                    ShowPluginWindow(asPWin);
+                    PluginWindows.Add(asPWin);
                 }
                 
             }
