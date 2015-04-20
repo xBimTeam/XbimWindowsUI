@@ -32,7 +32,7 @@ namespace Xbim.WindowsUI.DPoWValidation
             InitializeComponent();
             var vm = new ValidationViewModel();
             LoadSettings(vm);
-            DataContext = vm;
+            ValidationGrid.DataContext = vm;
         }
 
         private static void LoadSettings(ValidationViewModel vm)
