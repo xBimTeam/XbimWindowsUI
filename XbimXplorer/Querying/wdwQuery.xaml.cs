@@ -346,13 +346,20 @@ namespace XbimXplorer.Querying
                     }
 
                     m = Regex.Match(cmd,
-                        @"^(select|se) (?<mode>(count|list|typelist|short|full) )*(?<tt>(transverse|tt) )*(?<hi>(highlight|hi) )*(?<start>([\d,-]+|[^ ]+)) *(?<props>.*)",
+                        @"^(select|se) " +
+                        @"(?<mode>(count|list|typelist|short|full) )*" +
+                        @"(?<tt>(transverse|tt) )*" +
+                        @"(?<hi>(highlight|hi) )*" +
+                        @"(?<svt>(showvaluetype|svt) )*" +
+                        @"(?<start>([\d,-]+|[^ ]+)) *(?<props>.*)",
                         RegexOptions.IgnoreCase);
                     if (m.Success)
                     {
                         var start = m.Groups["start"].Value;
                         var props = m.Groups["props"].Value;
                         var mode = m.Groups["mode"].Value;
+                        var svt = m.Groups["svt"].Value;
+
 
                         // transverse tree mode
                         var transverseT = false;
@@ -410,9 +417,10 @@ namespace XbimXplorer.Querying
                                     beVerbose = false;
                                 if (mode.ToLower() == "full ")
                                     beVerbose = true;
+                                var svtB = (svt != "");
                                 foreach (var item in ret)
                                 {
-                                    ReportAdd(ReportEntity(item, 0, Verbose: beVerbose));
+                                    ReportAdd(ReportEntity(item, 0, Verbose: beVerbose, showValueType: svtB));
                                 }
                                 break;
                         }
@@ -738,7 +746,7 @@ namespace XbimXplorer.Querying
 
             t.AppendFormat("Commands:");
             t.AppendFormat(
-                "- select [count|list|typelist|short] [transverse] [highlight] <startingElement> [Property [Property...]]");
+                "- select [count|list|typelist|full|short] [tt|transverse] [hi|highlight] [svt|showvaluetype] <startingElement> [Property [Property...]]");
             t.Append(
                 "    <startingElement>: <EntityLabel, <EntityLabel>> or <TypeIdentificator>[<+|-><TypeIdentificator>]",
                 Brushes.Gray);
@@ -1062,7 +1070,7 @@ namespace XbimXplorer.Querying
         }
 
         private TextHighliter ReportEntity(int EntityLabel, int RecursiveDepth = 0, int IndentationLevel = 0,
-            bool Verbose = false)
+            bool Verbose = false, bool showValueType = false)
         {
             // Debug.WriteLine("EL: " + EntityLabel.ToString());
             var sb = new TextHighliter();
@@ -1083,7 +1091,7 @@ namespace XbimXplorer.Querying
                         sb.AppendFormat(IndentationHeader + "Properties: {0}", props.Count);
                     foreach (var prop in props)
                     {
-                        var PropLabels = ReportProp(sb, IndentationHeader, entity, prop, Verbose);
+                        var PropLabels = ReportProp(sb, IndentationHeader, entity, prop, Verbose, showValueType);
 
                         foreach (var PropLabel in PropLabels)
                         {
@@ -1102,7 +1110,7 @@ namespace XbimXplorer.Querying
                         sb.AppendFormat(IndentationHeader + "Inverses: {0}", Invs.Count);
                     foreach (var inverse in Invs)
                     {
-                        ReportProp(sb, IndentationHeader, entity, inverse, Verbose);
+                        ReportProp(sb, IndentationHeader, entity, inverse, Verbose, showValueType);
                     }
 
                     /*
@@ -1143,7 +1151,7 @@ namespace XbimXplorer.Querying
         }
 
         private static IEnumerable<int> ReportProp(TextHighliter sb, string IndentationHeader, IPersistIfcEntity entity,
-            IfcMetaProperty prop, bool Verbose)
+            IfcMetaProperty prop, bool Verbose, bool ShowPropType)
         {
             var RetIds = new List<int>();
             var propName = prop.PropertyInfo.Name;
@@ -1165,20 +1173,20 @@ namespace XbimXplorer.Querying
                     {
                         iCntProp++;
                         if (iCntProp == 1)
-                            propVal = ReportPropValue(item, ref RetIds);
+                            propVal = ReportPropValue(item, ref RetIds, ShowPropType);
                         else
                         {
                             if (iCntProp == 2)
                             {
                                 propVal = "\r\n" + IndentationHeader + "    " + propVal;
                             }
-                            propVal += "\r\n" + IndentationHeader + "    " + ReportPropValue(item, ref RetIds);
+                            propVal += "\r\n" + IndentationHeader + "    " + ReportPropValue(item, ref RetIds, ShowPropType);
                         }
                     }
                 }
             }
             else
-                propVal = ReportPropValue(propVal, ref RetIds);
+                propVal = ReportPropValue(propVal, ref RetIds, ShowPropType);
 
             if (Verbose)
                 sb.AppendFormat(IndentationHeader + "- {0} ({1}): {2}",
@@ -1214,7 +1222,7 @@ namespace XbimXplorer.Querying
             return ShortTypeName;
         }
 
-        private static string ReportPropValue(object propVal, ref List<int> RetIds)
+        private static string ReportPropValue(object propVal, ref List<int> RetIds, bool ShowPropType = false)
         {
             var pe = propVal as IPersistIfcEntity;
             var PropLabel = 0;
@@ -1223,7 +1231,15 @@ namespace XbimXplorer.Querying
                 RetIds.Add(pe.EntityLabel);
                 pe.Activate(false);
             }
-            var ret = propVal + ((PropLabel != 0) ? " [#" + PropLabel + "]" : "");
+            var ret = propVal + (
+                (PropLabel != 0) 
+                ? " [#" + PropLabel + "]" 
+                : ""
+                );
+            if (ShowPropType)
+            {
+                ret += " (" + CleanPropertyName(propVal.GetType().FullName) + ")";
+            }
             return ret;
         }
 
