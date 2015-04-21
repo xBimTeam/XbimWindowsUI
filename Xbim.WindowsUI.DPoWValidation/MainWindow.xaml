@@ -33,7 +33,7 @@
                         </Grid>
                     </GroupBox>
 
-                    <Button Grid.Row="2" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Create COBie Submission" />
+                    <Button Grid.Row="2" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Create COBie Submission" Click="Button_Click_1" />
 
                 </Grid>
             </TabItem>
@@ -61,11 +61,11 @@
                             </StackPanel>
                         </Grid>
                     </GroupBox>
-                    <Button Grid.Row="2" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Create Compliance Report" />
+                    <Button Grid.Row="2" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Create Compliance Report" Click="Button_Click_2" />
                     <TextBlock Grid.Row="3" TextWrapping="Wrap" Margin="0,5">
                             To validate the compliance of a COBie file upload either an XLS or XLSX spreadsheet containing the COBie data.
                     </TextBlock>
-                    <Button Grid.Row="4" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Improve COBie Compliance" />
+                    <Button Grid.Row="4" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Improve COBie Compliance" Click="Button_Click_3" />
                 </Grid>
             </TabItem>
             <TabItem Header="Submission report">

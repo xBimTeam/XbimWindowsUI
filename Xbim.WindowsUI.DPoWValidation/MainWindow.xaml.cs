@@ -57,5 +57,29 @@ namespace Xbim.WindowsUI.DPoWValidation
             Settings.Default.LastOpenedSubmission = vm.SubmissionFileSource;
             Settings.Default.Save();
         }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private Facility f;
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            f = new Facility();
+            FileInfo flogger = new FileInfo("tmp");
+            using (var logger = flogger.CreateText())
+            {
+                
+                f.ValidateUK2012(logger, true);
+            }            
+        }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            string log;
+            f.WriteCobie("fixed.xls", out log);
+        }
     }
 }
