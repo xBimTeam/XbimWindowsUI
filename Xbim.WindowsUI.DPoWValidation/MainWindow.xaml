@@ -10,7 +10,7 @@
     <Grid>
         <TabControl Margin="10">
             <TabItem Header="Create COBie Submission file">
-                <Grid Margin="10">
+                <Grid x:Name="CreateCobieGrid" Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -27,13 +27,13 @@
                     <GroupBox Grid.Row="1" Grid.Column="0" Header="IFC 2x3 File:" Margin="10,5">
                         <Grid>
                             <StackPanel Orientation="Vertical">
-                                <TextBox x:Name="IfcToConvert" Margin="5" Height="24" Text="" />
-                                <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" Click="Button_Click_4" />
+                                <TextBox x:Name="IfcToConvert" Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}"  />
+                                <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" Command="{Binding SelectSubmission}" />
                             </StackPanel>
                         </Grid>
                     </GroupBox>
 
-                    <Button Grid.Row="2" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Create COBie Submission" Click="Button_Click_1" />
+                    <Button Grid.Row="2" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Create COBie Submission" Command="{Binding SaveModelFacility}"  />
 
                 </Grid>
             </TabItem>

@@ -35,6 +35,7 @@ namespace Xbim.WindowsUI.DPoWValidation
             var vm = new ValidationViewModel();
             LoadSettings(vm);
             ValidationGrid.DataContext = vm;
+            CreateCobieGrid.DataContext = vm;
         }
 
         private static void LoadSettings(ValidationViewModel vm)

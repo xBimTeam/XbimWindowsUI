@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
 using Xbim.WindowsUI.DPoWValidation.Commands;
@@ -22,6 +23,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
     {
         public SelectFileCommand SelectRequirement { get; set; }
         public SelectFileCommand SelectSubmission { get; set; }
+
+        public SubmittedFacilitySaveCommand SaveModelFacility { get; set; }
 
         public ValidateCommand Validate { get; set; }
 
@@ -136,6 +139,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             SelectRequirement = new SelectFileCommand(RequirementFileInfo, this);
             SelectSubmission = new SelectFileCommand(SubmissionFileInfo, this) {IncludeIfc = true};
             SelectReport = new SelectReportFileCommand(ReportFileInfo, this);
+            
 
             ExportOnValidated = false;
             OpenOnExported = false;
@@ -143,6 +147,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             Validate = new ValidateCommand(this);
             ExportFacility = new FacilitySaveCommand(this);
             ValidateAndSave = new ValidateAndSaveCommand(this);
+            SaveModelFacility = new SubmittedFacilitySaveCommand(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -154,8 +159,16 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"RequirementFileSource"));
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"SubmissionFileSource"));
             PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ReportFileSource"));
+
+            SaveModelFacility.ChangesHappened();
             Validate.ChangesHappened();
             ValidateAndSave.ChangesHappened();
+        }
+
+        internal void ExecuteSaveCOBie()
+        {
+            ActivityStatus = "Loading submission file";
+            LoadSubmissionFile(SubmissionFileSource);
         }
 
         internal void ExecuteValidation()
@@ -389,13 +402,40 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         
         private void ValidateLoadedFacilities()
         {
-            ActivityStatus = "Validation in progress";
-            var f = new cobieUKValidation.FacilityValidator();
-            ValidationFacility = f.Validate(RequirementFacility, SubmissionFacility);
-            ActivityStatus = "Validation completed";
-            if (ExportOnValidated)
+            if (RequirementFacility == null && SubmissionFacility != null)
             {
-                ExportValidatedFacility();
+                // I want to save the cobie here.
+                var filters = new List<string>();
+                filters.Add("COBie excel|*.xlsx");
+                filters.Add("COBie binary excel|*.xls");
+                var dlg = new SaveFileDialog
+                {
+                    Filter = string.Join("|", filters.ToArray()),
+                    Title = "Select destination file"
+                };
+                var ret = dlg.ShowDialog();
+                if (ret == DialogResult.OK)
+                {
+                    string msg;
+                    SubmissionFacility.WriteCobie(dlg.FileName, out msg);
+
+                    if (OpenOnExported && File.Exists(dlg.FileName))
+                    {
+                        Process.Start(dlg.FileName);
+                    }
+                }
+            
+            }
+            else if (RequirementFacility != null && SubmissionFacility != null)
+            {
+                ActivityStatus = "Validation in progress";
+                var f = new cobieUKValidation.FacilityValidator();
+                ValidationFacility = f.Validate(RequirementFacility, SubmissionFacility);
+                ActivityStatus = "Validation completed";
+                if (ExportOnValidated)
+                {
+                    ExportValidatedFacility();
+                }
             }
         }
 
