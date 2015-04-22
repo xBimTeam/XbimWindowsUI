@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using System.Windows.Input;
-using Microsoft.Win32;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
@@ -61,7 +61,7 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
             }
 
             var result = dlg.ShowDialog();
-            if (!result.HasValue || result != true) 
+            if (result != DialogResult.OK)
                 return;
 
             _currentFile.File = dlg.FileName ;

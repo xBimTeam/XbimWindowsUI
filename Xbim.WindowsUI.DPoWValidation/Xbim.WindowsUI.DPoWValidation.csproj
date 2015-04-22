@@ -84,6 +84,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -95,9 +96,8 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Xbim.COBie, Version=3.0.5589.18432, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xbim.COBie">
       <HintPath>..\packages\Xbim.Exchange.3.0.69-Prerelease\lib\net45\Xbim.COBie.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLite, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Xbim.Exchange.3.0.69-Prerelease\lib\net45\Xbim.COBieLite.dll</HintPath>

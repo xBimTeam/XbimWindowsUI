@@ -27,8 +27,8 @@
                     <GroupBox Grid.Row="1" Grid.Column="0" Header="IFC 2x3 File:" Margin="10,5">
                         <Grid>
                             <StackPanel Orientation="Vertical">
-                                <TextBox Margin="5" Height="24" Text="" />
-                                <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" />
+                                <TextBox x:Name="IfcToConvert" Margin="5" Height="24" Text="" />
+                                <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" Click="Button_Click_4" />
                             </StackPanel>
                         </Grid>
                     </GroupBox>
@@ -56,8 +56,8 @@
                     <GroupBox Grid.Row="1" Grid.Column="0" Header="COBie File:" Margin="10,5">
                         <Grid>
                             <StackPanel Orientation="Vertical">
-                                <TextBox Margin="5" Height="24" Text="" />
-                                <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" />
+                                <TextBox x:Name="CobieFile" Margin="5" Height="24" Text="" />
+                                <Button Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" Click="Button_Click_5" />
                             </StackPanel>
                         </Grid>
                     </GroupBox>
@@ -65,7 +65,7 @@
                     <TextBlock Grid.Row="3" TextWrapping="Wrap" Margin="0,5">
                             To validate the compliance of a COBie file upload either an XLS or XLSX spreadsheet containing the COBie data.
                     </TextBlock>
-                    <Button Grid.Row="4" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Improve COBie Compliance" Click="Button_Click_3" />
+                    <Button x:Name="ImproveCObie" IsEnabled="False" Grid.Row="4" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10,20" Width="300" Content="Improve COBie Compliance" Click="Button_Click_3" />
                 </Grid>
             </TabItem>
             <TabItem Header="Submission report">
