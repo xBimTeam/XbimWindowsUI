@@ -220,10 +220,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 if (worker != null)
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
-#if Geometry
-                    var context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
-                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: worker.ReportProgress);
-#endif
                     if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                     {
                         try

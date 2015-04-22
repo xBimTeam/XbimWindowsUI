@@ -78,7 +78,7 @@ namespace Xbim.WindowsUI.DPoWValidation
                 return;
             
             string read;
-            var cb = Facility.ReadCobie(CobieFile.Text, out read);
+            f = Facility.ReadCobie(CobieFile.Text, out read);
             var flogger = new FileInfo(file);
             using (var logger = flogger.CreateText())
             {
