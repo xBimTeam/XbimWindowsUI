@@ -17,7 +17,20 @@
             </Grid.RowDefinitions>
             <TabControl Grid.Row="0" Margin="5,5,5,10" >
                 <TabItem Header="Results">
-                    <controls:DPoWFacilityViewer x:Name="FacilityViewer" />
+                    <Grid>
+                        <ComboBox x:Name="Classifications" SelectionChanged="UpdateList" VerticalAlignment="Top"/>
+                        <ListView x:Name="LstAssets" Margin="0,25,0,0" SelectionChanged="SetSelectedAsset" MouseDoubleClick="GotoAsset" >
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <WrapPanel>
+                                        <Ellipse Width="10" Height="10" Fill="{Binding CircleBrush}" />
+                                        <TextBlock Text="{Binding Name}" Margin="3,0" />
+                                    </WrapPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        
+                    </Grid>
                 </TabItem>
                 <TabItem Header="Commands">
                     <StackPanel>

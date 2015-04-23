@@ -11,9 +11,12 @@ using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 using Xbim.XbimExtensions.Interfaces;
 using System.IO;
+using System.Linq;
 using Microsoft.Win32;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
+using System.Collections.ObjectModel;
+using Xbim.CobieLiteUK.Validation;
 
 namespace Validation
 {
@@ -49,9 +52,8 @@ namespace Validation
             if (res.HasValue && res.Value)
             {
                 var r = new FacilityReader();
-                var t = r.LoadFacility(openFile.FileName);
-                SetFacility(t);
-                
+                ReqFacility = r.LoadFacility(openFile.FileName);
+                TestValidation();
             }
         }
 
@@ -62,10 +64,27 @@ namespace Validation
                 IsFileOpen = false;
                 return;
             }
-            ReqFacility = facility;
+            ViewFacility = facility;
             // todo: initialise component viewmodel 
-            FacilityViewer.DataContext = new DPoWFacilityViewModel(ReqFacility);
+            // FacilityViewer.DataContext = new DPoWFacilityViewModel(ReqFacility);
+
             IsFileOpen = true;
+
+            try
+            {
+                Classifications.ItemsSource = facility.AssetTypes.Where(at => at.Categories != null)
+                    .SelectMany(x => x.Categories)
+                    .Select(c => c.Code)
+                    .Distinct().ToList();
+                if (Classifications.Items.Count > 0)
+                {
+                    Classifications.SelectedItem = 0;
+                }
+            }
+            catch 
+            {
+
+            }            
         }
 
         private bool IsFileOpen
@@ -144,13 +163,23 @@ namespace Validation
                     }
                     else
                         ctrl.ModelFacility = null;
-                    ctrl.FacilityViewer.DataContext = new DPoWFacilityViewModel(ctrl.ModelFacility);
-                    
+                    // ctrl.FacilityViewer.DataContext = new DPoWFacilityViewModel(ctrl.ModelFacility);
+                    ctrl.TestValidation();
+
                 }
                     break;
                 case "SelectedEntity":
                     break;
             }
+        }
+
+        private void TestValidation()
+        {
+            if (ReqFacility == null || ModelFacility == null)
+                return;
+            var f = new FacilityValidator();
+            ValFacility = f.Validate(ReqFacility, ModelFacility);
+            SetFacility(ValFacility);
         }
 
         // Model
@@ -166,9 +195,9 @@ namespace Validation
 
         internal Facility ModelFacility = null;
         internal Facility ReqFacility = null;
+        internal Facility ValFacility = null;
+        internal Facility ViewFacility = null;
 
-        
-       
         
         public string MenuText
         {
@@ -206,10 +235,10 @@ namespace Validation
 
         private void CloseFile(object sender, RoutedEventArgs e)
         {
-            //Doc = null;
-            //lstClassifications.ItemsSource = null;
-            //lstProject.ItemsSource = null;
-            //IsFileOpen = false;
+            ReqFacility = null;
+            LstAssets.ItemsSource = null;
+            Classifications.ItemsSource = null;
+            IsFileOpen = false;
         }
 
       
@@ -271,6 +300,47 @@ namespace Validation
         private void LstClassResults_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             xpWindow.DrawingControl.ZoomSelected();
+        }
+
+        private void UpdateList(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedCode = Classifications.SelectedItem.ToString();
+
+            // var tS = new Dictionary<string, Asset>();
+            // look at classified asset types
+
+            var lst = new ObservableCollection<AssetViewModel>();
+
+            if (ViewFacility.AssetTypes == null)
+                return;
+            foreach (var assetType in ViewFacility.AssetTypes.Where(x => x.Categories != null))
+            {
+                var valid = assetType.Categories.Any(x => x.Code == selectedCode);
+                if (!valid)
+                    continue;
+
+                foreach (var asset in assetType.Assets)
+                {
+                    lst.Add(new AssetViewModel(asset));
+                }               
+            }
+            LstAssets.ItemsSource = lst;    
+        }
+
+        private void GotoAsset(object sender, MouseButtonEventArgs e)
+        {
+            xpWindow.DrawingControl.ZoomSelected();
+        }
+
+        private void SetSelectedAsset(object sender, SelectionChangedEventArgs e)
+        {
+            var avm = LstAssets.SelectedItem as AssetViewModel;
+            if (avm == null)
+                return;
+            var selectedLabel = avm.EntityLabel;
+            if (!selectedLabel.HasValue)
+                return;
+            xpWindow.SelectedItem = Model.Instances[selectedLabel.Value];
         }
     }
 }

@@ -13,6 +13,22 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
     {
         private readonly COBieLiteUK.Asset _asset;
 
+        public int? EntityLabel
+        {
+            get
+            {
+                try
+                {
+                    return Convert.ToInt32(_asset.ExternalId);
+                }
+                catch (Exception)
+                {
+
+                    return null;
+                }
+            }
+        }
+
         public AssetViewModel(COBieLiteUK.Asset asset)
         {
             this._asset = asset;
