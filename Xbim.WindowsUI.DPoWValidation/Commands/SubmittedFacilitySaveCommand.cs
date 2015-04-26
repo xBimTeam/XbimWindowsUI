@@ -22,7 +22,7 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
         public void Execute(object parameter)
         {
             _vm.OpenOnExported = true;
-            _vm.ExecuteSaveCOBie();
+            _vm.ExecuteSaveCobie();
         }
 
         public void ChangesHappened()

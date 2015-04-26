@@ -65,7 +65,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
-
         public DPoWFacilityViewModel RequirementFacilityVM { get; private set; }
 
         private Facility _submissionFacility;
@@ -165,7 +164,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             ValidateAndSave.ChangesHappened();
         }
 
-        internal void ExecuteSaveCOBie()
+        internal void ExecuteSaveCobie()
         {
             ActivityStatus = "Loading submission file";
             LoadSubmissionFile(SubmissionFileSource);
@@ -401,32 +400,33 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             };
         }
         
-
-        ISaveFileSelector FileSelector { get; set; }
+        [Dependency]
+        public ISaveFileSelector FileSelector { get; set; }
 
         private void ValidateLoadedFacilities()
         {
             if (RequirementFacility == null && SubmissionFacility != null)
             {
                 // I want to save the cobie here.
-                var filters = new List<string>();
-                filters.Add("COBie excel|*.xlsx");
-                filters.Add("COBie binary excel|*.xls");
+                var filters = new List<string>
+                {
+                    "COBie excel|*.xlsx", 
+                    "COBie binary excel|*.xls"
+                };
+                
                 FileSelector.Filter = string.Join("|", filters.ToArray());
                 FileSelector.Title = "Select destination file";
 
                 var ret = FileSelector.ShowDialog();
-                if (ret == DialogResult.OK)
+                if (ret != DialogResult.OK) 
+                    return;
+                
+                string msg;
+                SubmissionFacility.WriteCobie(FileSelector.FileName, out msg);
+                if (OpenOnExported && File.Exists(FileSelector.FileName))
                 {
-                    string msg;
-                    SubmissionFacility.WriteCobie(FileSelector.FileName, out msg);
-
-                    if (OpenOnExported && File.Exists(FileSelector.FileName))
-                    {
-                        Process.Start(FileSelector.FileName);
-                    }
+                    Process.Start(FileSelector.FileName);
                 }
-            
             }
             else if (RequirementFacility != null && SubmissionFacility != null)
             {
