@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 using System.Windows.Input;
-using Microsoft.Win32;
+using Microsoft.Practices.Unity;
+using Xbim.WindowsUI.DPoWValidation.Injection;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 
@@ -17,6 +19,7 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
 
         public SelectReportFileCommand(SourceFile tb, ValidationViewModel model)
         {
+            FileSelector = ContainerBootstrapper.Instance.Container.Resolve<ISaveFileSelector>();
             _currentFile = tb;
             _vm = model;
         }
@@ -36,6 +39,8 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
             }
         }
 
+        ISaveFileSelector FileSelector { get; set; }
+
         public void Execute(object parameter)
         {
             var filters = new List<string>();
@@ -44,20 +49,19 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
             filters.Add(@"Automation format|*.json");
             filters.Add(@"Automation format|*.xml");
 
-            var dlg = new SaveFileDialog
-            {
-                Filter = string.Join("|", filters.ToArray())
-            };
+            FileSelector.Filter = string.Join("|", filters.ToArray());
+
+            
             if (_currentFile.Exists)
             {
-                dlg.InitialDirectory = Path.GetDirectoryName(_currentFile.File);
+                FileSelector.InitialDirectory = Path.GetDirectoryName(_currentFile.File);
             }
 
-            var result = dlg.ShowDialog();
-            if (!result.HasValue || result != true) 
+            var result = FileSelector.ShowDialog();
+            if (result != DialogResult.OK) 
                 return;
 
-            _currentFile.File = dlg.FileName ;
+            _currentFile.File = FileSelector.FileName;
             _vm.FilesUpdate();
         }
     }

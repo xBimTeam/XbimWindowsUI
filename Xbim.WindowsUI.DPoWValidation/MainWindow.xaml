@@ -2,11 +2,9 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewModels="clr-namespace:Xbim.WindowsUI.DPoWValidation.ViewModels"
-        xmlns:controls="clr-namespace:Xbim.WindowsUI.DPoWValidation.Controls"
         x:Class="Xbim.WindowsUI.DPoWValidation.MainWindow"
-        Title="Digital Plan of Work - Validation (Powered by Xbim)" Height="503" Width="693"
+        Title="Digital Plan of Work - Validation (Powered by Xbim)" 
         >
-
     <Grid>
         <TabControl Margin="10">
             <TabItem Header="Create COBie Submission file">
@@ -111,10 +109,10 @@
                                     (Click <Hyperlink NavigateUri="http://www.google.com">here</Hyperlink> for instructions on how to create a requirements file
                                 </TextBlock>
                             </StackPanel>
-                            
+
                             <TextBox Grid.Row="1" Grid.Column="0" Margin="5,6,5,5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding RequirementFileSource, UpdateSourceTrigger=PropertyChanged}" />
                             <Button Grid.Row="1" Grid.Column="1" Height="24" HorizontalAlignment="Right" Width="70" Content="Browse" Command="{Binding SelectRequirement}" />
-                            
+
                         </Grid>
                     </GroupBox>
 
@@ -140,7 +138,7 @@
 
                             <TextBox Grid.Row="1" Grid.Column="0" Margin="5" Height="24" IsEnabled="{Binding FilesCanChange}" Text="{Binding SubmissionFileSource, UpdateSourceTrigger=PropertyChanged}" />
                             <Button Grid.Row="1" Grid.Column="1"  Height="24" HorizontalAlignment="Right" Margin="5" Width="70" Content="Browse" Command="{Binding SelectSubmission}"/>
-                            
+
                         </Grid>
                     </GroupBox>
 

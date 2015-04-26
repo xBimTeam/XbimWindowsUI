@@ -1,23 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.Practices.Unity;
 using Xbim.COBieLiteUK;
-using Xbim.CobieLiteUK.Validation;
-using Xbim.CobieLiteUK.Validation.Reporting;
-using Xbim.WindowsUI.DPoWValidation.Extensions;
+using Xbim.WindowsUI.DPoWValidation.Injection;
 using Xbim.WindowsUI.DPoWValidation.Properties;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 using System.Diagnostics;
@@ -27,16 +14,21 @@ namespace Xbim.WindowsUI.DPoWValidation
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, ICanShow
     {
         public MainWindow()
         {
             InitializeComponent();
-            var vm = new ValidationViewModel();
-            LoadSettings(vm);
-            ValidationGrid.DataContext = vm;
-            CreateCobieGrid.DataContext = vm;
         }
+
+        public MainWindow([Dependency]ValidationViewModel ViewModel) 
+            : this ()
+        {
+            LoadSettings(ViewModel);
+            ValidationGrid.DataContext = ViewModel;
+            CreateCobieGrid.DataContext = ViewModel;
+        }
+
 
         private static void LoadSettings(ValidationViewModel vm)
         {
@@ -165,18 +157,17 @@ namespace Xbim.WindowsUI.DPoWValidation
 
         }
 
-        private static string GetSaveFileName(string repName, List<string> filters)
-        {
-            var dlg = new SaveFileDialog
-            {
-                Filter = string.Join("|", filters.ToArray()),
-                Title = repName
-            };
+        ISaveFileSelector FileSelector { get; set; }
 
+        private string GetSaveFileName(string repName, List<string> filters)
+        {
+            FileSelector.Filter = string.Join("|", filters.ToArray());
+            FileSelector.Title = repName;
+            
             var file = "";
-            var result = dlg.ShowDialog();
+            var result = FileSelector.ShowDialog();
             if (result == System.Windows.Forms.DialogResult.OK)
-                file = dlg.FileName;
+                file = FileSelector.FileName;
             return file;
         }
 

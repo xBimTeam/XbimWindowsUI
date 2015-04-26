@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Practices.Unity;
+using Xbim.WindowsUI.DPoWValidation.Injection;
 
 namespace Xbim.WindowsUI.DPoWValidation
 {
@@ -13,5 +15,11 @@ namespace Xbim.WindowsUI.DPoWValidation
     /// </summary>
     public partial class App : Application
     {
+        private void App_Startup(object sender, StartupEventArgs e)
+        {
+            var uc = ContainerBootstrapper.Instance.Container;
+            var mw = uc.Resolve<MainWindow>();
+            mw.Show();
+        }
     }
 }

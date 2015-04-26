@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Practices.Unity;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
 using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Extensions;
+using Xbim.WindowsUI.DPoWValidation.Injection;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.Models;
 using Xbim.XbimExtensions;
-using XbimExchanger.IfcToCOBieLiteUK;
 using cobieUKValidation = Xbim.CobieLiteUK.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
@@ -217,7 +217,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             args.Result = SubmissionFacility;
         }
 
-        public SelectReportFileCommand SelectReport { get; private set; }
+        public SelectReportFileCommand SelectReport { get; set; }
 
         private void OpenIfcFile(object s, DoWorkEventArgs args)
         {
@@ -233,7 +233,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 if (worker != null)
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
-                    if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
+                    if (worker.CancellationPending) // if a cancellation has been requested then don't open the resulting file
                     {
                         try
                         {
@@ -288,6 +288,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
                         // sets a convenient integer to all children for model identification
                         // this is used by the federated model selection mechanisms.
+                        // 
                         var i = 0;
                         foreach (var item in model.AllModels)
                         {
@@ -400,6 +401,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             };
         }
         
+
+        ISaveFileSelector FileSelector { get; set; }
+
         private void ValidateLoadedFacilities()
         {
             if (RequirementFacility == null && SubmissionFacility != null)
@@ -408,20 +412,18 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 var filters = new List<string>();
                 filters.Add("COBie excel|*.xlsx");
                 filters.Add("COBie binary excel|*.xls");
-                var dlg = new SaveFileDialog
-                {
-                    Filter = string.Join("|", filters.ToArray()),
-                    Title = "Select destination file"
-                };
-                var ret = dlg.ShowDialog();
+                FileSelector.Filter = string.Join("|", filters.ToArray());
+                FileSelector.Title = "Select destination file";
+
+                var ret = FileSelector.ShowDialog();
                 if (ret == DialogResult.OK)
                 {
                     string msg;
-                    SubmissionFacility.WriteCobie(dlg.FileName, out msg);
+                    SubmissionFacility.WriteCobie(FileSelector.FileName, out msg);
 
-                    if (OpenOnExported && File.Exists(dlg.FileName))
+                    if (OpenOnExported && File.Exists(FileSelector.FileName))
                     {
-                        Process.Start(dlg.FileName);
+                        Process.Start(FileSelector.FileName);
                     }
                 }
             
