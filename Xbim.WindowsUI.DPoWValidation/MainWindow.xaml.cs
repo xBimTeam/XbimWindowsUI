@@ -21,7 +21,7 @@ namespace Xbim.WindowsUI.DPoWValidation
             InitializeComponent();
         }
 
-        public MainWindow([Dependency]ValidationViewModel ViewModel) 
+        public MainWindow(ValidationViewModel ViewModel) 
             : this ()
         {
             LoadSettings(ViewModel);
@@ -157,7 +157,8 @@ namespace Xbim.WindowsUI.DPoWValidation
 
         }
 
-        ISaveFileSelector FileSelector { get; set; }
+        [Dependency]
+        public ISaveFileSelector FileSelector { get; set; }
 
         private string GetSaveFileName(string repName, List<string> filters)
         {
