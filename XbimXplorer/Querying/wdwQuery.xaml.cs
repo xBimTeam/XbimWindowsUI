@@ -265,6 +265,7 @@ namespace XbimXplorer.Querying
 
                         if (type == "/")
                         {
+                            // this is a magic case handled by the matchingType
                         }
                         else if (type == PrepareRegex(type))
                             // there's not a regex expression, we will prepare one assuming the search for a bare name.
@@ -853,6 +854,15 @@ namespace XbimXplorer.Querying
 
         private static string PrepareRegex(string rex)
         {
+            short ishort;
+            if (short.TryParse(rex, out ishort))
+            {
+                // build the regex string from the typeid
+                //
+                var t = IfcMetaData.IfcType((short)ishort);
+                return  @".*\." + t.Name + "$";
+            }
+
             rex = rex.Replace(".", @"\."); //escaped dot
             rex = rex.Replace("*", ".*");
             rex = rex.Replace("?", ".");

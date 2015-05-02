@@ -67,6 +67,12 @@ namespace Xbim.Presentation
          : IEnumerable<XbimVector3D>
     {
         Vector3DCollection wpfVectors;
+
+        public WpfVector3DCollection()
+        {
+            this.wpfVectors = new Vector3DCollection();
+        }
+
         public WpfVector3DCollection(Vector3DCollection wpfVectors)
         {
             this.wpfVectors = wpfVectors;

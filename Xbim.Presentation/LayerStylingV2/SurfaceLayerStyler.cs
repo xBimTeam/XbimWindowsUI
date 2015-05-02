@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
@@ -85,6 +86,7 @@ namespace Xbim.Presentation.LayerStylingV2
                 else //we need to get the shape geometry
                 {
                     IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    
                     if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
@@ -113,6 +115,7 @@ namespace Xbim.Presentation.LayerStylingV2
                     else //it is a one off, merge it with shapes of a similar material
                     {
                         var targetMergeMeshByStyle = styleMeshSets[styleId];
+                        
                         switch ((XbimGeometryType)shapeGeom.Format)
                         {
                             case XbimGeometryType.Polyhedron:

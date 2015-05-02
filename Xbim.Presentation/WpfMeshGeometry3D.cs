@@ -73,7 +73,12 @@ namespace Xbim.Presentation
 
         public WpfMeshGeometry3D()
         {
-          
+            WpfModel = new GeometryModel3D();
+            WpfModel.Geometry = new MeshGeometry3D();
+            Mesh.Positions = new WpfPoint3DCollection(0);
+            Mesh.Normals = new WpfVector3DCollection();
+            Mesh.TriangleIndices = new Int32Collection();
+            _meshes = new XbimMeshFragmentCollection();
         }
 
         public WpfMeshGeometry3D(IXbimMeshGeometry3D mesh)
@@ -103,7 +108,9 @@ namespace Xbim.Presentation
         public MeshGeometry3D Mesh
         {
             get
-            { 
+            {
+                if (WpfModel == null)
+                    WpfModel = new GeometryModel3D();
                 return WpfModel.Geometry as MeshGeometry3D;
             }
         }
@@ -266,12 +273,28 @@ namespace Xbim.Presentation
 
         public int PositionCount
         {
-            get { return Mesh==null ? _unfrozenPositions.Count: Mesh.Positions.Count; }
+            get
+            {
+                if (Mesh == null && _unfrozenPositions == null)
+                {
+                    return 0;
+                }
+                return Mesh != null
+                    ? Mesh.Positions.Count
+                    : _unfrozenPositions.Count;
+            }
         }
 
         public int TriangleIndexCount
         {
-            get { return Mesh == null ? _unfrozenIndices.Count : Mesh.TriangleIndices.Count; }
+            get
+            {
+                if (Mesh == null && _unfrozenPositions == null)
+                {
+                    return 0;
+                }
+                return Mesh == null ? _unfrozenIndices.Count : Mesh.TriangleIndices.Count;
+            }
         }
 
         public XbimMeshFragment Add(IXbimGeometryModel geometryModel, Ifc2x3.Kernel.IfcProduct product, XbimMatrix3D transform, double? deflection = null, short modelId=0)
@@ -561,8 +584,6 @@ namespace Xbim.Presentation
             _meshes.Add(frag);
         }
 
-     
-        
         /// <summary>
         /// Reads a triangulated mesh from a byte array 
         /// </summary>
