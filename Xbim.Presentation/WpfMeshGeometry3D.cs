@@ -111,6 +111,8 @@ namespace Xbim.Presentation
             {
                 if (WpfModel == null)
                     WpfModel = new GeometryModel3D();
+                if (WpfModel.Geometry == null)
+                    WpfModel.Geometry = new MeshGeometry3D();
                 return WpfModel.Geometry as MeshGeometry3D;
             }
         }

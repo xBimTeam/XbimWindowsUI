@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
@@ -14,18 +13,15 @@ namespace Xbim.Presentation.LayerStylingV2
 {
     public class SurfaceLayerStyler : ILayerStylerV2
     {
-
         /// <summary>
-        /// This version uses the new Geometry representation
+        /// This version uses the new Geometry representation.
         /// </summary>
         /// <param name="model"></param>
         /// <param name="context"></param>
         /// <param name="exclude">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
         /// <returns></returns>
-        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context,
-            List<Type> exclude = null)
+        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context, List<Type> exclude = null)
         {
-
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
 
             if (context == null)
@@ -39,7 +35,6 @@ namespace Xbim.Presentation.LayerStylingV2
             var tmpTransparentsGroup = new Model3DGroup();
 
             var sstyles = context.SurfaceStyles();
-            
 
             foreach (var style in sstyles)
             {
@@ -56,28 +51,26 @@ namespace Xbim.Presentation.LayerStylingV2
                     tmpOpaquesGroup.Children.Add(mg);
             }
 
+            if (!styles.Any()) 
+                return scene; //this should always return something
 
-            if (!styles.Any()) return scene; //this should always return something
-            
-
-            foreach (var shapeInstance in context.ShapeInstances()
-                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
-                            !typeof(IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
-                        !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/))
+            foreach (
+                var shapeInstance in context.ShapeInstances().Where(s => 
+                    s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded 
+                    && 
+                    !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))
+                    ))
             {
-                var styleId = shapeInstance.StyleLabel > 0 ? shapeInstance.StyleLabel : shapeInstance.IfcTypeId * -1;
-
-                //GET THE ACTUAL GEOMETRY 
+                var styleId = shapeInstance.StyleLabel > 0 ? shapeInstance.StyleLabel : shapeInstance.IfcTypeId*-1;
+                // GET THE ACTUAL GEOMETRY 
                 MeshGeometry3D wpfMesh;
                 //see if we have already read it
                 if (repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
                 {
                     var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
-                    mg.SetValue(FrameworkElement.TagProperty,
-                        new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
+                    mg.SetValue(FrameworkElement.TagProperty, new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                     mg.BackMaterial = mg.Material;
-                    mg.Transform =
-                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
+                    mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
                     if (styles[styleId].IsTransparent)
                         tmpTransparentsGroup.Children.Add(mg);
                     else
@@ -86,27 +79,25 @@ namespace Xbim.Presentation.LayerStylingV2
                 else //we need to get the shape geometry
                 {
                     IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                    
+
                     if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
-                        switch ((XbimGeometryType)shapeGeom.Format)
+                        switch ((XbimGeometryType) shapeGeom.Format)
                         {
                             case XbimGeometryType.PolyhedronBinary:
                                 wpfMesh.Read(shapeGeom.ShapeData);
                                 break;
                             case XbimGeometryType.Polyhedron:
-                                wpfMesh.Read(((XbimShapeGeometry)shapeGeom).ShapeData);
+                                wpfMesh.Read(((XbimShapeGeometry) shapeGeom).ShapeData);
                                 break;
                         }
-                       
+
                         repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                         var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
-                        mg.SetValue(FrameworkElement.TagProperty,
-                            new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
-                        mg.BackMaterial = mg.Material;
-                        mg.Transform =
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
+                        mg.SetValue(FrameworkElement.TagProperty, new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
+                        mg.BackMaterial = mg.Material; 
+                        mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
                         if (styles[styleId].IsTransparent)
                             tmpTransparentsGroup.Children.Add(mg);
                         else
@@ -115,26 +106,26 @@ namespace Xbim.Presentation.LayerStylingV2
                     else //it is a one off, merge it with shapes of a similar material
                     {
                         var targetMergeMeshByStyle = styleMeshSets[styleId];
-                        
-                        switch ((XbimGeometryType)shapeGeom.Format)
+
+                        switch ((XbimGeometryType) shapeGeom.Format)
                         {
                             case XbimGeometryType.Polyhedron:
-                                var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                var shapePoly = (XbimShapeGeometry) shapeGeom;
                                 targetMergeMeshByStyle.Add(
-                           shapePoly.ShapeData,
-                           shapeInstance.IfcTypeId,
-                           shapeInstance.IfcProductLabel,
-                           shapeInstance.InstanceLabel,
-                           XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                    shapePoly.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
                                 targetMergeMeshByStyle.Add(
-                          shapeGeom.ShapeData,
-                          shapeInstance.IfcTypeId,
-                          shapeInstance.IfcProductLabel,
-                          shapeInstance.InstanceLabel,
-                          XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                    shapeGeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();
@@ -146,7 +137,7 @@ namespace Xbim.Presentation.LayerStylingV2
             {
                 wpfMeshGeometry3D.EndUpdate();
             }
-            //}
+            
             if (tmpOpaquesGroup.Children.Any())
             {
                 var mv = new ModelVisual3D();
@@ -165,15 +156,8 @@ namespace Xbim.Presentation.LayerStylingV2
             return scene;
         }
 
-
-
-
         public DrawingControl3D Control { get; set; }
 
-
-        public void SetFederationEnvironment(XbimReferencedModel refModel)
-        {
-            
-        }
+        public void SetFederationEnvironment(XbimReferencedModel refModel) { }
     }
 }
