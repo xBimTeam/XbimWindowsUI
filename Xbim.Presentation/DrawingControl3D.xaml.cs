@@ -10,7 +10,7 @@
 
 #endregion
 
-#define DOPARALLEL
+// #define DOPARALLEL
 
 #region Directives
 
@@ -1488,6 +1488,11 @@ namespace Xbim.Presentation
             // spaces are not excluded from the model to make the ShowSpaces property meaningful
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             scene.LayerColourMap.SetProductTypeColourMap();
+
+            var project = model.IfcProject;
+            if (project == null) 
+                return scene;
+
             XbimGeometryHandleCollection handles; 
                     // = new XbimGeometryHandleCollection(model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT));
                     // .Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT | IfcEntityNameEnum.IFCSPACE));
@@ -1512,12 +1517,8 @@ namespace Xbim.Presentation
                 handles = ctx.GetApproximateGeometryHandles();
             }
 
-            var project = model.IfcProject;
-            if (project == null) return scene;
+           
             
-
-            
-
             var groupedHandlers = layerStyler.GroupLayers(handles);
 #if DOPARALLEL
             Parallel.ForEach(groupedHandlers.Keys, layerName =>
@@ -1531,8 +1532,6 @@ namespace Xbim.Presentation
                 if (suppLevel == 1)
                 {
                     var geomColl = model.GetGeometryData(groupedHandlers[layerName]);
-                    
-
                     // initially add all content into the hidden field (underlying geometry info)
                     // it will later be moved to the visible WPF implementation by AddLayerToDrawingControl
                     foreach (var geomData in geomColl)
@@ -1547,8 +1546,6 @@ namespace Xbim.Presentation
                             layer.AddToHidden(gd);
 
                     }
-
-                   
                 }
                 else
                 {
@@ -1589,14 +1586,22 @@ namespace Xbim.Presentation
                     targetMergeMeshByStyle.EndUpdate();
 
                 }
-                Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }),
-                       DispatcherPriority.Background);
+
+                Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), null);
                 lock (scene)
                 {
+                    
                     scene.Add(layer);
 
-                    if (ModelBounds.IsEmpty) ModelBounds = layer.BoundingBoxHidden();
-                    else ModelBounds.Union(layer.BoundingBoxHidden());
+                    if (ModelBounds.IsEmpty) 
+                        ModelBounds = layer.BoundingBoxHidden();
+                    else 
+                        ModelBounds.Union(layer.BoundingBoxHidden());
+
+                    if (ModelBounds.IsEmpty)
+                        ModelBounds = layer.BoundingBoxVisible();
+                    else
+                        ModelBounds.Union(layer.BoundingBoxVisible());
                 }
             }
 #if DOPARALLEL

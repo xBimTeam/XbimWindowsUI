@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
-    <NuGetPackageImportStamp>1a2859f4</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>71838c59</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -112,7 +112,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.3.0.18-Alpha\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.3.0.19-Alpha\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Ifc.Extensions, Version=3.0.5572.12841, Culture=neutral, processorArchitecture=MSIL">
@@ -127,12 +127,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Xbim.Essentials.3.0.19\lib\net45\Xbim.IO.dll</HintPath>
     </Reference>
-    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5588.2836, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.3.0.18-Alpha\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
+    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5612.37533, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Geometry.3.0.19-Alpha\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.3.0.18-Alpha\lib\net45\Xbim.Tessellator.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.3.0.19-Alpha\lib\net45\Xbim.Tessellator.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -194,12 +194,12 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Xbim.Geometry.3.0.18-Alpha\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.18-Alpha\build\net45\Xbim.Geometry.targets')" />
+  <Import Project="..\packages\Xbim.Geometry.3.0.19-Alpha\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.19-Alpha\build\net45\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xbim.Geometry.3.0.18-Alpha\build\net45\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.3.0.18-Alpha\build\net45\Xbim.Geometry.targets'))" />
+    <Error Condition="!Exists('..\packages\Xbim.Geometry.3.0.19-Alpha\build\net45\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.3.0.19-Alpha\build\net45\Xbim.Geometry.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
