@@ -216,6 +216,7 @@
     <Compile Include="LayerStyling\LayerStylerSingleColour.cs" />
     <Compile Include="LayerStyling\LayerStylerTypeAndIFCStyleExtended.cs" />
     <Compile Include="LayerStyling\LayerStylerTypeAndIFCStyle.cs" />
+    <Compile Include="LayerStyling\MigrationHelper.cs" />
     <Compile Include="Rect3DExtensions.cs" />
     <Compile Include="WpfExtensions.cs" />
     <Compile Include="Xbim3DViewerControl.xaml.cs">
