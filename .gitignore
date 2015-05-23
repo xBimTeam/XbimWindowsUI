@@ -192,3 +192,4 @@ Xbim.Geometry.Engine[0-9]*.dll
 */Classifications/
 */Templates/
 /Xbim.Presentation/x86
+*/ClickOnce/
