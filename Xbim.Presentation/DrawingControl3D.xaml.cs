@@ -1511,8 +1511,6 @@ namespace Xbim.Presentation
                         model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)));
 
                 // version 1
-
-
                 var groupedHandlers = layerStyler.GroupLayers(handles);
 #if DOPARALLEL
                 Parallel.ForEach(groupedHandlers.Keys, layerName =>
@@ -1521,9 +1519,8 @@ namespace Xbim.Presentation
 #endif
 
                 {
-                    // todo: old xbim format does not load correctly
-                    return scene;
                     var layer = layerStyler.GetLayer(layerName, model, scene);
+
                     GeometryModel3D m3D = (WpfMeshGeometry3D)layer.Visible;
                     m3D.SetValue(TagProperty, layer);
 
@@ -1542,7 +1539,7 @@ namespace Xbim.Presentation
                             layer.AddToHidden(gd);
                     }
 
-                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), null);
+                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), DispatcherPriority.Background);
                     lock (scene)
                     {
 
