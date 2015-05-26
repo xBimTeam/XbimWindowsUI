@@ -1,22 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Markup;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
-using System.Windows.Media.Media3D;
-using System.Windows.Shell;
-using System.Windows.Threading;
-// using Xbim.COBie;
 using Xbim.IO;
-using Xbim.Presentation;
-using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.Interfaces;
+// using Xbim.COBie;
 
 namespace Xbim.Presentation.XplorerPluginSystem
 {

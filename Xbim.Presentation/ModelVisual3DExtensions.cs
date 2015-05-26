@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
@@ -17,8 +14,8 @@ namespace Xbim.Presentation
             {
                 if (visual.Content is Model3DGroup)
                 {
-                    GeometryModel3D m3d = (GeometryModel3D)((Model3DGroup)visual.Content).Children.First();
-                    MeshGeometry3D main = (MeshGeometry3D)(m3d.Geometry);
+                    var m3D = (GeometryModel3D)((Model3DGroup)visual.Content).Children.First();
+                    MeshGeometry3D main = (MeshGeometry3D)(m3D.Geometry);
                     MeshGeometry3D toAdd = (MeshGeometry3D)(geometry.Geometry);
                     Point3DCollection pc = new Point3DCollection(main.Positions.Count + toAdd.Positions.Count);
                     foreach (var pt in main.Positions) pc.Add(pt);
@@ -44,10 +41,10 @@ namespace Xbim.Presentation
                 //it is not a group but now needs to be
                 else
                 {
-                    Model3DGroup m3dGroup = new Model3DGroup();
-                    m3dGroup.Children.Add(visual.Content);
-                    m3dGroup.Children.Add(geometry);
-                    visual.Content = m3dGroup;
+                    Model3DGroup m3DGroup = new Model3DGroup();
+                    m3DGroup.Children.Add(visual.Content);
+                    m3DGroup.Children.Add(geometry);
+                    visual.Content = m3DGroup;
                 }
             }
         }

@@ -22,35 +22,50 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     public partial class SettingsWindow : Window
     {
-        public class SettingWindowVM: INotifyPropertyChanged
+        /// <summary>
+        /// 
+        /// </summary>
+        public class SettingWindowVm: INotifyPropertyChanged
         {
-            public SettingWindowVM()
+            /// <summary>
+            /// 
+            /// </summary>
+            public SettingWindowVm()
             {
                 SelFileAccessMode = Settings.Default.FileAccessMode;
                 NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
                 PluginStartupLoad = Settings.Default.PluginStartupLoad;
             }
 
-            List<XbimDBAccess> _FileAccessModes = null;
+            List<XbimDBAccess> _fileAccessModes = null;
+            /// <summary>
+            /// 
+            /// </summary>
             public IEnumerable<XbimDBAccess> FileAccessModes
             {
                 get
                 {
-                    if (_FileAccessModes != null)
-                        return _FileAccessModes;
+                    if (_fileAccessModes != null)
+                        return _fileAccessModes;
 
-                    _FileAccessModes = new List<XbimDBAccess>();
-                    var Values = Enum.GetValues(typeof(XbimDBAccess));
+                    _fileAccessModes = new List<XbimDBAccess>();
+                    var values = Enum.GetValues(typeof(XbimDBAccess));
                     List<XbimDBAccess> ret = new List<XbimDBAccess>();
-                    foreach (var item in Values)
+                    foreach (var item in values)
                     {
-                        _FileAccessModes.Add((XbimDBAccess)item);
+                        _fileAccessModes.Add((XbimDBAccess)item);
                     }
-                    return _FileAccessModes;
+                    return _fileAccessModes;
                 }
             } 
+            /// <summary>
+            /// 
+            /// </summary>
             public XbimDBAccess SelFileAccessMode { get; set; }
 
+            /// <summary>
+            /// 
+            /// </summary>
             public string NumberRecentFiles { get; set; }
 
             internal void SaveSettings()
@@ -64,24 +79,32 @@ namespace XbimXplorer.Dialogs
                 Settings.Default.Save();
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
             public bool PluginStartupLoad { get; set; }
 
+            /// <summary>
+            /// </summary>
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
-        SettingWindowVM _vm;
+        SettingWindowVm _vm;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public SettingsWindow()
         {
             InitializeComponent();
-            _vm = new SettingWindowVM();
+            _vm = new SettingWindowVm();
             DataContext = _vm;
         }
 
         private void ButtonOK_Click(object sender, RoutedEventArgs e)
         {
             _vm.SaveSettings();
-            _SettingsChanged = true;
+            _settingsChanged = true;
             Close();            
         }
 
@@ -90,12 +113,15 @@ namespace XbimXplorer.Dialogs
             Close();            
         }
 
-        private bool _SettingsChanged = false;
+        private bool _settingsChanged = false;
+        /// <summary>
+        /// 
+        /// </summary>
         public bool SettingsChanged
         {
             get
             {
-                return _SettingsChanged;
+                return _settingsChanged;
             }
         }
 
@@ -105,7 +131,7 @@ namespace XbimXplorer.Dialogs
             if (retVal == MessageBoxResult.Yes)
             {
                 Settings.Default.Reset();
-                _SettingsChanged = true;
+                _settingsChanged = true;
                 Close();
             }
         }

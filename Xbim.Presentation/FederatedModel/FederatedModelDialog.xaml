@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xbim="clr-namespace:Xbim.Presentation.FederatedModel"
         Title="Manage federation" Height="500" Width="750"
-        Name="window">
+        Name="Window">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -16,19 +16,19 @@
         <Label Content="Project Name" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
         <TextBox x:Name="ProjectName" HorizontalAlignment="Stretch" Height="23" 
                  Margin="10,41,10,0" TextWrapping="Wrap" 
-                 Text="{Binding Path=FederatedModel.Project, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=window}" VerticalAlignment="Top"/>
+                 Text="{Binding Path=FederatedModel.Project, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=Window}" VerticalAlignment="Top"/>
 
         <Label Content="Created By" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.Column="1"/>
 
         <Label Content="Author" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <TextBox x:Name="CreatedPersonTextBox" HorizontalAlignment="Stretch" Height="23" 
                  Margin="93,41,10,0" TextWrapping="Wrap" 
-                 Text="{Binding Path=FederatedModel.Author, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=window}" VerticalAlignment="Top" Grid.Column="1"/>
+                 Text="{Binding Path=FederatedModel.Author, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=Window}" VerticalAlignment="Top" Grid.Column="1"/>
 
         <Label Content="Organization" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <TextBox x:Name="CreatedOrgTextBox" HorizontalAlignment="Stretch" Height="23" 
                  Margin="93,72,10,0" TextWrapping="Wrap" 
-                 Text="{Binding Path=FederatedModel.Organization, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=window}" VerticalAlignment="Top" Grid.Column="1"/>
+                 Text="{Binding Path=FederatedModel.Organization, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=Window}" VerticalAlignment="Top" Grid.Column="1"/>
 
 
         <xbim:FederatedModelsGrid x:Name="FederatedList" Grid.Row="0" Margin="5,100,5,5" Grid.ColumnSpan="2" ToolTip="Add: fill in the data and press &lt;Enter&gt;&#x0a;Remove: select row(s) and press &lt;Delete&gt;"></xbim:FederatedModelsGrid>

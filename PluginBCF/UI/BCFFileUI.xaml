@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Xbim.BCF.UI" x:Class="Xbim.BCF.UI.BCFFileUI" 
+             xmlns:local="clr-namespace:Xbim.BCF.UI" x:Class="Xbim.BCF.UI.BcfFileUi" 
              mc:Ignorable="d" 
     >
     <!--  d:DesignHeight="300" d:DesignWidth="300"  -->
@@ -13,7 +13,7 @@
             <RowDefinition Height="auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <ListView x:Name="t" ItemsSource="{Binding Instances}" SelectionChanged="t_SelectionChanged" MouseDoubleClick="CameraEvent">
+        <ListView x:Name="T" ItemsSource="{Binding Instances}" SelectionChanged="t_SelectionChanged" MouseDoubleClick="CameraEvent">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Width="Auto">
@@ -30,6 +30,6 @@
             </ListView.View>
         </ListView>
         <GridSplitter Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="5"/>
-        <local:BCFInstanceUI Grid.Row="2" x:Name="SelInstance" />
+        <local:BcfInstanceUi Grid.Row="2" x:Name="SelInstance" />
     </Grid>
 </UserControl>

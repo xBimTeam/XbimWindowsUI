@@ -16,7 +16,6 @@ using System;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
-using Xbim.XbimExtensions;
 
 #endregion
 
@@ -28,17 +27,13 @@ namespace Xbim.Presentation
         {
             if (shading is IfcSurfaceStyleRendering)
                 return ((IfcSurfaceStyleRendering) shading).ToMaterial();
-            else
-            {
-                    byte red = Convert.ToByte(shading.SurfaceColour.Red*255);
-                    byte green = Convert.ToByte(shading.SurfaceColour.Green*255);
-                    byte blue = Convert.ToByte(shading.SurfaceColour.Blue*255);
-                    Color col = Color.FromRgb(red, green, blue);
-                    Brush brush = new SolidColorBrush(col);
-                    Material mat = new DiffuseMaterial(brush);
-                    return mat;
-                
-            }
+            byte red = Convert.ToByte(shading.SurfaceColour.Red*255);
+            byte green = Convert.ToByte(shading.SurfaceColour.Green*255);
+            byte blue = Convert.ToByte(shading.SurfaceColour.Blue*255);
+            Color col = Color.FromRgb(red, green, blue);
+            Brush brush = new SolidColorBrush(col);
+            Material mat = new DiffuseMaterial(brush);
+            return mat;
         }
     }
 }

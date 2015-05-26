@@ -1,27 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Windows.Input;
 
 namespace Xbim.Presentation
 {
     public class LayerViewModel
     {
-        string _LayerName;
-        DrawingControl3D _d3d;
-        public LayerViewModel(string LayerName, DrawingControl3D control3D)
+        string _layerName;
+
+        public LayerViewModel(string layerName)
         {
-            _LayerName = LayerName;
-            _d3d = control3D;
+            _layerName = layerName;
         }
 
         public string NameOnMenu
         {
             get 
             {
-                return _LayerName;
+                return _layerName;
             }
         }
 
@@ -29,22 +25,13 @@ namespace Xbim.Presentation
         {
             get
             {
-                return new LayerToggleCommand(this);
+                return new LayerToggleCommand();
             }
         }
     }
 
     public class LayerToggleCommand : ICommand
     {
-        private LayerViewModel layerViewModel;
-
-        public LayerToggleCommand(LayerViewModel layerViewModel)
-        {
-            // TODO: Complete member initialization
-            this.layerViewModel = layerViewModel;
-        }
-        
-
         bool ICommand.CanExecute(object parameter)
         {
             return true;

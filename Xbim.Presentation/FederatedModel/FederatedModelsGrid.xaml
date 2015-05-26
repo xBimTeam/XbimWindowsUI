@@ -6,7 +6,7 @@
              mc:Ignorable="d" Name="GridControl"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <DataGrid x:Name="propertyGrid" ItemsSource="{Binding ReferencedModelWrappers, ElementName=GridControl}" 
+        <DataGrid x:Name="PropertyGrid" ItemsSource="{Binding ReferencedModelWrappers, ElementName=GridControl}" 
                   CanUserAddRows="True" CanUserDeleteRows="True" CanUserSortColumns="True" AutoGenerateColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Identifier}" Width="30"/>

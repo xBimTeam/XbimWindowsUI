@@ -22,11 +22,9 @@ namespace Xbim.WindowsUI.DPoWValidation.Extensions
                 case @".json":
                     fac.WriteJson(fInfo.FullName);
                     return "Report exported.";
-                    break;
                 case @".xml":
                     fac.WriteXml(fInfo.FullName);
                     return "Report exported.";
-                    break;
                 case @".xlsx":
                 case @".xls":
                     if (fac.IsValidationResult())
@@ -38,14 +36,10 @@ namespace Xbim.WindowsUI.DPoWValidation.Extensions
                             ? "Export successful." 
                             : "Export failed.";
                     }
-                    else
-                    {
-                        // write cobie file 
-                        string msg;
-                        fac.WriteCobie(fInfo.FullName, out msg);
-                        return msg;
-                    }
-                    break;
+                    // write cobie file 
+                    string msg;
+                    fac.WriteCobie(fInfo.FullName, out msg);
+                    return msg;
             }
             return "Warning: nothing done, check report extension.";
         }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -13,9 +10,9 @@ namespace Xbim.Presentation.LayerStyling
     {
         XbimColour _colour = new XbimColour("LightGrey", 0.8, 0.8, 0.8);
 
-        public ModelGeometry.Scene.XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(string LayerKey, IO.XbimModel model, ModelGeometry.Scene.XbimScene<WpfMeshGeometry3D, WpfMaterial> scene)
+        public XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(string layerKey, XbimModel model, XbimScene<WpfMeshGeometry3D, WpfMaterial> scene)
         {
-            return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, _colour) { Name = LayerKey };
+            return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, _colour) { Name = layerKey };
         }
 
         public bool UseIfcSubStyles
@@ -28,7 +25,7 @@ namespace Xbim.Presentation.LayerStyling
             return true;
         }
 
-        public void SetFederationEnvironment(IO.XbimReferencedModel refModel)
+        public void SetFederationEnvironment(XbimReferencedModel refModel)
         {
             var federationColours = new XbimColourMap(StandardColourMaps.Federation);
             var key = refModel.DocumentInformation.DocumentOwner.RoleName();
@@ -36,11 +33,11 @@ namespace Xbim.Presentation.LayerStyling
             
         }
 
-        public Dictionary<string, IO.XbimGeometryHandleCollection> GroupLayers(IO.XbimGeometryHandleCollection InputHandles)
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
         {
             var retvalues = new Dictionary<string, XbimGeometryHandleCollection>();
-            if (InputHandles.Any() )
-                retvalues.Add("WholeModel", InputHandles);
+            if (inputHandles.Any() )
+                retvalues.Add("WholeModel", inputHandles);
             return retvalues;
         }
     }

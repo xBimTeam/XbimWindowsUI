@@ -5,10 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Xbim.Presentation" 
     xmlns:ifc="http://schemas.Xbim.com/ifc"
-             xmlns:HelixToolkit="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
+             xmlns:helixToolkit="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <HelixToolkit:HelixViewport3D  x:Name="Canvas"  IsHitTestVisible="True"
+    <helixToolkit:HelixViewport3D  x:Name="Canvas"  IsHitTestVisible="True"
                                    ShowFieldOfView="True"
                                    
                                    ClipToBounds="False" 
@@ -24,13 +24,13 @@
                                    ViewCubeBackText="L"   
                                    >
 
-        <HelixToolkit:HelixViewport3D.DefaultCamera>
+        <helixToolkit:HelixViewport3D.DefaultCamera>
             <PerspectiveCamera Position="100,-100,30" LookDirection="-100,100,-30" UpDirection="0,0,1" FieldOfView="95" NearPlaneDistance="125"/>
-        </HelixToolkit:HelixViewport3D.DefaultCamera>
-        <HelixToolkit:CuttingPlaneGroup x:Name="cuttingGroup" IsEnabled="False">
-            <HelixToolkit:CuttingPlaneGroup.CuttingPlanes>
-                <HelixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
-            </HelixToolkit:CuttingPlaneGroup.CuttingPlanes>
+        </helixToolkit:HelixViewport3D.DefaultCamera>
+        <helixToolkit:CuttingPlaneGroup x:Name="CuttingGroup" IsEnabled="False">
+            <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
+                <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
+            </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
             <ModelVisual3D x:Name="BuildingModel">
                 <ModelVisual3D.Children>
                     <ModelVisual3D x:Name="Opaques">
@@ -39,14 +39,14 @@
                     </ModelVisual3D>
                 </ModelVisual3D.Children>
             </ModelVisual3D>
-        </HelixToolkit:CuttingPlaneGroup>
+        </helixToolkit:CuttingPlaneGroup>
 
         <ModelVisual3D x:Name="Extras"></ModelVisual3D>
 
-        <HelixToolkit:DefaultLights ShowLights="False" />
+        <helixToolkit:DefaultLights ShowLights="False" />
         <!-- You can also add elements here in the xaml -->
-        <HelixToolkit:GridLinesVisual3D x:Name="GridLines" Width="100" Length="100" MinorDistance="10" MajorDistance="25" Thickness="0.25"/>
-        <HelixToolkit:MeshVisual3D x:Name="Highlighted" EdgeDiameter="0"  VertexRadius="0"></HelixToolkit:MeshVisual3D>
+        <helixToolkit:GridLinesVisual3D x:Name="GridLines" Width="100" Length="100" MinorDistance="10" MajorDistance="25" Thickness="0.25"/>
+        <helixToolkit:MeshVisual3D x:Name="Highlighted" EdgeDiameter="0"  VertexRadius="0"></helixToolkit:MeshVisual3D>
 
-    </HelixToolkit:HelixViewport3D>
+    </helixToolkit:HelixViewport3D>
 </UserControl>

@@ -6,39 +6,60 @@ using System.Text;
 
 namespace XbimXplorer.Dialogs
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class CheckedListItem<T> : INotifyPropertyChanged
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private bool isChecked;
-        private T item;
+        private bool _isChecked;
+        private T _item;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public CheckedListItem()
         { }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="isChecked"></param>
         public CheckedListItem(T item, bool isChecked = false)
         {
-            this.item = item;
-            this.isChecked = isChecked;
+            this._item = item;
+            this._isChecked = isChecked;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public T Item
         {
-            get { return item; }
+            get { return _item; }
             set
             {
-                item = value;
+                _item = value;
                 if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("Item"));
             }
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsChecked
         {
-            get { return isChecked; }
+            get { return _isChecked; }
             set
             {
-                isChecked = value;
+                _isChecked = value;
                 if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("IsChecked"));
             }
         }

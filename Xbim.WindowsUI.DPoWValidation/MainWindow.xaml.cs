@@ -21,12 +21,12 @@ namespace Xbim.WindowsUI.DPoWValidation
             InitializeComponent();
         }
 
-        public MainWindow(ValidationViewModel ViewModel) 
+        public MainWindow(ValidationViewModel viewModel) 
             : this ()
         {
-            LoadSettings(ViewModel);
-            ValidationGrid.DataContext = ViewModel;
-            CreateCobieGrid.DataContext = ViewModel;
+            LoadSettings(viewModel);
+            ValidationGrid.DataContext = viewModel;
+            CreateCobieGrid.DataContext = viewModel;
         }
 
 
@@ -53,7 +53,7 @@ namespace Xbim.WindowsUI.DPoWValidation
             Settings.Default.Save();
         }
 
-        private Facility f;
+        private Facility _f;
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
@@ -71,11 +71,11 @@ namespace Xbim.WindowsUI.DPoWValidation
                 return;
             
             string read;
-            f = Facility.ReadCobie(CobieFile.Text, out read);
+            _f = Facility.ReadCobie(CobieFile.Text, out read);
             var flogger = new FileInfo(file);
             using (var logger = flogger.CreateText())
             {
-                f.ValidateUK2012(logger, true);
+                _f.ValidateUK2012(logger, true);
             }
             if (flogger.Exists)
             {
@@ -86,7 +86,7 @@ namespace Xbim.WindowsUI.DPoWValidation
 
         private void Button_Click_3(object sender, RoutedEventArgs e)
         {
-            if (f == null)
+            if (_f == null)
                 return;
             string log;
 
@@ -100,7 +100,7 @@ namespace Xbim.WindowsUI.DPoWValidation
             if (file == "")
                 return;
 
-            f.WriteCobie(file, out log);
+            _f.WriteCobie(file, out log);
             if (File.Exists(file))
                 Process.Start(file);
         }

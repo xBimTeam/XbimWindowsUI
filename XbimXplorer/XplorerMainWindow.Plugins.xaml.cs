@@ -21,7 +21,7 @@ namespace XbimXplorer
         /// <param name="messageData"></param>
         public void BroadCastMessage(object sender, string messageTypeString, object messageData)
         {
-            foreach (var window in PluginWindows)
+            foreach (var window in _pluginWindows)
             {
                 var msging = window as IXbimXplorerPluginMessageReceiver;
                 if (msging != null)
@@ -104,7 +104,7 @@ namespace XbimXplorer
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Problem loading assembly " + refReq + " for " + fullAssemblyName);
+                        MessageBox.Show("Problem loading assembly " + refReq + " for " + fullAssemblyName + ", " + ex.Message);
                     }
                     AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
                 }
@@ -120,10 +120,10 @@ namespace XbimXplorer
                     var asPWin = instance as IXbimXplorerPluginWindow;
                     if (asPWin == null) 
                         continue;
-                    if (PluginWindows.Contains(asPWin)) 
+                    if (_pluginWindows.Contains(asPWin)) 
                         continue;
                     ShowPluginWindow(asPWin);
-                    PluginWindows.Add(asPWin);
+                    _pluginWindows.Add(asPWin);
                 }
                 
             }
@@ -139,7 +139,7 @@ namespace XbimXplorer
         {
         }
 
-        readonly PluginWindowCollection PluginWindows = new PluginWindowCollection();
+        readonly PluginWindowCollection _pluginWindows = new PluginWindowCollection();
 
         Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
@@ -162,10 +162,10 @@ namespace XbimXplorer
                 uc.HorizontalAlignment = HorizontalAlignment.Stretch;
                 uc.VerticalAlignment = VerticalAlignment.Stretch;
                 //set data binding
-                pluginWindow.BindUI(MainWindow);
+                pluginWindow.BindUi(MainWindow);
 
                 // add into UI
-                if (pluginWindow.DefaultUIContainer == PluginWindowDefaultUIContainerEnum.LayoutDoc)
+                if (pluginWindow.DefaultUiContainer == PluginWindowDefaultUiContainerEnum.LayoutDoc)
                 {
                     // layout document mode
                     LayoutDocument ld = new LayoutDocument();
@@ -173,7 +173,7 @@ namespace XbimXplorer
                     ld.Content = uc;
                     MainDocPane.Children.Add(ld);
                 }
-                else if (pluginWindow.DefaultUIContainer == PluginWindowDefaultUIContainerEnum.LayoutAnchorable)
+                else if (pluginWindow.DefaultUiContainer == PluginWindowDefaultUiContainerEnum.LayoutAnchorable)
                 {
                     LayoutAnchorablePaneGroup pg = GetRightPane();
                     LayoutAnchorablePane lap = new LayoutAnchorablePane();

@@ -18,18 +18,18 @@ namespace Xbim.BCF.UI
     /// <summary>
     /// Interaction logic for BCFInstanceUI.xaml
     /// </summary>
-    public partial class BCFInstanceUI : UserControl
+    public partial class BcfInstanceUi : UserControl
     {
-        public BCFInstanceUI()
+        public BcfInstanceUi()
         {
             InitializeComponent();
         }
 
         private void cmts_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cmts.SelectedItem == null || !(cmts.SelectedItem is BCFInstance))
+            if (Cmts.SelectedItem == null || !(Cmts.SelectedItem is BcfInstance))
             {
-                SelComment.DataContext = cmts.SelectedItem;
+                SelComment.DataContext = Cmts.SelectedItem;
             }
         }
     }

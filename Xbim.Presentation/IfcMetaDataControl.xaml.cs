@@ -15,22 +15,24 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Navigation;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.XbimExtensions.SelectTypes;
-using Xbim.XbimExtensions;
-using Xbim.XbimExtensions.Interfaces;
-using Xbim.IO;
-using System.Windows.Data;
-using Xbim.Ifc2x3.PropertyResource;
-using Xbim.Ifc2x3.QuantityResource;
 using Xbim.Ifc2x3.MaterialResource;
 using Xbim.Ifc2x3.MeasureResource;
-using System.Windows.Documents;
+using Xbim.Ifc2x3.ProductExtension;
+using Xbim.Ifc2x3.PropertyResource;
+using Xbim.Ifc2x3.QuantityResource;
+using Xbim.IO;
+using Xbim.XbimExtensions;
+using Xbim.XbimExtensions.Interfaces;
+using Xbim.XbimExtensions.SelectTypes;
 
 #endregion
 
@@ -551,12 +553,12 @@ namespace Xbim.Presentation
 
         #endregion
 
-        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             var hyperlink = sender as Hyperlink;
             if (hyperlink == null)
                 throw new ArgumentNullException();
-            System.Diagnostics.Process.Start(e.Uri.OriginalString);
+            Process.Start(e.Uri.OriginalString);
         }
     }
 }

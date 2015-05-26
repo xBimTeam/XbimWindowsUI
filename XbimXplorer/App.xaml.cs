@@ -13,14 +13,9 @@
 #region Directives
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading;
 using System.Windows;
-using System.Windows.Input;
-using System.Windows.Shell;
 using Xbim.XbimExtensions;
 
 #endregion
@@ -30,9 +25,10 @@ namespace XbimXplorer
     /// <summary>
     ///   Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App
     {
         #region JumpList
+/*
         private void JumpList_JumpItemsRejected(object sender, JumpItemsRejectedEventArgs e)
         {
             StringBuilder sb = new StringBuilder();
@@ -47,7 +43,9 @@ namespace XbimXplorer
 
             MessageBox.Show(sb.ToString());
         }
+*/
 
+/*
         private void JumpList_JumpItemsRemovedByUser(object sender, JumpItemsRemovedEventArgs e)
         {
             StringBuilder sb = new StringBuilder();
@@ -59,8 +57,13 @@ namespace XbimXplorer
 
             MessageBox.Show(sb.ToString());
         }
+*/
         #endregion
 
+        /// <summary>
+        /// Raises the <see cref="E:System.Windows.Application.Startup"/> event.
+        /// </summary>
+        /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
             var mainView = new XplorerMainWindow();
@@ -69,31 +72,31 @@ namespace XbimXplorer
             for (int i = 0; i< e.Args.Length; i++)
             {
                 string thisArg = e.Args[i];
-                if (string.Compare("/AccessMode", thisArg, true) == 0)
+                if (String.Compare("/AccessMode", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    string StringMode = e.Args[++i];
-                    XbimDBAccess mode = (XbimDBAccess)Enum.Parse(typeof(XbimDBAccess), StringMode);
-                    if (Enum.TryParse(StringMode, out mode))
+                    string stringMode = e.Args[++i];
+                    XbimDBAccess mode;
+                    if (Enum.TryParse(stringMode, out mode))
                     {
                         mainView.FileAccessMode = mode;
                     }
                 }
-                else if (string.Compare("/plugin", thisArg, true) == 0)
+                else if (String.Compare("/plugin", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    var PluginName = e.Args[++i];
-                    if (!File.Exists(PluginName))
-                        MessageBox.Show(PluginName + " not found.");
-                    Debug.Write(string.Format("Xplorer trying to load plugin from CommandLine"));
-                    mainView.LoadPlugin(PluginName);
+                    var pluginName = e.Args[++i];
+                    if (!File.Exists(pluginName))
+                        MessageBox.Show(pluginName + " not found.");
+                    Debug.Write("Xplorer trying to load plugin from CommandLine");
+                    mainView.LoadPlugin(pluginName);
                 }
-                else if (string.Compare("/select", thisArg, true) == 0)
+                else if (string.Compare("/select", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    string SelLabel = e.Args[++i];
-                    Debug.Write("Select " + SelLabel + "... ");
-                    mainView.LoadingComplete += delegate(object s, RunWorkerCompletedEventArgs args)
+                    string selLabel = e.Args[++i];
+                    Debug.Write("Select " + selLabel + "... ");
+                    mainView.LoadingComplete += delegate
                     {
                         int iSel;
-                        if (!int.TryParse(SelLabel, out iSel))
+                        if (!int.TryParse(selLabel, out iSel))
                             return;
                         if (mainView.Model == null)
                             return;

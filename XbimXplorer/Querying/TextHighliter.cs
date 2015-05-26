@@ -16,7 +16,7 @@ namespace XbimXplorer.Querying
 
         internal class MultiPartBit : ReportComponent
         {
-            Block b = null;
+            Block _b = null;
             public MultiPartBit(string[] strings, Brush[] brushes)
             {
                 int iC = Math.Min(strings.Length, brushes.Length);
@@ -27,47 +27,47 @@ namespace XbimXplorer.Querying
                     s2.Foreground = brushes[i];
                     s.Inlines.Add(s2);
                 }
-                b = new Paragraph(s);
+                _b = new Paragraph(s);
                 
             }
             internal override Block ToBlock()
             {
-                return b;
+                return _b;
             }
         }
 
         internal class ReportBit : ReportComponent
         {
-            string TextContent;
-            Brush textBrush;
+            string _textContent;
+            Brush _textBrush;
 
             public ReportBit(string txt, Brush brsh = null)
             {
-                TextContent = txt;
-                textBrush = brsh;
+                _textContent = txt;
+                _textBrush = brsh;
             }
 
             internal override Block ToBlock()
             {
-                Paragraph p = new Paragraph(new Run(TextContent));
-                if (textBrush != null)
-                    p.Foreground = textBrush;
+                Paragraph p = new Paragraph(new Run(_textContent));
+                if (_textBrush != null)
+                    p.Foreground = _textBrush;
                 return p;
             }
         }
 
-        List<ReportComponent> Bits = new List<ReportComponent>();
+        List<ReportComponent> _bits = new List<ReportComponent>();
 
         internal void Append(string text, Brush color)
         {
-            Bits.Add(new ReportBit(text, color));
+            _bits.Add(new ReportBit(text, color));
         }
 
         public Brush DefaultBrush = null;
 
         internal void AppendFormat(string format, params object[] args)
         {
-            Bits.Add(new ReportBit(
+            _bits.Add(new ReportBit(
                 string.Format(null, format, args),
                 DefaultBrush
                 ));
@@ -75,12 +75,12 @@ namespace XbimXplorer.Querying
 
         internal void Append(TextHighliter other)
         {
-            Bits.AddRange(other.Bits);
+            _bits.AddRange(other._bits);
         }
 
         internal void Clear()
         {
-            Bits = new List<ReportComponent>();
+            _bits = new List<ReportComponent>();
         }
 
         internal void DropInto(FlowDocument flowDocument)
@@ -90,7 +90,7 @@ namespace XbimXplorer.Querying
 
         private IEnumerable<Block> ToBlocks()
         {
-            foreach (var item in Bits)
+            foreach (var item in _bits)
             {
                 yield return item.ToBlock();
             }
@@ -99,7 +99,7 @@ namespace XbimXplorer.Querying
         internal void AppendSpans(string[] strings, Brush[] brushes)
         {
             MultiPartBit b = new MultiPartBit(strings, brushes);
-            Bits.Add(b);
+            _bits.Add(b);
             
         }
     }

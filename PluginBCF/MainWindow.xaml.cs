@@ -22,15 +22,15 @@ namespace Xbim.BCF
     /// </summary>
     public partial class MainWindow : IXbimXplorerPluginWindow, IXbimXplorerPluginMessageReceiver
     {
-        string baseFolder = @"..\..\Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\";
+        string _baseFolder = @"..\..\Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\";
 
         public MainWindow()
         {
             InitializeComponent();
-            CommandBindings.Add(new CommandBinding(BCFFileCommands.Load, ExecuteLoad, CanExecuteLoad));
-            CommandBindings.Add(new CommandBinding(BCFFileCommands.Save, ExecuteSave, CanExecuteSave));
+            CommandBindings.Add(new CommandBinding(BcfFileCommands.Load, ExecuteLoad, CanExecuteLoad));
+            CommandBindings.Add(new CommandBinding(BcfFileCommands.Save, ExecuteSave, CanExecuteSave));
 
-            CommandBindings.Add(new CommandBinding(BCFInstanceCommands.GotoCameraPosition, ExecuteCamera, CanExecuteLoad));
+            CommandBindings.Add(new CommandBinding(BcfInstanceCommands.GotoCameraPosition, ExecuteCamera, CanExecuteLoad));
         }
 
         private void ExecuteSave(object sender, ExecutedRoutedEventArgs e)
@@ -40,14 +40,14 @@ namespace Xbim.BCF
             var v = ofd.ShowDialog();
             if (v.HasValue && v.Value)
             {
-                selFile.Save(ofd.FileName);
+                SelFile.Save(ofd.FileName);
             }
 
         }
 
         private void CanExecuteSave(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = selFile.CanSave;
+            e.CanExecute = SelFile.CanSave;
         }
 
         public void ExecuteLoad(object sender, ExecutedRoutedEventArgs e)
@@ -57,15 +57,15 @@ namespace Xbim.BCF
             var v = ofd.ShowDialog();
             if (v.HasValue && v.Value)
             {
-                selFile.Load(ofd.FileName);
+                SelFile.Load(ofd.FileName);
             }
         }
 
         public void ExecuteCamera(object sender, ExecutedRoutedEventArgs e)
         {
-            if (selFile.t == null)
+            if (SelFile.T == null)
                 return;
-            var inst = selFile.t.SelectedItem as BCFInstance;
+            var inst = SelFile.T.SelectedItem as BcfInstance;
             if (inst == null)
                 return;
             var v = inst.VisualizationInfo;
@@ -134,7 +134,7 @@ namespace Xbim.BCF
 
         internal string Filename(string s)
         {
-            return Path.Combine(baseFolder, s);
+            return Path.Combine(_baseFolder, s);
         }
 
 
@@ -200,7 +200,7 @@ namespace Xbim.BCF
 
         private IXbimXplorerPluginMasterWindow _xpWindow;
 
-        public void BindUI(IXbimXplorerPluginMasterWindow mainWindow)
+        public void BindUi(IXbimXplorerPluginMasterWindow mainWindow)
         {
             _xpWindow = mainWindow;
             SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
@@ -276,7 +276,7 @@ namespace Xbim.BCF
         {
             var vi = new VisualizationInfo(_xpWindow.DrawingControl);
             var bitmapImage = GetSnapshotImage(_xpWindow.DrawingControl);
-            selFile.NewInstance(@"New thread", bitmapImage, vi);
+            SelFile.NewInstance(@"New thread", bitmapImage, vi);
         }
 
         private BitmapImage GetSnapshotImage(DrawingControl3D control)
@@ -300,11 +300,11 @@ namespace Xbim.BCF
         }
 
 
-        public PluginWindowDefaultUIShow DefaultUIActivation
-        { get { return PluginWindowDefaultUIShow.onLoad; } }
+        public PluginWindowDefaultUiShow DefaultUiActivation
+        { get { return PluginWindowDefaultUiShow.OnLoad; } }
 
-        public PluginWindowDefaultUIContainerEnum DefaultUIContainer
-        { get { return PluginWindowDefaultUIContainerEnum.LayoutAnchorable; } }
+        public PluginWindowDefaultUiContainerEnum DefaultUiContainer
+        { get { return PluginWindowDefaultUiContainerEnum.LayoutAnchorable; } }
 
         public void ProcessMessage(object sender, string messageTypeString, object messageData)
         {
@@ -319,7 +319,7 @@ namespace Xbim.BCF
                 var commentAuthor = (string)data["CommentAuthor"];
                 var commentText = (string)data["CommentText"];
                 
-                var instance = selFile.NewInstance(instanceTitle, bitmapImage, vi);
+                var instance = SelFile.NewInstance(instanceTitle, bitmapImage, vi);
 
                 var cmt = new Comment();
 

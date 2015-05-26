@@ -16,37 +16,37 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using System.Windows.Threading;
+using HelixToolkit.Wpf;
+using Xbim.Common.Geometry;
+using Xbim.Ifc2x3;
 using Xbim.Ifc2x3.Extensions;
+using Xbim.Ifc2x3.ExternalReferenceResource;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.ModelGeometry.Scene;
 using Xbim.Ifc2x3.SharedComponentElements;
-using Xbim.XbimExtensions.Interfaces;
 using Xbim.IO;
-using System.Diagnostics;
-using Xbim.Ifc2x3;
-using HelixToolkit.Wpf;
-using System.Collections.Specialized;
-using System.Threading.Tasks;
-using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.ExternalReferenceResource;
-using System.Text;
-using Xbim.Presentation.ModelGeomInfo;
-using System.Windows.Media.Imaging;
-using System.Windows.Interop;
-using System.Windows.Threading;
-using XbimGeometry.Interfaces;
+using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.LayerStylingV2;
+using Xbim.Presentation.ModelGeomInfo;
+using Xbim.XbimExtensions.Interfaces;
+using XbimGeometry.Interfaces;
 
 #endregion
 
@@ -67,7 +67,7 @@ namespace Xbim.Presentation
             Canvas.MouseDown += Canvas_MouseDown;
             Canvas.MouseWheel += Canvas_MouseWheel;
             Loaded += DrawingControl3D_Loaded;
-            federationColours = new XbimColourMap(StandardColourMaps.Federation);
+            _federationColours = new XbimColourMap(StandardColourMaps.Federation);
             Viewport.CameraChanged += UpdatefrustumPlanes;
             ClearGraphics();
             MouseModifierKeyBehaviour.Add(ModifierKeys.Control, XbimMouseClickActions.Toggle);
@@ -266,7 +266,7 @@ namespace Xbim.Presentation
 
         #region Fields
         public List<XbimScene<WpfMeshGeometry3D, WpfMaterial>> Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
-        private XbimColourMap federationColours;
+        private XbimColourMap _federationColours;
 
         // protected RayMeshGeometry3DHitTestResult _hitResult;
        
@@ -662,8 +662,7 @@ namespace Xbim.Presentation
 
         public void ReloadModel(ModelRefreshOptions options = ModelRefreshOptions.None)
         {
-            LoadGeometry(
-                model: (XbimModel)GetValue(ModelProperty),
+            LoadGeometry((XbimModel)GetValue(ModelProperty),
                 options: options
                 );
             SetValue(LayerSetProperty, LayerSetRefresh());
@@ -1247,7 +1246,7 @@ namespace Xbim.Presentation
             ViewPreserveAll = 7
         }
 
-        public ILayerStylerV2 GeomSupport2LayerStyler = null;
+        public ILayerStylerV2 GeomSupport2LayerStyler;
 
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
@@ -1308,7 +1307,7 @@ namespace Xbim.Presentation
 
             // prepare grouping and layering behaviours
             if (LayerStyler == null)
-                LayerStyler = new LayerStylerTypeAndIFCStyle();
+                LayerStyler = new LayerStylerTypeAndIfcStyle();
             LayerStyler.SetFederationEnvironment(null);
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
@@ -1441,7 +1440,7 @@ namespace Xbim.Presentation
                                                        .Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT)); // ifcSpaces added to the geometry
 
 
-            var colour = federationColours[docInfo.DocumentOwner.RoleName()];
+            var colour = _federationColours[docInfo.DocumentOwner.RoleName()];
             var metre = model.ModelFactors.OneMetre;
             WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / (float)metre);
                 
@@ -1473,7 +1472,7 @@ namespace Xbim.Presentation
         /// Provides a mechanism to define colouring schemes for elements in DrawingControl3D.
         /// After setting a new LayerStyler issue a ReloadModel (<see cref="Xbim.Presentation.DrawingControl3D.ReloadModel(ModelRefreshOptions)"/>). 
         /// </summary>
-        public ILayerStyler LayerStyler = null;
+        public ILayerStyler LayerStyler;
         /// <summary>
         /// Provides a mechanism to define colouring schemes for elements in DrawingControl3D.
         /// After setting a new LayerStyler issue a ReloadModel (<see cref="Xbim.Presentation.DrawingControl3D.ReloadModel(ModelRefreshOptions)"/>). 
@@ -1571,7 +1570,7 @@ namespace Xbim.Presentation
                                    shapeInstance.IfcTypeId,
                                    shapeInstance.IfcProductLabel,
                                    shapeInstance.InstanceLabel,
-                                   XbimMatrix3D.Multiply(shapeInstance.Transformation, this.WcsTransform));
+                                   XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
@@ -1580,7 +1579,7 @@ namespace Xbim.Presentation
                                   shapeInstance.IfcTypeId,
                                   shapeInstance.IfcProductLabel,
                                   shapeInstance.InstanceLabel,
-                                  XbimMatrix3D.Multiply(shapeInstance.Transformation, this.WcsTransform));
+                                  XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();
@@ -1723,10 +1722,10 @@ namespace Xbim.Presentation
         private List<LayerViewModel> LayerSetRefresh()
         {
             var ret = new List<LayerViewModel>();
-            ret.Add(new LayerViewModel("All", this));
+            ret.Add(new LayerViewModel("All"));
             foreach (var scene in Scenes)
                 foreach (var layer in scene.SubLayers) // go over top level layers only
-                    ret.Add(new LayerViewModel(layer.Name, this));
+                    ret.Add(new LayerViewModel(layer.Name));
             return ret;
         }
 
@@ -1861,15 +1860,15 @@ namespace Xbim.Presentation
 
         public void ShowOctree(XbimOctree<IfcProduct> octree, int specificLevel = -1, bool onlyWithContent = false)
         {
-            if (Viewport.Children.Contains(OctreeVisualization))
-                Viewport.Children.Remove(OctreeVisualization);
-            OctreeVisualization.Children.Clear();
+            if (Viewport.Children.Contains(_octreeVisualization))
+                Viewport.Children.Remove(_octreeVisualization);
+            _octreeVisualization.Children.Clear();
             ShowOctree<IfcProduct>(octree, specificLevel, onlyWithContent);
-            Viewport.Children.Add(OctreeVisualization);
+            Viewport.Children.Add(_octreeVisualization);
             
         }
 
-        ModelVisual3D OctreeVisualization = new ModelVisual3D();
+        ModelVisual3D _octreeVisualization = new ModelVisual3D();
 
 
         private void ShowOctree<T>(XbimOctree<T> octree, int specificLevel = -1, bool onlyWithContent = false)
@@ -1886,7 +1885,7 @@ namespace Xbim.Presentation
                     );
 
                 //Add octree geometry
-                OctreeVisualization.Children.Add(new ModelVisual3D { Content = rect.Geometry, Transform = transformation });
+                _octreeVisualization.Children.Add(new ModelVisual3D { Content = rect.Geometry, Transform = transformation });
             };
 
             if (specificLevel == -1 || specificLevel == octree.Depth)

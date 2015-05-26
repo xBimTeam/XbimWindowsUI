@@ -3,13 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:COBieLiteUK="clr-namespace:Xbim.COBieLiteUK;assembly=Xbim.COBieLiteUK"
+             xmlns:coBieLiteUk="clr-namespace:Xbim.COBieLiteUK;assembly=Xbim.COBieLiteUK"
              xmlns:viewModels="clr-namespace:Xbim.WindowsUI.DPoWValidation.ViewModels"
-             x:Class="Xbim.WindowsUI.DPoWValidation.Controls.DPoWFacilityViewer" 
+             x:Class="Xbim.WindowsUI.DPoWValidation.Controls.DpoWFacilityViewer" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
-        <viewModels:DPoWFacilityViewModel/>
+        <viewModels:DpoWFacilityViewModel/>
     </UserControl.DataContext>
     <Grid>
         <Grid.RowDefinitions>
@@ -18,7 +18,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ComboBox Grid.Row="0" VerticalAlignment="Top" ItemsSource="{Binding AvailableClassifications}" SelectedItem="{Binding SelectedClassification}" />
-        <TreeView Grid.Row="1" Name="trvMenu">
+        <TreeView Grid.Row="1" Name="TrvMenu">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:DocumentViewModel}">
                     <StackPanel Orientation="Horizontal">
@@ -28,7 +28,7 @@
                         <TextBlock Text="{Binding DocumentName}" />
                     </StackPanel>
                 </HierarchicalDataTemplate>
-                <HierarchicalDataTemplate DataType="{x:Type COBieLiteUK:Space}">
+                <HierarchicalDataTemplate DataType="{x:Type coBieLiteUk:Space}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Name}" />
                         <TextBlock Text=" [" Foreground="Blue" />

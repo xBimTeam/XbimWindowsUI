@@ -20,7 +20,7 @@ namespace XbimXplorer.Querying
             }
         }
 
-        internal IEnumerable<T> getItem<T>(IEnumerable<T> labels)
+        internal IEnumerable<T> GetItem<T>(IEnumerable<T> labels)
         {
             if (Index == -1)
                 return labels;

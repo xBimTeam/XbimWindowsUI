@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="IfcSimplify" Height="367.8" Width="512">
     <Grid>
-        <TextBox x:Name="txtInputFile" Height="23" Margin="83,12,59.6,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" ToolTip="Only IFC files are valid."/>
+        <TextBox x:Name="TxtInputFile" Height="23" Margin="83,12,59.6,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" ToolTip="Only IFC files are valid."/>
         <Label Content="Input file:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="cmdInit" Content="Initialise" HorizontalAlignment="Right" Margin="0,40,10.6,0" VerticalAlignment="Top" Width="121" Height="24" Click="cmdInit_Click"/>
-        <GroupBox x:Name="gCommands" Margin="10,69,9.6,10" IsEnabled="False">
+        <Button x:Name="CmdInit" Content="Initialise" HorizontalAlignment="Right" Margin="0,40,10.6,0" VerticalAlignment="Top" Width="121" Height="24" Click="cmdInit_Click"/>
+        <GroupBox x:Name="GCommands" Margin="10,69,9.6,10" IsEnabled="False">
             <GroupBox.Header>
                 Entity labels:
             </GroupBox.Header>
@@ -15,12 +15,12 @@
                     <ColumnDefinition Width="136.8"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="txtEntityLabelAdd" HorizontalAlignment="Left" Margin="10,29,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="117" RenderTransformOrigin="0.207,1.785" Height="22" TextChanged="txtEntityLabelAdd_TextChanged"/>
+                <TextBox x:Name="TxtEntityLabelAdd" HorizontalAlignment="Left" Margin="10,29,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="117" RenderTransformOrigin="0.207,1.785" Height="22" TextChanged="txtEntityLabelAdd_TextChanged"/>
                 <Label Content="Search:" HorizontalAlignment="Left" Height="29" Margin="10,0,0,0" VerticalAlignment="Top" Width="117"/>
                 <Button x:Name="CmdAdd" Content="Add" HorizontalAlignment="Left" Height="24" Margin="10,56,0,0" VerticalAlignment="Top" Width="117" Click="CmdAdd_Click"/>
-                <TextBox x:Name="txtOutput" TextWrapping="Wrap" Text="" Margin="5.2,29,5,0.4" Grid.Column="1" VerticalScrollBarVisibility="Auto"/>
+                <TextBox x:Name="TxtOutput" TextWrapping="Wrap" Text="" Margin="5.2,29,5,0.4" Grid.Column="1" VerticalScrollBarVisibility="Auto"/>
                 <Label Content="Currently selected:" HorizontalAlignment="Left" Height="29" Margin="0.2,0,0,0" VerticalAlignment="Top" Width="267" Grid.Column="1"/>
-                <Button x:Name="cmdSave" Content="Save simplified" HorizontalAlignment="Right" Margin="0,0,9.8,0.4" VerticalAlignment="Bottom" Width="117" Height="24" Click="cmdSave_Click"/>
+                <Button x:Name="CmdSave" Content="Save simplified" HorizontalAlignment="Right" Margin="0,0,9.8,0.4" VerticalAlignment="Bottom" Width="117" Height="24" Click="cmdSave_Click"/>
             </Grid>
 
 

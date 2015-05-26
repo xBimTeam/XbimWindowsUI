@@ -1,21 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using PropertyTools.Wpf;
-using Xbim.IO;
-using System.Windows;
-using Xbim.Ifc2x3.Kernel;
-using System.Windows.Data;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.ExternalReferenceResource;
-using System.Windows.Controls.Primitives;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
-using Xbim.XbimExtensions.Interfaces;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using PropertyTools.Wpf;
+using Xbim.Ifc2x3.Extensions;
+using Xbim.Ifc2x3.Kernel;
+using Xbim.IO;
 using Xbim.IO.ViewModels;
+using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -24,10 +18,10 @@ namespace Xbim.Presentation
 
         public XbimTreeview()
         {
-            SelectionMode = System.Windows.Controls.SelectionMode.Single; //always use single selection mode
+            SelectionMode = SelectionMode.Single; //always use single selection mode
         }
 
-        protected override void OnSelectionChanged(System.Windows.Controls.SelectionChangedEventArgs e)
+        protected override void OnSelectionChanged(SelectionChangedEventArgs e)
         {
             base.OnSelectionChanged(e);
             if (e.AddedItems.Count > 0)
@@ -51,8 +45,7 @@ namespace Xbim.Presentation
 
         // Using a DependencyProperty as the backing store for SelectedEntity.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedEntityProperty =
-            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(XbimTreeview), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnSelectedEntityChanged)));
+            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(XbimTreeview), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -62,14 +55,13 @@ namespace Xbim.Presentation
                 view.UnselectAll();
                 IPersistIfcEntity newVal = (IPersistIfcEntity)(e.NewValue);
                 if (newVal != null) view.Select(newVal);
-                return;
             }
         }
 
         // todo: bonghi: this one is too slow on Architettonico_def.xBIM, so I'm patching it for a specific hierarchy, but it needs serious redesign for efficiency
         private void Select(IPersistIfcEntity newVal, bool tryOptimise = true)
         {
-            if (this.ViewDefinition == XbimViewType.SpatialStructure && tryOptimise)
+            if (ViewDefinition == XbimViewType.SpatialStructure && tryOptimise)
             {
                 /*
                 We know that the structure in this case looks like:
@@ -107,7 +99,7 @@ namespace Xbim.Presentation
                         else
                         {
                             // do basic search
-                            this.Select(newVal, false);
+                            Select(newVal, false);
                         }
                         
                     }
@@ -118,7 +110,7 @@ namespace Xbim.Presentation
                     }
                 }
                 // if optimised search fails revert to brute force expansion
-                this.Select(newVal, false);
+                Select(newVal, false);
             }
             else
             {
@@ -136,13 +128,13 @@ namespace Xbim.Presentation
 
         private IXbimViewModel FindUnderContainingSpace(IPersistIfcEntity newVal, IfcProduct p)
         {
-            var ContainingSpace = p.IsContainedIn().FirstOrDefault();
-            if (ContainingSpace != null)
+            var containingSpace = p.IsContainedIn().FirstOrDefault();
+            if (containingSpace != null)
             {
-                var ContainingSpaceView = FindItemBreadthFirst(ContainingSpace);
-                if (ContainingSpaceView != null)
+                var containingSpaceView = FindItemBreadthFirst(containingSpace);
+                if (containingSpaceView != null)
                 {
-                    var found = FindItemDepthFirst(ContainingSpaceView, newVal);
+                    var found = FindItemDepthFirst(containingSpaceView, newVal);
                     if (found != null)
                     {
                         return found;
@@ -222,7 +214,7 @@ namespace Xbim.Presentation
 
         // Using a DependencyProperty as the backing store for ViewDefinition.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ViewDefinitionProperty =
-            DependencyProperty.Register("ViewDefinition", typeof(XbimViewType), typeof(XbimTreeview), new UIPropertyMetadata(XbimViewType.SpatialStructure, new PropertyChangedCallback(OnViewDefinitionChanged)));
+            DependencyProperty.Register("ViewDefinition", typeof(XbimViewType), typeof(XbimTreeview), new UIPropertyMetadata(XbimViewType.SpatialStructure, OnViewDefinitionChanged));
 
         private static void OnViewDefinitionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -239,7 +231,7 @@ namespace Xbim.Presentation
 
         // Using a DependencyProperty as the backing store for Model.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(XbimModel), typeof(XbimTreeview), new UIPropertyMetadata(null, new PropertyChangedCallback(OnModelChanged)));
+            DependencyProperty.Register("Model", typeof(XbimModel), typeof(XbimTreeview), new UIPropertyMetadata(null, OnModelChanged));
 
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -262,8 +254,6 @@ namespace Xbim.Presentation
                         break;
                     case XbimViewType.Groups:
                         tv.ViewGroups();
-                        break;
-                    default:
                         break;
                 }
             }
@@ -294,19 +284,23 @@ namespace Xbim.Presentation
                     XbimModelViewModel vm = HierarchySource.Cast<XbimModelViewModel>().FirstOrDefault();
                     if (vm != null)
                     {
-                        var modelVM = vm.Children.FirstOrDefault(m => (m as XbimRefModelViewModel).RefModel == refModel) as XbimRefModelViewModel;
-                        vm.RemoveRefModel(modelVM);
+                        var modelVm = vm.Children.FirstOrDefault(m =>
+                        {
+                            var xbimRefModelViewModel = m as XbimRefModelViewModel;
+                            return xbimRefModelViewModel != null && xbimRefModelViewModel.RefModel == refModel;
+                        }) as XbimRefModelViewModel;
+                        vm.RemoveRefModel(modelVm);
                     }
                 }
             }
         }
 
-        private void ViewSpatialStructure()
+        protected void ViewSpatialStructure()
         {
-            IfcProject project = Model.IfcProject as IfcProject;
+            IfcProject project = Model.IfcProject;
             if (project != null)
             {
-                this.ChildrenBinding = new Binding("Children");
+                ChildrenPath="Children";
                 List<SpatialViewModel> svList = new List<SpatialViewModel>();
                 foreach (var item in project.GetSpatialStructuralElements())
                 {
@@ -314,26 +308,23 @@ namespace Xbim.Presentation
                     svList.Add(sv); 
                 }
                 
-                this.HierarchySource = svList;
+                HierarchySource = svList;
                 foreach (var child in svList)
                 {
                     LazyLoadAll(child);
                 }
             }
-            else //Load any spatialstructure
-            {
-            }
         }
         private void ViewModel()
         {
-            IfcProject project = Model.IfcProject as IfcProject;
+            IfcProject project = Model.IfcProject;
             if (project != null)
             {
               
-                this.ChildrenBinding = new Binding("Children");
+                ChildrenPath ="Children";
                 ObservableCollection<XbimModelViewModel> svList = new ObservableCollection<XbimModelViewModel>();  
                 svList.Add(new XbimModelViewModel(project, null));
-                this.HierarchySource = svList;
+                HierarchySource = svList;
             }
         }
         private void LazyLoadAll(IXbimViewModel parent)
@@ -347,7 +338,7 @@ namespace Xbim.Presentation
         }
 
 
-        private void Expand(IXbimViewModel treeitem)
+        protected void Expand(IXbimViewModel treeitem)
         {
             treeitem.IsExpanded = true;
             foreach (var child in treeitem.Children)
@@ -356,7 +347,7 @@ namespace Xbim.Presentation
             }
         }
 
-        private void ViewClassification()
+        protected void ViewClassification()
         {
             //IfcProject project = Model.IfcProject as IfcProject;
             //if (project != null)
@@ -378,8 +369,8 @@ namespace Xbim.Presentation
         {
             if (Model != null)
             {
-                this.ChildrenBinding = new Binding("Children");
-                List<GroupViewModel> modelList = new List<GroupViewModel>();
+                ChildrenPath = "Children";
+                var modelList = new List<GroupViewModel>();
                 
                 var groups = Model.Instances.OfType<IfcGroup>();
                 var groupedObjects = new List<IfcRoot>();
@@ -393,7 +384,7 @@ namespace Xbim.Presentation
                     if(!groupedObjects.Contains(item))
                         modelList.Add(new GroupViewModel(item, null)); //add only root groups/systems
                 }
-                this.HierarchySource = modelList;
+                HierarchySource = modelList;
                 //foreach (var child in modelList)
                 //{
                 //    LazyLoadAll(child); //why to do this?
@@ -419,8 +410,6 @@ namespace Xbim.Presentation
                         break;
                     case XbimViewType.Groups:
                         ViewGroups();
-                        break;
-                    default:
                         break;
                 }
             }

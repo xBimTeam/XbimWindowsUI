@@ -22,34 +22,37 @@ namespace XbimXplorer.Simplify
     /// </summary>
     public partial class IfcSimplify : Window
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public IfcSimplify()
         {
             InitializeComponent();
         }
 
-        Dictionary<int, string> _IfcLines = new Dictionary<int, string>();
-        Dictionary<int, string> _IfcContents = new Dictionary<int, string>();
-        Dictionary<int, string> _IfcType = new Dictionary<int, string>();
-        List<int> _ElementsToExport = new List<int>();
+        Dictionary<int, string> _ifcLines = new Dictionary<int, string>();
+        Dictionary<int, string> _ifcContents = new Dictionary<int, string>();
+        Dictionary<int, string> _ifcType = new Dictionary<int, string>();
+        List<int> _elementsToExport = new List<int>();
 
-        string _Header;
-        string _Footer;
+        string _header;
+        string _footer;
 
         private void cmdInit_Click(object sender, RoutedEventArgs e)
         {
-            _IfcLines = new Dictionary<int, string>();
-            _IfcContents = new Dictionary<int, string>();
-            _ElementsToExport = new List<int>();
-            _IfcType = new Dictionary<int, string>();
-            _Header = "";
-            _Footer = "";
+            _ifcLines = new Dictionary<int, string>();
+            _ifcContents = new Dictionary<int, string>();
+            _elementsToExport = new List<int>();
+            _ifcType = new Dictionary<int, string>();
+            _header = "";
+            _footer = "";
 
 
-            FileTextParser fp = new FileTextParser(txtInputFile.Text);
-            string ReadLine;
-            bool FoundAnyLine = false;
+            FileTextParser fp = new FileTextParser(TxtInputFile.Text);
+            string readLine;
+            bool foundAnyLine = false;
 
-            List<int> RequiredLines = new List<int>();
+            List<int> requiredLines = new List<int>();
 
             //Regex re = new Regex(
             //    "#(\\d+)" + // integer index
@@ -74,44 +77,44 @@ namespace XbimXplorer.Simplify
                 "\\);" // the closing bracket escaped and the semicolon
                 );
 
-            while ((ReadLine = fp.NextLine()) != null)
+            while ((readLine = fp.NextLine()) != null)
             {
-                Match m = re.Match(ReadLine);
+                Match m = re.Match(readLine);
                 if (m.Success)
                 {
-                    FoundAnyLine = true;
+                    foundAnyLine = true;
                     int iId = Convert.ToInt32(m.Groups[1].ToString());
                     string type = m.Groups[2].ToString();
 
-                    _IfcLines.Add(iId, ReadLine);
-                    _IfcContents.Add(iId, m.Groups[3].ToString());
-                    _IfcType.Add(iId, type);
+                    _ifcLines.Add(iId, readLine);
+                    _ifcContents.Add(iId, m.Groups[3].ToString());
+                    _ifcType.Add(iId, type);
 
                     if (
                         type == "IFCPROJECT"
                         )
                     {
-                        RequiredLines.Add(iId);
+                        requiredLines.Add(iId);
                     }
 
                 }
                 else
                 {
-                    if (FoundAnyLine == false)
-                        _Header += ReadLine + "\r\n";
+                    if (foundAnyLine == false)
+                        _header += readLine + "\r\n";
                     else
-                        _Footer += ReadLine + "\r\n";
+                        _footer += readLine + "\r\n";
                 }
             }
             fp.Close();
             fp.Dispose();
-            gCommands.IsEnabled = true;
+            GCommands.IsEnabled = true;
 
             if (true)
             {
-                foreach (int i in RequiredLines)
+                foreach (int i in requiredLines)
                 {
-                    recursiveAdd(i);
+                    RecursiveAdd(i);
                 }
             }
             UpdateStatusCount();
@@ -124,7 +127,7 @@ namespace XbimXplorer.Simplify
                 int iConv = -1;
                 try
                 {
-                    iConv = Convert.ToInt32(txtEntityLabelAdd.Text);
+                    iConv = Convert.ToInt32(TxtEntityLabelAdd.Text);
                 }
                 catch
                 {
@@ -136,29 +139,29 @@ namespace XbimXplorer.Simplify
 
         private void txtEntityLabelAdd_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (txtEntityLabelAdd.Text == "")
+            if (TxtEntityLabelAdd.Text == "")
             {
                 UpdateStatusCount();
                 return;
             }
 
             int ic = SelectedIfcIndex;
-            if (_IfcLines.ContainsKey(ic))
+            if (_ifcLines.ContainsKey(ic))
             {
-                txtOutput.Text = _IfcLines[ic];
+                TxtOutput.Text = _ifcLines[ic];
             }
             else
             {
-                txtOutput.Text = "Not found";
+                TxtOutput.Text = "Not found";
             }
         }
 
-        private void recursiveAdd(int IfcIndex)
+        private void RecursiveAdd(int ifcIndex)
         {
-            if (_ElementsToExport.Contains(IfcIndex))
+            if (_elementsToExport.Contains(ifcIndex))
                 return; // been exported already;
 
-            _ElementsToExport.Add(IfcIndex);
+            _elementsToExport.Add(ifcIndex);
 
             Regex re = new Regex(
                 "#(\\d+)" + // hash and integer index
@@ -166,13 +169,13 @@ namespace XbimXplorer.Simplify
                 );
             try
             {
-                MatchCollection mc = re.Matches(_IfcContents[IfcIndex]);
+                MatchCollection mc = re.Matches(_ifcContents[ifcIndex]);
                 foreach (Match mtch in mc)
                 {
-                    int ThisIndex = Convert.ToInt32(mtch.Groups[1].ToString());
+                    int thisIndex = Convert.ToInt32(mtch.Groups[1].ToString());
                     //if (!_ElementsToExport.Contains(ThisIndex))
                     //    _ElementsToExport.Add(ThisIndex);
-                    recursiveAdd(ThisIndex);
+                    RecursiveAdd(thisIndex);
                 }
             }
             catch
@@ -182,41 +185,41 @@ namespace XbimXplorer.Simplify
 
         private void CmdAdd_Click(object sender, RoutedEventArgs e)
         {
-            recursiveAdd(SelectedIfcIndex);
+            RecursiveAdd(SelectedIfcIndex);
             UpdateStatusCount();
         }
 
         private void UpdateStatusCount()
         {
-            _ElementsToExport.Sort();
+            _elementsToExport.Sort();
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Elements: " + _ElementsToExport.Count.ToString());
-            foreach (int i in _ElementsToExport)
+            sb.AppendLine("Elements: " + _elementsToExport.Count.ToString());
+            foreach (int i in _elementsToExport)
             {
                 try
                 {
-                    sb.AppendLine(i.ToString() + ":" + _IfcType[i]);
+                    sb.AppendLine(i.ToString() + ":" + _ifcType[i]);
                 }
                 catch
                 {
                 }
             }
-            txtOutput.Text = sb.ToString();
+            TxtOutput.Text = sb.ToString();
         }
 
         private void cmdSave_Click(object sender, RoutedEventArgs e)
         {
-            FileInfo t = new FileInfo(txtInputFile.Text + ".stripped.ifc");
-            StreamWriter Tex = t.CreateText();
+            FileInfo t = new FileInfo(TxtInputFile.Text + ".stripped.ifc");
+            StreamWriter tex = t.CreateText();
 
-            Tex.Write(_Header);
-            foreach (int i in _ElementsToExport)
+            tex.Write(_header);
+            foreach (int i in _elementsToExport)
             {
-                Tex.WriteLine(_IfcLines[i]);
+                tex.WriteLine(_ifcLines[i]);
             }
-            Tex.Write(_Footer);
-            Tex.Close();
-            txtOutput.Text = "Done";
+            tex.Write(_footer);
+            tex.Close();
+            TxtOutput.Text = "Done";
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -234,7 +237,7 @@ namespace XbimXplorer.Simplify
             if (result == true)
             {
                 // Open document 
-                txtInputFile.Text = dlg.FileName;
+                TxtInputFile.Text = dlg.FileName;
             }
         }
 

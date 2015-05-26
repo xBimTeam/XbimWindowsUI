@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using System.IO;
 using System.Linq;
-using System.Text;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.IO;
-using Xbim.ModelGeometry.Converter;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.SelectTypes;
 
 namespace Xbim.Presentation.FederatedModel
 {
@@ -18,7 +14,7 @@ namespace Xbim.Presentation.FederatedModel
     public class XbimReferencedModelViewModel : INotifyPropertyChanged
     {
         #region fields
-        XbimReferencedModel _xbimReferencedModel = null;
+        XbimReferencedModel _xbimReferencedModel;
         string _identifier = "";
         string _name = "";
         string _organisationName = "";
@@ -81,7 +77,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel != null)
                 {
-                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as Xbim.Ifc2x3.ActorResource.IfcOrganization;
+                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
                     if (organization != null)
                         return organization.Name;
                 }
@@ -91,7 +87,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel != null)
                 {
-                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as Xbim.Ifc2x3.ActorResource.IfcOrganization;
+                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
                     if (organization != null)
                     {
                         using (var tnx = ReferencedModel.DocumentInfoTransaction)
@@ -164,22 +160,19 @@ namespace Xbim.Presentation.FederatedModel
 
 		    if (string.IsNullOrWhiteSpace(Name))
                 return false;
-            else
+            string ext = Path.GetExtension(Name).ToLowerInvariant();
+            using (XbimModel refM = new XbimModel())
             {
-                string ext = System.IO.Path.GetExtension(Name).ToLowerInvariant();
-                using (XbimModel refM = new XbimModel())
+                if (ext != ".xbim")
                 {
-                    if (ext != ".xbim")
-                    {
-                        refM.CreateFrom(Name, null, null, true);
-                        var m3D = new Xbim3DModelContext(refM);
-                        m3D.CreateContext();
-                        Name = System.IO.Path.ChangeExtension(Name, "xbim");
-                    }
+                    refM.CreateFrom(Name, null, null, true);
+                    var m3D = new Xbim3DModelContext(refM);
+                    m3D.CreateContext();
+                    Name = Path.ChangeExtension(Name, "xbim");
                 }
-
-                _xbimReferencedModel = model.AddModelReference(Name, OrganisationName, OrganisationRole);
             }
+
+            _xbimReferencedModel = model.AddModelReference(Name, OrganisationName, OrganisationRole);
 
             if (_xbimReferencedModel != null)
             {

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
@@ -29,11 +26,10 @@ namespace Xbim.Presentation
 
         #region Vector3DCollection Extensions
 
-
         /// <summary>
         /// Grows a collection by the required size
         /// </summary>
-        /// <param name="pointColl"></param>
+        /// <param name="vecColl"></param>
         /// <param name="growSize"></param>
         public static Vector3DCollection GrowBy(this Vector3DCollection vecColl, int growSize)
         {
@@ -45,11 +41,10 @@ namespace Xbim.Presentation
         #endregion
         #region Int32Collection  Extensions
 
-
         /// <summary>
         /// Grows a collection by the required size
         /// </summary>
-        /// <param name="pointColl"></param>
+        /// <param name="int32Coll"></param>
         /// <param name="growSize"></param>
         public static Int32Collection GrowBy(this Int32Collection int32Coll, int growSize)
         {

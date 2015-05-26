@@ -18,12 +18,19 @@ namespace XbimXplorer
     /// </summary>
     public partial class ModelSeparation : Window
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public ModelSeparation()
         {
             InitializeComponent();
 
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:System.Windows.Window.ContentRendered"/> event.
+        /// </summary>
+        /// <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
         protected override void OnContentRendered(EventArgs e)
         {
             base.OnContentRendered(e);

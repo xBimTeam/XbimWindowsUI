@@ -1,16 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Xbim.COBie;
 
 namespace XbimXplorer.Dialogs
@@ -18,16 +9,35 @@ namespace XbimXplorer.Dialogs
     /// <summary>
     /// Interaction logic for COBieClassFilter.xaml
     /// </summary>
-    public partial class COBieClassFilter : Window
+    public partial class CoBieClassFilter
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public FilterValues DefaultFilters { get; set; } //gives us the initial list of types
+        /// <summary>
+        /// 
+        /// </summary>
         public FilterValues UserFilters { get; set; }    //hold the user required class types, as required by the user
         //collection classes holding the checkedListItem class, which in tern holds the class types to display,  ObservableCollection implement the INotifyCollectionChanged
+        /// <summary>
+        /// 
+        /// </summary>
         public ObservableCollection<CheckedListItem<Type>> ClassFilterComponent { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public ObservableCollection<CheckedListItem<Type>> ClassFilterType { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public ObservableCollection<CheckedListItem<Type>> ClassFilterAssembly { get; set; }
 
-        public COBieClassFilter(FilterValues userFilters)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userFilters"></param>
+        public CoBieClassFilter(FilterValues userFilters)
         {
             InitializeComponent();
 
@@ -50,10 +60,10 @@ namespace XbimXplorer.Dialogs
         /// <summary>
         /// Initialize the ObservableCollection's 
         /// </summary>
-        /// <param name="obsColl">ObservableCollection<CheckedListItem<Type>></param>
-        /// <param name="defaultExcludeTypes">List of Type, holding default list of class types<CheckedListItem<Type>></param>
+        /// <param name="obsColl"></param>
+        /// <param name="defaultExcludeTypes"></param>
         /// <param name="userExcludeTypes">List of Type, holding user's  list of class types</param>
-        private void InitExcludes(ObservableCollection<CheckedListItem<Type>> obsColl, List<Type> defaultExcludeTypes, List<Type> userExcludeTypes)
+        private void InitExcludes(ObservableCollection<CheckedListItem<Type>> obsColl, IEnumerable<Type> defaultExcludeTypes, List<Type> userExcludeTypes)
         {
             foreach (Type typeobj in defaultExcludeTypes)
             {

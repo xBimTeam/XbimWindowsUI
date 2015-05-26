@@ -1,42 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Xbim.IO;
+using Xbim.IO.GroupingAndStyling;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation.LayerStyling
 {
     public class LayerStylerPerEntity : ILayerStyler
     {
-        private Xbim.IO.GroupingAndStyling.EntityLabel LayerGrouper { get; set; }
+        private EntityLabel LayerGrouper { get; set; }
 
         public LayerStylerPerEntity()
         {
             UseIfcSubStyles = true;
-            LayerGrouper = new Xbim.IO.GroupingAndStyling.EntityLabel();
+            LayerGrouper = new EntityLabel();
         }
 
-        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection InputHandles)
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
         {
-            return LayerGrouper.GroupLayers(InputHandles);
+            return LayerGrouper.GroupLayers(inputHandles);
         }
 
-        public ModelGeometry.Scene.XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
+        public XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
             string layerKey, 
             XbimModel model,
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene
             )
         {
             int iLab;
-            string LayerName = layerKey;
+            string layerName = layerKey;
             bool conversionok = Int32.TryParse(layerKey, out iLab);
             if (conversionok)
             {
                 layerKey = model.Instances[iLab].GetType().Name;
             }
             XbimColour colour = scene.LayerColourMap[layerKey];
-            return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = LayerName };
+            return new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = layerName };
         }
 
         public bool UseIfcSubStyles { get; set; }

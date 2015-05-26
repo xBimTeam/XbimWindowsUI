@@ -148,7 +148,7 @@ namespace XbimXplorer
                     s.Add(item);
 
             _mruFiles = new ObservableMruList<string>(s, 4, StringComparer.InvariantCultureIgnoreCase);
-            mnuRecent.ItemsSource = _mruFiles;
+            MnuRecent.ItemsSource = _mruFiles;
         }
 
         private void AddRecentFile()
@@ -345,7 +345,7 @@ namespace XbimXplorer
             CloseAndDeleteTemporaryFiles();
 
             _openedModelFileName = modelFileName.ToLower();
-            StatusBar.Visibility = Visibility.Visible;
+            ProgressStatusBar.Visibility = Visibility.Visible;
             CreateWorker();
 
             var ext = fInfo.Extension.ToLower();
@@ -852,7 +852,7 @@ namespace XbimXplorer
 
         private void CoBieClassFilterCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            var classFilterDlg = new COBieClassFilter(UserFilters);
+            var classFilterDlg = new CoBieClassFilter(UserFilters);
             var done = classFilterDlg.ShowDialog();
             if (done.HasValue && done.Value)
             {
@@ -896,14 +896,14 @@ namespace XbimXplorer
             if (mi.IsChecked)
             {
                 CoBieTemplate = UkTemplate;
-                if (US.IsChecked)
+                if (Us.IsChecked)
                 {
-                    US.IsChecked = false;
+                    Us.IsChecked = false;
                 }
             }
             else
             {
-                US.IsChecked = true;
+                Us.IsChecked = true;
                 CoBieTemplate = UsTemplate;
             }
         }
@@ -915,14 +915,14 @@ namespace XbimXplorer
             if (mi.IsChecked)
             {
                 CoBieTemplate = UsTemplate;
-                if (UK.IsChecked)
+                if (Uk.IsChecked)
                 {
-                    UK.IsChecked = false;
+                    Uk.IsChecked = false;
                 }
             }
             else
             {
-                UK.IsChecked = true;
+                Uk.IsChecked = true;
                 CoBieTemplate = UkTemplate;
             }
         }
@@ -984,7 +984,7 @@ namespace XbimXplorer
 
         private void SetDefaultModeStyler(object sender, RoutedEventArgs e)
         {
-            DrawingControl.LayerStyler = new LayerStylerTypeAndIFCStyle();
+            DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
             DrawingControl.ReloadModel();
         }
 
@@ -996,7 +996,7 @@ namespace XbimXplorer
 
         private void SetFederationStylerType(object sender, RoutedEventArgs e)
         {
-            DrawingControl.FederationLayerStyler = new LayerStylerTypeAndIFCStyle();
+            DrawingControl.FederationLayerStyler = new LayerStylerTypeAndIfcStyle();
             DrawingControl.ReloadModel();
         }
 

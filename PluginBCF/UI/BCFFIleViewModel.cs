@@ -8,10 +8,10 @@ using System.Windows;
 
 namespace Xbim.BCF.UI
 {
-    public class BCFFIleViewModel : DependencyObject
+    public class BcffIleViewModel : DependencyObject
     {
-        public BCFFile File = new BCFFile();
-        public ObservableCollection<BCFInstance> Instances
+        public BcfFile File = new BcfFile();
+        public ObservableCollection<BcfInstance> Instances
         {
             get
             {
@@ -19,7 +19,7 @@ namespace Xbim.BCF.UI
             }
         }
 
-        public string cnt
+        public string Cnt
         {
             get
             {

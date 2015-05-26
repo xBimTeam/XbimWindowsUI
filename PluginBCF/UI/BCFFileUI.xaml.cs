@@ -19,14 +19,14 @@ namespace Xbim.BCF.UI
     /// <summary>
     /// Interaction logic for BCFFile.xaml
     /// </summary>
-    public partial class BCFFileUI : UserControl
+    public partial class BcfFileUi : UserControl
     {
-        BCFFIleViewModel _vm;
+        BcffIleViewModel _vm;
 
-        public BCFFileUI()
+        public BcfFileUi()
         {
             InitializeComponent();
-            _vm = new BCFFIleViewModel();
+            _vm = new BcffIleViewModel();
             this.DataContext = _vm;
         }
 
@@ -35,10 +35,10 @@ namespace Xbim.BCF.UI
             _vm.LoadFrom(fileName);
         }
 
-        public BCFInstance NewInstance(string InstanceName, BitmapImage img, VisualizationInfo vi)
+        public BcfInstance NewInstance(string instanceName, BitmapImage img, VisualizationInfo vi)
         {
-            BCFInstance i = new BCFInstance();
-            i.Markup.Topic.Title = InstanceName;
+            BcfInstance i = new BcfInstance();
+            i.Markup.Topic.Title = instanceName;
             if (img != null)
                 i.SnapShot = img;
             if (vi != null)
@@ -47,26 +47,26 @@ namespace Xbim.BCF.UI
             return i;
         }
 
-        public void Load(BCFFile file)
+        public void Load(BcfFile file)
         {
             _vm.File = file;
         }
 
         private void t_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (t.SelectedItem == null || !(t.SelectedItem is BCFInstance))
+            if (T.SelectedItem == null || !(T.SelectedItem is BcfInstance))
             {
                 SelInstance.Visibility = System.Windows.Visibility.Hidden;
             }
             SelInstance.Visibility = System.Windows.Visibility.Visible;
 
-            BCFInstanceViewModel vm = new BCFInstanceViewModel((BCFInstance)t.SelectedItem);
+            BcfInstanceViewModel vm = new BcfInstanceViewModel((BcfInstance)T.SelectedItem);
             this.SelInstance.DataContext = vm;
         }
 
         private void CameraEvent(object sender, MouseButtonEventArgs e)
         {
-            BCFInstanceCommands.GotoCameraPosition.Execute(null, null);
+            BcfInstanceCommands.GotoCameraPosition.Execute(null, null);
         }
 
 

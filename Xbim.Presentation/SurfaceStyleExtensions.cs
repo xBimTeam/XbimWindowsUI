@@ -15,7 +15,6 @@
 using System.Linq;
 using System.Windows.Media.Media3D;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
-using Xbim.XbimExtensions;
 
 #endregion
 
@@ -33,11 +32,8 @@ namespace Xbim.Presentation
             //need to change this to return a material group that considers all types of Styles
             IfcSurfaceStyleRendering rendering = sStyle.Styles.OfType<IfcSurfaceStyleRendering>().FirstOrDefault();
             if (rendering != null) return rendering.ToMaterial();
-            else //try the shading
-            { 
-                IfcSurfaceStyleShading shading = sStyle.Styles.OfType<IfcSurfaceStyleShading>().FirstOrDefault();
-                 if (shading != null) return shading.ToMaterial();
-            }
+            IfcSurfaceStyleShading shading = sStyle.Styles.OfType<IfcSurfaceStyleShading>().FirstOrDefault();
+            if (shading != null) return shading.ToMaterial();
             return null; //no luck
         }
 

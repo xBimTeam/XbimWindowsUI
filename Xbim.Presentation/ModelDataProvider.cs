@@ -14,16 +14,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.RepresentationResource;
-using Xbim.XbimExtensions;
-using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
 using Xbim.IO;
-using System.Windows.Data;
+using Xbim.XbimExtensions.Interfaces;
 
 #endregion
 
@@ -54,14 +49,14 @@ namespace Xbim.Presentation
             _defaultMaterials.Add("IfcBuildingElementProxy", new DiffuseMaterial(new SolidColorBrush(Colors.Snow)));
             _defaultMaterials.Add("IfcWall", new DiffuseMaterial(new SolidColorBrush(Colors.White)));
             _defaultMaterials.Add("IfcRoof", new DiffuseMaterial(new SolidColorBrush(Colors.LightSteelBlue)));
-            _defaultMaterials.Add("IfcSlab", new DiffuseMaterial(new SolidColorBrush(Colors.LightSteelBlue) { }));
+            _defaultMaterials.Add("IfcSlab", new DiffuseMaterial(new SolidColorBrush(Colors.LightSteelBlue)));
             _defaultMaterials.Add("IfcWindow", windowMaterial);
             _defaultMaterials.Add("IfcPlate", windowMaterial); 
-            _defaultMaterials.Add("IfcDoor", new DiffuseMaterial(new SolidColorBrush(Colors.CadetBlue) { }));
+            _defaultMaterials.Add("IfcDoor", new DiffuseMaterial(new SolidColorBrush(Colors.CadetBlue)));
             _defaultMaterials.Add("IfcStair",
                                   new DiffuseMaterial(new SolidColorBrush(Colors.Wheat)));
-            _defaultMaterials.Add("IfcBeam", new DiffuseMaterial(new SolidColorBrush(Colors.LightSlateGray) { }));
-            _defaultMaterials.Add("IfcColumn", new DiffuseMaterial(new SolidColorBrush(Colors.LightSlateGray) { }));
+            _defaultMaterials.Add("IfcBeam", new DiffuseMaterial(new SolidColorBrush(Colors.LightSlateGray)));
+            _defaultMaterials.Add("IfcColumn", new DiffuseMaterial(new SolidColorBrush(Colors.LightSlateGray)));
             _defaultMaterials.Add("IfcFurnishingElement",
                                   new DiffuseMaterial(new SolidColorBrush(Colors.WhiteSmoke) {Opacity = 0.7}));
             _defaultMaterials.Add("IfcDistributionFlowElement",
@@ -74,7 +69,7 @@ namespace Xbim.Presentation
                                   new DiffuseMaterial(new SolidColorBrush(Colors.IndianRed) { Opacity = 1.0 }));
             _defaultMaterials.Add("IfcSpace", new DiffuseMaterial(new SolidColorBrush(Colors.Red) {Opacity = 0.4}));
     
-            _defaultMaterials.Add("IfcRailing", new DiffuseMaterial(new SolidColorBrush(Colors.Goldenrod) {  }));
+            _defaultMaterials.Add("IfcRailing", new DiffuseMaterial(new SolidColorBrush(Colors.Goldenrod)));
             _defaultMaterials.Add("IfcOpeningElement", new DiffuseMaterial(new SolidColorBrush(Colors.Red) { Opacity = 0.4 }));
         }
 
@@ -107,8 +102,7 @@ namespace Xbim.Presentation
         {
             if (obj != null)
                 return GetDefaultMaterial(obj.GetType().Name);
-            else
-                return null;
+            return null;
         }
 
         public static XbimMaterialProvider GetDefaultMaterial(Type entityType)
@@ -145,11 +139,11 @@ namespace Xbim.Presentation
         {
             get 
             {
-                return (XbimModel)this.ObjectInstance;
+                return (XbimModel)ObjectInstance;
             }
             set
             {
-                this.ObjectInstance = value;
+                ObjectInstance = value;
                 //NotifyPropertyChanged("Model");
             }
         }

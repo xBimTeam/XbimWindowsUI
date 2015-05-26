@@ -48,10 +48,12 @@ namespace Xbim.Presentation
             get { return _backgroundMaterialBinding; }
             
         }
+
         /// <summary>
         ///   Sets face and background Material to material
         /// </summary>
         /// <param name = "material"></param>
+        /// <param name="transparent"></param>
         public XbimMaterialProvider(Material material, bool transparent = false)
         {
             FaceMaterial = material;

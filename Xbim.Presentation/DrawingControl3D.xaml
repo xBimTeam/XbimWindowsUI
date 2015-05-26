@@ -32,7 +32,7 @@
         -->
         <helixToolkit:MeshVisual3D x:Name="TransHighlighted" EdgeDiameter="0"  VertexRadius="0"></helixToolkit:MeshVisual3D>
 
-        <helixToolkit:CuttingPlaneGroup x:Name="cuttingGroup" IsEnabled="False">
+        <helixToolkit:CuttingPlaneGroup x:Name="CuttingGroup" IsEnabled="False">
             <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                 <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
@@ -42,7 +42,7 @@
         
         <extensions:ObservableMeshVisual3D x:Name="Highlighted" EdgeDiameter="0"  VertexRadius="0"></extensions:ObservableMeshVisual3D>
 
-        <helixToolkit:CuttingPlaneGroup x:Name="cuttingGroupT" IsEnabled="False">
+        <helixToolkit:CuttingPlaneGroup x:Name="CuttingGroupT" IsEnabled="False">
             <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                 <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>

@@ -18,7 +18,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
 {
     class ValidationResultStyler : ILayerStylerV2
     {
-        private WpfMeshGeometry3D prepareMesh(XbimColour col)
+        private WpfMeshGeometry3D PrepareMesh(XbimColour col)
         {
             var matRed = new WpfMaterial();
             matRed.CreateMaterial(col);
@@ -32,12 +32,12 @@ namespace XbimXplorer.Plugins.DPoWValidation
 
             var retScene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             
-            var Red = prepareMesh(new XbimColour("Red", 1.0, 0.0, 0.0));
-            var Green = prepareMesh(new XbimColour("Green", 0.0, 1.0, 0.0));
-            var Amber =prepareMesh(new XbimColour("Amber", 0.0, 0.0, 1.0, 0.9));
-            tmpOpaquesGroup.Children.Add(Red);
-            tmpOpaquesGroup.Children.Add(Green);
-            tmpOpaquesGroup.Children.Add(Amber);
+            var red = PrepareMesh(new XbimColour("Red", 1.0, 0.0, 0.0));
+            var green = PrepareMesh(new XbimColour("Green", 0.0, 1.0, 0.0));
+            var amber =PrepareMesh(new XbimColour("Amber", 0.0, 0.0, 1.0, 0.9));
+            tmpOpaquesGroup.Children.Add(red);
+            tmpOpaquesGroup.Children.Add(green);
+            tmpOpaquesGroup.Children.Add(amber);
 
 
             int i = 0;
@@ -53,13 +53,13 @@ namespace XbimXplorer.Plugins.DPoWValidation
                 switch (i++%3)
                 {
                     case 0:
-                        targetMergeMesh = Red;
+                        targetMergeMesh = red;
                         break;
                     case 1:
-                        targetMergeMesh = Green;
+                        targetMergeMesh = green;
                         break;
                     default:
-                        targetMergeMesh = Amber;
+                        targetMergeMesh = amber;
                         break;
                 }
 

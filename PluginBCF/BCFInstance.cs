@@ -8,15 +8,15 @@ using System.Windows.Media.Imaging;
 
 namespace Xbim.BCF
 {
-    public class BCFInstance
+    public class BcfInstance
     {
-        public BCFInstance()
+        public BcfInstance()
         {
             Markup = new Markup();
-            Markup.Topic.Guid = guid;
+            Markup.Topic.Guid = Guid;
         }
 
-        public BCFInstance(string guid)
+        public BcfInstance(string guid)
         {
             Markup = new Markup();
             Markup.Topic.Guid = guid;
@@ -30,7 +30,7 @@ namespace Xbim.BCF
             }
         }
 
-        public string guid
+        public string Guid
         {
             get {
                 return Markup.Topic.Guid;

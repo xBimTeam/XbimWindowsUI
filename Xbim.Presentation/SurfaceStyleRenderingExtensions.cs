@@ -17,8 +17,7 @@ using System.Windows.Media.Media3D;
 using Xbim.Ifc2x3.MeasureResource;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc2x3.PresentationResource;
-using Xbim.XbimExtensions;
-using Xbim.Ifc2x3.Extensions;
+
 #endregion
 
 namespace Xbim.Presentation
@@ -66,10 +65,7 @@ namespace Xbim.Presentation
                 Material mat = grp.Children[0];
                 return mat;
             }
-            else
-            {
-                return grp;
-            }
+            return grp;
         }
     }
 }

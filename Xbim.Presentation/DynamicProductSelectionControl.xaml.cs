@@ -1,23 +1,15 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.CSharp;
-using System.CodeDom.Compiler;
-using System.Reflection;
-using Xbim.IO;
-using Xbim.Ifc2x3.Kernel;
 using Microsoft.Win32;
-using System.IO;
+using Xbim.Ifc2x3.Kernel;
+using Xbim.IO;
 using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation
@@ -31,11 +23,11 @@ namespace Xbim.Presentation
         public DynamicProductSelectionControl()
         {
             InitializeComponent();
-            txtCode.Text = CodeTemplate;
+            TxtCode.Text = _codeTemplate;
         }
 
         #region Code skeleton
-        private string CodeSkeleton1 = @"
+        private string _codeSkeleton1 = @"
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -107,7 +99,7 @@ namespace DynamicQuery
         }
             ";
 
-        string CodeTemplate =
+        string _codeTemplate =
 @"//This will perform selection of the objects. 
 //Selected objects with the geometry will be highlighted
 public IEnumerable<IfcProduct> Select(IModel model)
@@ -134,7 +126,7 @@ public void Execute(IModel model)
 }
 ";
 
-        string CodeSkeleton2 =
+        string _codeSkeleton2 =
 @"
     }
 }
@@ -233,7 +225,7 @@ public void Execute(IModel model)
                 return;
             }
 
-            string code = txtCode.Text;
+            string code = TxtCode.Text;
             if (String.IsNullOrEmpty(code) || String.IsNullOrWhiteSpace(code))
             {
                 MessageBox.Show("You have to insert some C# code.", "Message", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -262,7 +254,7 @@ public void Execute(IModel model)
             compilerParams.ReferencedAssemblies.Add("Xbim.Ifc.Extensions.dll");
 
             //get the code together
-            string source = CodeSkeleton1 + code + CodeSkeleton2;
+            string source = _codeSkeleton1 + code + _codeSkeleton2;
             //compile the source
             CompilerResults results = provider.CompileAssemblyFromSource(compilerParams, source);
 
@@ -274,7 +266,7 @@ public void Execute(IModel model)
                 {
                     errors.AppendFormat("Line {0},{1}\t: {2}\n", error.Line, error.Column, error.ErrorText);
                 }
-                MessageBox.Show("Compilation of your code has failed. \n" + errors.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Compilation of your code has failed. \n" + errors, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -282,9 +274,9 @@ public void Execute(IModel model)
             object o = results.CompiledAssembly.CreateInstance("DynamicQuery.Query");
             if (o == null)
                 throw new Exception("Compiled code does not contain class DynamicQuery.Query");
-            MethodInfo miSelect = o.GetType().GetMethod("Select", new Type[] { typeof(IModel) });
-            MethodInfo miShowOnly = o.GetType().GetMethod("ShowOnly", new Type[] { typeof(IModel) });
-            MethodInfo miExecute = o.GetType().GetMethod("Execute", new Type[] { typeof(IModel) });
+            MethodInfo miSelect = o.GetType().GetMethod("Select", new[] { typeof(IModel) });
+            MethodInfo miShowOnly = o.GetType().GetMethod("ShowOnly", new[] { typeof(IModel) });
+            MethodInfo miExecute = o.GetType().GetMethod("Execute", new[] { typeof(IModel) });
             MethodInfo miOutput = o.GetType().GetMethod("GetOutput");
             
 
@@ -336,14 +328,14 @@ public void Execute(IModel model)
 
             //get messages from the compiled code
             string msg = miOutput.Invoke(o, null) as string;
-            txtOutput.Text += msg;
-            txtOutput.ScrollToEnd();
+            TxtOutput.Text += msg;
+            TxtOutput.ScrollToEnd();
 
         }
 
         private void btnDefault_Click(object sender, RoutedEventArgs e)
         {
-            txtCode.Text = CodeTemplate;
+            TxtCode.Text = _codeTemplate;
 
         }
 
@@ -357,7 +349,7 @@ public void Execute(IModel model)
             dlg.ValidateNames = true;
             if (dlg.ShowDialog() == true)
             {
-                txtCode.Text = File.ReadAllText(dlg.FileName);
+                TxtCode.Text = File.ReadAllText(dlg.FileName);
             }
 
         }
@@ -374,7 +366,7 @@ public void Execute(IModel model)
             {
                 Stream file = dlg.OpenFile();
                 TextWriter wr = new StreamWriter(file);
-                wr.Write(txtCode.Text);
+                wr.Write(TxtCode.Text);
                 wr.Close();
                 file.Close();
             }
@@ -393,7 +385,7 @@ public void Execute(IModel model)
             {
                 Stream file = dlg.OpenFile();
                 TextWriter wr = new StreamWriter(file);
-                wr.Write(txtOutput.Text);
+                wr.Write(TxtOutput.Text);
                 wr.Close();
                 file.Close();
             }

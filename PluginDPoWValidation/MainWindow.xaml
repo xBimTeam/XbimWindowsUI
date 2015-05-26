@@ -10,7 +10,7 @@
                 Height="22" Width="200" HorizontalAlignment="Center" Grid.Row="0" 
                 Visibility="{Binding OpenButtonVisibility}" />
         
-        <Grid x:Name="UI" Visibility="{Binding UIVisibility}" >
+        <Grid x:Name="Ui" Visibility="{Binding UIVisibility}" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="7*" />
                 <RowDefinition Height="5*" />
@@ -50,7 +50,7 @@
                 </TabItem>
             </TabControl>
             <GridSplitter Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="5"/>
-            <TextBox Margin="5" x:Name="report" TextWrapping="Wrap" Text="" Grid.Row="1" />
+            <TextBox Margin="5" x:Name="Report" TextWrapping="Wrap" Text="" Grid.Row="1" />
         </Grid>
     </Grid>
 </UserControl>

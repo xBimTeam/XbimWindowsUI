@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 
@@ -15,6 +12,6 @@ namespace Xbim.Presentation.LayerStylingV2
 
         DrawingControl3D Control { get; set; }
 
-        void SetFederationEnvironment(IO.XbimReferencedModel refModel);
+        void SetFederationEnvironment(XbimReferencedModel refModel);
     }
 }

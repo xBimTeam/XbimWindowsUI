@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 using Xbim.IO.GroupingAndStyling;
 using Xbim.ModelGeometry.Scene;
@@ -14,45 +15,45 @@ namespace Xbim.Presentation.LayerStyling
     /// Demo layer styler for xBim Explorer in WPF.
     /// It's invoked through the Querying window.
     /// </summary>
-    public class LayerStylerTypeAndIFCStyleExtended : ILayerStyler, IGeomHandlesGrouping
+    public class LayerStylerTypeAndIfcStyleExtended : ILayerStyler, IGeomHandlesGrouping
     {
-        HashSet<int> LightTransparentEntities;
-        HashSet<Type> LightTransparentTypes;
+        HashSet<int> _lightTransparentEntities;
+        HashSet<Type> _lightTransparentTypes;
 
-        HashSet<int> HiddenEntities;
-        HashSet<Type> HiddenTypes; 
+        HashSet<int> _hiddenEntities;
+        HashSet<Type> _hiddenTypes; 
 
-        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection InputHandles)
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
         {
             // creates a new dictionary and then fills it by type enumerating the known non-abstract subtypes of Product
             Dictionary<string, XbimGeometryHandleCollection> result = new Dictionary<string, XbimGeometryHandleCollection>();
 
             // prepares transparents first
             HashSet<short> traspTypes = new HashSet<short>();
-            foreach (var ttp in LightTransparentTypes)
+            foreach (var ttp in _lightTransparentTypes)
             {
                 traspTypes.Add(IfcMetaData.IfcTypeId(ttp));
             }
             XbimGeometryHandleCollection transp = new XbimGeometryHandleCollection(
-                    InputHandles.Where(g =>
+                    inputHandles.Where(g =>
                         traspTypes.Contains(g.IfcTypeId)
                         ||
-                        LightTransparentEntities.Contains(g.ProductLabel)
+                        _lightTransparentEntities.Contains(g.ProductLabel)
                         )
                     );
             result.Add("_LightBlueTransparent", transp);
 
             // deal with ignore elements
-            HashSet<short> HiddTypes = new HashSet<short>();
-            foreach (var htp in HiddenTypes)
+            HashSet<short> hiddTypes = new HashSet<short>();
+            foreach (var htp in _hiddenTypes)
             {
-                HiddTypes.Add(IfcMetaData.IfcTypeId(htp));
+                hiddTypes.Add(IfcMetaData.IfcTypeId(htp));
             }
             XbimGeometryHandleCollection hidd = new XbimGeometryHandleCollection(
-                    InputHandles.Where(g =>
-                        HiddTypes.Contains(g.IfcTypeId)
+                    inputHandles.Where(g =>
+                        hiddTypes.Contains(g.IfcTypeId)
                         ||
-                        HiddenEntities.Contains(g.ProductLabel)
+                        _hiddenEntities.Contains(g.ProductLabel)
                         )
                     );
 
@@ -63,7 +64,7 @@ namespace Xbim.Presentation.LayerStyling
             {
                 short ifcTypeId = IfcMetaData.IfcTypeId(subType);
                 XbimGeometryHandleCollection handles = new XbimGeometryHandleCollection(
-                    InputHandles.Where(g => 
+                    inputHandles.Where(g => 
                         g.IfcTypeId == ifcTypeId
                         &&
                         !(transp.Contains(g))
@@ -84,7 +85,7 @@ namespace Xbim.Presentation.LayerStyling
         /// <summary>
         /// Default initialisation
         /// </summary>
-        public LayerStylerTypeAndIFCStyleExtended()
+        public LayerStylerTypeAndIfcStyleExtended()
         {
             UseIfcSubStyles = false;
             Initialise();
@@ -94,21 +95,21 @@ namespace Xbim.Presentation.LayerStyling
         private void Initialise()
         {
             _colours = new XbimColourMap(StandardColourMaps.IfcProductTypeMap);
-            LightTransparentEntities = new HashSet<int>();
-            LightTransparentTypes = new HashSet<Type>();
-            HiddenEntities = new HashSet<int>();
-            HiddenTypes = new HashSet<Type>();
+            _lightTransparentEntities = new HashSet<int>();
+            _lightTransparentTypes = new HashSet<Type>();
+            _hiddenEntities = new HashSet<int>();
+            _hiddenTypes = new HashSet<Type>();
         }
 
         private void SetDefaults()
         {
             _colours.Add(new XbimColour("_LightBlueTransparent", 0, 0, 1, 0.5));
-            LightTransparentTypes.Add(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall));
-            LightTransparentTypes.Add(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWallStandardCase));
-            HiddenTypes.Add(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcColumn));
+            _lightTransparentTypes.Add(typeof(IfcWall));
+            _lightTransparentTypes.Add(typeof(IfcWallStandardCase));
+            _hiddenTypes.Add(typeof(IfcColumn));
         }
         
-        public ModelGeometry.Scene.XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
+        public XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
             string layerKey, 
             XbimModel model,
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene
@@ -143,9 +144,9 @@ namespace Xbim.Presentation.LayerStyling
 
                 if (selection == "set") // selection type
                 {
-                    var dest = LightTransparentTypes;
+                    var dest = _lightTransparentTypes;
                     if (action == "hide")
-                        dest = HiddenTypes;
+                        dest = _hiddenTypes;
                     foreach (var item in entitySelection)
                     {
                         if (!dest.Contains(item.GetType()))
@@ -156,9 +157,9 @@ namespace Xbim.Presentation.LayerStyling
                 }
                 if (selection == "se") // selection items
                 {
-                    var dest = LightTransparentEntities;
+                    var dest = _lightTransparentEntities;
                     if (action == "hide")
-                        dest = HiddenEntities;
+                        dest = _hiddenEntities;
                     foreach (var item in entitySelection)
                     {
                         int i = Math.Abs(item.EntityLabel);

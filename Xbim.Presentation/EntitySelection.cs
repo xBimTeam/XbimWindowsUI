@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections;
-using Xbim.XbimExtensions.Interfaces;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using Xbim.Common.XbimExtensions;
+using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -17,15 +14,15 @@ namespace Xbim.Presentation
     {
         private List<SelectionEvent> _selectionLog;
         private XbimIPersistIfcEntityCollection<IPersistIfcEntity> _selection = new XbimIPersistIfcEntityCollection<IPersistIfcEntity>();
-        private int position = -1;
+        private int _position = -1;
 
         /// <summary>
         /// Initialises an empty selection;
         /// </summary>
-        /// <param name="KeepLogging">Set to True to enable activity logging for undo/redo operations.</param>
-        public EntitySelection(bool KeepLogging = false)
+        /// <param name="keepLogging">Set to True to enable activity logging for undo/redo operations.</param>
+        public EntitySelection(bool keepLogging = false)
         {
-            if (KeepLogging)
+            if (keepLogging)
                 _selectionLog = new List<SelectionEvent>();
         }
 
@@ -33,10 +30,10 @@ namespace Xbim.Presentation
         {
             if (_selectionLog == null)
                 return;
-            if (position >= 0)
+            if (_position >= 0)
             {
-                RollBack(_selectionLog[position]);
-                position--;
+                RollBack(_selectionLog[_position]);
+                _position--;
             }
         }
 
@@ -44,10 +41,10 @@ namespace Xbim.Presentation
         {
             if (_selectionLog == null)
                 return;
-            if (position < _selectionLog.Count - 1)
+            if (_position < _selectionLog.Count - 1)
             { 
-                position++;
-                RollForward(_selectionLog[position]);
+                _position++;
+                RollForward(_selectionLog[_position]);
             }
         }
 
@@ -55,13 +52,11 @@ namespace Xbim.Presentation
         {
             switch (e.Action)
             {
-                case Action.ADD:
+                case Action.Add:
                     RemoveRange(e.Entities);
                     break;
-                case Action.REMOVE:
+                case Action.Remove:
                     AddRange(e.Entities);
-                    break;
-                default:
                     break;
             }
         }
@@ -70,13 +65,11 @@ namespace Xbim.Presentation
         {
             switch (e.Action)
             {
-                case Action.ADD:
+                case Action.Add:
                     AddRange(e.Entities);
                     break;
-                case Action.REMOVE:
+                case Action.Remove:
                     RemoveRange(e.Entities);
-                    break;
-                default:
                     break;
             }
         }
@@ -119,7 +112,7 @@ namespace Xbim.Presentation
         {
             if (entity == null)
                 return;
-            Add(new IPersistIfcEntity[] { entity });
+            Add(new[] { entity });
         }
 
         public void Add(IEnumerable<IPersistIfcEntity> entity)
@@ -127,13 +120,13 @@ namespace Xbim.Presentation
             IEnumerable<IPersistIfcEntity> check = AddRange(entity);
             if (_selectionLog == null)
                 return;
-            _selectionLog.Add(new SelectionEvent() { Action = Action.ADD, Entities = check });
+            _selectionLog.Add(new SelectionEvent { Action = Action.Add, Entities = check });
             ResetLog();
         }
 
         public void Remove(IPersistIfcEntity entity)
         {
-            Remove(new IPersistIfcEntity[] { entity });
+            Remove(new[] { entity });
         }
 
         public void Remove(IEnumerable<IPersistIfcEntity> entity)
@@ -143,25 +136,25 @@ namespace Xbim.Presentation
             IEnumerable<IPersistIfcEntity> check = RemoveRange(entity);
             if (_selectionLog == null)
                 return;
-            _selectionLog.Add(new SelectionEvent() { Action = Action.REMOVE, Entities = check });
+            _selectionLog.Add(new SelectionEvent { Action = Action.Remove, Entities = check });
             ResetLog();
         }
 
         private void ResetLog()
         {
-            if (position == _selectionLog.Count - 2) 
-                position = _selectionLog.Count - 1; //normal transaction
-            if (position < _selectionLog.Count - 2) //there were undo/redo operations and action inbetween must be discarded
+            if (_position == _selectionLog.Count - 2) 
+                _position = _selectionLog.Count - 1; //normal transaction
+            if (_position < _selectionLog.Count - 2) //there were undo/redo operations and action inbetween must be discarded
             {
-                _selectionLog.RemoveRange(position + 1, _selectionLog.Count - 2);
-                position = _selectionLog.Count - 1;
+                _selectionLog.RemoveRange(_position + 1, _selectionLog.Count - 2);
+                _position = _selectionLog.Count - 1;
             }
         }
 
         private enum Action
         {
-            ADD,
-            REMOVE
+            Add,
+            Remove
         }
 
         private struct SelectionEvent
@@ -190,7 +183,7 @@ namespace Xbim.Presentation
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return (IEnumerator)GetEnumerator();
+            return GetEnumerator();
         }
 
         /// <summary>
@@ -202,14 +195,11 @@ namespace Xbim.Presentation
         {
             if (_selection.Contains(item))
             {
-                this.Remove(item);
+                Remove(item);
                 return false;
             }
-            else
-            {
-                this.Add(item);
-                return true;
-            }
+            Add(item);
+            return true;
         }
 
         internal void Clear()
@@ -218,7 +208,7 @@ namespace Xbim.Presentation
             //
             IPersistIfcEntity[] t = new IPersistIfcEntity[_selection.Count];
             _selection.CopyTo(t, 0);
-            this.RemoveRange(t);
+            RemoveRange(t);
         }
     }
 }

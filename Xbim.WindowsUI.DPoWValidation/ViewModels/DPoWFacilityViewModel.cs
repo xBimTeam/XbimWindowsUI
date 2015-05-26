@@ -12,11 +12,11 @@ using Xbim.WindowsUI.DPoWValidation.Properties;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
-    public class DPoWFacilityViewModel: INotifyPropertyChanged
+    public class DpoWFacilityViewModel: INotifyPropertyChanged
     {
         private readonly Facility _model;
 
-        public DPoWFacilityViewModel()
+        public DpoWFacilityViewModel()
         { }
 
         public ObservableCollection<string> AvailableClassifications { get; private set; }
@@ -37,7 +37,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         public FacilitySaveCommand SaveCommand { get; private set; }
 
-        public DPoWFacilityViewModel(Facility model)
+        public DpoWFacilityViewModel(Facility model)
         {
             _model = model;
             if (_model == null)

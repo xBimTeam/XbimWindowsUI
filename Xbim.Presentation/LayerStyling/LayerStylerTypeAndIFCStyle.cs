@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using Xbim.IO;
+using Xbim.IO.GroupingAndStyling;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation.LayerStyling
@@ -10,30 +8,30 @@ namespace Xbim.Presentation.LayerStyling
     /// <summary>
     /// Default layer styler for xBim Explorer in WPF
     /// </summary>
-    public class LayerStylerTypeAndIFCStyle : ILayerStyler
+    public class LayerStylerTypeAndIfcStyle : ILayerStyler
     {
         /// <summary>
         /// Default initialisation
         /// </summary>
-        public LayerStylerTypeAndIFCStyle()
+        public LayerStylerTypeAndIfcStyle()
         {
             UseIfcSubStyles = true;
-            _LayerGrouper = new Xbim.IO.GroupingAndStyling.TypeAndStyle();
+            LayerGrouper = new TypeAndStyle();
         }
 
         /// <summary>
         /// this private member takes care of handling the IGeomHandlesGrouping interface
         /// </summary>
-        private Xbim.IO.GroupingAndStyling.TypeAndStyle _LayerGrouper { get; set; }
+        private TypeAndStyle LayerGrouper { get; set; }
 
         // redirects the grouping requirement to the style using the LayerGrouper
-        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection InputHandles)
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
         {
-            return _LayerGrouper.GroupLayers(InputHandles);
+            return LayerGrouper.GroupLayers(inputHandles);
         }
 
 
-        public ModelGeometry.Scene.XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
+        public XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
             string layerKey, 
             XbimModel model,
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene

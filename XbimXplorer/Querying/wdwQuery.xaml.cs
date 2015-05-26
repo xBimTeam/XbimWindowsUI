@@ -32,6 +32,9 @@ namespace XbimXplorer.Querying
     /// </summary>
     public partial class WdwQuery : IXbimXplorerPluginWindow
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public WdwQuery()
         {
             InitializeComponent();
@@ -44,7 +47,7 @@ namespace XbimXplorer.Querying
                 using (var reader = File.OpenText(fname))
                 {
                     var read = reader.ReadToEnd();
-                    txtCommand.Text = read;
+                    TxtCommand.Text = read;
                 }
             }
 #endif
@@ -65,7 +68,7 @@ namespace XbimXplorer.Querying
                 var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
                 using (var writer = File.CreateText(fname))
                 {
-                    writer.Write(txtCommand.Text);
+                    writer.Write(TxtCommand.Text);
                     writer.Flush();
                     writer.Close();
                 }
@@ -73,11 +76,11 @@ namespace XbimXplorer.Querying
 
                 e.Handled = true;
                 if (_bDoClear)
-                    txtOut.Document = new FlowDocument();
+                    TxtOut.Document = new FlowDocument();
 
-                var commandArray = txtCommand.Text.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
-                if (txtCommand.SelectedText != string.Empty)
-                    commandArray = txtCommand.SelectedText.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+                var commandArray = TxtCommand.Text.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+                if (TxtCommand.SelectedText != string.Empty)
+                    commandArray = TxtCommand.SelectedText.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var cmdF in commandArray)
                 {
@@ -131,7 +134,7 @@ namespace XbimXplorer.Querying
 
                             if (option == "")
                             {
-                                txtOut.Document = new FlowDocument();
+                                TxtOut.Document = new FlowDocument();
                                 continue;
                             }
                             if (option == "on")
@@ -150,7 +153,7 @@ namespace XbimXplorer.Querying
                         catch
                         {
                         }
-                        txtOut.Document = new FlowDocument();
+                        TxtOut.Document = new FlowDocument();
                         continue;
                     }
 
@@ -308,7 +311,7 @@ namespace XbimXplorer.Querying
                     if (m.Success)
                     {
                         var start = m.Groups["entities"].Value;
-                        IEnumerable<int> labels = toIntarray(start, ',');
+                        IEnumerable<int> labels = ToIntarray(start, ',');
                         if (labels.Count() > 0)
                         {
                             _parentWindow.DrawingControl.LoadGeometry(Model, labels);
@@ -326,7 +329,7 @@ namespace XbimXplorer.Querying
                     {
                         var start = m.Groups["entities"].Value;
                         var mode = m.Groups["mode"].Value;
-                        IEnumerable<int> labels = toIntarray(start, ',');
+                        IEnumerable<int> labels = ToIntarray(start, ',');
                         foreach (var item in labels)
                         {
                             ReportAdd("Geometry for: " + item, Brushes.Green);
@@ -373,7 +376,7 @@ namespace XbimXplorer.Querying
                         if (highlightT != "")
                             highlight = true;
 
-                        IEnumerable<int> labels = toIntarray(start, ',');
+                        IEnumerable<int> labels = ToIntarray(start, ',');
                         IEnumerable<int> ret = null;
                         if (!labels.Any())
                         {
@@ -386,7 +389,7 @@ namespace XbimXplorer.Querying
                                 // the syntax could be IfcWall[10]
                                 var sbi = new SquareBracketIndexer(submatch.Groups[1].Value);
                                 IEnumerable<int> thisLabels = QueryEngine.EntititesForType(sbi.Property, Model);
-                                thisLabels = sbi.getItem(thisLabels);
+                                thisLabels = sbi.GetItem(thisLabels);
                                 labels = modeAdd
                                     ? labels.Concat(thisLabels)
                                     : labels.Where(t => !thisLabels.Contains(t));
@@ -421,7 +424,7 @@ namespace XbimXplorer.Querying
                                 var svtB = (svt != "");
                                 foreach (var item in ret)
                                 {
-                                    ReportAdd(ReportEntity(item, 0, Verbose: beVerbose, showValueType: svtB));
+                                    ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
                                 }
                                 break;
                         }
@@ -456,11 +459,11 @@ namespace XbimXplorer.Querying
                             var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
                             var tC = mcp.Transform(reg.Centre);
                             var tS = mcp.Transform(reg.Size);
-                            var r3d = new XbimRect3D(
+                            var r3D = new XbimRect3D(
                                 tC.X - tS.X/2, tC.Y - tS.Y/2, tC.Z - tS.Z/2,
                                 tS.X, tS.X, tS.Z
                                 );
-                            _parentWindow.DrawingControl.ZoomTo(r3d);
+                            _parentWindow.DrawingControl.ZoomTo(r3D);
                             _parentWindow.Activate();
                             continue;
                         }
@@ -566,7 +569,7 @@ namespace XbimXplorer.Querying
                     m = Regex.Match(cmd, @"^Styler (?<command>.+)", RegexOptions.IgnoreCase);
                     if (m.Success)
                     {
-                        var st = _parentWindow.DrawingControl.LayerStyler as LayerStylerTypeAndIFCStyleExtended;
+                        var st = _parentWindow.DrawingControl.LayerStyler as LayerStylerTypeAndIfcStyleExtended;
                         if (st != null)
                         {
                             var command = m.Groups["command"].Value;
@@ -607,7 +610,7 @@ namespace XbimXplorer.Querying
                             if (t == "type")
                             {
                                 ReportAdd("Visual mode set to EntityType.");
-                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIFCStyle();
+                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
                                 _parentWindow.DrawingControl.ReloadModel(
                                     options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
@@ -628,7 +631,7 @@ namespace XbimXplorer.Querying
                             else if (t == "demo")
                             {
                                 ReportAdd("Visual mode set to Demo.");
-                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIFCStyleExtended();
+                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyleExtended();
                                 _parentWindow.DrawingControl.ReloadModel(
                                     options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
                             }
@@ -668,7 +671,7 @@ namespace XbimXplorer.Querying
 
         private void ReportAdd(TextHighliter th)
         {
-            th.DropInto(txtOut.Document);
+            th.DropInto(TxtOut.Document);
             th.Clear();
         }
 
@@ -679,10 +682,10 @@ namespace XbimXplorer.Querying
             {
                 newP.Foreground = inColor;
             }
-            txtOut.Document.Blocks.Add(newP);
+            TxtOut.Document.Blocks.Add(newP);
         }
 
-        private int[] toIntarray(string value, char sep)
+        private int[] ToIntarray(string value, char sep)
         {
             var sa = value.Split(new[] {sep}, StringSplitOptions.RemoveEmptyEntries);
             var ia = new List<int>();
@@ -799,7 +802,7 @@ namespace XbimXplorer.Querying
             t.AppendFormat("double slash (//) are the comments token and the remainder of lines is ignored.");
             t.AppendFormat("If a portion of text is selected, only selected text will be executed.");
 
-            t.DropInto(txtOut.Document);
+            t.DropInto(TxtOut.Document);
 
         }
 
@@ -1032,9 +1035,9 @@ namespace XbimXplorer.Querying
                     }
                 }
 
-                var ExistingIF = selectType.GetInterfaces();
-                sb.AppendFormat(indentationHeader + "Interfaces: {0}", ExistingIF.Length);
-                foreach (var item in ExistingIF)
+                var existingIf = selectType.GetInterfaces();
+                sb.AppendFormat(indentationHeader + "Interfaces: {0}", existingIf.Length);
+                foreach (var item in existingIf)
                 {
                     sb.AppendFormat(indentationHeader + "- {0}", item.Name);
                 }
@@ -1043,7 +1046,7 @@ namespace XbimXplorer.Querying
                 {
                     if (commontIf[i] == selectType)
                         commontIf[i] = null;
-                    if (ExistingIF.Contains(commontIf[i]))
+                    if (existingIf.Contains(commontIf[i]))
                     {
                         commontIf[i] = null;
                     }
@@ -1067,60 +1070,60 @@ namespace XbimXplorer.Querying
             return sb;
         }
 
-        private void ChildTree(IfcType ot, TextHighliter sb, string indentationHeader, int Indent)
+        private void ChildTree(IfcType ot, TextHighliter sb, string indentationHeader, int indent)
         {
-            var sSpace = new string(' ', Indent*2);
+            var sSpace = new string(' ', indent*2);
             // sSpace = sSpace.Replace(new string[] { " " }, "  ");
             foreach (var item in ot.IfcSubTypes)
             {
                 var isAbstract = item.Type.IsAbstract ? " (abstract)" : "";
                 sb.AppendFormat(indentationHeader + sSpace + "- {0} {1}", item, isAbstract);
-                ChildTree(item, sb, indentationHeader, Indent + 1);
+                ChildTree(item, sb, indentationHeader, indent + 1);
             }
         }
 
-        private TextHighliter ReportEntity(int EntityLabel, int RecursiveDepth = 0, int IndentationLevel = 0,
-            bool Verbose = false, bool showValueType = false)
+        private TextHighliter ReportEntity(int entityLabel, int recursiveDepth = 0, int indentationLevel = 0,
+            bool verbose = false, bool showValueType = false)
         {
             // Debug.WriteLine("EL: " + EntityLabel.ToString());
             var sb = new TextHighliter();
-            var IndentationHeader = new String('\t', IndentationLevel);
+            var indentationHeader = new String('\t', indentationLevel);
             try
             {
-                var entity = Model.Instances[EntityLabel];
+                var entity = Model.Instances[entityLabel];
                 if (entity != null)
                 {
                     var ifcType = IfcMetaData.IfcType(entity);
 
                     sb.Append(
-                        string.Format(IndentationHeader + "=== {0} [#{1}]", ifcType, EntityLabel),
+                        string.Format(indentationHeader + "=== {0} [#{1}]", ifcType, entityLabel),
                         Brushes.Blue
                         );
                     var props = ifcType.IfcProperties.Values;
                     if (props.Count > 0)
-                        sb.AppendFormat(IndentationHeader + "Properties: {0}", props.Count);
+                        sb.AppendFormat(indentationHeader + "Properties: {0}", props.Count);
                     foreach (var prop in props)
                     {
-                        var PropLabels = ReportProp(sb, IndentationHeader, entity, prop, Verbose, showValueType);
+                        var propLabels = ReportProp(sb, indentationHeader, entity, prop, verbose, showValueType);
 
-                        foreach (var PropLabel in PropLabels)
+                        foreach (var propLabel in propLabels)
                         {
                             if (
-                                PropLabel != EntityLabel &&
-                                (RecursiveDepth > 0 || RecursiveDepth < 0)
-                                && PropLabel != 0
+                                propLabel != entityLabel &&
+                                (recursiveDepth > 0 || recursiveDepth < 0)
+                                && propLabel != 0
                                 )
                             {
-                                sb.Append(ReportEntity(PropLabel, RecursiveDepth - 1, IndentationLevel + 1));
+                                sb.Append(ReportEntity(propLabel, recursiveDepth - 1, indentationLevel + 1));
                             }
                         }
                     }
-                    var Invs = ifcType.IfcInverses;
-                    if (Invs.Count > 0)
-                        sb.AppendFormat(IndentationHeader + "Inverses: {0}", Invs.Count);
-                    foreach (var inverse in Invs)
+                    var invs = ifcType.IfcInverses;
+                    if (invs.Count > 0)
+                        sb.AppendFormat(indentationHeader + "Inverses: {0}", invs.Count);
+                    foreach (var inverse in invs)
                     {
-                        ReportProp(sb, IndentationHeader, entity, inverse, Verbose, showValueType);
+                        ReportProp(sb, indentationHeader, entity, inverse, verbose, showValueType);
                     }
 
                     /*
@@ -1149,24 +1152,24 @@ namespace XbimXplorer.Querying
                 }
                 else
                 {
-                    sb.AppendFormat(IndentationHeader + "=== Entity #{0} is null", EntityLabel);
+                    sb.AppendFormat(indentationHeader + "=== Entity #{0} is null", entityLabel);
                 }
             }
             catch (Exception ex)
             {
-                sb.AppendFormat(IndentationHeader + "\r\nException Thrown: {0} ({1})\r\n{2}", ex.Message,
+                sb.AppendFormat(indentationHeader + "\r\nException Thrown: {0} ({1})\r\n{2}", ex.Message,
                     ex.GetType().ToString(), ex.StackTrace);
             }
             return sb;
         }
 
-        private static IEnumerable<int> ReportProp(TextHighliter sb, string IndentationHeader, IPersistIfcEntity entity,
-            IfcMetaProperty prop, bool Verbose, bool ShowPropType)
+        private static IEnumerable<int> ReportProp(TextHighliter sb, string indentationHeader, IPersistIfcEntity entity,
+            IfcMetaProperty prop, bool verbose, bool showPropType)
         {
-            var RetIds = new List<int>();
+            var retIds = new List<int>();
             var propName = prop.PropertyInfo.Name;
             var propType = prop.PropertyInfo.PropertyType;
-            var ShortTypeName = CleanPropertyName(propType.FullName);
+            var shortTypeName = CleanPropertyName(propType.FullName);
             var propVal = prop.PropertyInfo.GetValue(entity, null);
             if (propVal == null)
                 propVal = "<null>";
@@ -1183,70 +1186,70 @@ namespace XbimXplorer.Querying
                     {
                         iCntProp++;
                         if (iCntProp == 1)
-                            propVal = ReportPropValue(item, ref RetIds, ShowPropType);
+                            propVal = ReportPropValue(item, ref retIds, showPropType);
                         else
                         {
                             if (iCntProp == 2)
                             {
-                                propVal = "\r\n" + IndentationHeader + "    " + propVal;
+                                propVal = "\r\n" + indentationHeader + "    " + propVal;
                             }
-                            propVal += "\r\n" + IndentationHeader + "    " + ReportPropValue(item, ref RetIds, ShowPropType);
+                            propVal += "\r\n" + indentationHeader + "    " + ReportPropValue(item, ref retIds, showPropType);
                         }
                     }
                 }
             }
             else
-                propVal = ReportPropValue(propVal, ref RetIds, ShowPropType);
+                propVal = ReportPropValue(propVal, ref retIds, showPropType);
 
-            if (Verbose)
-                sb.AppendFormat(IndentationHeader + "- {0} ({1}): {2}",
+            if (verbose)
+                sb.AppendFormat(indentationHeader + "- {0} ({1}): {2}",
                     propName, // 0
-                    ShortTypeName, // 1
+                    shortTypeName, // 1
                     propVal // 2
                     );
             else
             {
                 if ((string) propVal != "<null>" && (string) propVal != "<empty>")
                 {
-                    sb.AppendFormat(IndentationHeader + "- {0}: {1}",
+                    sb.AppendFormat(indentationHeader + "- {0}: {1}",
                         propName, // 0
                         propVal // 1
                         );
                 }
             }
-            return RetIds;
+            return retIds;
         }
 
-        private static string CleanPropertyName(string ShortTypeName)
+        private static string CleanPropertyName(string shortTypeName)
         {
-            var m = Regex.Match(ShortTypeName, @"^((?<Mod>.*)`\d\[\[)*Xbim\.(?<Type>[\w\.]*)");
+            var m = Regex.Match(shortTypeName, @"^((?<Mod>.*)`\d\[\[)*Xbim\.(?<Type>[\w\.]*)");
             if (m.Success)
             {
-                ShortTypeName = m.Groups["Type"].Value; // + m.Groups["Type"].Value + 
+                shortTypeName = m.Groups["Type"].Value; // + m.Groups["Type"].Value + 
                 if (m.Groups["Mod"].Value != string.Empty)
                 {
-                    var GetLast = m.Groups["Mod"].Value.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);
-                    ShortTypeName += " (" + GetLast[GetLast.Length - 1] + ")";
+                    var getLast = m.Groups["Mod"].Value.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);
+                    shortTypeName += " (" + getLast[getLast.Length - 1] + ")";
                 }
             }
-            return ShortTypeName;
+            return shortTypeName;
         }
 
-        private static string ReportPropValue(object propVal, ref List<int> RetIds, bool ShowPropType = false)
+        private static string ReportPropValue(object propVal, ref List<int> retIds, bool showPropType = false)
         {
             var pe = propVal as IPersistIfcEntity;
-            var PropLabel = 0;
+            var propLabel = 0;
             if (pe != null)
             {
-                RetIds.Add(pe.EntityLabel);
+                retIds.Add(pe.EntityLabel);
                 pe.Activate(false);
             }
             var ret = propVal + (
-                (PropLabel != 0) 
-                ? " [#" + PropLabel + "]" 
+                (propLabel != 0) 
+                ? " [#" + propLabel + "]" 
                 : ""
                 );
-            if (ShowPropType)
+            if (showPropType)
             {
                 ret += " (" + CleanPropertyName(propVal.GetType().FullName) + ")";
             }
@@ -1255,11 +1258,17 @@ namespace XbimXplorer.Querying
 
         #region "Plugin"
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string MenuText
         {
             get { return "Querying Window"; }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string WindowTitle
         {
             get { return "Querying Window"; }
@@ -1269,7 +1278,7 @@ namespace XbimXplorer.Querying
         /// All bindings are to be established in this call
         /// </summary>
         /// <param name="mainWindow"></param>
-        public void BindUI(IXbimXplorerPluginMasterWindow mainWindow)
+        public void BindUi(IXbimXplorerPluginMasterWindow mainWindow)
         {
             _parentWindow = mainWindow;
             SetBinding(SelectedItemProperty,
@@ -1279,12 +1288,18 @@ namespace XbimXplorer.Querying
         }
 
         // SelectedEntity
+        /// <summary>
+        /// 
+        /// </summary>
         public IPersistIfcEntity SelectedEntity
         {
             get { return (IPersistIfcEntity) GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedEntity", typeof (IPersistIfcEntity), typeof (WdwQuery),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
@@ -1292,12 +1307,18 @@ namespace XbimXplorer.Querying
 
 
         // Model
+        /// <summary>
+        /// 
+        /// </summary>
         public XbimModel Model
         {
             get { return (XbimModel) GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof (XbimModel), typeof (WdwQuery),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
@@ -1329,15 +1350,21 @@ namespace XbimXplorer.Querying
             }
         }
 
-        public PluginWindowDefaultUIContainerEnum DefaultUIContainer
+        /// <summary>
+        /// 
+        /// </summary>
+        public PluginWindowDefaultUiContainerEnum DefaultUiContainer
         {
-            get { return PluginWindowDefaultUIContainerEnum.LayoutAnchorable; }
+            get { return PluginWindowDefaultUiContainerEnum.LayoutAnchorable; }
         }
 
 
-        public PluginWindowDefaultUIShow DefaultUIActivation
+        /// <summary>
+        /// 
+        /// </summary>
+        public PluginWindowDefaultUiShow DefaultUiActivation
         {
-            get { return PluginWindowDefaultUIShow.onMenu; }
+            get { return PluginWindowDefaultUiShow.OnMenu; }
         }
 
         #endregion

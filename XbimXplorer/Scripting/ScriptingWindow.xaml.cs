@@ -21,6 +21,9 @@ namespace XbimXplorer.Scripting
     public partial class ScriptingWindow : Window
     {
 
+        /// <summary>
+        /// 
+        /// </summary>
         public ScriptingWindow()
         {
             InitializeComponent();

@@ -18,9 +18,9 @@ namespace Xbim.WindowsUI.DPoWValidation.Controls
     /// <summary>
     /// Interaction logic for DPoWFacilityViewer.xaml
     /// </summary>
-    public partial class DPoWFacilityViewer : UserControl
+    public partial class DpoWFacilityViewer : UserControl
     {
-        public DPoWFacilityViewer()
+        public DpoWFacilityViewer()
         {
             InitializeComponent();
         }

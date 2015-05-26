@@ -38,17 +38,17 @@ namespace XbimXplorer.Dialogs
         /// <param name="callingWindow"></param>
         public ExportWindow(XplorerMainWindow callingWindow) : this()
         {
-            mainWindow = callingWindow;
+            _mainWindow = callingWindow;
 
             TxtFolderName.Text =
                 Path.Combine(
-                    new FileInfo(mainWindow.GetOpenedModelFileName()).DirectoryName,
+                    new FileInfo(_mainWindow.GetOpenedModelFileName()).DirectoryName,
                     "Export"
                     );
 
         }
 
-        private XplorerMainWindow mainWindow;
+        private XplorerMainWindow _mainWindow;
 
         private void DoExport(object sender, RoutedEventArgs e)
         {
@@ -87,7 +87,7 @@ namespace XbimXplorer.Dialogs
                         {
                             try
                             {
-                                var geomContext = new Xbim3DModelContext(mainWindow.Model);
+                                var geomContext = new Xbim3DModelContext(_mainWindow.Model);
                                 geomContext.Write(binaryWriter);
                             }
                             finally
@@ -114,7 +114,7 @@ namespace XbimXplorer.Dialogs
                 )
             {
 
-                var helper = new CoBieLiteHelper(mainWindow.Model, "UniClass");
+                var helper = new CoBieLiteHelper(_mainWindow.Model, "UniClass");
                 var facilities = helper.GetFacilities();
 
                 if (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value)
@@ -173,7 +173,7 @@ namespace XbimXplorer.Dialogs
 
         private string GetExportName(string extension, int progressive = 0)
         {
-            var basefile = new FileInfo(mainWindow.GetOpenedModelFileName());
+            var basefile = new FileInfo(_mainWindow.GetOpenedModelFileName());
             var wexbimFileName = Path.Combine(TxtFolderName.Text, basefile.Name);
             if (progressive != 0)
                 extension = progressive + "." + extension;

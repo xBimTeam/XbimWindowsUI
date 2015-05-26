@@ -26,58 +26,58 @@ namespace Xbim.Presentation
     {
         public static void Move(ToolTipContentProviderDelegate provider, Point location)
         {
-            if (provider != current_provider || location != current_location)
+            if (provider != _currentProvider || location != _currentLocation)
             {
-                timer.Stop();
-                current_provider = provider;
-                current_location = location;
-                if (tip.IsOpen) Hide();
-                timer.Start();
+                _timer.Stop();
+                _currentProvider = provider;
+                _currentLocation = location;
+                if (_tip.IsOpen) Hide();
+                _timer.Start();
             }
-            else if (tip.IsOpen)
+            else if (_tip.IsOpen)
             {
-                Vector delta = Mouse.GetPosition(null) - initial_position;
-                tip.VerticalOffset = delta.Y;
-                tip.HorizontalOffset = delta.X;
+                Vector delta = Mouse.GetPosition(null) - _initialPosition;
+                _tip.VerticalOffset = delta.Y;
+                _tip.HorizontalOffset = delta.X;
             }
         }
 
         public static void Hide()
         {
-            timer.Stop();
-            tip.IsOpen = false;
+            _timer.Stop();
+            _tip.IsOpen = false;
         }
 
         static ToolTipController()
         {
-            timer.Interval = new TimeSpan(ToolTipService.GetInitialShowDelay(tip)*10000);
-            timer.Tick += new EventHandler(timer_Tick);
+            _timer.Interval = new TimeSpan(ToolTipService.GetInitialShowDelay(_tip)*10000);
+            _timer.Tick += timer_Tick;
         }
 
         private static void timer_Tick(object sender, EventArgs e)
         {
-            timer.Stop();
+            _timer.Stop();
             OnShowToolTip();
         }
 
         private static void OnShowToolTip()
         {
-            if (current_provider != null)
+            if (_currentProvider != null)
             {
-                tip.VerticalOffset = 0;
-                tip.HorizontalOffset = 0;
-                tip.Content = current_provider(current_location);
-                tip.IsOpen = tip.Content != null;
+                _tip.VerticalOffset = 0;
+                _tip.HorizontalOffset = 0;
+                _tip.Content = _currentProvider(_currentLocation);
+                _tip.IsOpen = _tip.Content != null;
 
-                initial_position = Mouse.GetPosition(null);
+                _initialPosition = Mouse.GetPosition(null);
             }
         }
 
-        private static ToolTipContentProviderDelegate current_provider;
-        private static Point current_location;
-        private static ToolTip tip = new ToolTip();
-        private static Point initial_position;
-        private static DispatcherTimer timer = new DispatcherTimer();
+        private static ToolTipContentProviderDelegate _currentProvider;
+        private static Point _currentLocation;
+        private static ToolTip _tip = new ToolTip();
+        private static Point _initialPosition;
+        private static DispatcherTimer _timer = new DispatcherTimer();
     }
 
     /// <summary>

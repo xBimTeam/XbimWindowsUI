@@ -70,11 +70,11 @@ namespace Xbim.BCF
     public partial class Point
     {
         public Point() { }
-        public Point(Point3D Pnt)
+        public Point(Point3D pnt)
         {
-            this.xField = Pnt.X;
-            this.yField = Pnt.Y;
-            this.zField = Pnt.Z;
+            this.xField = pnt.X;
+            this.yField = pnt.Y;
+            this.zField = pnt.Z;
         }
     }
 
@@ -82,11 +82,11 @@ namespace Xbim.BCF
     {
         public Direction() { }
 
-        public Direction(Vector3D Dir)
+        public Direction(Vector3D dir)
         {
-            this.xField = Dir.X;
-            this.yField = Dir.Y;
-            this.zField = Dir.Z;
+            this.xField = dir.X;
+            this.yField = dir.Y;
+            this.zField = dir.Z;
         }
     }
 }

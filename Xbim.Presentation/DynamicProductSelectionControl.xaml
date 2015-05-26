@@ -13,18 +13,18 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Load from file" Name="btnLoad" Click="btnLoad_Click" Margin="5"/>
-                <Button Content="Save to file" Name="btnSave" Click="btnSave_Click" Margin="5"/>
-                <Button Content="Default code" Name="btnDefault" Click="btnDefault_Click" Margin="5"/>
-                <Button Content="Save output" Name="btnSaveOutput" Click="btnSaveOutput_Click" Margin="5"/>
-                <Button Content="Perform" Name="btnPerform" Click="btnPerform_Click" Margin="5" FontWeight="Bold" FontSize="13" />
+                <Button Content="Load from file" Name="BtnLoad" Click="btnLoad_Click" Margin="5"/>
+                <Button Content="Save to file" Name="BtnSave" Click="btnSave_Click" Margin="5"/>
+                <Button Content="Default code" Name="BtnDefault" Click="btnDefault_Click" Margin="5"/>
+                <Button Content="Save output" Name="BtnSaveOutput" Click="btnSaveOutput_Click" Margin="5"/>
+                <Button Content="Perform" Name="BtnPerform" Click="btnPerform_Click" Margin="5" FontWeight="Bold" FontSize="13" />
             </StackPanel>
-            <TextBox  Name="txtCode"  AcceptsReturn="True" TextWrapping="Wrap" Foreground="#FF0000C3" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsTab="True" />
+            <TextBox  Name="TxtCode"  AcceptsReturn="True" TextWrapping="Wrap" Foreground="#FF0000C3" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsTab="True" />
         </DockPanel>
         <GridSplitter  Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="Gray"  ShowsPreview="True" Height="3"/>
         <DockPanel Grid.Row="2">
             <Label  DockPanel.Dock="Top">Output:</Label>
-            <TextBox  Name="txtOutput"  AllowDrop="False" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
+            <TextBox  Name="TxtOutput"  AllowDrop="False" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
         </DockPanel>
     </Grid>
 </UserControl>

@@ -57,7 +57,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             set
             {
                 _requirementFacility = value; 
-                RequirementFacilityVM = new DPoWFacilityViewModel(_requirementFacility);
+                RequirementFacilityVm = new DpoWFacilityViewModel(_requirementFacility);
                 
                 if (PropertyChanged == null)
                     return;
@@ -65,7 +65,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
-        public DPoWFacilityViewModel RequirementFacilityVM { get; private set; }
+        public DpoWFacilityViewModel RequirementFacilityVm { get; private set; }
 
         private Facility _submissionFacility;
 
@@ -75,7 +75,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             set
             {
                 _submissionFacility = value;
-                SubmissionFacilityVM = new DPoWFacilityViewModel(_submissionFacility);
+                SubmissionFacilityVm = new DpoWFacilityViewModel(_submissionFacility);
                 
                 if (PropertyChanged == null)
                     return;
@@ -83,7 +83,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
-        public DPoWFacilityViewModel SubmissionFacilityVM { get; private set; }
+        public DpoWFacilityViewModel SubmissionFacilityVm { get; private set; }
 
         private Facility _validationFacility;
 
@@ -93,7 +93,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             set
             {
                 _validationFacility = value;
-                ValidationFacilityVM = new DPoWFacilityViewModel(_validationFacility);
+                ValidationFacilityVm = new DpoWFacilityViewModel(_validationFacility);
                 ExportFacility = new FacilitySaveCommand(this);
                 
                 if (PropertyChanged == null)
@@ -105,7 +105,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
-        public DPoWFacilityViewModel ValidationFacilityVM { get; private set; }
+        public DpoWFacilityViewModel ValidationFacilityVm { get; private set; }
 
         public string SubmissionFileSource
         {

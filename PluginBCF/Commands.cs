@@ -7,14 +7,14 @@ using System.Windows.Input;
 
 namespace Xbim.BCF
 {
-    public static class BCFFileCommands
+    public static class BcfFileCommands
     {
         public static RoutedCommand Load = new RoutedCommand(); 
     
         public static RoutedCommand Save = new RoutedCommand();
     }
     
-    public static class BCFInstanceCommands
+    public static class BcfInstanceCommands
     {
         public static RoutedCommand GotoCameraPosition = new RoutedCommand();
     }

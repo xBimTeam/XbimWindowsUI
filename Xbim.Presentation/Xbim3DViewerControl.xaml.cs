@@ -1,23 +1,14 @@
-﻿using HelixToolkit.Wpf;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using HelixToolkit.Wpf;
 using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
-using Xbim.ModelGeometry.Converter;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -57,7 +48,7 @@ namespace Xbim.Presentation
         // Using a DependencyProperty as the backing store for Model.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof(XbimModel), typeof(DrawingControl3D), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnModelChanged)));
+                                                                      OnModelChanged));
 
 
 
@@ -77,14 +68,14 @@ namespace Xbim.Presentation
 
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            DrawingControl3D d3d = d as DrawingControl3D;
-            if (d3d != null) d3d.ReloadModel();
+            DrawingControl3D d3D = d as DrawingControl3D;
+            if (d3D != null) d3D.ReloadModel();
         }
 
 
         public void ReloadModel(bool recalcView = true)
         {
-            LoadGeometry((XbimModel)this.GetValue(ModelProperty), recalcView);
+            LoadGeometry((XbimModel)GetValue(ModelProperty), recalcView);
            
         }
 

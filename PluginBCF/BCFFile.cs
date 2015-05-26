@@ -11,19 +11,19 @@ using System.Threading.Tasks;
 
 namespace Xbim.BCF
 {
-    public class BCFFile 
+    public class BcfFile 
     {
-        public ObservableCollection<BCFInstance> Instances = new ObservableCollection<BCFInstance>();
+        public ObservableCollection<BcfInstance> Instances = new ObservableCollection<BcfInstance>();
 
         private const string MarkupFileName = "markup.bcf";
         private const string ViewpointFileName = "viewpoint.bcfv";
         private const string SnapshotFileName = "snapshot.png";
 
 
-        public void LoadFile(string FileName)
+        public void LoadFile(string fileName)
         {
             // BCFFile retFile = new BCFFile();
-            using (ZipFile z = ZipFile.Read(FileName))
+            using (ZipFile z = ZipFile.Read(fileName))
             {
                 Regex r = new Regex(@"(?<guid>.*?)/(?<fname>.*)");
                 foreach (var zipentry in z)
@@ -40,9 +40,9 @@ namespace Xbim.BCF
                         string guid = res.Groups["guid"].Value;
                         string fname = res.Groups["fname"].Value;
                         if (!Instances.Where(x=>x.Markup.Topic.Guid == guid).Any())
-                            Instances.Add(new BCFInstance(guid));
+                            Instances.Add(new BcfInstance(guid));
 
-                        BCFInstance inst = Instances.Where(x => x.Markup.Topic.Guid == guid).FirstOrDefault();
+                        BcfInstance inst = Instances.Where(x => x.Markup.Topic.Guid == guid).FirstOrDefault();
                         switch (fname.ToLowerInvariant())
                         {
                             case MarkupFileName:
@@ -79,18 +79,18 @@ namespace Xbim.BCF
         {
             using (ZipFile zip = new ZipFile())
             {
-                foreach (var Instance in Instances)
+                foreach (var instance in Instances)
                 {
-                    string dir = GetTemporaryDirectory(Instance.guid);
-                    Instance.Markup.SaveToFile(Path.Combine(dir, MarkupFileName));
-                    Instance.SnapShotSaveToFile(Path.Combine(dir, SnapshotFileName));
-                    Instance.VisualizationInfo.SaveToFile(Path.Combine(dir, ViewpointFileName));
-                    zip.AddDirectory(dir, Instance.guid);
+                    string dir = GetTemporaryDirectory(instance.Guid);
+                    instance.Markup.SaveToFile(Path.Combine(dir, MarkupFileName));
+                    instance.SnapShotSaveToFile(Path.Combine(dir, SnapshotFileName));
+                    instance.VisualizationInfo.SaveToFile(Path.Combine(dir, ViewpointFileName));
+                    zip.AddDirectory(dir, instance.Guid);
                 }
                 zip.Save(filename);
-                foreach (var Instance in Instances)
+                foreach (var instance in Instances)
                 {
-                    Directory.Delete(GetTemporaryDirectory(Instance.guid), true);
+                    Directory.Delete(GetTemporaryDirectory(instance.Guid), true);
                 }
             }
         }

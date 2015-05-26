@@ -1,19 +1,13 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.Win32;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.IO;
 
@@ -24,7 +18,7 @@ namespace Xbim.Presentation.FederatedModel
     /// </summary>
     public partial class FederatedModelsGrid : UserControl
     {
-        XbimModel _model = null;
+        XbimModel _model;
         List<string> _roles = new List<string>();
         ObservableCollection<XbimReferencedModelViewModel> _referencedModelsWrappers = new ObservableCollection<XbimReferencedModelViewModel>();
 
@@ -50,9 +44,9 @@ namespace Xbim.Presentation.FederatedModel
             _roles = _roles.OrderBy(x => x.ToString()).ToList();
 
             InitializeComponent();
-            this.DataContextChanged += FederatedModelProperties_DataContextChanged;
+            DataContextChanged += FederatedModelProperties_DataContextChanged;
             ReferencedModelWrappers.CollectionChanged += ReferencedModels_CollectionChanged;
-            propertyGrid.RowEditEnding += propertyGrid_RowEditEnding;
+            PropertyGrid.RowEditEnding += propertyGrid_RowEditEnding;
         }
 
         void propertyGrid_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
@@ -68,17 +62,17 @@ namespace Xbim.Presentation.FederatedModel
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show("Something went wrong, object might not have been added\n\n" + ex.Message);
+                MessageBox.Show("Something went wrong, object might not have been added\n\n" + ex.Message);
             }
         }
 
-        void ReferencedModels_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Add:
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                case NotifyCollectionChangedAction.Remove:
                     //Remove model
 
                     var oldItems = new List<XbimModel>();
@@ -97,7 +91,7 @@ namespace Xbim.Presentation.FederatedModel
         {
             get
             {
-                return propertyGrid.SelectedItems;
+                return PropertyGrid.SelectedItems;
             }
         }
 
@@ -126,7 +120,7 @@ namespace Xbim.Presentation.FederatedModel
                 {
                     OpenFileDialog fbDlg = new OpenFileDialog();
                     fbDlg.Filter = "xBIM Files (.txt)|*.xbim|All Files (*.*)|*.*"; ;
-                    Nullable<bool> result = fbDlg.ShowDialog();
+                    bool? result = fbDlg.ShowDialog();
                     if (result == true)
                     {
                         txt.Text = fbDlg.FileName;
@@ -137,7 +131,7 @@ namespace Xbim.Presentation.FederatedModel
 
         private void DeleteRowButton_Click(object sender, RoutedEventArgs e)
         {
-            var wrapper = (sender as System.Windows.Controls.Button).DataContext as XbimReferencedModelViewModel;
+            var wrapper = (sender as Button).DataContext as XbimReferencedModelViewModel;
             if (wrapper.ReferencedModel != null)
                 ReferencedModelWrappers.Remove(wrapper);
         }

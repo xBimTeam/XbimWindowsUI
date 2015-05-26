@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:top="clr-namespace:Xbim.BCF"
-             xmlns:local="clr-namespace:Xbim.BCF.UI" x:Class="Xbim.BCF.UI.BCFInstanceUI"
+             xmlns:local="clr-namespace:Xbim.BCF.UI" x:Class="Xbim.BCF.UI.BcfInstanceUi"
              mc:Ignorable="d" 
              d:DesignHeight="304" d:DesignWidth="329.6">
     <Grid Background="Gray">
@@ -20,7 +20,7 @@
                 <Grid>
                     <Image Margin="5,5,5,25"  Source="{Binding Img}"  />
                     <Label VerticalAlignment="Bottom">
-                        <Hyperlink Command="{x:Static top:BCFInstanceCommands.GotoCameraPosition}" >
+                        <Hyperlink Command="{x:Static top:BcfInstanceCommands.GotoCameraPosition}" >
                             <Run Text="Go"/>
                         </Hyperlink>
                     </Label>
@@ -32,7 +32,7 @@
                         <ColumnDefinition />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
-                    <ListView Grid.Column="0" x:Name="cmts" ItemsSource="{Binding Comments}" SelectionChanged="cmts_SelectionChanged" Margin="2,2,2,20">
+                    <ListView Grid.Column="0" x:Name="Cmts" ItemsSource="{Binding Comments}" SelectionChanged="cmts_SelectionChanged" Margin="2,2,2,20">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Width="80" Header="Author" DisplayMemberBinding="{Binding Author}" />
@@ -47,7 +47,7 @@
                         </Hyperlink>
                     </Label>
 
-                    <local:BCFCommentUI x:Name="SelComment" Grid.Column="1" />
+                    <local:BcfCommentUi x:Name="SelComment" Grid.Column="1" />
 
                 </Grid>
             </TabItem>

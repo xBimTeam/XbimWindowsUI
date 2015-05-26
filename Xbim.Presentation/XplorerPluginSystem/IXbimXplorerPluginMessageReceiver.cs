@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Xbim.Presentation.XplorerPluginSystem
+﻿namespace Xbim.Presentation.XplorerPluginSystem
 {
    
     public interface IXbimXplorerPluginMessageReceiver

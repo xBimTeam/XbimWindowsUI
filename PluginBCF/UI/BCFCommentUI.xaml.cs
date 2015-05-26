@@ -18,9 +18,9 @@ namespace Xbim.BCF.UI
     /// <summary>
     /// Interaction logic for BCFCommentUI.xaml
     /// </summary>
-    public partial class BCFCommentUI : UserControl
+    public partial class BcfCommentUi : UserControl
     {
-        public BCFCommentUI()
+        public BcfCommentUi()
         {
             InitializeComponent();
         }

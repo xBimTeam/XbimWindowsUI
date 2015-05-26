@@ -10,10 +10,10 @@ namespace Bonghi.FileIO
         private StreamReader _srReader = null;
         private int _iLineNumber = 0;
         
-        public FileTextParser(string FileName) {
+        public FileTextParser(string fileName) {
             try
             {
-                _srReader = File.OpenText(FileName);
+                _srReader = File.OpenText(fileName);
                 _iLineNumber = 0;
             }
             catch (SystemException exc){
@@ -83,16 +83,16 @@ namespace Bonghi.FileIO
             }
             
         }
-        public string ReadUntil(string MatchRegex) {
-            return ReadUntil(MatchRegex, "");
+        public string ReadUntil(string matchRegex) {
+            return ReadUntil(matchRegex, "");
         }
 
-        public string ReadUntil(string MatchRegex, string ExitCondition) {
+        public string ReadUntil(string matchRegex, string exitCondition) {
             string tOut = null;
-            Regex reMatch = new Regex(MatchRegex);
+            Regex reMatch = new Regex(matchRegex);
             Regex reExit = null;
-            if (ExitCondition != "") {
-                reExit = new Regex(ExitCondition);
+            if (exitCondition != "") {
+                reExit = new Regex(exitCondition);
             }
             string lastread;
             while ((lastread = NextLine()) != null)

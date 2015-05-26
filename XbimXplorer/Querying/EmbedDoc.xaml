@@ -8,13 +8,13 @@
              xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
              mc:Ignorable="d" 
              >
-    <Grid FocusManager.FocusedElement="{Binding ElementName=txtCommand}">
+    <Grid FocusManager.FocusedElement="{Binding ElementName=TxtCommand}">
         <Grid.RowDefinitions>
             <RowDefinition Height="75"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="txtCommand" Grid.Row="0" FontFamily="Lucida Console" AcceptsReturn="True" AutoWordSelection="True" />
-        <RichTextBox x:Name="txtOut" Grid.Row="1" FontFamily="Lucida Console" Background="#FFFFFFE1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True">
+        <TextBox x:Name="TxtCommand" Grid.Row="0" FontFamily="Lucida Console" AcceptsReturn="True" AutoWordSelection="True" />
+        <RichTextBox x:Name="TxtOut" Grid.Row="1" FontFamily="Lucida Console" Background="#FFFFFFE1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True">
             <RichTextBox.Resources>
                 <Style TargetType="{x:Type Paragraph}">
                     <Setter Property="Margin" Value="0"/>

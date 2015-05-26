@@ -11,17 +11,17 @@ using System.Windows.Media.Imaging;
 
 namespace Xbim.BCF.UI
 {
-    public class BCFInstanceViewModel : DependencyObject
+    public class BcfInstanceViewModel : DependencyObject
     {
-        BCFInstance _instance;
+        BcfInstance _instance;
 
-        public BCFInstanceViewModel(BCFInstance Instance)
+        public BcfInstanceViewModel(BcfInstance instance)
         {
-            _instance = Instance;
+            _instance = instance;
             if (_instance != null)
             {
-                TopicTitle = Instance.Markup.Topic.Title;
-                TopicReferenceLink = Instance.Markup.Topic.ReferenceLink;
+                TopicTitle = instance.Markup.Topic.Title;
+                TopicReferenceLink = instance.Markup.Topic.ReferenceLink;
             }
             GoCam = new GoCamera(this);
             _addCmt = new AddCommentCommand(this);
@@ -48,7 +48,7 @@ namespace Xbim.BCF.UI
 
         // Using a DependencyProperty as the backing store for Title.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TopicTitleProperty =
-            DependencyProperty.Register("TopicTitle", typeof(string), typeof(BCFInstanceViewModel), 
+            DependencyProperty.Register("TopicTitle", typeof(string), typeof(BcfInstanceViewModel), 
                 new PropertyMetadata("", new PropertyChangedCallback(OnTextsChanged))
             );
 
@@ -56,7 +56,7 @@ namespace Xbim.BCF.UI
         {
             if (d is DependencyObject)
             {
-                var D = d as BCFInstanceViewModel;
+                var D = d as BcfInstanceViewModel;
                 if (e.Property.Name == "TopicTitle")
                     D._instance.Markup.Topic.Title = e.NewValue as string;
                 if (e.Property.Name == "TopicReferenceLink")
@@ -72,7 +72,7 @@ namespace Xbim.BCF.UI
 
         // Using a DependencyProperty as the backing store for TopicReferenceLink.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TopicReferenceLinkProperty =
-            DependencyProperty.Register("TopicReferenceLink", typeof(string), typeof(BCFInstanceViewModel), new PropertyMetadata("", new PropertyChangedCallback(OnTextsChanged)));
+            DependencyProperty.Register("TopicReferenceLink", typeof(string), typeof(BcfInstanceViewModel), new PropertyMetadata("", new PropertyChangedCallback(OnTextsChanged)));
 
         public BitmapImage Img
         {
@@ -133,8 +133,8 @@ namespace Xbim.BCF.UI
 
     public class AddCommentCommand : ICommand
     {
-        BCFInstanceViewModel _vm;
-        public AddCommentCommand(BCFInstanceViewModel vm)
+        BcfInstanceViewModel _vm;
+        public AddCommentCommand(BcfInstanceViewModel vm)
         {
             _vm = vm;
         }
@@ -144,6 +144,9 @@ namespace Xbim.BCF.UI
             return true;
         }
 
+        /// <summary>
+        /// Occurs when changes occur that affect whether or not the command should execute.
+        /// </summary>
         public event EventHandler CanExecuteChanged; // always true
 
         public void Execute(object parameter)
@@ -154,8 +157,8 @@ namespace Xbim.BCF.UI
 
     public class GoCamera : ICommand
     {
-        BCFInstanceViewModel _vm;
-        public GoCamera(BCFInstanceViewModel vm)
+        BcfInstanceViewModel _vm;
+        public GoCamera(BcfInstanceViewModel vm)
         {
             _vm = vm;
         }

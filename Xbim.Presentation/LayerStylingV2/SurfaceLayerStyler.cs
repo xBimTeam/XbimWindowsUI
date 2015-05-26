@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
+using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using System.Windows;
-using Xbim.Ifc2x3.ProductExtension;
 using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation.LayerStylingV2

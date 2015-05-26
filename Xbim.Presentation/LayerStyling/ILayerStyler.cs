@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xbim.IO;
+﻿using Xbim.IO;
 using Xbim.IO.GroupingAndStyling;
 using Xbim.ModelGeometry.Scene;
 
@@ -17,9 +13,9 @@ namespace Xbim.Presentation.LayerStyling
         /// <summary>
         /// returns a layer for the specified key 
         /// </summary>
-        /// <param name="LayerKey">It's a string that is generated in the GroupLayers function of the IGeomHandlesGrouping interface.</param>
-        ModelGeometry.Scene.XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
-            string LayerKey, 
+        /// <param name="layerKey">It's a string that is generated in the GroupLayers function of the IGeomHandlesGrouping interface.</param>
+        XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> GetLayer(
+            string layerKey, 
             XbimModel model,
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene
             );

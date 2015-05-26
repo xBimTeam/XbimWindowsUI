@@ -1,31 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
-using System.Windows.Media;
 
 namespace Xbim.Presentation
 {
     public class WpfXbimRectangle3D
     {
-        private GeometryModel3D geometry = new GeometryModel3D();
+        private GeometryModel3D _geometry = new GeometryModel3D();
 
-        public GeometryModel3D Geometry { get { return geometry; } }
+        public GeometryModel3D Geometry { get { return _geometry; } }
 
         public WpfXbimRectangle3D(XbimRect3D block)
         {
-            geometry.Geometry = new MeshGeometry3D();
+            _geometry.Geometry = new MeshGeometry3D();
             SolidColorBrush brush = new SolidColorBrush(Colors.LightBlue);
             brush.Opacity = 0.3;
             var material = new DiffuseMaterial(brush);
             material.AmbientColor = Colors.LightBlue;
 
-            geometry.BackMaterial = material;
-            geometry.Material = material;
+            _geometry.BackMaterial = material;
+            _geometry.Material = material;
 
-            var mesh = geometry.Geometry as MeshGeometry3D;
+            var mesh = _geometry.Geometry as MeshGeometry3D;
             
             var min = block.Min;
             var max = block.Max;

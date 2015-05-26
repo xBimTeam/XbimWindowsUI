@@ -1,15 +1,15 @@
 ﻿namespace Xbim.Presentation.XplorerPluginSystem
 {
-    public enum PluginWindowDefaultUIContainerEnum
+    public enum PluginWindowDefaultUiContainerEnum
     {
         LayoutDoc,
         LayoutAnchorable
     }
 
-    public enum PluginWindowDefaultUIShow
+    public enum PluginWindowDefaultUiShow
     {
-        onMenu,
-        onLoad
+        OnMenu,
+        OnLoad
     }
 
     
@@ -17,8 +17,8 @@
     {
         string MenuText { get; }
         string WindowTitle { get; }
-        void BindUI(IXbimXplorerPluginMasterWindow mainWindow);
-        PluginWindowDefaultUIContainerEnum DefaultUIContainer { get; }
-        PluginWindowDefaultUIShow DefaultUIActivation { get; }
+        void BindUi(IXbimXplorerPluginMasterWindow mainWindow);
+        PluginWindowDefaultUiContainerEnum DefaultUiContainer { get; }
+        PluginWindowDefaultUiShow DefaultUiActivation { get; }
     }
 }

@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Windows.Media.Media3D;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.MaterialResource;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
-using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
 
@@ -54,21 +50,22 @@ namespace Xbim.Presentation
         /// <summary>
         /// Returns the list of Object in a IfcRelAssociatesMaterial with the specified material select.
         /// </summary>
+        /// <param name="instanceCollection"></param>
         /// <param name="matSel">The material select to search.</param>
-        /// <param name="DeepSearch">
+        /// <param name="deepSearch">
         /// True if the function needs to execute a deeper semantical analysis of the relations (it can expand the query result).
         /// False if a direct analysis of explicit associations with the specific MaterialSet.
         /// </param>
-        public static IEnumerable<IfcRoot> GetInstancesOfMaterial(this IXbimInstanceCollection InstanceCollection, IfcMaterialSelect matSel, bool DeepSearch)
+        public static IEnumerable<IfcRoot> GetInstancesOfMaterial(this IXbimInstanceCollection instanceCollection, IfcMaterialSelect matSel, bool deepSearch)
         {
             // Debug.WriteLine(string.Format("GetInstance {0}, {1}", matSel.EntityLabel.ToString(), DeepSearch));
             if (matSel is IfcMaterial)
             {
                 // straight return of objects of all associations
-                var Assocs = InstanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
                     x => x.RelatingMaterial.EntityLabel ==matSel.EntityLabel
                     );
-                foreach (var assoc in Assocs)
+                foreach (var assoc in assocs)
                 {
                     // ... and returns one object at a time in the enumerable
                     foreach (var item in assoc.RelatedObjects)
@@ -79,13 +76,13 @@ namespace Xbim.Presentation
             }
             else if (matSel is IfcMaterialLayer)
             {
-                if (!DeepSearch)
+                if (!deepSearch)
                 {
                     // straight return of objects of all associations
-                    var Assocs = InstanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                    var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
                         x =>x.RelatingMaterial.EntityLabel == matSel.EntityLabel
                         );
-                    foreach (var assoc in Assocs)
+                    foreach (var assoc in assocs)
                     {
                         // ... and returns one object at a time in the enumerable
                         foreach (var item in assoc.RelatedObjects)
@@ -96,19 +93,19 @@ namespace Xbim.Presentation
                 }
                 else // this is deep search
                 {
-                    foreach (var StraightMatch in GetInstancesOfMaterial(InstanceCollection, ((IfcMaterialLayer)matSel).ToMaterialLayerSet, false))
-                        yield return StraightMatch;
+                    foreach (var straightMatch in GetInstancesOfMaterial(instanceCollection, ((IfcMaterialLayer)matSel).ToMaterialLayerSet, false))
+                        yield return straightMatch;
                 }
             }
             else if (matSel is IfcMaterialList)
             {
-                if (!DeepSearch)
+                if (!deepSearch)
                 {
                     // straight return of objects of all associations
-                    var Assocs = InstanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                    var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
                         x =>x.RelatingMaterial.EntityLabel == matSel.EntityLabel
                         );
-                    foreach (var assoc in Assocs)
+                    foreach (var assoc in assocs)
                     {
                         // ... and returns one object at a time in the enumerable
                         foreach (var item in assoc.RelatedObjects)
@@ -122,9 +119,9 @@ namespace Xbim.Presentation
                     // a problem with this is that some exporters produce multiple IfcMaterialList that 
                     // they share the same underlying set of Materials, so we are looking for a signature of the underlying materials.
                     // 
-                    var BaseMatArray = ((IfcMaterialList)matSel).Materials.Select(x => x.EntityLabel).ToArray(); // this is the signature.
+                    var baseMatArray = ((IfcMaterialList)matSel).Materials.Select(x => x.EntityLabel).ToArray(); // this is the signature.
                     var cmp = EqualityComparer<int>.Default;
-                    foreach (var testingMaterialList in InstanceCollection.OfType<IfcMaterialList>())
+                    foreach (var testingMaterialList in instanceCollection.OfType<IfcMaterialList>())
                     {
                         bool bDoesMatch = false;
                         if (testingMaterialList.EntityLabel == matSel.EntityLabel)
@@ -133,13 +130,13 @@ namespace Xbim.Presentation
                         }
                         else
                         {
-                            var CompMatArray = ((IfcMaterialList)testingMaterialList).Materials.Select(x => x.EntityLabel).ToArray(); // this is the other signature.
-                            bDoesMatch = ArraysEqual<int>(BaseMatArray, CompMatArray, cmp);
+                            var compMatArray = testingMaterialList.Materials.Select(x => x.EntityLabel).ToArray(); // this is the other signature.
+                            bDoesMatch = ArraysEqual(baseMatArray, compMatArray, cmp);
                         }
                         if (bDoesMatch)
                         {
-                            foreach (var StraightMatch in GetInstancesOfMaterial(InstanceCollection, testingMaterialList, false))
-                                yield return StraightMatch;
+                            foreach (var straightMatch in GetInstancesOfMaterial(instanceCollection, testingMaterialList, false))
+                                yield return straightMatch;
                         }
                     }
                 }
@@ -150,13 +147,13 @@ namespace Xbim.Presentation
 
                 // given a material layerset ...
                 // ... search for all its usages modes ...
-                var lsUsages = InstanceCollection.OfType<IfcMaterialLayerSetUsage>().Where(
+                var lsUsages = instanceCollection.OfType<IfcMaterialLayerSetUsage>().Where(
                     x => x.ForLayerSet.EntityLabel ==((IfcMaterialLayerSet)matSel).EntityLabel
                     );
                 foreach (var lsUsage in lsUsages)
                 {
                     // ... then for each usage mode, searches the relations with objects ...
-                    foreach (var item in GetInstancesOfMaterial(InstanceCollection, lsUsage, false))
+                    foreach (var item in GetInstancesOfMaterial(instanceCollection, lsUsage, false))
                     {
                         yield return item;
                     }
@@ -164,10 +161,10 @@ namespace Xbim.Presentation
             }
             else if (matSel is IfcMaterialLayerSetUsage)
             {
-                if (DeepSearch)
+                if (deepSearch)
                 {
                     // identify the underlying material layer set and return all its usages.
-                    foreach (var item in InstanceCollection.GetInstancesOfMaterial(((IfcMaterialLayerSetUsage)matSel).ForLayerSet, false))
+                    foreach (var item in instanceCollection.GetInstancesOfMaterial(((IfcMaterialLayerSetUsage)matSel).ForLayerSet, false))
                     {
                         yield return item;
                     }
@@ -175,10 +172,10 @@ namespace Xbim.Presentation
                 else
                 {
                     // straight return of objects of all associations
-                    var Assocs = InstanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                    var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
                         x => x.RelatingMaterial.EntityLabel == matSel.EntityLabel
                         );
-                    foreach (var assoc in Assocs)
+                    foreach (var assoc in assocs)
                     {
                         // ... and returns one object at a time in the enumerable
                         foreach (var item in assoc.RelatedObjects)

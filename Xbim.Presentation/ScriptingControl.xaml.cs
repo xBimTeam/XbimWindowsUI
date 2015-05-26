@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
+using System.Windows.Forms;
 using Xbim.IO;
 using Xbim.Script;
-using System.IO;
+using Cursors = System.Windows.Input.Cursors;
+using MessageBox = System.Windows.MessageBox;
 
 namespace Xbim.Presentation
 {
@@ -33,7 +36,7 @@ namespace Xbim.Presentation
         // Using a DependencyProperty as the backing store for Model.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof(XbimModel), typeof(ScriptingControl), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnModelChanged)));
+                                                                      OnModelChanged));
 
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -56,7 +59,8 @@ namespace Xbim.Presentation
 
 
             _parser.Output = _output;
-            _parser.OnScriptParsed += delegate(object sender, ScriptParsedEventArgs e) {
+            _parser.OnScriptParsed += delegate
+            {
                 //fire the event
                 ScriptParsed();
 
@@ -75,7 +79,7 @@ namespace Xbim.Presentation
             {
                 var path = args.FilePath;
                 if (path != null)
-                    System.Diagnostics.Process.Start(path);
+                    Process.Start(path);
             };
         }
 
@@ -87,7 +91,7 @@ namespace Xbim.Presentation
                 MessageBox.Show("There is no script to save.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-            System.Windows.Forms.SaveFileDialog dlg = new System.Windows.Forms.SaveFileDialog();
+            SaveFileDialog dlg = new SaveFileDialog();
             dlg.AddExtension = true;
             dlg.DefaultExt = ".bql";
             dlg.Title = "Set file name of the script...";
@@ -118,7 +122,7 @@ namespace Xbim.Presentation
 
         private void LoadScript_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.OpenFileDialog dlg = new System.Windows.Forms.OpenFileDialog();
+            OpenFileDialog dlg = new OpenFileDialog();
             dlg.AddExtension = true;
             dlg.DefaultExt = ".bql";
             dlg.Title = "Specify the script file...";
@@ -151,30 +155,30 @@ namespace Xbim.Presentation
             var script = ScriptInput.Text;
             if (String.IsNullOrEmpty(script))
             {
-                System.Windows.MessageBox.Show("There is no script to execute.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("There is no script to execute.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            var origCurs = this.Cursor;
-            this.Cursor = Cursors.Wait;
+            var origCurs = Cursor;
+            Cursor = Cursors.Wait;
             _parser.Parse(script);
-            this.Cursor = origCurs;
+            Cursor = origCurs;
 
-            ErrorsWindow.Visibility = System.Windows.Visibility.Collapsed;
+            ErrorsWindow.Visibility = Visibility.Collapsed;
             ErrorsWindow.Text = null;
-            MsgWindow.Visibility = System.Windows.Visibility.Collapsed;
+            MsgWindow.Visibility = Visibility.Collapsed;
             MsgWindow.Text = null;
 
             if (_parser.Errors.Count != 0)
             {
                 foreach (var err in _parser.Errors)
                     ErrorsWindow.Text += err + "\n";
-                ErrorsWindow.Visibility = System.Windows.Visibility.Visible;
+                ErrorsWindow.Visibility = Visibility.Visible;
             }
             else
             {
                 MsgWindow.Text += DateTime.Now.ToShortTimeString() + " run OK";
-                MsgWindow.Visibility = System.Windows.Visibility.Visible;
+                MsgWindow.Visibility = Visibility.Visible;
             }
         }
 
