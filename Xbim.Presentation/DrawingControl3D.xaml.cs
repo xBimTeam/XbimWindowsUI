@@ -785,14 +785,14 @@ namespace Xbim.Presentation
                 foreach (var item in Selection)
                 {
                     var fromModel = item.ModelOf as XbimModel;
-                    if (fromModel != null && newVal is IfcProduct)
+                    if (fromModel != null && item is IfcProduct)
                     {
                         var metre = fromModel.ModelFactors.OneMetre;
                         WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
 
                         var context = new Xbim3DModelContext(fromModel);
 
-                        var productShape = context.ShapeInstancesOf((IfcProduct)newVal).Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
+                        var productShape = context.ShapeInstancesOf((IfcProduct)item).Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
                         if (productShape.Any())
                         {
 
