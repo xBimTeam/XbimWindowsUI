@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ProductExtension;
@@ -28,8 +29,13 @@ namespace Xbim.Presentation.LayerStylingV2
 
             var red = PrepareMesh(new XbimColour("Red", 1.0, 0.0, 0.0, 0.5));
             var green = PrepareMesh(new XbimColour("Green", 0.0, 1.0, 0.0, 0.5));
+            red.WpfModel.SetValue(FrameworkElement.TagProperty, red);
+            green.WpfModel.SetValue(FrameworkElement.TagProperty, green);
+            red.BeginUpdate();
+            green.BeginUpdate();
             
             tmpOpaquesGroup.Children.Add(red);
+            
             tmpOpaquesGroup.Children.Add(green);
             
 
@@ -76,6 +82,9 @@ namespace Xbim.Presentation.LayerStylingV2
                 }
 
             }
+
+            red.EndUpdate();
+            green.EndUpdate();
 
             var mv = new ModelVisual3D { Content = tmpOpaquesGroup };
             Control.Opaques.Children.Add(mv);

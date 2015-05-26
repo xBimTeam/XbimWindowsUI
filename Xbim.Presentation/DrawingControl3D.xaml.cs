@@ -10,7 +10,7 @@
 
 #endregion
 
-#define DOPARALLEL
+// #define DOPARALLEL
 
 #region Directives
 
@@ -1430,9 +1430,6 @@ namespace Xbim.Presentation
             }
         }
 
-       
-
-
         private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildRefModelScene(XbimModel model, IfcDocumentInformation docInfo)
         {
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
@@ -1481,12 +1478,18 @@ namespace Xbim.Presentation
 
         
 
-        private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, IEnumerable<int> loadLabels, ILayerStyler layerStyler)
+        private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, IEnumerable<int> loadLabels,
+            ILayerStyler layerStyler)
         {
 
             // spaces are not excluded from the model to make the ShowSpaces property meaningful
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             scene.LayerColourMap.SetProductTypeColourMap();
+
+            var project = model.IfcProject;
+            if (project == null)
+                return scene;
+
             XbimGeometryHandleCollection handles; 
                     // = new XbimGeometryHandleCollection(model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT));
                     // .Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT | IfcEntityNameEnum.IFCSPACE));
@@ -1497,41 +1500,31 @@ namespace Xbim.Presentation
             if (suppLevel == 1)
             {
                 var metre = model.ModelFactors.OneMetre;
-                WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
+                WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
+                               XbimMatrix3D.CreateScale((float) (1/metre));
 
                 handles = loadLabels == null
                     ? new XbimGeometryHandleCollection(
                         model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT))
                     : new XbimGeometryHandleCollection(
                         model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)));
-            }
-            else
-            {
-                ctx = new Xbim3DModelContext(model);
-                handles = ctx.GetApproximateGeometryHandles();
-            }
 
-            var project = model.IfcProject;
-            if (project == null) return scene;
-            
-
-            
-
+                // version 1
             var groupedHandlers = layerStyler.GroupLayers(handles);
 #if DOPARALLEL
             Parallel.ForEach(groupedHandlers.Keys, layerName =>
 #else
             foreach (var layerName in groupedHandlers.Keys)
 #endif
+
             {
                 var layer = layerStyler.GetLayer(layerName, model, scene);
-                var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
 
-                if (suppLevel == 1)
-                {
-                    var geomColl = model.GetGeometryData(groupedHandlers[layerName]);
+                    GeometryModel3D m3D = (WpfMeshGeometry3D)layer.Visible;
+                    m3D.SetValue(TagProperty, layer);
                     
-
+                    var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
+                    var geomColl = model.GetGeometryData(groupedHandlers[layerName]);
                     // initially add all content into the hidden field (underlying geometry info)
                     // it will later be moved to the visible WPF implementation by AddLayerToDrawingControl
                     foreach (var geomData in geomColl)
@@ -1539,32 +1532,64 @@ namespace Xbim.Presentation
 #pragma warning disable 618
                         var gd = geomData.TransformBy(WcsTransform);
 #pragma warning restore 618
-
                         if (LayerStyler.UseIfcSubStyles)
                             layer.AddToHidden(gd, model);
                         else
                             layer.AddToHidden(gd);
-
                     }
 
+                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), DispatcherPriority.Background);
+                    lock (scene)
+                    {
+
+                        scene.Add(layer);
+
+                        if (ModelBounds.IsEmpty)
+                            ModelBounds = layer.BoundingBoxHidden();
+                        else
+                            ModelBounds.Union(layer.BoundingBoxHidden());
+
+                        if (ModelBounds.IsEmpty)
+                            ModelBounds = layer.BoundingBoxVisible();
+                        else
+                            ModelBounds.Union(layer.BoundingBoxVisible());
+                    }
+                    }
+#if DOPARALLEL
+            );
+#endif
                    
                 }
                 else
                 {
-                    var targetMergeMeshByStyle = ((WpfMeshGeometry3D)layer.Visible);
+                ctx = new Xbim3DModelContext(model);
+                handles = ctx.GetApproximateGeometryHandles();
+
+                // version 2
+                var groupedHandlers = layerStyler.GroupLayers(handles);
+
+                foreach (var layerName in groupedHandlers.Keys)
+
+                {
+                    var layer = layerStyler.GetLayer(layerName, model, scene);
+                    var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
+                    var targetMergeMeshByStyle = ((WpfMeshGeometry3D) layer.Visible);
+
                     targetMergeMeshByStyle.BeginUpdate();
+                    targetMergeMeshByStyle.WpfModel.SetValue(TagProperty, targetMergeMeshByStyle);
                     // v2 handles
                     var hndls = groupedHandlers[layerName];
                     foreach (var handle in hndls)
                     {
-                        var shapeInstance = ctx.ShapeInstances().FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
+                        var shapeInstance =
+                            ctx.ShapeInstances().FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
                         IXbimShapeGeometryData shapeGeom = ctx.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 
                         // var targetMergeMeshByStyle = styleMeshSets[styleId];
-                        switch ((XbimGeometryType)shapeGeom.Format)
+                        switch ((XbimGeometryType) shapeGeom.Format)
                         {
                             case XbimGeometryType.Polyhedron:
-                                var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                var shapePoly = (XbimShapeGeometry) shapeGeom;
                                 targetMergeMeshByStyle.Add(
                                    shapePoly.ShapeData,
                                    shapeInstance.IfcTypeId,
@@ -1587,22 +1612,24 @@ namespace Xbim.Presentation
                     }
                     targetMergeMeshByStyle.EndUpdate();
 
-                }
-                Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }),
-                       DispatcherPriority.Background);
+                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), null);
                 lock (scene)
                 {
                     scene.Add(layer);
 
-                    if (ModelBounds.IsEmpty) ModelBounds = layer.BoundingBoxHidden();
-                    else ModelBounds.Union(layer.BoundingBoxHidden());
+                        if (ModelBounds.IsEmpty)
+                            ModelBounds = layer.BoundingBoxHidden();
+                        else
+                            ModelBounds.Union(layer.BoundingBoxHidden());
+
+                        if (ModelBounds.IsEmpty)
+                            ModelBounds = layer.BoundingBoxVisible();
+                        else
+                            ModelBounds.Union(layer.BoundingBoxVisible());
+                    }
                 }
             }
-#if DOPARALLEL
-            );
-#endif
             Dispatcher.BeginInvoke(new Action(Hide<IfcSpace>), DispatcherPriority.Background);
-
             return scene;
         }
 
@@ -1623,9 +1650,10 @@ namespace Xbim.Presentation
         private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer) // Formerly called DrawLayer
         {
             layer.Show();
-
             GeometryModel3D m3D = (WpfMeshGeometry3D)layer.Visible;
-            m3D.SetValue(TagProperty, layer);
+
+            
+
             // sort out materials and bind
             if (layer.Style.RenderBothFaces)
                 m3D.BackMaterial = m3D.Material = (WpfMaterial)layer.Material;

@@ -156,7 +156,16 @@ namespace Xbim.Presentation
             get { return new WpfPoint3DCollection(Mesh.Positions); }
             set
             {
-                Mesh.Positions = new WpfPoint3DCollection(value);
+                if (WpfModel == null || WpfModel.Geometry == null)
+                {
+                    _unfrozenPositions = new List<Point3D>(value.Count());
+                    foreach (var xbimPoint3D in value)
+                    {
+                        _unfrozenPositions.Add(new Point3D(xbimPoint3D.X, xbimPoint3D.Y, xbimPoint3D.Z));
+                    }
+                }
+                else
+                    Mesh.Positions = new WpfPoint3DCollection(value);
             }
         }
 
@@ -165,7 +174,16 @@ namespace Xbim.Presentation
             get { return new WpfVector3DCollection(Mesh.Normals); }
             set
             {
-                Mesh.Normals = new WpfVector3DCollection(value);
+                if (WpfModel == null || WpfModel.Geometry == null)
+                {
+                    _unfrozenNormals = new List<Vector3D>(value.Count());
+                    foreach (var xbimV3D in value)
+                    {
+                        _unfrozenNormals.Add(new Vector3D(xbimV3D.X, xbimV3D.Y, xbimV3D.Z));
+                    }
+                }
+                else
+                    Mesh.Normals = new WpfVector3DCollection(value);
             }
         }
 
@@ -174,7 +192,12 @@ namespace Xbim.Presentation
             get { return Mesh.TriangleIndices; }
             set
             {
-                Mesh.TriangleIndices = new Int32Collection(value);
+                if (WpfModel == null || WpfModel.Geometry == null)
+                {
+                    _unfrozenIndices = value.ToList();
+                }
+                else
+                    Mesh.TriangleIndices = new Int32Collection(value);
             }
         }
 
@@ -182,19 +205,17 @@ namespace Xbim.Presentation
         {
             if (_meshes.Any()) //if no meshes nothing to move
             {
-                toMesh.BeginUpdate();
-                
                 toMesh.Positions = new List<XbimPoint3D>(Positions); 
                 toMesh.Normals = new List<XbimVector3D>(Normals); 
                 toMesh.TriangleIndices = new List<int>(TriangleIndices);
 
-                toMesh.Meshes = new XbimMeshFragmentCollection(Meshes); _meshes.Clear();
+                toMesh.Meshes = new XbimMeshFragmentCollection(Meshes); 
+                
+                _meshes.Clear();
                 WpfModel.Geometry = new MeshGeometry3D();
-                toMesh.EndUpdate();
+               
             }
         }
-
-        
 
         public GeometryModel3D ToGeometryModel3D()
         {
@@ -724,6 +745,5 @@ namespace Xbim.Presentation
             _unfrozenNormals = new List<Vector3D>(Mesh.Normals);
             WpfModel.Geometry = null;
         }
-     
     }
 }

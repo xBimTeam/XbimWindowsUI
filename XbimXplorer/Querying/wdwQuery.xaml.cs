@@ -19,6 +19,7 @@ using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
+using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
@@ -56,6 +57,25 @@ namespace XbimXplorer.Querying
         private IXbimXplorerPluginMasterWindow _parentWindow;
 
         private bool _bDoClear = true;
+
+        /// <summary>
+        /// Returns all types in the current AppDomain implementing the interface or inheriting the type. 
+        /// </summary>
+        public static IEnumerable<Type> TypesImplementingInterface(Type desiredType)
+        {
+            return AppDomain
+                   .CurrentDomain
+                   .GetAssemblies()
+                   .SelectMany(assembly => assembly.GetTypes())
+                   .Where(desiredType.IsAssignableFrom);
+        }
+
+        public static bool IsRealClass(Type testType)
+        {
+            return testType.IsAbstract == false
+                 && testType.IsGenericTypeDefinition == false
+                 && testType.IsInterface == false;
+        }
 
         private void txtCommand_KeyDown(object sender, KeyEventArgs e)
         {
@@ -606,37 +626,41 @@ namespace XbimXplorer.Querying
                         }
                         else if (m.Groups["action"].Value.ToLowerInvariant() == "mode")
                         {
-                            var t = parName.ToLowerInvariant();
-                            if (t == "type")
+                            parName = parName.ToLowerInvariant();
+
+                            var sb = new StringBuilder();
+                            
+                            var v1 = TypesImplementingInterface(typeof (ILayerStyler));
+                            foreach (var instance in v1.Where(IsRealClass))
                             {
-                                ReportAdd("Visual mode set to EntityType.");
-                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
+                                if (instance.Name.ToLowerInvariant() == parName || instance.FullName.ToLowerInvariant() == parName)
+                                {
+                                    _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
+                                    _parentWindow.DrawingControl.LayerStyler = (ILayerStyler)Activator.CreateInstance(instance);
                                 _parentWindow.DrawingControl.ReloadModel(
-                                    options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                        options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
+                                        );
+                                    ReportAdd("Visual mode set to " + instance.FullName + ".");
+                                    continue;
+                                }
+                                sb.AppendLine(" - " + instance.FullName);
                             }
-                            else if (t == "entity")
+                            var v2 = TypesImplementingInterface(typeof(ILayerStylerV2));
+                            foreach (var instance in v2.Where(IsRealClass))
                             {
-                                ReportAdd("Visual mode set to EntityLabel.");
-                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerPerEntity();
-                                _parentWindow.DrawingControl.ReloadModel(
-                                    options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
-                            }
-                            else if (t == "oddeven")
+                                if (instance.Name.ToLowerInvariant() == parName || instance.FullName.ToLowerInvariant() == parName)
                             {
-                                ReportAdd("Visual mode set to Odd/Even.");
-                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerEvenOdd();
+                                    _parentWindow.DrawingControl.LayerStylerForceVersion1 = false;
+                                    _parentWindow.DrawingControl.GeomSupport2LayerStyler = (ILayerStylerV2)Activator.CreateInstance(instance);
                                 _parentWindow.DrawingControl.ReloadModel(
-                                    options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                        options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
+                                        );
+                                    ReportAdd("Visual mode set to " + instance.FullName + ".");
+                                    continue;
                             }
-                            else if (t == "demo")
-                            {
-                                ReportAdd("Visual mode set to Demo.");
-                                _parentWindow.DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyleExtended();
-                                _parentWindow.DrawingControl.ReloadModel(
-                                    options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll);
+                                sb.AppendLine(" - " + instance.FullName);
                             }
-                            else
-                                ReportAdd(string.Format("mode not understood: {0}.", t));
+                            ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb.ToString()));
                         }
                         else
                         {
