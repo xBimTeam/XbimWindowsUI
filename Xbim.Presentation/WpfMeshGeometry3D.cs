@@ -683,27 +683,22 @@ namespace Xbim.Presentation
                             }
                         }
                         else
-                        {
-                            var uniqueIndices = new Dictionary<int, int>();
+                        {     
                             for (var j = 0; j < numTrianglesInFace; j++)
                             {
-                                for (int k = 0; k < 3; k++)
+                                for (var k = 0; k < 3; k++)
                                 {
-                                    int idx = ReadIndex(br, numVertices);
+                                    var idx = ReadIndex(br, numVertices);
                                     var normal = br.ReadPackedNormal().Normal;
-                                    int writtenIdx;
-                                    if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
-                                    {
-                                        writtenIdx = vertices.Count;
-                                        vertices.Add(uniqueVertices[idx]);
-                                        uniqueIndices.Add(idx, writtenIdx);
-                                        var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                                        if (qrd != null) //transform the normal if we have to
-                                            wpfNormal = qrd.Transform(wpfNormal);
-                                        normals.Add(wpfNormal);
-                                    }
 
-                                    triangleIndices.Add(indexBase + writtenIdx);
+                                    triangleIndices.Add(indexBase + vertices.Count);
+                                    vertices.Add(uniqueVertices[idx]);
+
+                                    var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                                    if (qrd != null) //transform the normal if we have to
+                                        wpfNormal = qrd.Transform(wpfNormal);
+                                    normals.Add(wpfNormal);
+
                                 }
                             }
                         }
