@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -109,29 +110,39 @@ namespace XbimXplorer
                     AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
                 }
             }
-
+            ICollection<Type> types = new List<Type>();
             try
             {
-                var userControls = assembly.GetTypes().Where(x => x.BaseType == typeof(UserControl));
-                foreach (var tp in userControls)
-                {
-                    Debug.WriteLine("Looping " + tp.Name);
-                    var instance = Activator.CreateInstance(tp);
-                    var asPWin = instance as IXbimXplorerPluginWindow;
-                    if (asPWin == null) 
-                        continue;
-                    if (_pluginWindows.Contains(asPWin)) 
-                        continue;
-                    ShowPluginWindow(asPWin);
-                    _pluginWindows.Add(asPWin);
-                }
-                
+                types = assembly.GetTypes().Where(i => i != null && typeof(UserControl).IsAssignableFrom(i)  && i.Assembly == assembly).ToList();
             }
             catch (ReflectionTypeLoadException ex)
             {
-                MessageBox.Show(ex.Message);
+                foreach (var theType in ex.Types)
+                {
+                    try
+                    {
+                        if (theType != null && typeof(UserControl).IsAssignableFrom(theType) && theType.Assembly == assembly)
+                            types.Add(theType);
+                    }
+                    // This exception list is not exhaustive, modify to suit any reasons
+                    // you find for failure to parse a single assembly
+                    catch (BadImageFormatException)
+                    {
+                        // Type not in this assembly - reference to elsewhere ignored
+                    }
+                }
+            }
 
-                throw ex;
+            foreach (var tp in types)
+            {
+                var instance = Activator.CreateInstance(tp);
+                var asPWin = instance as IXbimXplorerPluginWindow;
+                if (asPWin == null)
+                    continue;
+                if (_pluginWindows.Contains(asPWin))
+                    continue;
+                ShowPluginWindow(asPWin);
+                _pluginWindows.Add(asPWin);
             }
         }
 
