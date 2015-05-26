@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Xbim.WindowsUI</id>
-        <version>3.0.5-Prerelease</version>
+        <version>3.0.6-Prerelease</version>
         <title>xBIM WindowsUI</title>
         <authors>xBIM team</authors>
         <owners>Steve Lockley</owners>
@@ -15,18 +15,18 @@ It provides full support for reading and writing geometry, topology and data in 
 xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
 The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
 IOS and Android versions are under development.</description>
-        <summary>xBIM Windows UI contains a set of MS Windows controls that can be used to build Windows Xaml or forms based applications that can display the geometry and semantic data in IFC models.</summary>
-        <releaseNotes>3.0 contains the first Nuget release of the BIM Query Language</releaseNotes>
-        <language>en-GB</language>
-        <tags>BIM, IFC, IfcXml, IfcZip, COBie, COBieLite, BIMQL, BIM Query Langauge, .Net, C#, BuildingSmart</tags>
-        <dependencies>
-			<dependency id="Xbim.Scripting" version="3.0.12-Prerelease" />
-			<dependency id="HelixToolkit" version="2015.1.461" />
-			<dependency id="PropertyTools.Wpf" version="2013.1.12.1" />
-        </dependencies>
-      </metadata>
-      <files>
-        <file src="Output\Release\Xbim.Presentation.dll" target="lib\net45\Xbim.Presentation.dll" />
-        <file src="Output\Release\Xbim.Presentation.xml" target="lib\net45\Xbim.Presentation.xml" />
-      </files>
+      <summary>xBIM Windows UI contains a set of MS Windows controls that can be used to build Windows Xaml or forms based applications that can display the geometry and semantic data in IFC models.</summary>
+      <releaseNotes>3.0 contains the first Nuget release of the BIM Query Language</releaseNotes>
+      <language>en-GB</language>
+      <tags>BIM, IFC, IfcXml, IfcZip, COBie, COBieLite, BIMQL, BIM Query Langauge, .Net, C#, BuildingSmart</tags>
+      <dependencies>
+        <dependency id="Xbim.Scripting" version="3.0.13" />
+        <dependency id="HelixToolkit" version="2015.1.461" />
+        <dependency id="PropertyTools.Wpf" version="2013.1.12.1" />
+      </dependencies>
+    </metadata>
+    <files>
+      <file src="Output\Release\Xbim.Presentation.dll" target="lib\net45\Xbim.Presentation.dll" />
+      <file src="Output\Release\Xbim.Presentation.xml" target="lib\net45\Xbim.Presentation.xml" />
+    </files>
     </package>
