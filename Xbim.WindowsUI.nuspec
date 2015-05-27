@@ -21,8 +21,8 @@ IOS and Android versions are under development.</description>
       <tags>BIM, IFC, IfcXml, IfcZip, COBie, COBieLite, BIMQL, BIM Query Langauge, .Net, C#, BuildingSmart</tags>
       <dependencies>
         <dependency id="Xbim.Scripting" version="3.0.13" />
-        <dependency id="HelixToolkit" version="2015.1.461" />
-        <dependency id="PropertyTools.Wpf" version="2013.1.12.1" />
+        <dependency id="HelixToolkit" version="2015.1.520" />
+        <dependency id="PropertyTools.Wpf" version="2015.1.61" />
       </dependencies>
     </metadata>
     <files>
