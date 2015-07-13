@@ -24,7 +24,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <_ResolveReferenceDependencies>true</_ResolveReferenceDependencies>
-    <NuGetPackageImportStamp>d43f193a</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>2b7bd999</NuGetPackageImportStamp>
     <PublishUrl>ClickOnce\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -117,53 +117,49 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
-    <Reference Include="Esent.Interop">
+    <Reference Include="Esent.Interop, Version=1.9.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\ManagedEsent.1.9.2.0\lib\net40\Esent.Interop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Gat.Controls.AboutBox">
-      <HintPath>..\packages\AboutBox.2.0.0\lib\net45\Gat.Controls.AboutBox.dll</HintPath>
+    <Reference Include="Gat.Controls.AboutBox, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AboutBox.2.0.0\lib\net40\Gat.Controls.AboutBox.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="HelixToolkit, Version=2015.1.520.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\HelixToolkit.2015.1.520\lib\portable-net4+sl4+wp71+win8\HelixToolkit.dll</HintPath>
+    <Reference Include="HelixToolkit, Version=2015.1.545.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.2015.1.545\lib\portable-net4+sl4+wp71+win8\HelixToolkit.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="HelixToolkit.Wpf, Version=2015.1.520.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\HelixToolkit.Wpf.2015.1.520\lib\net45\HelixToolkit.Wpf.dll</HintPath>
+    <Reference Include="HelixToolkit.Wpf, Version=2015.1.545.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.Wpf.2015.1.545\lib\net40\HelixToolkit.Wpf.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NPOI.2.1.3.1\lib\net40\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="log4net">
+    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NPOI, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NPOI.2.1.3.1\lib\net40\NPOI.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NPOI.OOXML">
+    <Reference Include="NPOI.OOXML, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <HintPath>..\packages\NPOI.2.1.3.1\lib\net40\NPOI.OOXML.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NPOI.OpenXml4Net">
+    <Reference Include="NPOI.OpenXml4Net, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <HintPath>..\packages\NPOI.2.1.3.1\lib\net40\NPOI.OpenXml4Net.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NPOI.OpenXmlFormats">
+    <Reference Include="NPOI.OpenXmlFormats, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <HintPath>..\packages\NPOI.2.1.3.1\lib\net40\NPOI.OpenXmlFormats.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="PropertyTools, Version=2015.1.61.0, Culture=neutral, PublicKeyToken=ea0c9f2b460934d0, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PropertyTools.Wpf.2015.1.61\lib\net45\PropertyTools.dll</HintPath>
     </Reference>
     <Reference Include="PropertyTools.Wpf, Version=2015.1.61.0, Culture=neutral, PublicKeyToken=ea0c9f2b460934d0, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -198,73 +194,85 @@
     <Reference Include="PresentationFramework">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="Xbim.COBie">
-      <HintPath>..\packages\Xbim.Exchange.3.0.81\lib\net45\Xbim.COBie.dll</HintPath>
+    <Reference Include="Xbim.COBie, Version=3.0.5662.18369, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Exchange.3.0.83\lib\net40\Xbim.COBie.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.COBieLite">
-      <HintPath>..\packages\Xbim.Exchange.3.0.81\lib\net45\Xbim.COBieLite.dll</HintPath>
+    <Reference Include="Xbim.COBieLite, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Exchange.3.0.83\lib\net40\Xbim.COBieLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.COBieLiteUK">
-      <HintPath>..\packages\Xbim.Exchange.3.0.81\lib\net45\Xbim.COBieLiteUK.dll</HintPath>
+    <Reference Include="Xbim.COBieLiteUK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Exchange.3.0.83\lib\net40\Xbim.COBieLiteUK.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.COBieLiteUK.Validation">
-      <HintPath>..\packages\Xbim.Exchange.3.0.81\lib\net45\Xbim.COBieLiteUK.Validation.dll</HintPath>
+    <Reference Include="Xbim.COBieLiteUK.Validation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Exchange.3.0.83\lib\net40\Xbim.COBieLiteUK.Validation.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Common, Version=3.0.5620.24387, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.20\lib\net45\Xbim.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Xbim.DPoW">
-      <HintPath>..\packages\Xbim.Exchange.3.0.81\lib\net45\Xbim.DPoW.dll</HintPath>
+    <Reference Include="Xbim.Common, Version=3.0.5662.16891, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Essentials.3.0.24\lib\net40\Xbim.Common.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Exchanger">
-      <HintPath>..\packages\Xbim.Exchange.3.0.81\lib\net45\Xbim.Exchanger.dll</HintPath>
+    <Reference Include="Xbim.DPoW, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Exchange.3.0.83\lib\net40\Xbim.DPoW.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Geometry.Engine.Interop">
-      <HintPath>..\packages\Xbim.Geometry.3.0.21\lib\net45\Xbim.Geometry.Engine.Interop.dll</HintPath>
+    <Reference Include="Xbim.Exchanger, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Exchange.3.0.83\lib\net40\Xbim.Exchanger.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Ifc.Extensions, Version=3.0.5620.24390, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.20\lib\net45\Xbim.Ifc.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Xbim.Ifc2x3, Version=3.0.5620.24388, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Xbim.IO, Version=3.0.5620.24390, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Xbim.Essentials.3.0.20\lib\net45\Xbim.IO.dll</HintPath>
-    </Reference>
-    <Reference Include="Xbim.ModelGeometry.Scene">
-      <HintPath>..\packages\Xbim.Geometry.3.0.21\lib\net45\Xbim.ModelGeometry.Scene.dll</HintPath>
+    <Reference Include="Xbim.Geometry.Engine.Interop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Geometry.3.0.24\lib\net40\Xbim.Geometry.Engine.Interop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Script">
-      <HintPath>..\packages\Xbim.Scripting.3.0.13\lib\net45\Xbim.Script.dll</HintPath>
+    <Reference Include="Xbim.Ifc.Extensions, Version=3.0.5662.16959, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Essentials.3.0.24\lib\net40\Xbim.Ifc.Extensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Tessellator">
-      <HintPath>..\packages\Xbim.Geometry.3.0.21\lib\net45\Xbim.Tessellator.dll</HintPath>
+    <Reference Include="Xbim.Ifc2x3, Version=3.0.5662.16958, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Essentials.3.0.24\lib\net40\Xbim.Ifc2x3.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xceed.Wpf.AvalonDock">
+    <Reference Include="Xbim.IO, Version=3.0.5662.16959, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Essentials.3.0.24\lib\net40\Xbim.IO.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xbim.ModelGeometry.Scene, Version=3.0.5662.17666, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Geometry.3.0.24\lib\net40\Xbim.ModelGeometry.Scene.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xbim.Properties, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.PropertySets.1.0.3\lib\net40\Xbim.Properties.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xbim.Script, Version=3.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Scripting.3.0.14\lib\net40\Xbim.Script.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xbim.Tessellator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xbim.Geometry.3.0.24\lib\net40\Xbim.Tessellator.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonDock.2.0.2000\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero">
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonDock.2.0.2000\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Expression">
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Expression, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonDock.2.0.2000\lib\net40\Xceed.Wpf.AvalonDock.Themes.Expression.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro">
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonDock.2.0.2000\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010">
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonDock.2.0.2000\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -461,12 +469,12 @@
     </FileAssociation>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Xbim.Geometry.3.0.21\build\net45\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.21\build\net45\Xbim.Geometry.targets')" />
+  <Import Project="..\packages\Xbim.Geometry.3.0.24\build\net40\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.3.0.24\build\net40\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xbim.Geometry.3.0.21\build\net45\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.3.0.21\build\net45\Xbim.Geometry.targets'))" />
+    <Error Condition="!Exists('..\packages\Xbim.Geometry.3.0.24\build\net40\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.3.0.24\build\net40\Xbim.Geometry.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

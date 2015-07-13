@@ -5,6 +5,6 @@
         x:Name="This"
         Title="Scripting Window" Height="400" Width="600">
     <Grid>
-        <xbim:ScriptingControl Name="ScriptingConcrol"/>
+        <xbim:ScriptingControl x:Name="ScriptingControl" />
     </Grid>
 </Window>

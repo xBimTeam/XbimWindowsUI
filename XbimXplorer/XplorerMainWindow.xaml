@@ -142,8 +142,10 @@
                         <TextBlock Text="{Binding Viewport.CameraInertiaFactor, StringFormat='{}{0:0.000}', ElementName=DrawingControl}"/>
                     </StackPanel>
                 </MenuItem>
+                <!--
                 <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraRotationMode, ElementName=DrawingControl}" Header="CameraRotationMode"/>
                 <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraMode, ElementName=DrawingControl}" Header="CameraMode" />
+                -->
             </MenuItem>
             <MenuItem Header="C_OBie">
                 <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}" />

@@ -932,11 +932,11 @@ namespace XbimXplorer
             var win = new ScriptingWindow();
             win.Owner = this;
 
-            win.ScriptingConcrol.DataContext = ModelProvider;
+            win.ScriptingControl.DataContext = ModelProvider;
             var binding = new Binding();
-            win.ScriptingConcrol.SetBinding(ScriptingControl.ModelProperty, binding);
+            win.ScriptingControl.SetBinding(ScriptingControl.ModelProperty, binding);
 
-            win.ScriptingConcrol.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
+            win.ScriptingControl.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
             {
                 ModelProvider.ObjectInstance = null;
                 var m3D = new Xbim3DModelContext(arg.NewModel);
@@ -945,7 +945,7 @@ namespace XbimXplorer
                 ModelProvider.Refresh();
             };
 
-            win.ScriptingConcrol.OnScriptParsed += delegate
+            win.ScriptingControl.OnScriptParsed += delegate
             {
                 GroupControl.Regenerate();
                 //SpatialControl.Regenerate();
