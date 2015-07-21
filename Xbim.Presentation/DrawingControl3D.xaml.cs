@@ -838,9 +838,7 @@ namespace Xbim.Presentation
                                 var gd = geomData.TransformBy(WcsTransform);
                                 xm3d.Add(gd);
                             }
-                            m.TriangleIndices = new Int32Collection(xm3d.TriangleIndices);
-                            m.Positions = Extensions.Utility.GeomUtils.GetPointCollection( xm3d.Positions);
-                            m.Normals = Extensions.Utility.GeomUtils.GetVectorCollection(xm3d.Normals);
+                            m.Add(xm3d);
                         }
                     }
                 }

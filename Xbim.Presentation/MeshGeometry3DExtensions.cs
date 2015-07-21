@@ -7,11 +7,19 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
+using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
 {
     public static class MeshGeometry3DExtensions
     {
+        public static void Add(this MeshGeometry3D m3D, XbimMeshGeometry3D addedGeometry3D)
+        {
+            m3D.TriangleIndices = Extensions.Utility.GeomUtils.CombineIndexCollection(m3D.TriangleIndices, addedGeometry3D.TriangleIndices, m3D.Positions.Count);
+            m3D.Positions = Extensions.Utility.GeomUtils.CombinePointCollection(m3D.Positions, addedGeometry3D.Positions);
+            m3D.Normals = Extensions.Utility.GeomUtils.CombineVectorCollection(m3D.Normals, addedGeometry3D.Normals);
+        }
+
         /// <summary>
         /// Reads a triangulated model from an array of bytes and adds the mesh to the current state
         ///  </summary>
