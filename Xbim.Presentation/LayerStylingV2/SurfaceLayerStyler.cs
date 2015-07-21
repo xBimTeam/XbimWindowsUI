@@ -121,20 +121,22 @@ namespace Xbim.Presentation.LayerStylingV2
                             case XbimGeometryType.Polyhedron:
                                 var shapePoly = (XbimShapeGeometry)shapeGeom;
                                 targetMergeMeshByStyle.Add(
-                           shapePoly.ShapeData,
-                           shapeInstance.IfcTypeId,
-                           shapeInstance.IfcProductLabel,
-                           shapeInstance.InstanceLabel,
-                           XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                    shapePoly.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform),
+                                    model.UserDefinedId);
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
                                 targetMergeMeshByStyle.Add(
-                          shapeGeom.ShapeData,
-                          shapeInstance.IfcTypeId,
-                          shapeInstance.IfcProductLabel,
-                          shapeInstance.InstanceLabel,
-                          XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                    shapeGeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform),
+                                    model.UserDefinedId);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();

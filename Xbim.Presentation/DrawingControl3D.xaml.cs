@@ -1625,7 +1625,8 @@ namespace Xbim.Presentation
                                    shapeInstance.IfcTypeId,
                                    shapeInstance.IfcProductLabel,
                                    shapeInstance.InstanceLabel,
-                                   XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                   XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform),
+                                   model.UserDefinedId);
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
@@ -1634,7 +1635,8 @@ namespace Xbim.Presentation
                                   shapeInstance.IfcTypeId,
                                   shapeInstance.IfcProductLabel,
                                   shapeInstance.InstanceLabel,
-                                  XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                  XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform),
+                                  model.UserDefinedId);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();

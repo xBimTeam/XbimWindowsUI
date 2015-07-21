@@ -4,6 +4,7 @@ using System.Linq;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation.FederatedModel
 {
@@ -167,7 +168,7 @@ namespace Xbim.Presentation.FederatedModel
                 {
                     refM.CreateFrom(Name, null, null, true);
                     var m3D = new Xbim3DModelContext(refM);
-                    m3D.CreateContext();
+                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
                     Name = Path.ChangeExtension(Name, "xbim");
                 }
             }
