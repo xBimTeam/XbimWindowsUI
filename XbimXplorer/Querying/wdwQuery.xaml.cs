@@ -627,20 +627,32 @@ namespace XbimXplorer.Querying
                         else if (m.Groups["action"].Value.ToLowerInvariant() == "mode")
                         {
                             parName = parName.ToLowerInvariant();
-
                             var sb = new StringBuilder();
-                            
+
+                            if (_parentWindow.DrawingControl.LayerStylerForceVersion1 ||
+                                Model.GeometrySupportLevel == 1)
+                                ReportAdd(string.Format(@"Current mode is {0}",
+                                    _parentWindow.DrawingControl.LayerStyler.GetType()), Brushes.Green);
+                            else
+                                ReportAdd(string.Format(@"Current mode is {0}",
+                                    _parentWindow.DrawingControl.GeomSupport2LayerStyler.GetType()), Brushes.Green);
+
+                            bool stylerSet = false;
+
                             var v1 = TypesImplementingInterface(typeof (ILayerStyler));
                             foreach (var instance in v1.Where(IsRealClass))
                             {
-                                if (instance.Name.ToLowerInvariant() == parName || instance.FullName.ToLowerInvariant() == parName)
+                                if (instance.Name.ToLowerInvariant() == parName ||
+                                    instance.FullName.ToLowerInvariant() == parName)
                                 {
                                     _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
-                                    _parentWindow.DrawingControl.LayerStyler = (ILayerStyler)Activator.CreateInstance(instance);
-                                _parentWindow.DrawingControl.ReloadModel(
+                                    _parentWindow.DrawingControl.LayerStyler =
+                                        (ILayerStyler) Activator.CreateInstance(instance);
+                                    _parentWindow.DrawingControl.ReloadModel(
                                         options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
                                         );
-                                    ReportAdd("Visual mode set to " + instance.FullName + ".");
+                                    ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
+                                    stylerSet = true;
                                     continue;
                                 }
                                 sb.AppendLine(" - " + instance.FullName);
@@ -648,19 +660,23 @@ namespace XbimXplorer.Querying
                             var v2 = TypesImplementingInterface(typeof(ILayerStylerV2));
                             foreach (var instance in v2.Where(IsRealClass))
                             {
-                                if (instance.Name.ToLowerInvariant() == parName || instance.FullName.ToLowerInvariant() == parName)
-                            {
+                                if (instance.Name.ToLowerInvariant() == parName ||
+                                    instance.FullName.ToLowerInvariant() == parName)
+                                {
                                     _parentWindow.DrawingControl.LayerStylerForceVersion1 = false;
-                                    _parentWindow.DrawingControl.GeomSupport2LayerStyler = (ILayerStylerV2)Activator.CreateInstance(instance);
-                                _parentWindow.DrawingControl.ReloadModel(
+                                    _parentWindow.DrawingControl.GeomSupport2LayerStyler =
+                                        (ILayerStylerV2) Activator.CreateInstance(instance);
+                                    _parentWindow.DrawingControl.ReloadModel(
                                         options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
                                         );
-                                    ReportAdd("Visual mode set to " + instance.FullName + ".");
+                                    ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
+                                    stylerSet = true;
                                     continue;
-                            }
+                                }
                                 sb.AppendLine(" - " + instance.FullName);
                             }
-                            ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb.ToString()));
+                            if (!stylerSet)
+                                ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb.ToString()));
                         }
                         else
                         {

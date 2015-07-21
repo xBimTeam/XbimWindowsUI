@@ -886,6 +886,10 @@ namespace XbimXplorer
             about.Copyright = "Prof. Steve Lockley";
             // about.PublisherLogo = about.ApplicationLogo;
             about.AdditionalNotes = "The xBIM toolkit is an Open Source software initiative to help software developers and researchers to support the next generation of BIM tools; unlike other open source application xBIM license is compatible with commercial environments (http://xbim.codeplex.com/license)";
+            if (Model != null)
+            {
+                about.AdditionalNotes += string.Format("\r\nGeometry information version: {0}", Model.GeometrySupportLevel);
+            }
             about.Show();
         }
 

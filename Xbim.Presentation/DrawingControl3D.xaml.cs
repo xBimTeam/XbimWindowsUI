@@ -372,6 +372,8 @@ namespace Xbim.Presentation
             
             var pos = e.GetPosition(Canvas);
             var hit = FindHit(pos);
+            
+
             if (hit == null || hit.ModelHit == null)
             {
                 Selection.Clear();
@@ -415,6 +417,10 @@ namespace Xbim.Presentation
                         thisSelectedEntity = modelHit.Instances[frag.EntityLabel];
                     }
                 }
+            }
+            else if (hitObject is XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>)
+            {
+                thisSelectedEntity = GetClickedEntity(hit);
             }
             else
             {
@@ -787,31 +793,56 @@ namespace Xbim.Presentation
                     var fromModel = item.ModelOf as XbimModel;
                     if (fromModel != null && item is IfcProduct)
                     {
-                        var metre = fromModel.ModelFactors.OneMetre;
-                        WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
-
-                        var context = new Xbim3DModelContext(fromModel);
-
-                        var productShape = context.ShapeInstancesOf((IfcProduct)item).Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded).ToList();
-                        if (productShape.Any())
+                        if (fromModel.GeometrySupportLevel == 2)
                         {
+                            var metre = fromModel.ModelFactors.OneMetre;
+                            WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
+                                           XbimMatrix3D.CreateScale((float) (1/metre));
 
-                            foreach (var shapeInstance in productShape)
+                            var context = new Xbim3DModelContext(fromModel);
+
+                            var productShape =
+                                context.ShapeInstancesOf((IfcProduct) item)
+                                    .Where(
+                                        s =>
+                                            s.RepresentationType !=
+                                            XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                                    .ToList();
+                            if (productShape.Any())
                             {
-                                IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                                switch ((XbimGeometryType)shapeGeom.Format)
+
+                                foreach (var shapeInstance in productShape)
                                 {
-                                    case XbimGeometryType.PolyhedronBinary:
-                                        m.Read(shapeGeom.ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
-                                        break;
-                                    case XbimGeometryType.Polyhedron:
-                                        m.Read(((XbimShapeGeometry)shapeGeom).ShapeData, XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
-                                        break;
+                                    IXbimShapeGeometryData shapeGeom =
+                                        context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                    switch ((XbimGeometryType) shapeGeom.Format)
+                                    {
+                                        case XbimGeometryType.PolyhedronBinary:
+                                            m.Read(shapeGeom.ShapeData,
+                                                XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                            break;
+                                        case XbimGeometryType.Polyhedron:
+                                            m.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
+                                                XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform));
+                                            break;
+                                    }
                                 }
                             }
                         }
+                        else
+                        {
+                            var xm3d = new XbimMeshGeometry3D();
+                            var geomDataSet = fromModel.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                            foreach (var geomData in geomDataSet)
+                            {
+                                var gd = geomData.TransformBy(WcsTransform);
+                                xm3d.Add(gd);
+                            }
+                            m.TriangleIndices = new Int32Collection(xm3d.TriangleIndices);
+                            m.Positions = Extensions.Utility.GeomUtils.GetPointCollection( xm3d.Positions);
+                            m.Normals = Extensions.Utility.GeomUtils.GetVectorCollection(xm3d.Normals);
+                        }
                     }
-
                 }
             }
             else if (newVal != null)
@@ -1451,7 +1482,7 @@ namespace Xbim.Presentation
                 
             }
 
-            Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer); }), DispatcherPriority.Background);
+            Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, true); }), DispatcherPriority.Background);
             lock (scene)
             {
                 scene.Add(layer);
@@ -1509,7 +1540,7 @@ namespace Xbim.Presentation
                     : new XbimGeometryHandleCollection(
                         model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)));
 
-                // version 1
+                // geometry engine version 1
             var groupedHandlers = layerStyler.GroupLayers(handles);
 #if DOPARALLEL
             Parallel.ForEach(groupedHandlers.Keys, layerName =>
@@ -1531,6 +1562,7 @@ namespace Xbim.Presentation
                     {
 #pragma warning disable 618
                         var gd = geomData.TransformBy(WcsTransform);
+                        
 #pragma warning restore 618
                         if (LayerStyler.UseIfcSubStyles)
                             layer.AddToHidden(gd, model);
@@ -1538,7 +1570,7 @@ namespace Xbim.Presentation
                             layer.AddToHidden(gd);
                     }
 
-                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), DispatcherPriority.Background);
+                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, true, isLayerVisible); }), DispatcherPriority.Background);
                     lock (scene)
                     {
 
@@ -1565,7 +1597,7 @@ namespace Xbim.Presentation
                 ctx = new Xbim3DModelContext(model);
                 handles = ctx.GetApproximateGeometryHandles();
 
-                // version 2
+                //  // geometry engine version 2
                 var groupedHandlers = layerStyler.GroupLayers(handles);
 
                 foreach (var layerName in groupedHandlers.Keys)
@@ -1612,7 +1644,7 @@ namespace Xbim.Presentation
                     }
                     targetMergeMeshByStyle.EndUpdate();
 
-                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, isLayerVisible); }), null);
+                    Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, false, isLayerVisible); }), null);
                 lock (scene)
                 {
                     scene.Add(layer);
@@ -1637,9 +1669,9 @@ namespace Xbim.Presentation
         /// Function that actually populates the geometry from the layer into the viewer meshes.
         /// If the <paramref name="isLayerVisible"/> is set to false layer becomes hidden.
         /// </summary>
-        private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer, bool isLayerVisible)
+        private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer, bool addTagProperty, bool isLayerVisible)
         {
-            AddLayerToDrawingControl(layer);
+            AddLayerToDrawingControl(layer, addTagProperty);
             if (!isLayerVisible)
                 layer.HideAll();
         }
@@ -1647,12 +1679,12 @@ namespace Xbim.Presentation
         /// <summary>
         /// function that actually populates the geometry from the layer into the viewer meshes.
         /// </summary>
-        private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer) // Formerly called DrawLayer
+        private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer, bool addTagProperty) // Formerly called DrawLayer
         {
             layer.Show();
             GeometryModel3D m3D = (WpfMeshGeometry3D)layer.Visible;
-
-            
+            if (addTagProperty)
+                m3D.SetValue(TagProperty, layer);
 
             // sort out materials and bind
             if (layer.Style.RenderBothFaces)
@@ -1672,7 +1704,7 @@ namespace Xbim.Presentation
                 Opaques.Children.Add(mv);
 
             foreach (var subLayer in layer.SubLayers)
-                AddLayerToDrawingControl(subLayer);
+                AddLayerToDrawingControl(subLayer, addTagProperty);
         }
 
         /// <summary>
