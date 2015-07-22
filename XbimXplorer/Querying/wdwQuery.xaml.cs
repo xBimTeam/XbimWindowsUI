@@ -648,6 +648,10 @@ namespace XbimXplorer.Querying
                                     _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
                                     _parentWindow.DrawingControl.LayerStyler =
                                         (ILayerStyler) Activator.CreateInstance(instance);
+                                    _parentWindow.DrawingControl.FederationLayerStyler =
+                                        (ILayerStyler)Activator.CreateInstance(instance);
+
+
                                     _parentWindow.DrawingControl.ReloadModel(
                                         options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
                                         );
