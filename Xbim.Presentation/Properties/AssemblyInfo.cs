@@ -10,6 +10,8 @@
 
 #endregion
 
+using System.Windows;
+
 #region Directives
 
 using System.Reflection;
@@ -36,3 +38,8 @@ using System.Windows.Markup;
 [assembly: Guid("603a1283-949b-4733-bb77-0c622e46346d")]
 
 [assembly: XmlnsDefinition("http://schemas.Xbim.com/Presentation", "Xbim.Presentation")]
+
+[assembly: ThemeInfo(
+    ResourceDictionaryLocation.None,
+    ResourceDictionaryLocation.SourceAssembly
+)]

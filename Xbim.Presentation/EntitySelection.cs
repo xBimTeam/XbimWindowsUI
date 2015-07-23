@@ -202,7 +202,7 @@ namespace Xbim.Presentation
             return true;
         }
 
-        internal void Clear()
+        public void Clear()
         {
             // to preserve undo capability
             //

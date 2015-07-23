@@ -3,6 +3,7 @@ using System.Linq;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -40,5 +41,7 @@ namespace Xbim.Presentation.LayerStyling
                 retvalues.Add("WholeModel", inputHandles);
             return retvalues;
         }
+
+        public void SetCurrentModel(IModel model) { }
     }
 }

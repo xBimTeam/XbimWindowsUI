@@ -41,6 +41,7 @@ using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.Ifc2x3.SharedComponentElements;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using Xbim.Presentation.Extensions;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.ModelGeomInfo;
@@ -56,14 +57,79 @@ namespace Xbim.Presentation
     /// <summary>
     ///   Interaction logic for DrawingControl3D.xaml
     /// </summary>
-    public partial class DrawingControl3D
-    {   
-        public DrawingControl3D()
+    [TemplatePart(Name = TemplateCanvas, Type = typeof(HelixViewport3D))]
+    [TemplatePart(Name = TemplateTransHighlighted, Type = typeof(MeshVisual3D))]
+    [TemplatePart(Name = TemplateCuttingGroup, Type = typeof(CuttingPlaneGroup))]
+    [TemplatePart(Name = TemplateOpaques, Type = typeof(ModelVisual3D))]
+    [TemplatePart(Name = TemplateHighlighted, Type = typeof(ObservableMeshVisual3D))]
+    [TemplatePart(Name = TemplateCuttingGroupT, Type = typeof(CuttingPlaneGroup))]
+    [TemplatePart(Name = TemplateTransparents, Type = typeof(ModelVisual3D))]
+    [TemplatePart(Name = TemplateExtras, Type = typeof(ModelVisual3D))]
+    [TemplatePart(Name = TemplateGridLines, Type = typeof(GridLinesVisual3D))]
+    public class DrawingControl3D : UserControl
+    {
+        #region Template defined variables
+
+        private const string TemplateCanvas = "Canvas";
+        private const string TemplateTransHighlighted = "TransHighlighted";
+        private const string TemplateCuttingGroup = "CuttingGroup";
+        private const string TemplateOpaques = "Opaques";
+        private const string TemplateHighlighted = "Highlighted";
+        private const string TemplateCuttingGroupT = "CuttingGroupT";
+        private const string TemplateTransparents = "Transparents";
+        private const string TemplateExtras = "Extras";
+        private const string TemplateGridLines = "GridLines";
+
+        protected HelixViewport3D Canvas;
+        protected MeshVisual3D TransHighlighted;
+        protected CuttingPlaneGroup CuttingGroup;
+        protected ModelVisual3D Opaques;
+        protected ObservableMeshVisual3D Highlighted;
+        protected CuttingPlaneGroup CuttingGroupT;
+        protected ModelVisual3D Transparents;
+        protected ModelVisual3D Extras;
+        protected GridLinesVisual3D GridLines;
+
+        public ModelVisual3D OpaquesVisual3D { get { return Opaques; } }
+        public ModelVisual3D TransparentsVisual3D { get { return Transparents; } }
+
+        #endregion
+
+        protected HashSet<Material> Materials
         {
-            InitializeComponent();
+            get { return _materials; }
+        }
+
+        protected Dictionary<Material, double> Opacities
+        {
+            get { return _opacities; }
+        }
+
+        protected CombinedManipulator ClipHandler;
+
+        static DrawingControl3D()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(DrawingControl3D), new FrameworkPropertyMetadata(typeof(DrawingControl3D)));
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            Canvas = (HelixViewport3D) GetTemplateChild(TemplateCanvas);
+            TransHighlighted = (MeshVisual3D) GetTemplateChild(TemplateTransHighlighted);
+            CuttingGroup = (CuttingPlaneGroup) GetTemplateChild(TemplateCuttingGroup);
+            Opaques = (ModelVisual3D) GetTemplateChild(TemplateOpaques);
+            Highlighted = (ObservableMeshVisual3D) GetTemplateChild(TemplateHighlighted);
+            CuttingGroupT = (CuttingPlaneGroup) GetTemplateChild(TemplateCuttingGroupT);
+            Transparents = (ModelVisual3D) GetTemplateChild(TemplateTransparents);
+            Extras = (ModelVisual3D) GetTemplateChild(TemplateExtras);
+            GridLines = (GridLinesVisual3D) GetTemplateChild(TemplateGridLines);
+
             Highlighted.PropertyChanged += Highlighted_PropertyChanged;
             Viewport = Canvas;
             Canvas.MouseDown += Canvas_MouseDown;
+            Canvas.MouseMove += Canvas_MouseMove;
             Canvas.MouseWheel += Canvas_MouseWheel;
             Loaded += DrawingControl3D_Loaded;
             _federationColours = new XbimColourMap(StandardColourMaps.Federation);
@@ -84,14 +150,12 @@ namespace Xbim.Presentation
             pInfo.SetValue(TransHighlighted, sourceValue, null);
         }
 
-        CombinedManipulator _clipHandler;
-
         public bool LayerStylerForceVersion1 { get; set; }
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
             var plane = GetCutPlane();
-            if (e.Key == Key.LeftShift && _clipHandler == null && plane != null)
+            if (e.Key == Key.LeftShift && ClipHandler == null && plane != null)
                 ClipPlaneHandlesShow();
             else if (e.Key == Key.Delete &&
                 ((e.KeyboardDevice.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift) // shift is pressed
@@ -102,12 +166,12 @@ namespace Xbim.Presentation
                     ClearCutPlane();
                 }
                 ClipPlaneHandlesHide();
-                _clipHandler = null;
+                ClipHandler = null;
             }
             base.OnPreviewKeyDown(e);
         }
 
-        private void ClipPlaneHandlesPlace(Point3D pos)
+        protected void ClipPlaneHandlesPlace(Point3D pos)
         {
             var m = Matrix3D.Identity;
             m.Translate(new Vector3D(
@@ -117,20 +181,20 @@ namespace Xbim.Presentation
             // ClipPlaneHandlesShow();
         }
 
-        private void ClipPlaneHandlesShow()
+        protected void ClipPlaneHandlesShow()
         {
-            _clipHandler = new CombinedManipulator();
-            Extras.Children.Add(_clipHandler);
+            ClipHandler = new CombinedManipulator();
+            Extras.Children.Add(ClipHandler);
         }
 
         protected override void OnPreviewKeyUp(KeyEventArgs e)
         {
             // dealing with cutting plane update
             //
-            if (e.Key == Key.LeftShift && _clipHandler != null)
+            if (e.Key == Key.LeftShift && ClipHandler != null)
             {
                 var m1 = Extras.Transform.Value;
-                var m2 = _clipHandler.Transform.Value;
+                var m2 = ClipHandler.Transform.Value;
 
                 ClipPlaneHandlesHide();
 
@@ -145,10 +209,10 @@ namespace Xbim.Presentation
             base.OnPreviewKeyUp(e);
         }
 
-        private void ClipPlaneHandlesHide()
+        protected void ClipPlaneHandlesHide()
         {
             Extras.Children.Clear();
-            _clipHandler = null;
+            ClipHandler = null;
         }
 
 
@@ -258,21 +322,21 @@ namespace Xbim.Presentation
             }
             }
 
-        void DrawingControl3D_Loaded(object sender, RoutedEventArgs e)
+        protected virtual void DrawingControl3D_Loaded(object sender, RoutedEventArgs e)
         {
             ShowSpaces = false; 
         }
 
         #region Fields
         public List<XbimScene<WpfMeshGeometry3D, WpfMaterial>> Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
-        private readonly XbimColourMap _federationColours;
+        private XbimColourMap _federationColours;
 
         // protected RayMeshGeometry3DHitTestResult _hitResult;
        
         public XbimRect3D ModelBounds;
         private XbimRect3D _viewBounds;
         // private int? _currentProduct;
-        private readonly List<Material> _materials = new List<Material>();
+        private readonly HashSet<Material> _materials = new HashSet<Material>();
         private readonly Dictionary<Material, double> _opacities = new Dictionary<Material, double>();
         /// <summary>
         /// Gets or sets the model.
@@ -292,15 +356,13 @@ namespace Xbim.Presentation
         }
 
         public void SetCutPlane(double posX, double posY, double posZ, double nrmX, double nrmY, double nrmZ)
-        {   
-            SetNamedCutPlane(posX, posY, posZ, nrmX, nrmY, nrmZ, "cuttingGroup");
-            SetNamedCutPlane(posX, posY, posZ, nrmX, nrmY, nrmZ, "cuttingGroupT");
+        {
+            SetNamedCutPlane(posX, posY, posZ, nrmX, nrmY, nrmZ, CuttingGroup);
+            SetNamedCutPlane(posX, posY, posZ, nrmX, nrmY, nrmZ, CuttingGroupT);
         }
 
-        private void SetNamedCutPlane(double posX, double posY, double posZ, double nrmX, double nrmY, double nrmZ, string cuttingGroupName)
+        private void SetNamedCutPlane(double posX, double posY, double posZ, double nrmX, double nrmY, double nrmZ, CuttingPlaneGroup cpg)
         {
-            var p = FindName(cuttingGroupName);
-            var cpg = p as CuttingPlaneGroup;
             if (cpg == null) 
                 return;
             cpg.IsEnabled = false;
@@ -315,14 +377,12 @@ namespace Xbim.Presentation
 
         public void ClearCutPlane()
         {
-            ClearNamedCutPlane("cuttingGroup");
-            ClearNamedCutPlane("cuttingGroupT");
+            ClearNamedCutPlane(CuttingGroup);
+            ClearNamedCutPlane(CuttingGroupT);
         }
 
-        private void ClearNamedCutPlane(string name)
+        private void ClearNamedCutPlane(CuttingPlaneGroup cpg)
         {
-            var p = FindName(name);
-            var cpg = p as CuttingPlaneGroup;
             if (cpg != null)
             {
                 cpg.IsEnabled = false;
@@ -345,14 +405,12 @@ namespace Xbim.Presentation
 
         public Dictionary<ModifierKeys, XbimMouseClickActions> MouseModifierKeyBehaviour = new Dictionary<ModifierKeys, XbimMouseClickActions>();
 
-        private void SelectionDrivenSelectedEntityChange(IPersistIfcEntity entity)
+        protected void SelectionDrivenSelectedEntityChange(IPersistIfcEntity entity = null)
         {
             _selectedEntityChangeTriggedBySelectionChange = true;
             if (SelectedEntity == null && entity == null)
-            {
-                // OnSelectedEntityChanged(this, new DependencyPropertyChangedEventArgs(SelectedEntityProperty, null, null));
                 HighlighSelected(null);
-            }
+
             SelectedEntity = entity;
             
             _selectedEntityChangeTriggedBySelectionChange = false;
@@ -361,7 +419,7 @@ namespace Xbim.Presentation
         public event UserModeledDimensionChanged UserModeledDimensionChangedEvent;
         public delegate void UserModeledDimensionChanged(DrawingControl3D m, PolylineGeomInfo e);
 
-        private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
+        protected virtual void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
         {    
             var pos = e.GetPosition(Canvas);
             var hit = FindHit(pos);
@@ -483,6 +541,25 @@ namespace Xbim.Presentation
             {
                 SelectedEntity = thisSelectedEntity;
             }
+        }
+
+        protected virtual void Canvas_MouseMove(object sender, MouseEventArgs e)
+        {
+        }
+
+        protected virtual void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            Console.WriteLine(e.Delta);
+        }
+
+        protected virtual ILayerStyler GetCurrentLayerStyler()
+        {
+            return LayerStyler ?? (LayerStyler = new LayerStylerTypeAndIfcStyle());
+        }
+
+        protected virtual ILayerStyler GetCurrentFederationLayerStyler()
+        {
+            return FederationLayerStyler ?? (FederationLayerStyler = new LayerStylerSingleColour());
         }
 
         private PointGeomInfo GetClosestPoint(RayMeshGeometry3DHitTestResult hit)
@@ -755,7 +832,7 @@ namespace Xbim.Presentation
         /// Executed when a new entity is selected
         /// </summary>
         /// <param name="newVal"></param>
-        private void HighlighSelected(IPersistIfcEntity newVal)
+        protected virtual void HighlighSelected(IPersistIfcEntity newVal)
         {
             var m = new MeshGeometry3D();
 
@@ -882,7 +959,7 @@ namespace Xbim.Presentation
                         CreateNormal(m.Positions[p3], m.Normals[p3], axesMeshBuilder);
                     }
                 }
-                Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), Materials.Yellow);
+                Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
             }
             else
             {
@@ -930,7 +1007,7 @@ namespace Xbim.Presentation
                 {
                     ShowAll();
                 }
-                Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), Materials.Yellow);
+                Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
             }
         }
 
@@ -1164,7 +1241,7 @@ namespace Xbim.Presentation
             axesMeshBuilder.AddTube(path, lineThickness, 9, false);
         }
 
-        private RayMeshGeometry3DHitTestResult FindHit(Point position)
+        protected RayMeshGeometry3DHitTestResult FindHit(Point position)
         {
             RayMeshGeometry3DHitTestResult result = null;
             HitTestFilterCallback hitFilterCallback = oFilter =>
@@ -1214,12 +1291,6 @@ namespace Xbim.Presentation
         {
             PercentageLoaded = 0;
 
-            if (!((options & ModelRefreshOptions.ViewPreserveSelection) == ModelRefreshOptions.ViewPreserveSelection))
-            {
-            Selection = new EntitySelection();
-                Highlighted.Mesh = null;
-            }
-            
             UserModeledDimension.Clear();
 
             _materials.Clear();
@@ -1229,8 +1300,14 @@ namespace Xbim.Presentation
             Transparents.Children.Clear();
             Extras.Children.Clear();
 
+            if (!((options & ModelRefreshOptions.ViewPreserveSelection) == ModelRefreshOptions.ViewPreserveSelection))
+            {
+                Selection = new EntitySelection();
+                Highlighted.Mesh = null;
+            }
+            
             if (!((options & ModelRefreshOptions.ViewPreserveCuttingPlane) == ModelRefreshOptions.ViewPreserveCuttingPlane))
-            ClearCutPlane();
+                ClearCutPlane();
 
             ModelBounds = XbimRect3D.Empty;
             _viewBounds = new XbimRect3D(0, 0, 0, 10, 10, 5);    
@@ -1309,8 +1386,8 @@ namespace Xbim.Presentation
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
 
             // prepare grouping and layering behaviours
-            if (LayerStyler == null)
-                LayerStyler = new LayerStylerTypeAndIfcStyle();
+            LayerStyler = GetCurrentLayerStyler();
+            LayerStyler.SetCurrentModel(model);
             LayerStyler.SetFederationEnvironment(null);
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
@@ -1435,8 +1512,8 @@ namespace Xbim.Presentation
         private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildRefModelScene(XbimModel model, IfcDocumentInformation docInfo)
         {
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
-            var handles = new XbimGeometryHandleCollection(model.GetGeometryHandles()
-                                                       .Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT)); // ifcSpaces added to the geometry
+            var handles = new XbimGeometryHandleCollection(model.GetGeometryHandles());
+                                                       //.Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT)); // ifcSpaces added to the geometry
 
             var colour = _federationColours[docInfo.DocumentOwner.RoleName()];
             var metre = model.ModelFactors.OneMetre;
@@ -1646,7 +1723,7 @@ namespace Xbim.Presentation
         /// <summary>
         /// function that actually populates the geometry from the layer into the viewer meshes.
         /// </summary>
-        private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer, bool addTagProperty) // Formerly called DrawLayer
+        protected void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer, bool addTagProperty) // Formerly called DrawLayer
         {
             layer.Show();
             GeometryModel3D m3D = (WpfMeshGeometry3D)layer.Visible;
@@ -1728,9 +1805,15 @@ namespace Xbim.Presentation
         public void Hide<T>()
         {
             var ifcType = IfcMetaData.IfcType(typeof(T));
+            Hide(ifcType);
+        }
+
+        protected void Hide(IfcType ifcType, bool hideSubTypes = true)
+        {
             var toHide = ifcType.Name + ";";
-            foreach (var subType in ifcType.NonAbstractSubTypes)
-                toHide += subType.Name + ";";
+            if (hideSubTypes)
+                toHide = ifcType.NonAbstractSubTypes.Aggregate(toHide, (current, subType) => current + (subType.Name + ";"));
+
             foreach (var scene in Scenes)
                 foreach (var layer in scene.SubLayers) //go over top level layers only
                     if (toHide.Contains(layer.Name + ";"))
@@ -1774,6 +1857,11 @@ namespace Xbim.Presentation
         private void Show<T>()
         {
             var ifcType = IfcMetaData.IfcType(typeof(T));
+            Show(ifcType);
+        }
+
+        protected void Show(IfcType ifcType)
+        {
             var toShow = ifcType.Name + ";";
             foreach (var subType in ifcType.NonAbstractSubTypes)
                 toShow += subType.Name + ";";
@@ -1928,11 +2016,6 @@ namespace Xbim.Presentation
                 {
                     ShowOctree(child, specificLevel, onlyWithContent);
                 }
-        }
-
-        private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            Console.WriteLine(e.Delta);
         }
 
         /// <summary>

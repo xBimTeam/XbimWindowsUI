@@ -218,7 +218,6 @@
     <Compile Include="LayerStylingV2\AlternateColourStyler.cs" />
     <Compile Include="LayerStylingV2\ILayerStylerV2.cs" />
     <Compile Include="LayerStylingV2\SurfaceLayerStyler.cs" />
-    <Compile Include="LayerStyling\IExtendedLayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylerPerEntity.cs" />
     <Compile Include="LayerStyling\ILayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylerEvenOdd.cs" />
@@ -274,12 +273,6 @@
     <Compile Include="XplorerPluginSystem\UIAttributes.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="DrawingControl3D.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="DynamicProductSelectionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -303,6 +296,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="SynchronizedView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -95,7 +95,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
             }
 
             var mv = new ModelVisual3D {Content = tmpOpaquesGroup};
-            Control.Opaques.Children.Add(mv);
+            Control.OpaquesVisual3D.Children.Add(mv);
             Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
 
             return retScene;
