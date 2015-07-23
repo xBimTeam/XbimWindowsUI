@@ -1447,7 +1447,7 @@ namespace Xbim.Presentation
             foreach (var geomData in model.GetGeometryData(handles))
             {
 #pragma warning disable 618
-                layer.AddToHidden(geomData.TransformBy(WcsTransform));
+                layer.AddToHidden(geomData.TransformBy(WcsTransform), model);
 #pragma warning restore 618
             }
 
