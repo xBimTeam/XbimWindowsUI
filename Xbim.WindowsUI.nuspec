@@ -23,7 +23,7 @@ IOS and Android versions are under development.</description>
       <dependencies>
         <dependency id="Xbim.Scripting" version="3.1.1" />
         <dependency id="HelixToolkit" version="2015.1.545" />
-        <dependency id="PropertyTools.Wpf" version="2015.1.61" />
+        <dependency id="PropertyTools.Wpf" version="2015.1.66" />
       </dependencies>
     </metadata>
     <files>
