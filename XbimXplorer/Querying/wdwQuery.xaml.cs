@@ -629,13 +629,19 @@ namespace XbimXplorer.Querying
                             parName = parName.ToLowerInvariant();
                             var sb = new StringBuilder();
 
-                            if (_parentWindow.DrawingControl.LayerStylerForceVersion1 ||
-                                Model.GeometrySupportLevel == 1)
+                            // foreach model
+                            if (_parentWindow.DrawingControl.LayerStylerForceVersion1 || Model.GeometrySupportLevel == 1)
                                 ReportAdd(string.Format(@"Current mode is {0}",
-                                    _parentWindow.DrawingControl.LayerStyler.GetType()), Brushes.Green);
-                            else
+                                    _parentWindow.DrawingControl.LayerStyler.GetType())
+                                    , Brushes.Green);
+                            else if (Model.GeometrySupportLevel == 2)
                                 ReportAdd(string.Format(@"Current mode is {0}",
                                     _parentWindow.DrawingControl.GeomSupport2LayerStyler.GetType()), Brushes.Green);
+                            else
+                            {
+                                ReportAdd(string.Format(@"Visual mode not enabled on GeometrySupportLevel 0"),
+                                    Brushes.Red);
+                            }
 
                             bool stylerSet = false;
 

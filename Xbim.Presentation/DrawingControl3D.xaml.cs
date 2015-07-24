@@ -1300,13 +1300,13 @@ namespace Xbim.Presentation
             Transparents.Children.Clear();
             Extras.Children.Clear();
 
-            if (!((options & ModelRefreshOptions.ViewPreserveSelection) == ModelRefreshOptions.ViewPreserveSelection))
+            if ((options & ModelRefreshOptions.ViewPreserveSelection) != ModelRefreshOptions.ViewPreserveSelection)
             {
                 Selection = new EntitySelection();
                 Highlighted.Mesh = null;
             }
             
-            if (!((options & ModelRefreshOptions.ViewPreserveCuttingPlane) == ModelRefreshOptions.ViewPreserveCuttingPlane))
+            if ((options & ModelRefreshOptions.ViewPreserveCuttingPlane) != ModelRefreshOptions.ViewPreserveCuttingPlane)
                 ClearCutPlane();
 
             ModelBounds = XbimRect3D.Empty;
@@ -1413,7 +1413,10 @@ namespace Xbim.Presentation
             {
                 if (LayerStylerForceVersion1 || refModel.Model.GeometrySupportLevel == 1)
                 {
-                    Scenes.Add(BuildRefModelScene(refModel.Model, refModel.DocumentInformation));
+                    SetFederationStylerRefModel(refModel);
+                    var tSc = BuildScene(refModel.Model, null, FederationLayerStyler);
+                    if (tSc.Layers.Any())
+                        Scenes.Add(tSc);
                 }
                 else if (geometrySupportLevel == 2)
                 {
@@ -1425,6 +1428,14 @@ namespace Xbim.Presentation
             ShowSpaces = false;
 
             RecalculateView();
+        }
+
+        private void SetFederationStylerRefModel(XbimReferencedModel refModel)
+        {
+            if (FederationLayerStyler == null)
+                FederationLayerStyler = new LayerStylerSingleColour();
+            //FederationLayerStyler = new LayerStylerTypeAndIFCStyle();
+            FederationLayerStyler.SetFederationEnvironment(refModel);
         }
 
         private XbimRegion GetLargestRegion(XbimModel model)
@@ -1612,13 +1623,12 @@ namespace Xbim.Presentation
                         if (LayerStyler.UseIfcSubStyles)
                             layer.AddToHidden(gd, model);
                         else
-                            layer.AddToHidden(gd);
+                            layer.AddToHidden(gd, null, model.UserDefinedId);
                     }
 
                     Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, true, isLayerVisible); }), DispatcherPriority.Background);
                     lock (scene)
                     {
-
                         scene.Add(layer);
 
                         if (ModelBounds.IsEmpty)
