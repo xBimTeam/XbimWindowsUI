@@ -7,12 +7,76 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
+using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.ProductExtension;
+using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
     public static class MeshGeometry3DExtensions
     {
+        public static void AddElements(this MeshGeometry3D m, EntitySelection selection, XbimMatrix3D wcsTransform, XbimVector3D modelTranslation)
+        {
+            foreach (var item in selection)
+            {
+                var fromModel = item.ModelOf as XbimModel;
+                if (fromModel != null && item is IfcProduct)
+                {
+                    if (fromModel.GeometrySupportLevel == 2)
+                    {
+                        var metre = fromModel.ModelFactors.OneMetre;
+                        wcsTransform = XbimMatrix3D.CreateTranslation(modelTranslation) *
+                                       XbimMatrix3D.CreateScale((float)(1 / metre));
+
+                        var context = new Xbim3DModelContext(fromModel);
+
+                        var productShape = context.ShapeInstancesOf((IfcProduct)item)
+                                .Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                                .ToList();
+                        if (!productShape.Any() && item is IfcFeatureElement)
+                        {
+                            productShape = context.ShapeInstancesOf((IfcProduct)item)
+                                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                                .ToList();
+                        }
+
+                        if (productShape.Any())
+                        {
+                            foreach (var shapeInstance in productShape)
+                            {
+                                IXbimShapeGeometryData shapeGeom =
+                                    context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                switch ((XbimGeometryType)shapeGeom.Format)
+                                {
+                                    case XbimGeometryType.PolyhedronBinary:
+                                        m.Read(shapeGeom.ShapeData,
+                                            XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                                        break;
+                                    case XbimGeometryType.Polyhedron:
+                                        m.Read(((XbimShapeGeometry)shapeGeom).ShapeData,
+                                            XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var xm3d = new XbimMeshGeometry3D();
+                        var geomDataSet = fromModel.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                        foreach (var geomData in geomDataSet)
+                        {
+                            var gd = geomData.TransformBy(wcsTransform);
+                            xm3d.Add(gd);
+                        }
+                        m.Add(xm3d);
+                    }
+                }
+            }
+        }
+
         public static void Add(this MeshGeometry3D m3D, XbimMeshGeometry3D addedGeometry3D)
         {
             m3D.TriangleIndices = Extensions.Utility.GeomUtils.CombineIndexCollection(m3D.TriangleIndices, addedGeometry3D.TriangleIndices, m3D.Positions.Count);
