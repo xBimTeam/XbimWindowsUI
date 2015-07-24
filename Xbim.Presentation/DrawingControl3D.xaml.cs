@@ -1432,9 +1432,7 @@ namespace Xbim.Presentation
 
         private void SetFederationStylerRefModel(XbimReferencedModel refModel)
         {
-            if (FederationLayerStyler == null)
-                FederationLayerStyler = new LayerStylerSingleColour();
-            //FederationLayerStyler = new LayerStylerTypeAndIFCStyle();
+            FederationLayerStyler = GetCurrentFederationLayerStyler();
             FederationLayerStyler.SetFederationEnvironment(refModel);
         }
 
