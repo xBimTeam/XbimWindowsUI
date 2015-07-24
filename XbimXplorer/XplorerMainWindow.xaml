@@ -59,7 +59,7 @@
         <CommandBinding Command="Open"   Executed="CommandBinding_Open" CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
-        
+
         <CommandBinding Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}"   Executed="ExportCoBieCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
@@ -73,7 +73,7 @@
             <RowDefinition />
             <RowDefinition Height="Auto" MinHeight="23" />
         </Grid.RowDefinitions>
-       
+
         <Menu Grid.Row="0" >
             <MenuItem Header="_Model">
                 <MenuItem Header="_Open" Command="Open"/>
@@ -83,7 +83,7 @@
                 <MenuItem Header="Recent files" x:Name="MnuRecent" Click="RecentFileClick" />
                 <Separator />
                 <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
-                    
+
                 <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
                 <MenuItem Header="S_eparate" Click="SeparateMenuItem_Click" />
             </MenuItem>
@@ -91,14 +91,14 @@
                 <MenuItem Header="_Open" Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" />
                 <MenuItem Header="_Edit" Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" />
             </MenuItem>
-                
+
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
                     <MenuItem Header="_Model Style Reset" Click="SetDefaultModeStyler" />
                     <MenuItem Header="Federation style by _Role" Click="SetFederationStylerRole" />
                     <MenuItem Header="Federation style by _Element type" Click="SetFederationStylerType" />
-            </MenuItem>
-                    
+                </MenuItem>
+
                 <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
                 <MenuItem Header="_Copy" Command="Copy"/>
                 <!--
@@ -156,14 +156,14 @@
             </MenuItem>
             <MenuItem Header="_About" Click="About_Click"/>
         </Menu>
-       
+
         <avalonDock:DockingManager Grid.Row="1" x:Name="DockingManager">
             <avalonDock:LayoutRoot>
                 <avalonDock:LayoutPanel x:Name="MainPanel" Orientation="Horizontal">
                     <avalonDock:LayoutAnchorablePaneGroup DockWidth="150" Orientation="Vertical">
                         <avalonDock:LayoutAnchorablePane >
                             <avalonDock:LayoutAnchorable Title="Spatial view" CanClose="False" CanHide="False">
-                        <xbim:XbimTreeview x:Name="SpatialControl"    
+                                <xbim:XbimTreeview x:Name="SpatialControl"    
                             Indentation="10"
                             BorderThickness="1"
                             Model="{Binding}"  
@@ -172,7 +172,7 @@
                             MouseDoubleClick="SpatialControl_MouseDoubleClick"  FontSize="10" />
                             </avalonDock:LayoutAnchorable>
                             <avalonDock:LayoutAnchorable Title="Groups" CanClose="False" >
-                        <xbim:XbimTreeview x:Name="GroupControl"    
+                                <xbim:XbimTreeview x:Name="GroupControl"    
                             ViewDefinition ="Groups"
                             Indentation="10"
                             BorderThickness="1"
@@ -183,14 +183,14 @@
                             </avalonDock:LayoutAnchorable>
                             <avalonDock:LayoutAnchorable Title="ScriptResults" CanClose="False" >
                                 <TabControl>
-                    <TabItem Header="Script Results" Visibility="Collapsed" Name="ScriptResults">
-                    </TabItem>
-                </TabControl>
+                                    <TabItem Header="Script Results" Visibility="Collapsed" Name="ScriptResults">
+                                    </TabItem>
+                                </TabControl>
                             </avalonDock:LayoutAnchorable>
                         </avalonDock:LayoutAnchorablePane>
                         <avalonDock:LayoutAnchorablePane>
                             <avalonDock:LayoutAnchorable Title="Properties" CanClose="False" >
-                <xbim:IfcMetaDataControl x:Name="PropertiesControl" BorderThickness="1" Grid.Row="2"  
+                                <xbim:IfcMetaDataControl x:Name="PropertiesControl" BorderThickness="1" Grid.Row="2"  
                                                          SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow}"
                                          Model="{Binding}"
                 />
@@ -203,21 +203,19 @@
                                 x:Name="DrawingControl" 
                                    SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow, Mode=TwoWay}"    
                                    Model ="{Binding}" 
-                                   Grid.Column="2" 
                                    Focusable="True" 
                                    Width="Auto" 
                                    Height="Auto" 
                                    MouseDoubleClick="SpatialControl_MouseDoubleClick"
                                    ModelOpacity="0.75"
-                                
                                    >
-                <xbim:DrawingControl3D.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                        <GradientStop Color="#FFB9B1B1" Offset="1"/>
-                        <GradientStop Color="#FFFAF8FF"/>
-                    </LinearGradientBrush>
-                </xbim:DrawingControl3D.Background>
-            </xbim:DrawingControl3D>
+                                <xbim:DrawingControl3D.Background>
+                                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                                        <GradientStop Color="#FFB9B1B1" Offset="1"/>
+                                        <GradientStop Color="#FFFAF8FF"/>
+                                    </LinearGradientBrush>
+                                </xbim:DrawingControl3D.Background>
+                            </xbim:DrawingControl3D>
                         </avalonDock:LayoutDocument>
                     </avalonDock:LayoutDocumentPane>
                 </avalonDock:LayoutPanel>
@@ -242,13 +240,13 @@
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" Name="ProgressStatusBar" Visibility="Hidden">
                 <Grid>
-                    
+
                     <ProgressBar  Name="ProgressBar"  Height="20" Maximum="100" Minimum="0" Width="150"  HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressBar>
                     <TextBlock Name="StatusMsg" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">Parsing</TextBlock>
-                    
+
                 </Grid>
             </StatusBarItem>
         </StatusBar>
-       
+
     </Grid>
 </Window>

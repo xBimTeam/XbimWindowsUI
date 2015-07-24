@@ -1334,7 +1334,8 @@ namespace Xbim.Presentation
         /// <param name="model"></param>
         /// <param name="entityLabels">If null loads the whole model, otherwise only elements listed in the enumerable</param>
         /// <param name="options"></param>
-        public void LoadGeometry(XbimModel model, IEnumerable<int> entityLabels = null, ModelRefreshOptions options = ModelRefreshOptions.None)
+        public void LoadGeometry(XbimModel model, IEnumerable<int> entityLabels = null,
+            ModelRefreshOptions options = ModelRefreshOptions.None)
         {
             // AddLayerToDrawingControl is the function that actually populates the geometry in the viewer.
             // AddLayerToDrawingControl is triggered by BuildRefModelScene and BuildScene below here when layers get ready.
@@ -1342,16 +1343,16 @@ namespace Xbim.Presentation
             //reset all the visuals
             ClearGraphics(options);
             short userDefinedId = 0;
-            if (model == null) 
+            if (model == null)
                 return; //nothing to show
             model.UserDefinedId = userDefinedId;
             var geometrySupportLevel = model.GeometrySupportLevel;
             var context = new Xbim3DModelContext(model);
             XbimRegion largest;
-            largest = 
-                geometrySupportLevel == 1 
-                ? GetLargestRegion(model) 
-                : context.GetLargestRegion();
+            largest =
+                geometrySupportLevel == 1
+                    ? GetLargestRegion(model)
+                    : context.GetLargestRegion();
             var bb = XbimRect3D.Empty;
             if (largest != null)
                 bb = new XbimRect3D(largest.Centre, largest.Centre);
@@ -1362,7 +1363,7 @@ namespace Xbim.Presentation
                 refModel.Model.UserDefinedId = ++userDefinedId;
                 if (geometrySupportLevel == 1)
                     r = GetLargestRegion(refModel.Model);
-                else  //assume we are the latest level (2)
+                else //assume we are the latest level (2)
                 {
                     var refContext = new Xbim3DModelContext(refModel.Model);
                     r = refContext.GetLargestRegion();
@@ -1380,7 +1381,7 @@ namespace Xbim.Presentation
 
             // model scaling
             var metre = model.ModelFactors.OneMetre;
-            WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / metre);
+            WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*XbimMatrix3D.CreateScale(1/metre);
 
 
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
@@ -1390,13 +1391,11 @@ namespace Xbim.Presentation
             LayerStyler.SetCurrentModel(model);
             LayerStyler.SetFederationEnvironment(null);
             //build the geometric scene and render as we go
-            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
-
-
+            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 
             if (LayerStylerForceVersion1 || geometrySupportLevel == 1)
                 scene = BuildScene(model, entityLabels, LayerStyler);
-            else //assume we are the latest level (GeometrySupportLevel == 2)
+            else if (geometrySupportLevel == 2)
             {
                 if (GeomSupport2LayerStyler == null)
                     GeomSupport2LayerStyler = new SurfaceLayerStyler();
@@ -1404,9 +1403,11 @@ namespace Xbim.Presentation
                 GeomSupport2LayerStyler.SetFederationEnvironment(null);
                 scene = GeomSupport2LayerStyler.BuildScene(model, context, _exclude);
             }
-            if(scene.Layers.Any())
-                Scenes.Add(scene);
-
+            if (scene != null)
+            {
+                if (scene.Layers.Any())
+                    Scenes.Add(scene);
+            }
             // now look at all referenced models.
             foreach (var refModel in model.ReferencedModels)
             {
@@ -1414,7 +1415,7 @@ namespace Xbim.Presentation
                 {
                     Scenes.Add(BuildRefModelScene(refModel.Model, refModel.DocumentInformation));
                 }
-                else //assume we are the latest level (GeometrySupportLevel == 2)
+                else if (geometrySupportLevel == 2)
                 {
                     GeomSupport2LayerStyler.SetFederationEnvironment(refModel);
                     var refContext = new Xbim3DModelContext(refModel.Model);
@@ -1422,6 +1423,7 @@ namespace Xbim.Presentation
                 }
             }
             ShowSpaces = false;
+
             RecalculateView();
         }
 
@@ -1776,9 +1778,9 @@ namespace Xbim.Presentation
                 {
                     foreach (var item in layer.LayersTree(0))
                     {
-                        yield return item;    
+                        yield return item;
                     }
-                }   
+                }
         }
 
 

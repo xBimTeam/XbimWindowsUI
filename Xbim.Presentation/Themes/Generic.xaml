@@ -18,6 +18,7 @@
                                    ViewCubeFrontText="R"
                                    ViewCubeRightText="B"
                                    ViewCubeBackText="L"
+                                   Background="{TemplateBinding Background}"
                                    >
 
                         <helixToolkit:HelixViewport3D.DefaultCamera>
