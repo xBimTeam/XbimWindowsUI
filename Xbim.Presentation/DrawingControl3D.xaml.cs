@@ -126,14 +126,19 @@ namespace Xbim.Presentation
             Extras = (ModelVisual3D) GetTemplateChild(TemplateExtras);
             GridLines = (GridLinesVisual3D) GetTemplateChild(TemplateGridLines);
 
-            Highlighted.PropertyChanged += Highlighted_PropertyChanged;
+            if (Highlighted != null) 
+                Highlighted.PropertyChanged += Highlighted_PropertyChanged;
             Viewport = Canvas;
-            Canvas.MouseDown += Canvas_MouseDown;
-            Canvas.MouseMove += Canvas_MouseMove;
-            Canvas.MouseWheel += Canvas_MouseWheel;
+            if (Canvas != null)
+            {
+                Canvas.MouseDown += Canvas_MouseDown;
+                Canvas.MouseMove += Canvas_MouseMove;
+                Canvas.MouseWheel += Canvas_MouseWheel;
+            }
             Loaded += DrawingControl3D_Loaded;
             _federationColours = new XbimColourMap(StandardColourMaps.Federation);
-            Viewport.CameraChanged += UpdatefrustumPlanes;
+            if (Viewport != null) 
+                Viewport.CameraChanged += UpdatefrustumPlanes;
             ClearGraphics();
             MouseModifierKeyBehaviour.Add(ModifierKeys.Control, XbimMouseClickActions.Toggle);
             MouseModifierKeyBehaviour.Add(ModifierKeys.Alt, XbimMouseClickActions.Measure);
@@ -178,7 +183,6 @@ namespace Xbim.Presentation
                 pos.X, pos.Y, pos.Z)
                 );
             Extras.Transform = new MatrixTransform3D(m);
-            // ClipPlaneHandlesShow();
         }
 
         protected void ClipPlaneHandlesShow()
@@ -217,10 +221,7 @@ namespace Xbim.Presentation
 
 
         // elements associated with vector polygons drafted interactively on the model by the user
-        //
-       
         private List<Type> _exclude;
-           
         private LinesVisual3D _userModeledDimLines;
         private PointsVisual3D _userModeledDimPoints;
         public PolylineGeomInfo UserModeledDimension = new PolylineGeomInfo();
@@ -1479,6 +1480,32 @@ namespace Xbim.Presentation
         /// </summary>
         public ILayerStyler FederationLayerStyler = null;
 
+        public virtual XbimGeometryHandleCollection GetHandles(XbimModel model, IEnumerable<int> loadLabels)
+        {
+            var handles = new XbimGeometryHandleCollection();
+            switch (model.GeometrySupportLevel)
+            {
+                case 1:
+                    var metre = model.ModelFactors.OneMetre;
+                    WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
+                                   XbimMatrix3D.CreateScale((float) (1/metre));
+
+                    handles = (loadLabels == null)
+                        ? new XbimGeometryHandleCollection(
+                            model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT))
+                        : new XbimGeometryHandleCollection(
+                            model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)));
+                    break;
+                case 2:
+                    var ctx = new Xbim3DModelContext(model);
+                    handles = (loadLabels == null)
+                        ? ctx.GetApproximateGeometryHandles()
+                        : ctx.GetApproximateGeometryHandles(loadLabels);
+                    break;
+            }
+            return handles;
+        }
+
         private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, IEnumerable<int> loadLabels, ILayerStyler layerStyler)
         {
             // spaces are not excluded from the model to make the ShowSpaces property meaningful
@@ -1489,26 +1516,16 @@ namespace Xbim.Presentation
             if (project == null)
                 return scene;
 
-            XbimGeometryHandleCollection handles; 
-                    // = new XbimGeometryHandleCollection(model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT));
-                    // .Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT | IfcEntityNameEnum.IFCSPACE));
-
-            Xbim3DModelContext ctx = null;
-            
+            var handles = GetHandles(model, loadLabels);
             var suppLevel = model.GeometrySupportLevel;
             if (suppLevel == 1)
             {
+                // geometry engine version 1
                 var metre = model.ModelFactors.OneMetre;
                 WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
                                XbimMatrix3D.CreateScale((float) (1/metre));
+            
 
-                handles = (loadLabels == null)
-                    ? new XbimGeometryHandleCollection(
-                        model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT))
-                    : new XbimGeometryHandleCollection(
-                        model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)));
-
-                // geometry engine version 1
             var groupedHandlers = layerStyler.GroupLayers(handles);
 #if DOPARALLEL
             Parallel.ForEach(groupedHandlers.Keys, layerName =>
@@ -1559,12 +1576,8 @@ namespace Xbim.Presentation
                 }
                 else
                 {
-                    ctx = new Xbim3DModelContext(model);
-                    handles = (loadLabels == null)
-                        ? ctx.GetApproximateGeometryHandles()
-                        : ctx.GetApproximateGeometryHandles(loadLabels);
-
                 // geometry engine version 2
+                    var ctx = new Xbim3DModelContext(model);
                 var groupedHandlers = layerStyler.GroupLayers(handles);
 
                 foreach (var layerName in groupedHandlers.Keys)
@@ -1755,11 +1768,8 @@ namespace Xbim.Presentation
 
         private List<LayerViewModel> LayerSetRefresh()
         {
-            var ret = new List<LayerViewModel>();
-            ret.Add(new LayerViewModel("All"));
-            foreach (var scene in Scenes)
-                foreach (var layer in scene.SubLayers) // go over top level layers only
-                    ret.Add(new LayerViewModel(layer.Name));
+            var ret = new List<LayerViewModel> {new LayerViewModel("All")};
+            ret.AddRange(from scene in Scenes from layer in scene.SubLayers select new LayerViewModel(layer.Name));
             return ret;
         }
 
@@ -1797,23 +1807,23 @@ namespace Xbim.Presentation
 
         public void ShowAll()
         {
-            _exclude = new List<Type>();
-            _exclude.Add(typeof(IfcFeatureElement));
-            _exclude.Add(typeof(IfcSpace));
-           // ReloadModel(false);
-  
+            _exclude = new List<Type>
+            {
+                typeof (IfcFeatureElement), 
+                typeof (IfcSpace)
+            };
         }
 
         public void HideAll()
         {
-            _exclude = new List<Type>();
-            _exclude.Add(typeof(IfcFeatureElement));
-            _exclude.Add(typeof(IfcSpace));
-            _exclude.Add(typeof(IfcFastener));
-            _exclude.Add(typeof(IfcPlate));
-            _exclude.Add(typeof(IfcMember));
-           // ReloadModel(false);
-            
+            _exclude = new List<Type>
+            {
+                typeof (IfcFeatureElement),
+                typeof (IfcSpace),
+                typeof (IfcFastener),
+                typeof (IfcPlate),
+                typeof (IfcMember)
+            };
         }
 
         public void SetCamera(ProjectionCamera cam)

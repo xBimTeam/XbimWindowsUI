@@ -29,12 +29,14 @@ namespace Xbim.Presentation
         /// <returns></returns>
         public static Material ToMaterial(this IfcSurfaceStyle sStyle)
         {
-            //need to change this to return a material group that considers all types of Styles
-            IfcSurfaceStyleRendering rendering = sStyle.Styles.OfType<IfcSurfaceStyleRendering>().FirstOrDefault();
-            if (rendering != null) return rendering.ToMaterial();
-            IfcSurfaceStyleShading shading = sStyle.Styles.OfType<IfcSurfaceStyleShading>().FirstOrDefault();
-            if (shading != null) return shading.ToMaterial();
-            return null; //no luck
+            // todo: need to change this to return a material group that considers all types of Styles
+            var rendering = sStyle.Styles.OfType<IfcSurfaceStyleRendering>().FirstOrDefault();
+            if (rendering != null) 
+                return rendering.ToMaterial();
+            var shading = sStyle.Styles.OfType<IfcSurfaceStyleShading>().FirstOrDefault();
+            return (shading != null) 
+                ? shading.ToMaterial() 
+                : null;
         }
 
         public static IfcSurfaceStyleShading GetSurfaceStyleShading(this IfcSurfaceStyle sStyle)
