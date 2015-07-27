@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
@@ -118,9 +119,10 @@ namespace Xbim.Presentation.LayerStylingV2
                         switch ((XbimGeometryType)shapeGeom.Format)
                         {
                             case XbimGeometryType.Polyhedron:
-                                var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                // var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                var asString = Encoding.UTF8.GetString(shapeGeom.ShapeData.ToArray());
                                 targetMergeMeshByStyle.Add(
-                                    shapePoly.ShapeData,
+                                    asString,
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
                                     shapeInstance.InstanceLabel,

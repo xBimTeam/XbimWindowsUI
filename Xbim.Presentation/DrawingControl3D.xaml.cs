@@ -1479,8 +1479,6 @@ namespace Xbim.Presentation
         /// </summary>
         public ILayerStyler FederationLayerStyler = null;
 
-        
-
         private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, IEnumerable<int> loadLabels, ILayerStyler layerStyler)
         {
             // spaces are not excluded from the model to make the ShowSpaces property meaningful
@@ -1504,7 +1502,7 @@ namespace Xbim.Presentation
                 WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
                                XbimMatrix3D.CreateScale((float) (1/metre));
 
-                handles = loadLabels == null
+                handles = (loadLabels == null)
                     ? new XbimGeometryHandleCollection(
                         model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT))
                     : new XbimGeometryHandleCollection(
@@ -1561,8 +1559,10 @@ namespace Xbim.Presentation
                 }
                 else
                 {
-                ctx = new Xbim3DModelContext(model);
-                handles = ctx.GetApproximateGeometryHandles();
+                    ctx = new Xbim3DModelContext(model);
+                    handles = (loadLabels == null)
+                        ? ctx.GetApproximateGeometryHandles()
+                        : ctx.GetApproximateGeometryHandles(loadLabels);
 
                 // geometry engine version 2
                 var groupedHandlers = layerStyler.GroupLayers(handles);
