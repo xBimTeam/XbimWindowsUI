@@ -538,12 +538,30 @@ namespace XbimXplorer.Querying
                             if (storey != null)
                             {
                                 //get the object position data (should only be one)
-                                var geomdata =
-                                    Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly)
-                                        .FirstOrDefault();
-                                if (geomdata != null)
+                                XbimPoint3D p;
+                                if (Model.GeometrySupportLevel == 1)
                                 {
-                                    var pt = new XbimPoint3D(0, 0, XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
+                                    var geomdata =
+                                        Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly)
+                                            .FirstOrDefault();
+                                    if (geomdata != null)
+                                    {
+                                        var pt = new XbimPoint3D(0, 0,
+                                            XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
+                                        var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
+                                        var transformed = mcp.Transform(pt);
+                                        msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z,
+                                            transformed.Z + 1);
+                                        pz = transformed.Z + 1;
+                                    }
+                                }
+                                else if (Model.GeometrySupportLevel == 2)
+                                {
+                                    var v = new TransformGraph(Model);
+                                    v.AddProduct(storey);
+                                    var v2 = v[storey].WorldMatrix();
+                                    var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
+                                            
                                     var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
                                     var transformed = mcp.Transform(pt);
                                     msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z,

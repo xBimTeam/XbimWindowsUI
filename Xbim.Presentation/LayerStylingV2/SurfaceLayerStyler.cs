@@ -57,14 +57,13 @@ namespace Xbim.Presentation.LayerStylingV2
 
 
             if (!styles.Any()) return scene; //this should always return something
-            int i = 0;
             var shapeInstances = context.ShapeInstances()
                 .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
                             !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                         !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
             foreach (var shapeInstance in shapeInstances)
             {
-                Console.WriteLine(i++);
+                
                 var styleId = shapeInstance.StyleLabel > 0 ? shapeInstance.StyleLabel : shapeInstance.IfcTypeId * -1;
 
                 //GET THE ACTUAL GEOMETRY 
