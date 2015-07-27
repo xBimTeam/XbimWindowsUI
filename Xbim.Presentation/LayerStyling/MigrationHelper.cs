@@ -18,7 +18,6 @@ namespace Xbim.Presentation.LayerStyling
                 foreach (var shapeInstance in context.ShapeInstances()
                     .Where(x => loadLabels.Contains(x.InstanceLabel)))
                 {
-                    if (context.Model.Instances[shapeInstance.IfcProductLabel] is )
                     retCollection.Add(
                         new XbimGeometryHandle(
                             shapeInstance.InstanceLabel,
