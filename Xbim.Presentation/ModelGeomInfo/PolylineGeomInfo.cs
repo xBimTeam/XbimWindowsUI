@@ -55,10 +55,13 @@ namespace Xbim.Presentation.ModelGeomInfo
 
         public override string ToString()
         {
-            double d = GetArea();
-            if (!double.IsNaN(d))
-                return string.Format("Lenght: {0:0.##}m Area: {1:0.##}sqm", GetLenght(), d);
-            return string.Format("Lenght: {0:0.##}m", GetLenght());
+            if (_geomPoints.Count == 1)
+                return string.Format("Selected point: {0:0.##}x {1:0.##}y {2:0.##}z",
+                    _geomPoints[0].Point.X, _geomPoints[0].Point.Y, _geomPoints[0].Point.Z);
+            var d = GetArea();
+            return !double.IsNaN(d) 
+                ? string.Format("Lenght: {0:0.##}m Area: {1:0.##}sqm", GetLenght(), d) 
+                : string.Format("Lenght: {0:0.##}m", GetLenght());
         }
 
         public PolylineGeomInfo()

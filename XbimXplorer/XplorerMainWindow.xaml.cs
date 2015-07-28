@@ -888,7 +888,12 @@ namespace XbimXplorer
             about.AdditionalNotes = "The xBIM toolkit is an Open Source software initiative to help software developers and researchers to support the next generation of BIM tools; unlike other open source application xBIM license is compatible with commercial environments (http://xbim.codeplex.com/license)";
             if (Model != null)
             {
-                about.AdditionalNotes += string.Format("\r\nGeometry information version: {0}", Model.GeometrySupportLevel);
+                about.AdditionalNotes += "\r\n\r\nGeometry information:\r\n";
+                about.AdditionalNotes += string.Format("{0}: {1}\r\n", Model.DatabaseName, Model.GeometrySupportLevel);
+                foreach (var subModel in Model.ReferencedModels)
+                {
+                    about.AdditionalNotes += string.Format("{0}: {1}\r\n", subModel.Model.DatabaseName, subModel.Model.GeometrySupportLevel);    
+                }
             }
             about.Show();
         }

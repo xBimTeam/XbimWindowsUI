@@ -16,13 +16,23 @@ namespace Xbim.Presentation
         public XbimRegion LargestRegion;
         public Xbim3DModelContext Context;
         public XbimMatrix3D Transfrom;
+        private readonly IModel _model;
 
         public XbimModelPositioning(XbimModel model)
         {
+            _model = model;
             Context = new Xbim3DModelContext(model);
-            LargestRegion = model.GeometrySupportLevel == 1
-                ? GetLargestRegion(model)
-                : Context.GetLargestRegion();
+            var supportLevel = model.GeometrySupportLevel;
+           
+            switch (supportLevel)
+            {
+                case 1:
+                    LargestRegion = GetLargestRegion(model);
+                    break;
+                case 2:
+                    LargestRegion = Context.GetLargestRegion();
+                    break;
+            }
         }
 
         private static XbimRegion GetLargestRegion(XbimModel model)
@@ -37,6 +47,12 @@ namespace Xbim.Presentation
                 return null;
             var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
             return regions.MostPopulated();
+        }
+
+        internal void SetCenter(XbimVector3D modelTranslation)
+        {
+            var metre = _model.ModelFactors.OneMetre;
+            Transfrom = XbimMatrix3D.CreateTranslation(modelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
         }
     }
 
@@ -72,6 +88,14 @@ namespace Xbim.Presentation
         public XbimModelPositioningCollection()
         {
             _collection = new Dictionary<IModel, XbimModelPositioning>();
+        }
+
+        internal void SetCenter(XbimVector3D ModelTranslation)
+        {
+            foreach (var model in _collection.Values)
+            {
+                model.SetCenter(ModelTranslation);
+            }
         }
     }
 }

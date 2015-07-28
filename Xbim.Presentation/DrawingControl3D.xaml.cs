@@ -1196,7 +1196,7 @@ namespace Xbim.Presentation
         public static readonly DependencyProperty PercentageLoadedProperty =
             DependencyProperty.Register("PercentageLoaded", typeof(double), typeof(DrawingControl3D),
                                         new UIPropertyMetadata(0.0));
-        public XbimVector3D ModelTranslation;
+        // public XbimVector3D ModelTranslation;
         // public XbimMatrix3D WcsTransform;
 
         private void ClearGraphics(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1271,13 +1271,13 @@ namespace Xbim.Presentation
                 ModelPositions.AddModel(refModel.Model);
             }
             var bb = ModelPositions.GetEnvelopOfCentes();
-
             var p = bb.Centroid();
-            ModelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
+            // var modelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
+            var modelTranslation = new XbimVector3D(0, 0, 0);
+
+            ModelPositions.SetCenter(modelTranslation);
 
             // model scaling
-            var metre = model.ModelFactors.OneMetre;
-            ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / metre);
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
 
             // prepare grouping and layering behaviours
@@ -1405,36 +1405,37 @@ namespace Xbim.Presentation
 
         private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildRefModelScene(XbimModel model, IfcDocumentInformation docInfo)
         {
-            var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
-            var handles = new XbimGeometryHandleCollection(model.GetGeometryHandles());
-                                                       //.Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT)); // ifcSpaces added to the geometry
+//            var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
+//            var handles = new XbimGeometryHandleCollection(model.GetGeometryHandles());
+//                                                       //.Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT)); // ifcSpaces added to the geometry
 
-            var colour = _federationColours[docInfo.DocumentOwner.RoleName()];
-            var metre = model.ModelFactors.OneMetre;
-            ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / (float)metre);
+//            var colour = _federationColours[docInfo.DocumentOwner.RoleName()];
+//            var metre = model.ModelFactors.OneMetre;
+//            ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / (float)metre);
                 
-            var layer = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = "All" };
-            //add all content initially into the hidden field
-            foreach (var geomData in model.GetGeometryData(handles))
-            {
-#pragma warning disable 618
-                layer.AddToHidden(geomData.TransformBy(ModelPositions[model].Transfrom), model);
-#pragma warning restore 618
-            }
+//            var layer = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = "All" };
+//            //add all content initially into the hidden field
+//            foreach (var geomData in model.GetGeometryData(handles))
+//            {
+//#pragma warning disable 618
+//                layer.AddToHidden(geomData.TransformBy(ModelPositions[model].Transfrom), model);
+//#pragma warning restore 618
+//            }
 
-            Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, true); }), DispatcherPriority.Background);
-            lock (scene)
-            {
-                scene.Add(layer);
+//            Dispatcher.BeginInvoke(new Action(() => { AddLayerToDrawingControl(layer, true); }), DispatcherPriority.Background);
+//            lock (scene)
+//            {
+//                scene.Add(layer);
 
-                if (ModelBounds.IsEmpty) 
-                    ModelBounds = layer.BoundingBoxHidden();
-                else 
-                    ModelBounds.Union(layer.BoundingBoxHidden());
-            }
+//                if (ModelBounds.IsEmpty) 
+//                    ModelBounds = layer.BoundingBoxHidden();
+//                else 
+//                    ModelBounds.Union(layer.BoundingBoxHidden());
+//            }
 
-            Dispatcher.BeginInvoke(new Action(Hide<IfcSpace>), DispatcherPriority.Background);
-            return scene;
+//            Dispatcher.BeginInvoke(new Action(Hide<IfcSpace>), DispatcherPriority.Background);
+//            return scene;
+            return null;
         }
         
         /// <summary>
@@ -1481,13 +1482,8 @@ namespace Xbim.Presentation
 
             var handles = GetHandles(model, ModelPositions[model].Context, loadLabels);
             var suppLevel = model.GeometrySupportLevel;
-            if (suppLevel == 1)
+            if (suppLevel == 1) // geometry engine version 1
             {
-                // geometry engine version 1
-                var metre = model.ModelFactors.OneMetre;
-                ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float) (1/metre));
-            
-
             var groupedHandlers = layerStyler.GroupLayers(handles);
 #if DOPARALLEL
             Parallel.ForEach(groupedHandlers.Keys, layerName =>
@@ -1884,18 +1880,26 @@ namespace Xbim.Presentation
         private void ShowOctree<T>(XbimOctree<T> octree, int specificLevel = -1, bool onlyWithContent = false)
         {
             //prepare action
-            Action show = () => {
+            Action show = () =>
+            {
                 var rect = new WpfXbimRectangle3D(octree.Bounds);
-
                 //create transformation
-                var scale = 1f / Model.ModelFactors.OneMetre;
-                var transformation = Transform3DHelper.CombineTransform(
-                    new TranslateTransform3D(ModelTranslation.X, ModelTranslation.Y, ModelTranslation.Z),
-                    new ScaleTransform3D(scale, scale, scale)
-                    );
+                
+                var transformation = Transform3D.Identity;
+
+                // todo: restore scaling if needed
+                // var scale = 1f / Model.ModelFactors.OneMetre;
+                //Transform3DHelper.CombineTransform(
+                //new TranslateTransform3D(ModelTranslation.X, ModelTranslation.Y, ModelTranslation.Z),
+                //new ScaleTransform3D(scale, scale, scale)
+                //);
 
                 //Add octree geometry
-                _octreeVisualization.Children.Add(new ModelVisual3D { Content = rect.Geometry, Transform = transformation });
+                _octreeVisualization.Children.Add(new ModelVisual3D
+                {
+                    Content = rect.Geometry,
+                    Transform = transformation
+                });
             };
 
             if (specificLevel == -1 || specificLevel == octree.Depth)
@@ -1906,11 +1910,12 @@ namespace Xbim.Presentation
                     show();
             }
 
-            if (specificLevel == -1 || specificLevel > octree.Depth)
-                foreach (var child in octree.Children)
-                {
-                    ShowOctree(child, specificLevel, onlyWithContent);
-                }
+            if (specificLevel != -1 && specificLevel <= octree.Depth) 
+                return;
+            foreach (var child in octree.Children)
+            {
+                ShowOctree(child, specificLevel, onlyWithContent);
+            }
         }
 
         /// <summary>
