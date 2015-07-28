@@ -839,12 +839,12 @@ namespace Xbim.Presentation
             {
                 foreach (var item in Selection)
                 {
-                    m.AddElements(Selection, ModelPositions[item.ModelOf].Transfrom, ModelTranslation);    
+                    m.AddElements(item, ModelPositions[item.ModelOf].Transfrom);    
                 }
             }
             else if (newVal != null)
             {
-                m.AddElements(newVal, ModelPositions[newVal.ModelOf].Transfrom, ModelTranslation);
+                m.AddElements(newVal, ModelPositions[newVal.ModelOf].Transfrom);
             }
 
             // 2. then determine how to highlight it
@@ -1268,7 +1268,7 @@ namespace Xbim.Presentation
             foreach (var refModel in model.ReferencedModels)
             {
                 refModel.Model.UserDefinedId = ++userDefinedId;
-                ModelPositions.AddModel(model);
+                ModelPositions.AddModel(refModel.Model);
             }
             var bb = ModelPositions.GetEnvelopOfCentes();
 
@@ -1284,6 +1284,11 @@ namespace Xbim.Presentation
             LayerStyler = GetCurrentLayerStyler();
             LayerStyler.SetCurrentModel(model);
             LayerStyler.SetFederationEnvironment(null);
+
+            if (GeomSupport2LayerStyler == null)
+                GeomSupport2LayerStyler = new SurfaceLayerStyler();
+            GeomSupport2LayerStyler.Control = this;
+
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 
@@ -1291,11 +1296,7 @@ namespace Xbim.Presentation
                 scene = BuildScene(model, entityLabels, LayerStyler);
             else if (geometrySupportLevel == 2)
             {
-                if (GeomSupport2LayerStyler == null)
-                    GeomSupport2LayerStyler = new SurfaceLayerStyler();
-                GeomSupport2LayerStyler.Control = this;
-                GeomSupport2LayerStyler.SetFederationEnvironment(null);
-                
+                GeomSupport2LayerStyler.SetFederationEnvironment(null);                
                 scene = GeomSupport2LayerStyler.BuildScene(model, ModelPositions[model].Context, _exclude);
             }
             if (scene != null)

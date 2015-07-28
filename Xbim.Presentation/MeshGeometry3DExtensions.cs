@@ -18,28 +18,23 @@ namespace Xbim.Presentation
 {
     public static class MeshGeometry3DExtensions
     {
-        public static void AddElements(this MeshGeometry3D m, EntitySelection selection, XbimMatrix3D wcsTransform,
-            XbimVector3D modelTranslation)
+        public static void AddElements(this MeshGeometry3D m, EntitySelection selection, XbimMatrix3D wcsTransform)
         {
             foreach (var item in selection)
             {
-                m.AddElements(item, wcsTransform, modelTranslation);
+                m.AddElements(item, wcsTransform);
             }
         }
 
-        public static void AddElements(this MeshGeometry3D m, IPersistIfcEntity item, XbimMatrix3D wcsTransform,
-            XbimVector3D modelTranslation)
+        public static void AddElements(this MeshGeometry3D m, IPersistIfcEntity item, XbimMatrix3D wcsTransform)
         {
 
             var fromModel = item.ModelOf as XbimModel;
-            if (fromModel != null && item is IfcProduct)
+            if (fromModel == null || !(item is IfcProduct)) 
+                return;
+            switch (fromModel.GeometrySupportLevel)
             {
-                if (fromModel.GeometrySupportLevel == 2)
-                {
-                    var metre = fromModel.ModelFactors.OneMetre;
-                    wcsTransform = XbimMatrix3D.CreateTranslation(modelTranslation)*
-                                   XbimMatrix3D.CreateScale((float) (1/metre));
-
+                case 2:
                     var context = new Xbim3DModelContext(fromModel);
 
                     var productShape = context.ShapeInstancesOf((IfcProduct) item)
@@ -53,28 +48,26 @@ namespace Xbim.Presentation
                             .ToList();
                     }
 
-                    if (productShape.Any())
+                    if (!productShape.Any()) 
+                        return;
+                    foreach (var shapeInstance in productShape)
                     {
-                        foreach (var shapeInstance in productShape)
+                        IXbimShapeGeometryData shapeGeom =
+                            context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        switch ((XbimGeometryType) shapeGeom.Format)
                         {
-                            IXbimShapeGeometryData shapeGeom =
-                                context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                            switch ((XbimGeometryType) shapeGeom.Format)
-                            {
-                                case XbimGeometryType.PolyhedronBinary:
-                                    m.Read(shapeGeom.ShapeData,
-                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
-                                    break;
-                                case XbimGeometryType.Polyhedron:
-                                    m.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
-                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
-                                    break;
-                            }
+                            case XbimGeometryType.PolyhedronBinary:
+                                m.Read(shapeGeom.ShapeData,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                                break;
+                            case XbimGeometryType.Polyhedron:
+                                m.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                                break;
                         }
                     }
-                }
-                else if (fromModel.GeometrySupportLevel == 1)
-                {
+                    break;
+                case 1:
                     var xm3d = new XbimMeshGeometry3D();
                     var geomDataSet = fromModel.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
                     foreach (var geomData in geomDataSet)
@@ -83,7 +76,7 @@ namespace Xbim.Presentation
                         xm3d.Add(gd);
                     }
                     m.Add(xm3d);
-                }
+                    break;
             }
         }
 
