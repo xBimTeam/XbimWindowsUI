@@ -72,7 +72,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
                    shapeInstance.IfcTypeId,
                    shapeInstance.IfcProductLabel,
                    shapeInstance.InstanceLabel,
-                   XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform),
+                   XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
                    model.UserDefinedId
                    );
                         break;
@@ -83,7 +83,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
                   shapeInstance.IfcTypeId,
                   shapeInstance.IfcProductLabel,
                   shapeInstance.InstanceLabel,
-                  XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform),
+                  XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
                   model.UserDefinedId);
                         break;
                     default:

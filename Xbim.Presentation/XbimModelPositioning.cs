@@ -6,6 +6,7 @@ using NPOI.POIFS.Storage;
 using Xbim.Common.Geometry;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using Xbim.XbimExtensions.Interfaces;
 using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
@@ -14,6 +15,7 @@ namespace Xbim.Presentation
     {
         public XbimRegion LargestRegion;
         public Xbim3DModelContext Context;
+        public XbimMatrix3D Transfrom;
 
         public XbimModelPositioning(XbimModel model)
         {
@@ -40,13 +42,13 @@ namespace Xbim.Presentation
 
     public class XbimModelPositioningCollection
     {
-        public XbimModelPositioning this[XbimModel i]
+        public XbimModelPositioning this[IModel i]
         {
             get { return _collection[i]; }
             set { _collection[i] = value; }
         }
 
-        private readonly Dictionary<XbimModel, XbimModelPositioning> _collection;
+        private readonly Dictionary<IModel, XbimModelPositioning> _collection;
 
         public void AddModel(XbimModel model)
         {
@@ -69,7 +71,7 @@ namespace Xbim.Presentation
 
         public XbimModelPositioningCollection()
         {
-            _collection = new Dictionary<XbimModel, XbimModelPositioning>();
+            _collection = new Dictionary<IModel, XbimModelPositioning>();
         }
     }
 }

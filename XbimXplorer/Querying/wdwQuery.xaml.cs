@@ -476,7 +476,7 @@ namespace XbimXplorer.Querying
                         var reg = regions.FirstOrDefault(x => x.Name == rName);
                         if (reg != null)
                         {
-                            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
+                            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
                             var tC = mcp.Transform(reg.Centre);
                             var tS = mcp.Transform(reg.Size);
                             var r3D = new XbimRect3D(
@@ -548,7 +548,7 @@ namespace XbimXplorer.Querying
                                     {
                                         var pt = new XbimPoint3D(0, 0,
                                             XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
-                                        var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
+                                        var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
                                         var transformed = mcp.Transform(pt);
                                         msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z,
                                             transformed.Z + 1);
@@ -561,8 +561,8 @@ namespace XbimXplorer.Querying
                                     v.AddProduct(storey);
                                     var v2 = v[storey].WorldMatrix();
                                     var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
-                                            
-                                    var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.WcsTransform);
+
+                                    var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
                                     var transformed = mcp.Transform(pt);
                                     msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z,
                                         transformed.Z + 1);

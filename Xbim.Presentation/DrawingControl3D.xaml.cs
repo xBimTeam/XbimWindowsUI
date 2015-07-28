@@ -837,12 +837,14 @@ namespace Xbim.Presentation
             var m = new MeshGeometry3D();
             if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
             {
-                m.AddElements(Selection, WcsTransform, ModelTranslation);
+                foreach (var item in Selection)
+                {
+                    m.AddElements(Selection, ModelPositions[item.ModelOf].Transfrom, ModelTranslation);    
+                }
             }
             else if (newVal != null)
             {
-                var newValSelection = new EntitySelection {newVal};
-                m.AddElements(newValSelection, WcsTransform, ModelTranslation);
+                m.AddElements(newVal, ModelPositions[newVal.ModelOf].Transfrom, ModelTranslation);
             }
 
             // 2. then determine how to highlight it
@@ -910,12 +912,8 @@ namespace Xbim.Presentation
                             new Point3D(m.Positions[p2].X, m.Positions[p2].Y, m.Positions[p2].Z),
                             new Point3D(m.Positions[p3].X, m.Positions[p3].Y, m.Positions[p3].Z)
                         };
-
-
                         axesMeshBuilder.AddTube(path, lineThickness, 9, true);
-
                     }
-                    
                     HideAll();
                 }
                 else
@@ -1199,8 +1197,7 @@ namespace Xbim.Presentation
             DependencyProperty.Register("PercentageLoaded", typeof(double), typeof(DrawingControl3D),
                                         new UIPropertyMetadata(0.0));
         public XbimVector3D ModelTranslation;
-        public XbimMatrix3D WcsTransform;
-
+        // public XbimMatrix3D WcsTransform;
 
         private void ClearGraphics(ModelRefreshOptions options = ModelRefreshOptions.None)
         {
@@ -1223,7 +1220,7 @@ namespace Xbim.Presentation
             
             if ((options & ModelRefreshOptions.ViewPreserveCuttingPlane) != ModelRefreshOptions.ViewPreserveCuttingPlane)
                 ClearCutPlane();
-            _modelPositions = new XbimModelPositioningCollection();
+            ModelPositions = new XbimModelPositioningCollection();
             ModelBounds = XbimRect3D.Empty;
             
             _viewBounds = new XbimRect3D(0, 0, 0, 10, 10, 5);    
@@ -1242,7 +1239,7 @@ namespace Xbim.Presentation
             ViewPreserveAll = 7
         }
 
-        private XbimModelPositioningCollection _modelPositions = null;
+        public XbimModelPositioningCollection ModelPositions = null;
 
         public ILayerStylerV2 GeomSupport2LayerStyler;
 
@@ -1267,20 +1264,20 @@ namespace Xbim.Presentation
             var geometrySupportLevel = model.GeometrySupportLevel;
 
 
-            _modelPositions.AddModel(model);
+            ModelPositions.AddModel(model);
             foreach (var refModel in model.ReferencedModels)
             {
                 refModel.Model.UserDefinedId = ++userDefinedId;
-                _modelPositions.AddModel(model);
+                ModelPositions.AddModel(model);
             }
-            var bb = _modelPositions.GetEnvelopOfCentes();
+            var bb = ModelPositions.GetEnvelopOfCentes();
 
             var p = bb.Centroid();
             ModelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
 
             // model scaling
             var metre = model.ModelFactors.OneMetre;
-            WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*XbimMatrix3D.CreateScale(1/metre);
+            ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / metre);
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
 
             // prepare grouping and layering behaviours
@@ -1299,7 +1296,7 @@ namespace Xbim.Presentation
                 GeomSupport2LayerStyler.Control = this;
                 GeomSupport2LayerStyler.SetFederationEnvironment(null);
                 
-                scene = GeomSupport2LayerStyler.BuildScene(model, _modelPositions[model].Context, _exclude);
+                scene = GeomSupport2LayerStyler.BuildScene(model, ModelPositions[model].Context, _exclude);
             }
             if (scene != null)
             {
@@ -1319,7 +1316,7 @@ namespace Xbim.Presentation
                 else if (refModel.Model.GeometrySupportLevel == 2)
                 {
                     GeomSupport2LayerStyler.SetFederationEnvironment(refModel);
-                    Scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, _modelPositions[refModel.Model].Context, _exclude));
+                    Scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, ModelPositions[refModel.Model].Context, _exclude));
                 }
             }
             ShowSpaces = false;
@@ -1413,14 +1410,14 @@ namespace Xbim.Presentation
 
             var colour = _federationColours[docInfo.DocumentOwner.RoleName()];
             var metre = model.ModelFactors.OneMetre;
-            WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / (float)metre);
+            ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale(1 / (float)metre);
                 
             var layer = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, colour) { Name = "All" };
             //add all content initially into the hidden field
             foreach (var geomData in model.GetGeometryData(handles))
             {
 #pragma warning disable 618
-                layer.AddToHidden(geomData.TransformBy(WcsTransform), model);
+                layer.AddToHidden(geomData.TransformBy(ModelPositions[model].Transfrom), model);
 #pragma warning restore 618
             }
 
@@ -1481,14 +1478,13 @@ namespace Xbim.Presentation
             if (project == null)
                 return scene;
 
-            var handles = GetHandles(model, _modelPositions[model].Context, loadLabels);
+            var handles = GetHandles(model, ModelPositions[model].Context, loadLabels);
             var suppLevel = model.GeometrySupportLevel;
             if (suppLevel == 1)
             {
                 // geometry engine version 1
                 var metre = model.ModelFactors.OneMetre;
-                WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
-                               XbimMatrix3D.CreateScale((float) (1/metre));
+                ModelPositions[model].Transfrom = XbimMatrix3D.CreateTranslation(ModelTranslation) * XbimMatrix3D.CreateScale((float) (1/metre));
             
 
             var groupedHandlers = layerStyler.GroupLayers(handles);
@@ -1510,7 +1506,7 @@ namespace Xbim.Presentation
                     foreach (var geomData in geomColl)
                     {
 #pragma warning disable 618
-                        var gd = geomData.TransformBy(WcsTransform);
+                        var gd = geomData.TransformBy(ModelPositions[model].Transfrom);
 #pragma warning restore 618
                         if (LayerStyler.UseIfcSubStyles)
                             layer.AddToHidden(gd, model);
@@ -1539,7 +1535,7 @@ namespace Xbim.Presentation
 #endif
                    
                 }
-                else
+                else if (suppLevel == 2)
                 {
                 // geometry engine version 2
                     
@@ -1557,8 +1553,8 @@ namespace Xbim.Presentation
                     var hndls = groupedHandlers[layerName];
                     foreach (var handle in hndls)
                     {
-                        var shapeInstance = _modelPositions[model].Context.ShapeInstances().FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
-                        IXbimShapeGeometryData shapeGeom = _modelPositions[model].Context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        var shapeInstance = ModelPositions[model].Context.ShapeInstances().FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
+                        IXbimShapeGeometryData shapeGeom = ModelPositions[model].Context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 
                         // var targetMergeMeshByStyle = styleMeshSets[styleId];
                         switch ((XbimGeometryType) shapeGeom.Format)
@@ -1570,7 +1566,7 @@ namespace Xbim.Presentation
                                    shapeInstance.IfcTypeId,
                                    shapeInstance.IfcProductLabel,
                                    shapeInstance.InstanceLabel,
-                                   XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform),
+                                   XbimMatrix3D.Multiply(shapeInstance.Transformation, ModelPositions[model].Transfrom),
                                    model.UserDefinedId);
                                 break;
 
@@ -1580,7 +1576,7 @@ namespace Xbim.Presentation
                                   shapeInstance.IfcTypeId,
                                   shapeInstance.IfcProductLabel,
                                   shapeInstance.InstanceLabel,
-                                  XbimMatrix3D.Multiply(shapeInstance.Transformation, WcsTransform),
+                                  XbimMatrix3D.Multiply(shapeInstance.Transformation, ModelPositions[model].Transfrom),
                                   model.UserDefinedId);
                                 break;
                             default:

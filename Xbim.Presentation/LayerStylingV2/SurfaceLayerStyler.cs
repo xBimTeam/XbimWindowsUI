@@ -77,7 +77,7 @@ namespace Xbim.Presentation.LayerStylingV2
                         new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                     mg.BackMaterial = mg.Material;
                     mg.Transform =
-                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
+                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom).ToMatrixTransform3D();
                     if (styles[styleId].IsTransparent)
                         tmpTransparentsGroup.Children.Add(mg);
                     else
@@ -106,7 +106,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                         mg.BackMaterial = mg.Material;
                         mg.Transform =
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom).ToMatrixTransform3D();
                         if (styles[styleId].IsTransparent)
                             tmpTransparentsGroup.Children.Add(mg);
                         else
@@ -126,7 +126,7 @@ namespace Xbim.Presentation.LayerStylingV2
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
                                     shapeInstance.InstanceLabel,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform),
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
                                     model.UserDefinedId);
                                 break;
 
@@ -136,7 +136,7 @@ namespace Xbim.Presentation.LayerStylingV2
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
                                     shapeInstance.InstanceLabel,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform),
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
                                     model.UserDefinedId);
                                 break;
                             default:
