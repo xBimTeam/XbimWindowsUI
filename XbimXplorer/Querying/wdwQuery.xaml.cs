@@ -26,6 +26,10 @@ using Xbim.XbimExtensions.SelectTypes;
 using XbimGeometry.Interfaces;
 using XbimXplorer.Simplify;
 
+// todo: see if gemini is a good candidate for a network based ui experience in xbim.
+// https://github.com/tgjones/gemini
+//
+
 namespace XbimXplorer.Querying
 {
     /// <summary>

@@ -56,7 +56,7 @@ namespace Xbim.Presentation.ModelGeomInfo
         public override string ToString()
         {
             if (_geomPoints.Count == 1)
-                return string.Format("Selected point: {0:0.##}x {1:0.##}y {2:0.##}z",
+                return string.Format("Selected point coords: {0:0.##}, {1:0.##}, {2:0.##})",
                     _geomPoints[0].Point.X, _geomPoints[0].Point.Y, _geomPoints[0].Point.Z);
             var d = GetArea();
             return !double.IsNaN(d) 
