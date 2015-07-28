@@ -262,6 +262,7 @@
     <Compile Include="WpfVector3DCollection.cs" />
     <Compile Include="XbimMaterialModelVisual.cs" />
     <Compile Include="XbimMaterialProvider.cs" />
+    <Compile Include="XbimModelPositioning.cs" />
     <Compile Include="XbimModelPresentationExtensions.cs" />
     <Compile Include="FederatedModel\XbimReferencedModelViewModel.cs" />
     <Compile Include="XbimMouseClickActions.cs" />

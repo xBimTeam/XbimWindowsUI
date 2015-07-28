@@ -1223,12 +1223,13 @@ namespace Xbim.Presentation
             
             if ((options & ModelRefreshOptions.ViewPreserveCuttingPlane) != ModelRefreshOptions.ViewPreserveCuttingPlane)
                 ClearCutPlane();
-
+            _modelPositions = new XbimModelPositioningCollection();
             ModelBounds = XbimRect3D.Empty;
+            
             _viewBounds = new XbimRect3D(0, 0, 0, 10, 10, 5);    
             Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
             if ((options & ModelRefreshOptions.ViewPreserveCameraPosition) != ModelRefreshOptions.ViewPreserveCameraPosition)
-            Viewport.ResetCamera();
+                Viewport.ResetCamera();
         }
 
         [Flags]
@@ -1240,6 +1241,8 @@ namespace Xbim.Presentation
             ViewPreserveCuttingPlane = 4,
             ViewPreserveAll = 7
         }
+
+        private XbimModelPositioningCollection _modelPositions = null;
 
         public ILayerStylerV2 GeomSupport2LayerStyler;
 
@@ -1262,43 +1265,22 @@ namespace Xbim.Presentation
                 return; //nothing to show
             model.UserDefinedId = userDefinedId;
             var geometrySupportLevel = model.GeometrySupportLevel;
-            var context = new Xbim3DModelContext(model);
-            XbimRegion largest;
-            largest =
-                geometrySupportLevel == 1
-                    ? GetLargestRegion(model)
-                    : context.GetLargestRegion();
-            var bb = XbimRect3D.Empty;
-            if (largest != null)
-                bb = new XbimRect3D(largest.Centre, largest.Centre);
 
+
+            _modelPositions.AddModel(model);
             foreach (var refModel in model.ReferencedModels)
             {
-                XbimRegion r;
                 refModel.Model.UserDefinedId = ++userDefinedId;
-                if (geometrySupportLevel == 1)
-                    r = GetLargestRegion(refModel.Model);
-                else //assume we are the latest level (2)
-                {
-                    var refContext = new Xbim3DModelContext(refModel.Model);
-                    r = refContext.GetLargestRegion();
-                }
-                if (r != null)
-                {
-                    if (bb.IsEmpty)
-                        bb = new XbimRect3D(r.Centre, r.Centre);
-                    else
-                        bb.Union(r.Centre);
-                }
+                _modelPositions.AddModel(model);
             }
+            var bb = _modelPositions.GetEnvelopOfCentes();
+
             var p = bb.Centroid();
             ModelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
 
             // model scaling
             var metre = model.ModelFactors.OneMetre;
             WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*XbimMatrix3D.CreateScale(1/metre);
-
-
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
 
             // prepare grouping and layering behaviours
@@ -1316,7 +1298,8 @@ namespace Xbim.Presentation
                     GeomSupport2LayerStyler = new SurfaceLayerStyler();
                 GeomSupport2LayerStyler.Control = this;
                 GeomSupport2LayerStyler.SetFederationEnvironment(null);
-                scene = GeomSupport2LayerStyler.BuildScene(model, context, _exclude);
+                
+                scene = GeomSupport2LayerStyler.BuildScene(model, _modelPositions[model].Context, _exclude);
             }
             if (scene != null)
             {
@@ -1333,11 +1316,10 @@ namespace Xbim.Presentation
                     if (tSc.Layers.Any())
                         Scenes.Add(tSc);
                 }
-                else if (geometrySupportLevel == 2)
+                else if (refModel.Model.GeometrySupportLevel == 2)
                 {
                     GeomSupport2LayerStyler.SetFederationEnvironment(refModel);
-                    var refContext = new Xbim3DModelContext(refModel.Model);
-                    Scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, refContext, _exclude));
+                    Scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, _modelPositions[refModel.Model].Context, _exclude));
                 }
             }
             ShowSpaces = false;
@@ -1349,20 +1331,6 @@ namespace Xbim.Presentation
         {
             FederationLayerStyler = GetCurrentFederationLayerStyler();
             FederationLayerStyler.SetFederationEnvironment(refModel);
-        }
-
-        private XbimRegion GetLargestRegion(XbimModel model)
-        {
-            var project = model.IfcProject;
-            var projectId = 0;
-            if (project != null) projectId = project.EntityLabel;
-            var regionData = model.GetGeometryData(projectId, XbimGeometryType.Region).FirstOrDefault();
-            //get the region data should only be one
-
-            if (regionData == null) 
-                return null;
-            var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
-            return regions.MostPopulated();
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1400,27 +1368,29 @@ namespace Xbim.Presentation
 
         private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0) 
-                return;
-            var refModel = e.NewItems[0] as XbimReferencedModel;
-            if (Scenes.Count == 0) //need to calculate extents
-            {
-                if (refModel != null)
-                {
-                    var largest = GetLargestRegion(refModel.Model);
-                    var bb = XbimRect3D.Empty;
-                    if (largest != null)
-                        bb = new XbimRect3D(largest.Centre, largest.Centre);
-                    var p = bb.Centroid();
-                    ModelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
-                }
-            }
-            if (refModel != null)
-            {
-                var scene = BuildRefModelScene(refModel.Model, refModel.DocumentInformation);
-                Scenes.Add(scene);
-            }
-            RecalculateView();
+            //// todo: restore collection changed
+            ////
+            //if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0) 
+            //    return;
+            //var refModel = e.NewItems[0] as XbimReferencedModel;
+            //if (Scenes.Count == 0) //need to calculate extents
+            //{
+            //    if (refModel != null)
+            //    {
+            //        var largest = GetLargestRegion(refModel.Model);
+            //        var bb = XbimRect3D.Empty;
+            //        if (largest != null)
+            //            bb = new XbimRect3D(largest.Centre, largest.Centre);
+            //        var p = bb.Centroid();
+            //        ModelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
+            //    }
+            //}
+            //if (refModel != null)
+            //{
+            //    var scene = BuildRefModelScene(refModel.Model, refModel.DocumentInformation);
+            //    Scenes.Add(scene);
+            //}
+            //RecalculateView();
         }
 
         public void ReportData(StringBuilder sb, IModel model, int entityLabel)
@@ -1480,16 +1450,12 @@ namespace Xbim.Presentation
         /// </summary>
         public ILayerStyler FederationLayerStyler = null;
 
-        public virtual XbimGeometryHandleCollection GetHandles(XbimModel model, IEnumerable<int> loadLabels)
+        public virtual XbimGeometryHandleCollection GetHandles(XbimModel model, Xbim3DModelContext context, IEnumerable<int> loadLabels)
         {
             var handles = new XbimGeometryHandleCollection();
             switch (model.GeometrySupportLevel)
             {
                 case 1:
-                    var metre = model.ModelFactors.OneMetre;
-                    WcsTransform = XbimMatrix3D.CreateTranslation(ModelTranslation)*
-                                   XbimMatrix3D.CreateScale((float) (1/metre));
-
                     handles = (loadLabels == null)
                         ? new XbimGeometryHandleCollection(
                             model.GetGeometryHandles().Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT))
@@ -1497,10 +1463,9 @@ namespace Xbim.Presentation
                             model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)));
                     break;
                 case 2:
-                    var ctx = new Xbim3DModelContext(model);
                     handles = (loadLabels == null)
-                        ? ctx.GetApproximateGeometryHandles()
-                        : ctx.GetApproximateGeometryHandles(loadLabels);
+                        ? context.GetApproximateGeometryHandles()
+                        : context.GetApproximateGeometryHandles(loadLabels);
                     break;
             }
             return handles;
@@ -1516,7 +1481,7 @@ namespace Xbim.Presentation
             if (project == null)
                 return scene;
 
-            var handles = GetHandles(model, loadLabels);
+            var handles = GetHandles(model, _modelPositions[model].Context, loadLabels);
             var suppLevel = model.GeometrySupportLevel;
             if (suppLevel == 1)
             {
@@ -1577,7 +1542,7 @@ namespace Xbim.Presentation
                 else
                 {
                 // geometry engine version 2
-                    var ctx = new Xbim3DModelContext(model);
+                    
                 var groupedHandlers = layerStyler.GroupLayers(handles);
 
                 foreach (var layerName in groupedHandlers.Keys)
@@ -1592,9 +1557,8 @@ namespace Xbim.Presentation
                     var hndls = groupedHandlers[layerName];
                     foreach (var handle in hndls)
                     {
-                        var shapeInstance =
-                            ctx.ShapeInstances().FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
-                        IXbimShapeGeometryData shapeGeom = ctx.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        var shapeInstance = _modelPositions[model].Context.ShapeInstances().FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
+                        IXbimShapeGeometryData shapeGeom = _modelPositions[model].Context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 
                         // var targetMergeMeshByStyle = styleMeshSets[styleId];
                         switch ((XbimGeometryType) shapeGeom.Format)
