@@ -1790,7 +1790,8 @@ namespace Xbim.Presentation
 
         public void ViewHome()
         {
-            if (Viewport.CameraController != null) Viewport.CameraController.ResetCamera();
+            if (Viewport.CameraController != null) 
+                Viewport.CameraController.ResetCamera();
             var r3D = new Rect3D(_viewBounds.X, _viewBounds.Y, _viewBounds.Z, _viewBounds.SizeX, _viewBounds.SizeY, _viewBounds.SizeZ);
             Viewport.ZoomExtents(r3D);
         }
