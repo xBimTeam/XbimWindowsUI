@@ -563,7 +563,7 @@ namespace XbimXplorer.Querying
                                 {
                                     var v = new TransformGraph(Model);
                                     v.AddProduct(storey);
-                                    var v2 = v[storey].WorldMatrix();
+                                    var v2 = v[storey].LocalMatrix;
                                     var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
 
                                     var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
