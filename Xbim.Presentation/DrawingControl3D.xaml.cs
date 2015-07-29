@@ -1270,10 +1270,10 @@ namespace Xbim.Presentation
                 refModel.Model.UserDefinedId = ++userDefinedId;
                 ModelPositions.AddModel(refModel.Model);
             }
-            var bb = ModelPositions.GetEnvelopOfCentes();
+            var bb = ModelPositions.GetEnvelop();
             var p = bb.Centroid();
-            // var modelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
-            var modelTranslation = new XbimVector3D(0, 0, 0);
+            var modelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
+            // var modelTranslation = new XbimVector3D(0, 0, 0);
 
             ModelPositions.SetCenter(modelTranslation);
 

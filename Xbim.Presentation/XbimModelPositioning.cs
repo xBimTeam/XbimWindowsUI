@@ -35,18 +35,25 @@ namespace Xbim.Presentation
             }
         }
 
+        
+        /// <summary>
+        /// Works only on models version 1.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         private static XbimRegion GetLargestRegion(XbimModel model)
         {
+            //get the region data should only be one
             var project = model.IfcProject;
             var projectId = 0;
             if (project != null) projectId = project.EntityLabel;
+            // in version 1.0 there should be only 1 record in the database for the project (storing multiple regions).
             var regionData = model.GetGeometryData(projectId, XbimGeometryType.Region).FirstOrDefault();
-            //get the region data should only be one
 
             if (regionData == null)
                 return null;
             var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
-            return regions.MostPopulated();
+            return regions.MostPopulated(); // this then returns 
         }
 
         internal void SetCenter(XbimVector3D modelTranslation)
@@ -70,6 +77,39 @@ namespace Xbim.Presentation
         {
             var tmp = new XbimModelPositioning(model);
             _collection.Add(model, tmp);
+        }
+
+        public XbimRect3D GetEnvelop()
+        {
+            var bb = XbimRect3D.Empty;
+            foreach (var r in _collection.Values.Select(positioning => positioning.LargestRegion).Where(r => r != null))
+            {
+                var pts = MinMaxPoints(r);
+
+                if (bb.IsEmpty)
+                    bb = new XbimRect3D(pts[0], pts[1]);
+                else
+                {
+                    bb.Union(pts[0]);
+                    bb.Union(pts[1]);
+                }
+            }
+            return bb;
+        }
+
+        private XbimPoint3D[] MinMaxPoints(XbimRegion rect)
+        {
+            var pMin = new XbimPoint3D(
+                rect.Centre.X - (rect.Size.X/2),
+                rect.Centre.Y - (rect.Size.Y/2),
+                rect.Centre.Z - (rect.Size.Z/2));
+
+            var pMax = new XbimPoint3D(
+                rect.Centre.X + (rect.Size.X / 2),
+                rect.Centre.Y + (rect.Size.Y / 2),
+                rect.Centre.Z + (rect.Size.Z / 2));
+
+            return new[] {pMin, pMax};
         }
 
         public XbimRect3D GetEnvelopOfCentes()

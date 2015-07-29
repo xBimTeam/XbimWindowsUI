@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ProductExtension;
+using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using XbimGeometry.Interfaces;
@@ -25,6 +26,21 @@ namespace Xbim.Presentation.LayerStylingV2
         public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context,
             List<Type> exclude = null)
         {
+            var excludedTypes = new HashSet<short>();
+            if (exclude == null)
+                exclude = new List<Type>()
+                {
+                    typeof(IfcSpace)
+                    // , typeof(IfcFeatureElement)
+                };
+            foreach (var excludedT in exclude)
+            {
+                var ifcT = IfcMetaData.IfcType(excludedT);
+                foreach (var exIfcType in ifcT.NonAbstractSubTypes.Select(IfcMetaData.IfcType))
+                {
+                    excludedTypes.Add(exIfcType.TypeId);
+                }
+            }
 
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
 
@@ -56,12 +72,13 @@ namespace Xbim.Presentation.LayerStylingV2
                     tmpOpaquesGroup.Children.Add(mg);
             }
 
-
             if (!styles.Any()) return scene; //this should always return something
             var shapeInstances = context.ShapeInstances()
-                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
-                            !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
-                        !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
+                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded
+                            &&
+                            !excludedTypes.Contains(s.IfcTypeId));
+                            // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
+                            // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
             foreach (var shapeInstance in shapeInstances)
             {
                 
