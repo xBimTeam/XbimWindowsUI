@@ -94,7 +94,8 @@
 
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
-                    <MenuItem Header="_Model Style Reset" Click="SetDefaultModeStyler" />
+                    <MenuItem Header="_Style Reset" Click="SetDefaultModeStyler" />
+                    <MenuItem Header="_Use old styler" Click="SetStylerVersion1" />
                     <MenuItem Header="Federation style by _Role" Click="SetFederationStylerRole" />
                     <MenuItem Header="Federation style by _Element type" Click="SetFederationStylerType" />
                 </MenuItem>

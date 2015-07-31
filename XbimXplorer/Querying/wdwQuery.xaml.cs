@@ -119,14 +119,14 @@ namespace XbimXplorer.Querying
                         continue;
 
                     // put here all commands that don't require a database open
-                    var mdbclosed = Regex.Match(cmd, @"help", RegexOptions.IgnoreCase);
+                    var mdbclosed = Regex.Match(cmd, @"^help$", RegexOptions.IgnoreCase);
                     if (mdbclosed.Success)
                     {
                         DisplayHelp();
                         continue;
                     }
 
-                    mdbclosed = Regex.Match(cmd, @"RefreshPlugins", RegexOptions.IgnoreCase);
+                    mdbclosed = Regex.Match(cmd, @"^RefreshPlugins$", RegexOptions.IgnoreCase);
                     if (mdbclosed.Success)
                     {
                         if (_parentWindow != null)
@@ -134,7 +134,7 @@ namespace XbimXplorer.Querying
                         continue;
                     }
 
-                    mdbclosed = Regex.Match(cmd, @"xplorer", RegexOptions.IgnoreCase);
+                    mdbclosed = Regex.Match(cmd, @"^xplorer$", RegexOptions.IgnoreCase);
                     if (mdbclosed.Success)
                     {
                         if (_parentWindow != null)
@@ -145,6 +145,19 @@ namespace XbimXplorer.Querying
                             var xp = new XplorerMainWindow();
                             _parentWindow = xp;
                             xp.Show();
+                        }
+                        continue;
+                    }
+
+                    mdbclosed = Regex.Match(cmd, @"^versions$", RegexOptions.IgnoreCase);
+                    if (mdbclosed.Success)
+                    {
+                        var asms = AppDomain.CurrentDomain.GetAssemblies();
+                        ReportAdd("List of loaded assemblies:", Brushes.Black);
+                        foreach (var asm in asms)
+                        {
+                            var asmName = asm.GetName();
+                            ReportAdd(string.Format(" - {0}", asmName.FullName), Brushes.Black);
                         }
                         continue;
                     }

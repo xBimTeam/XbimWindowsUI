@@ -70,9 +70,13 @@ namespace XbimXplorer
 
         internal void LoadPlugin(string fullAssemblyName)
         {
-            Debug.WriteLine(string.Format("Attempting to load: {0}", fullAssemblyName));
             if (!File.Exists(fullAssemblyName))
+            {
+                Debug.WriteLine(string.Format("Assembly not found {0}", fullAssemblyName));
                 return;
+            }
+            Debug.WriteLine(string.Format("Attempting to load: {0}", fullAssemblyName));
+
             var contPath = Path.GetDirectoryName(fullAssemblyName);
             _assemblyLoadFolder = contPath;
 
@@ -80,11 +84,13 @@ namespace XbimXplorer
             foreach (var refReq in assembly.GetReferencedAssemblies())
             {
                 //check if the assembly is loaded
-                Assembly[] asms = AppDomain.CurrentDomain.GetAssemblies();
-                bool reqFound = false;
-                foreach (Assembly asm in asms)
+                var asms = AppDomain.CurrentDomain.GetAssemblies();
+                var reqFound = false;
+                foreach (var asm in asms)
                 {
-                    AssemblyName asmName = asm.GetName();
+                    
+                    var asmName = asm.GetName();
+                    
                     if (asmName.FullName.Equals(refReq.FullName))
                     {
                         reqFound = true;
@@ -92,7 +98,14 @@ namespace XbimXplorer
                     }
                     if (asmName.Name.Equals(refReq.Name))
                     {
-                        Debug.WriteLine("Versioning issues: \r\na -> {0} \r\nb -> {1}", refReq.FullName, asmName.FullName);
+                        //byte[] token = asmName.GetPublicKeyToken();
+                        //string stoken = "";
+                        //if(token != null && token.Length>0)  
+                        //    stoken = token.Select(x => x.ToString("x2")).Aggregate((x, y) => x + y);  
+
+                        Debug.WriteLine("Versioning issues:\r\n" +
+                                "Required -> {0}\r\n" +
+                                "Loaded   -> {1}", refReq.FullName, asmName.FullName);
                     }
                 }
                 if (!reqFound)

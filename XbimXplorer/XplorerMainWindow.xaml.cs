@@ -44,6 +44,7 @@ using XbimXplorer.Dialogs;
 using System.Windows.Media.Imaging;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Presentation.FederatedModel;
+using Xbim.Presentation.LayerStylingV2;
 using XbimXplorer.Querying;
 using XbimXplorer.Scripting;
 using XbimXplorer.Properties;
@@ -994,18 +995,29 @@ namespace XbimXplorer
         private void SetDefaultModeStyler(object sender, RoutedEventArgs e)
         {
             DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
+            DrawingControl.GeomSupport2LayerStyler = new SurfaceLayerStyler();
+            DrawingControl.LayerStylerForceVersion1 = false;
+            DrawingControl.ReloadModel();
+        }
+
+        private void SetStylerVersion1(object sender, RoutedEventArgs e)
+        {
+            DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
+            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
         private void SetFederationStylerRole(object sender, RoutedEventArgs e)
         {
             DrawingControl.FederationLayerStyler = new LayerStylerSingleColour();
+            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
         private void SetFederationStylerType(object sender, RoutedEventArgs e)
         {
             DrawingControl.FederationLayerStyler = new LayerStylerTypeAndIfcStyle();
+            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 

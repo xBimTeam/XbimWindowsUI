@@ -15,7 +15,8 @@
 [assembly: AssemblyCulture("")]
  
 // AssemblyVersion is the CLR version. Change this only when making breaking changes
-[assembly: AssemblyVersion("3.1.*")]
+// Whenever breaking changes happen update this.
+[assembly: AssemblyVersion("3.1.1.0")]
 // AssemblyFileVersion should ideally be changed with each build, and should help identify the origin of a build
 [assembly: AssemblyFileVersion("3.1.0.0")]
 
