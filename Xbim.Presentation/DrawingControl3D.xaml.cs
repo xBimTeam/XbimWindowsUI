@@ -1797,8 +1797,7 @@ namespace Xbim.Presentation
                 Viewport.Children.Remove(_octreeVisualization);
             _octreeVisualization.Children.Clear();
             ShowOctree<IfcProduct>(octree, specificLevel, onlyWithContent);
-            Viewport.Children.Add(_octreeVisualization);
-            
+            Viewport.Children.Add(_octreeVisualization);  
         }
 
         ModelVisual3D _octreeVisualization = new ModelVisual3D();

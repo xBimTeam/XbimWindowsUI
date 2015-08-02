@@ -47,13 +47,12 @@ namespace XbimXplorer.Querying
 #if DEBUG
             // loads the last commands stored
             var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
-            if (File.Exists(fname))
+            if (!File.Exists(fname)) 
+                return;
+            using (var reader = File.OpenText(fname))
             {
-                using (var reader = File.OpenText(fname))
-                {
-                    var read = reader.ReadToEnd();
-                    TxtCommand.Text = read;
-                }
+                var read = reader.ReadToEnd();
+                TxtCommand.Text = read;
             }
 #endif
         }
@@ -74,7 +73,7 @@ namespace XbimXplorer.Querying
                    .Where(desiredType.IsAssignableFrom);
         }
 
-        public static bool IsRealClass(Type testType)
+        private static bool IsRealClass(Type testType)
         {
             return testType.IsAbstract == false
                  && testType.IsGenericTypeDefinition == false
@@ -83,674 +82,666 @@ namespace XbimXplorer.Querying
 
         private void txtCommand_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter &&
-                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
-                )
-            {
+            if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))) 
+                return;
 #if DEBUG
-                // stores the commands being launched
-                var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
-                using (var writer = File.CreateText(fname))
-                {
-                    writer.Write(TxtCommand.Text);
-                    writer.Flush();
-                    writer.Close();
-                }
+            // stores the commands being launched
+            var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
+            using (var writer = File.CreateText(fname))
+            {
+                writer.Write(TxtCommand.Text);
+                writer.Flush();
+                writer.Close();
+            }
 #endif
 
-                e.Handled = true;
-                if (_bDoClear)
-                    TxtOut.Document = new FlowDocument();
+            e.Handled = true;
+            if (_bDoClear)
+                TxtOut.Document = new FlowDocument();
 
-                var commandArray = TxtCommand.Text.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
-                if (TxtCommand.SelectedText != string.Empty)
-                    commandArray = TxtCommand.SelectedText.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            var commandArray = TxtCommand.Text.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            if (TxtCommand.SelectedText != string.Empty)
+                commandArray = TxtCommand.SelectedText.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (var cmdF in commandArray)
+            foreach (var cmdF in commandArray)
+            {
+                ReportAdd("> " + cmdF, Brushes.ForestGreen);
+                var cmd = cmdF;
+                var i = cmd.IndexOf("//", StringComparison.Ordinal);
+                if (i > 0)
                 {
-                    ReportAdd("> " + cmdF, Brushes.ForestGreen);
-                    var cmd = cmdF;
-                    var i = cmd.IndexOf("//", StringComparison.Ordinal);
-                    if (i > 0)
-                    {
-                        cmd = cmd.Substring(0, i);
-                    }
-                    if (cmd.TrimStart().StartsWith("//"))
-                        continue;
+                    cmd = cmd.Substring(0, i);
+                }
+                if (cmd.TrimStart().StartsWith("//"))
+                    continue;
 
-                    // put here all commands that don't require a database open
-                    var mdbclosed = Regex.Match(cmd, @"^help$", RegexOptions.IgnoreCase);
-                    if (mdbclosed.Success)
-                    {
-                        DisplayHelp();
-                        continue;
-                    }
+                // put here all commands that don't require a database open
+                var mdbclosed = Regex.Match(cmd, @"^help$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    DisplayHelp();
+                    continue;
+                }
 
-                    mdbclosed = Regex.Match(cmd, @"^RefreshPlugins$", RegexOptions.IgnoreCase);
-                    if (mdbclosed.Success)
-                    {
-                        if (_parentWindow != null)
-                            _parentWindow.RefreshPlugins();
-                        continue;
-                    }
+                mdbclosed = Regex.Match(cmd, @"^RefreshPlugins$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    if (_parentWindow != null)
+                        _parentWindow.RefreshPlugins();
+                    continue;
+                }
 
-                    mdbclosed = Regex.Match(cmd, @"^xplorer$", RegexOptions.IgnoreCase);
-                    if (mdbclosed.Success)
+                mdbclosed = Regex.Match(cmd, @"^xplorer$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    if (_parentWindow != null)
+                        _parentWindow.Focus();
+                    else
                     {
-                        if (_parentWindow != null)
-                            _parentWindow.Focus();
-                        else
+                        // todo: bonghi: open the model in xplorer if needed.
+                        var xp = new XplorerMainWindow();
+                        _parentWindow = xp;
+                        xp.Show();
+                    }
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^versions$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var asms = AppDomain.CurrentDomain.GetAssemblies();
+                    ReportAdd("List of loaded assemblies:", Brushes.Black);
+                    foreach (var asm in asms)
+                    {
+                        var asmName = asm.GetName();
+                        ReportAdd(string.Format(" - {0}", asmName.FullName), Brushes.Black);
+                    }
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"clear *\b(?<mode>(on|off))*", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    try
+                    {
+                        var option = mdbclosed.Groups["mode"].Value;
+
+                        if (option == "")
                         {
-                            // todo: bonghi: open the model in xplorer if needed.
-                            var xp = new XplorerMainWindow();
-                            _parentWindow = xp;
-                            xp.Show();
-                        }
-                        continue;
-                    }
-
-                    mdbclosed = Regex.Match(cmd, @"^versions$", RegexOptions.IgnoreCase);
-                    if (mdbclosed.Success)
-                    {
-                        var asms = AppDomain.CurrentDomain.GetAssemblies();
-                        ReportAdd("List of loaded assemblies:", Brushes.Black);
-                        foreach (var asm in asms)
-                        {
-                            var asmName = asm.GetName();
-                            ReportAdd(string.Format(" - {0}", asmName.FullName), Brushes.Black);
-                        }
-                        continue;
-                    }
-
-                    mdbclosed = Regex.Match(cmd, @"clear *\b(?<mode>(on|off))*", RegexOptions.IgnoreCase);
-                    if (mdbclosed.Success)
-                    {
-                        try
-                        {
-                            var option = mdbclosed.Groups["mode"].Value;
-
-                            if (option == "")
-                            {
-                                TxtOut.Document = new FlowDocument();
-                                continue;
-                            }
-                            if (option == "on")
-                                _bDoClear = true;
-                            else if (option == "off")
-                                _bDoClear = false;
-                            else
-                            {
-                                ReportAdd(string.Format("Autoclear not changed ({0} is not a valid option).", option));
-                                continue;
-                            }
-                            ReportAdd(string.Format("Autoclear set to {0}", option.ToLower()));
+                            TxtOut.Document = new FlowDocument();
                             continue;
                         }
-// ReSharper disable once EmptyGeneralCatchClause
-                        catch
+                        if (option == "on")
+                            _bDoClear = true;
+                        else if (option == "off")
+                            _bDoClear = false;
+                        else
                         {
-                        }
-                        TxtOut.Document = new FlowDocument();
-                        continue;
-                    }
-
-
-                    if (Model == null)
-                    {
-                        ReportAdd("Plaese open a database.", Brushes.Red);
-                        continue;
-                    }
-
-                    // all commands here
-                    //
-                    var m = Regex.Match(cmd, @"^(entitylabel|el) (?<el>\d+)(?<recursion> -*\d+)*",
-                        RegexOptions.IgnoreCase);
-                    if (m.Success)
-                    {
-                        var recursion = 0;
-                        var v = Convert.ToInt32(m.Groups["el"].Value);
-                        try
-                        {
-                            recursion = Convert.ToInt32(m.Groups["recursion"].Value);
-                        }
-// ReSharper disable once EmptyGeneralCatchClause
-                        catch
-                        {
-                        }
-
-                        ReportAdd(ReportEntity(v, recursion));
-                        continue;
-                    }
-
-
-
-                    m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
-                    if (m.Success)
-                    {
-                        if (Model.Header == null)
-                        {
-                            ReportAdd("Model header is not defined.", Brushes.Red);
+                            ReportAdd(string.Format("Autoclear not changed ({0} is not a valid option).", option));
                             continue;
                         }
-                        ReportAdd("FileDescription:");
-                        foreach (var item in Model.Header.FileDescription.Description)
-                        {
-                            ReportAdd(string.Format("- Description: {0}", item));
-                        }
-                        ReportAdd(string.Format("- ImplementationLevel: {0}",
-                            Model.Header.FileDescription.ImplementationLevel));
-                        ReportAdd(string.Format("- EntityCount: {0}", Model.Header.FileDescription.EntityCount));
-
-                        ReportAdd("FileName:");
-                        ReportAdd(string.Format("- Name: {0}", Model.Header.FileName.Name));
-                        ReportAdd(string.Format("- TimeStamp: {0}", Model.Header.FileName.TimeStamp));
-                        foreach (var item in Model.Header.FileName.Organization)
-                        {
-                            ReportAdd(string.Format("- Organization: {0}", item));
-                        }
-                        ReportAdd(string.Format("- OriginatingSystem: {0}", Model.Header.FileName.OriginatingSystem));
-                        ReportAdd(string.Format("- PreprocessorVersion: {0}", Model.Header.FileName.PreprocessorVersion));
-                        foreach (var item in Model.Header.FileName.AuthorName)
-                        {
-                            ReportAdd(string.Format("- AuthorName: {0}", item));
-                        }
-
-                        ReportAdd(string.Format("- AuthorizationName: {0}", Model.Header.FileName.AuthorizationName));
-                        foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
-                        {
-                            ReportAdd(string.Format("- AuthorizationMailingAddress: {0}", item));
-                        }
-
-                        ReportAdd("FileSchema:");
-                        foreach (var item in Model.Header.FileSchema.Schemas)
-                        {
-                            ReportAdd(string.Format("- Schema: {0}", item));
-                        }
+                        ReportAdd(string.Format("Autoclear set to {0}", option.ToLower()));
                         continue;
                     }
-
-                    // SelectionHighlighting [WholeMesh|Normals]
-                    m = Regex.Match(cmd, @"^(SelectionHighlighting|sh) (?<mode>(wholemesh|normals|wireframe))+",
-                        RegexOptions.IgnoreCase);
-                    if (m.Success)
+// ReSharper disable once EmptyGeneralCatchClause
+                    catch
                     {
-                        var mode = m.Groups["mode"].Value.ToLowerInvariant();
-                        if (mode == "normals")
-                        {
-                            ReportAdd("Selection visual style set to 'Normals'");
-                            _parentWindow.DrawingControl.SelectionHighlightMode =
-                                DrawingControl3D.SelectionHighlightModes.Normals;
-                        }
-                        else if (mode == "wholemesh")
-                        {
-                            ReportAdd("Selection visual style set to 'WholeMesh'");
-                            _parentWindow.DrawingControl.SelectionHighlightMode =
-                                DrawingControl3D.SelectionHighlightModes.WholeMesh;
-                        }
-                        else if (mode == "wireframe")
-                        {
-                            ReportAdd("Selection visual style set to 'WireFrame'");
-                            _parentWindow.DrawingControl.SelectionHighlightMode =
-                                DrawingControl3D.SelectionHighlightModes.WireFrame;
-                        }
-                        continue;
+                    }
+                    TxtOut.Document = new FlowDocument();
+                    continue;
+                }
+
+
+                if (Model == null)
+                {
+                    ReportAdd("Plaese open a database.", Brushes.Red);
+                    continue;
+                }
+
+                // all commands here
+                //
+                var m = Regex.Match(cmd, @"^(entitylabel|el) (?<el>\d+)(?<recursion> -*\d+)*",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var recursion = 0;
+                    var v = Convert.ToInt32(m.Groups["el"].Value);
+                    try
+                    {
+                        recursion = Convert.ToInt32(m.Groups["recursion"].Value);
+                    }
+// ReSharper disable once EmptyGeneralCatchClause
+                    catch
+                    {
                     }
 
-                    m = Regex.Match(cmd, @"^(IfcSchema|is) (?<mode>(list|count|short|full) )*(?<type>\w+)[ ]*",
-                        RegexOptions.IgnoreCase);
-                    if (m.Success)
+                    ReportAdd(ReportEntity(v, recursion));
+                    continue;
+                }
+
+
+
+                m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    if (Model.Header == null)
                     {
-                        var type = m.Groups["type"].Value;
-                        var mode = m.Groups["mode"].Value;
-
-                        if (type == "/")
-                        {
-                            // this is a magic case handled by the matchingType
-                        }
-                        else if (type == PrepareRegex(type))
-                            // there's not a regex expression, we will prepare one assuming the search for a bare name.
-                        {
-                            type = @".*\." + type + "$";
-                                // any character repeated then a dot then the name and the end of line
-                        }
-                        else
-                            type = PrepareRegex(type);
-
-                        var typeList = MatchingTypes(type);
-
-
-                        if (mode.ToLower() == "list ")
-                        {
-                            foreach (var item in typeList)
-                                ReportAdd(item);
-                        }
-                        else if (mode.ToLower() == "count ")
-                        {
-                            ReportAdd("count: " + typeList.Count());
-                        }
-                        else
-                        {
-                            // report
-                            var beVerbose = 1;
-                            if (mode.ToLower() == "short ")
-                                beVerbose = 0;
-                            if (mode.ToLower() == "full ")
-                                beVerbose = 2;
-                            foreach (var item in typeList)
-                            {
-                                ReportAdd(ReportType(item, beVerbose));
-                            }
-                        }
+                        ReportAdd("Model header is not defined.", Brushes.Red);
                         continue;
                     }
-
-                    m = Regex.Match(cmd, @"^(reload|re) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
-                    if (m.Success)
+                    ReportAdd("FileDescription:");
+                    foreach (var item in Model.Header.FileDescription.Description)
                     {
-                        var start = m.Groups["entities"].Value;
-                        IEnumerable<int> labels = ToIntarray(start, ',');
-                        if (labels.Count() > 0)
-                        {
-                            _parentWindow.DrawingControl.LoadGeometry(Model, labels);
-                        }
-                        else
-                        {
-                            _parentWindow.DrawingControl.LoadGeometry(Model);
-                        }
-                        continue;
+                        ReportAdd(string.Format("- Description: {0}", item));
+                    }
+                    ReportAdd(string.Format("- ImplementationLevel: {0}",
+                        Model.Header.FileDescription.ImplementationLevel));
+                    ReportAdd(string.Format("- EntityCount: {0}", Model.Header.FileDescription.EntityCount));
+
+                    ReportAdd("FileName:");
+                    ReportAdd(string.Format("- Name: {0}", Model.Header.FileName.Name));
+                    ReportAdd(string.Format("- TimeStamp: {0}", Model.Header.FileName.TimeStamp));
+                    foreach (var item in Model.Header.FileName.Organization)
+                    {
+                        ReportAdd(string.Format("- Organization: {0}", item));
+                    }
+                    ReportAdd(string.Format("- OriginatingSystem: {0}", Model.Header.FileName.OriginatingSystem));
+                    ReportAdd(string.Format("- PreprocessorVersion: {0}", Model.Header.FileName.PreprocessorVersion));
+                    foreach (var item in Model.Header.FileName.AuthorName)
+                    {
+                        ReportAdd(string.Format("- AuthorName: {0}", item));
                     }
 
-                    m = Regex.Match(cmd, @"^(GeometryInfo|gi) (?<mode>(binary|viewer) )*(?<entities>([\d,]+|[^ ]+))",
-                        RegexOptions.IgnoreCase);
-                    if (m.Success)
+                    ReportAdd(string.Format("- AuthorizationName: {0}", Model.Header.FileName.AuthorizationName));
+                    foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
                     {
-                        var start = m.Groups["entities"].Value;
-                        var mode = m.Groups["mode"].Value;
-                        IEnumerable<int> labels = ToIntarray(start, ',');
-                        foreach (var item in labels)
-                        {
-                            ReportAdd("Geometry for: " + item, Brushes.Green);
-                            ReportAdd(GeomQuerying.GeomInfoBoundBox(Model, item));
-                            ReportAdd(GeomQuerying.GeomLayers(Model, item, _parentWindow.DrawingControl.Scenes));
-                            if (mode == "binary ")
-                            {
-                                ReportAdd(GeomQuerying.GeomInfoMesh(Model, item));
-                            }
-                            if (mode == "viewer ")
-                            {
-                                ReportAdd(
-                                    GeomQuerying.Viewerdata(_parentWindow.DrawingControl, Model, item)
-                                    );
-                            }
-                        }
-                        continue;
+                        ReportAdd(string.Format("- AuthorizationMailingAddress: {0}", item));
                     }
 
-                    m = Regex.Match(cmd,
-                        @"^(select|se) " +
-                        @"(?<mode>(count|list|typelist|short|full) )*" +
-                        @"(?<tt>(transverse|tt) )*" +
-                        @"(?<hi>(highlight|hi) )*" +
-                        @"(?<svt>(showvaluetype|svt) )*" +
-                        @"(?<start>([\d,-]+|[^ ]+)) *(?<props>.*)",
-                        RegexOptions.IgnoreCase);
-                    if (m.Success)
+                    ReportAdd("FileSchema:");
+                    foreach (var item in Model.Header.FileSchema.Schemas)
                     {
-                        var start = m.Groups["start"].Value;
-                        var props = m.Groups["props"].Value;
-                        var mode = m.Groups["mode"].Value;
-                        var svt = m.Groups["svt"].Value;
+                        ReportAdd(string.Format("- Schema: {0}", item));
+                    }
+                    continue;
+                }
+
+                // SelectionHighlighting [WholeMesh|Normals]
+                m = Regex.Match(cmd, @"^(SelectionHighlighting|sh) (?<mode>(wholemesh|normals|wireframe))+",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var mode = m.Groups["mode"].Value.ToLowerInvariant();
+                    if (mode == "normals")
+                    {
+                        ReportAdd("Selection visual style set to 'Normals'");
+                        _parentWindow.DrawingControl.SelectionHighlightMode =
+                            DrawingControl3D.SelectionHighlightModes.Normals;
+                    }
+                    else if (mode == "wholemesh")
+                    {
+                        ReportAdd("Selection visual style set to 'WholeMesh'");
+                        _parentWindow.DrawingControl.SelectionHighlightMode =
+                            DrawingControl3D.SelectionHighlightModes.WholeMesh;
+                    }
+                    else if (mode == "wireframe")
+                    {
+                        ReportAdd("Selection visual style set to 'WireFrame'");
+                        _parentWindow.DrawingControl.SelectionHighlightMode =
+                            DrawingControl3D.SelectionHighlightModes.WireFrame;
+                    }
+                    continue;
+                }
+
+                m = Regex.Match(cmd, @"^(IfcSchema|is) (?<mode>(list|count|short|full) )*(?<type>\w+)[ ]*",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var type = m.Groups["type"].Value;
+                    var mode = m.Groups["mode"].Value;
+
+                    if (type == "/")
+                    {
+                        // this is a magic case handled by the matchingType
+                    }
+                    else if (type == PrepareRegex(type))
+                        // there's not a regex expression, we will prepare one assuming the search for a bare name.
+                    {
+                        type = @".*\." + type + "$";
+                        // any character repeated then a dot then the name and the end of line
+                    }
+                    else
+                        type = PrepareRegex(type);
+
+                    var typeList = MatchingTypes(type);
 
 
-                        // transverse tree mode
-                        var transverseT = false;
-                        var transverse = m.Groups["tt"].Value;
-                        if (transverse != "")
-                            transverseT = true;
-
-                        var highlight = false;
-                        var highlightT = m.Groups["hi"].Value;
-                        if (highlightT != "")
-                            highlight = true;
-
-                        IEnumerable<int> labels = ToIntarray(start, ',');
-                        IEnumerable<int> ret = null;
-                        if (!labels.Any())
+                    if (mode.ToLower() == "list ")
+                    {
+                        foreach (var item in typeList)
+                            ReportAdd(item);
+                    }
+                    else if (mode.ToLower() == "count ")
+                    {
+                        ReportAdd("count: " + typeList.Count());
+                    }
+                    else
+                    {
+                        // report
+                        var beVerbose = 1;
+                        if (mode.ToLower() == "short ")
+                            beVerbose = 0;
+                        if (mode.ToLower() == "full ")
+                            beVerbose = 2;
+                        foreach (var item in typeList)
                         {
-                            // see if it's a type string instead;
-                            var subRe = new Regex(@"[\+\-]*([A-Za-z0-9\[\]]+)");
-                            var res = subRe.Matches(start);
-                            foreach (Match submatch in res)
-                            {
-                                var modeAdd = !submatch.Value.Contains("-");
-                                // the syntax could be IfcWall[10]
-                                var sbi = new SquareBracketIndexer(submatch.Groups[1].Value);
-                                IEnumerable<int> thisLabels = QueryEngine.EntititesForType(sbi.Property, Model);
-                                thisLabels = sbi.GetItem(thisLabels);
-                                labels = modeAdd
-                                    ? labels.Concat(thisLabels)
-                                    : labels.Where(t => !thisLabels.Contains(t));
-                            }
+                            ReportAdd(ReportType(item, beVerbose));
                         }
-                        ret = QueryEngine.RecursiveQuery(Model, props, labels, transverseT);
+                    }
+                    continue;
+                }
 
-                        // textual report
-                        switch (mode.ToLower())
+                m = Regex.Match(cmd, @"^(reload|re) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var start = m.Groups["entities"].Value;
+                    IEnumerable<int> labels = ToIntarray(start, ',');
+                    if (labels.Any())
+                    {
+                        _parentWindow.DrawingControl.LoadGeometry(Model, labels);
+                    }
+                    else
+                    {
+                        _parentWindow.DrawingControl.LoadGeometry(Model);
+                    }
+                    continue;
+                }
+
+                m = Regex.Match(cmd, @"^(GeometryInfo|gi) (?<mode>(binary|viewer) )*(?<entities>([\d,]+|[^ ]+))",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var start = m.Groups["entities"].Value;
+                    var mode = m.Groups["mode"].Value;
+                    IEnumerable<int> labels = ToIntarray(start, ',');
+                    foreach (var item in labels)
+                    {
+                        ReportAdd("Geometry for: " + item, Brushes.Green);
+                        ReportAdd(GeomQuerying.GeomInfoBoundBox(Model, item));
+                        ReportAdd(GeomQuerying.GeomLayers(Model, item, _parentWindow.DrawingControl.Scenes));
+                        if (mode == "binary ")
                         {
-                            case "count ":
-                                ReportAdd(string.Format("Count: {0}", ret.Count()));
-                                break;
-                            case "list ":
-                                foreach (var item in ret)
-                                {
-                                    ReportAdd(item.ToString(CultureInfo.InvariantCulture));
-                                }
-                                break;
-                            case "typelist ":
-                                foreach (var item in ret)
-                                {
-                                    ReportAdd(item + "\t" + Model.Instances[item].IfcType().Name);
-                                }
-                                break;
-                            default:
-                                var beVerbose = false;
-                                if (mode.ToLower() == "short ")
-                                    beVerbose = false;
-                                if (mode.ToLower() == "full ")
-                                    beVerbose = true;
-                                var svtB = (svt != "");
-                                foreach (var item in ret)
-                                {
-                                    ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
-                                }
-                                break;
+                            ReportAdd(GeomQuerying.GeomInfoMesh(Model, item));
                         }
-                        // visual selection
-                        if (highlight)
+                        if (mode == "viewer ")
                         {
-                            var s = new EntitySelection();
+                            ReportAdd(
+                                GeomQuerying.Viewerdata(_parentWindow.DrawingControl, Model, item)
+                                );
+                        }
+                    }
+                    continue;
+                }
+
+                m = Regex.Match(cmd,
+                    @"^(select|se) " +
+                    @"(?<mode>(count|list|typelist|short|full) )*" +
+                    @"(?<tt>(transverse|tt) )*" +
+                    @"(?<hi>(highlight|hi) )*" +
+                    @"(?<svt>(showvaluetype|svt) )*" +
+                    @"(?<start>([\d,-]+|[^ ]+)) *(?<props>.*)",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var start = m.Groups["start"].Value;
+                    var props = m.Groups["props"].Value;
+                    var mode = m.Groups["mode"].Value;
+                    var svt = m.Groups["svt"].Value;
+
+
+                    // transverse tree mode
+                    var transverseT = false;
+                    var transverse = m.Groups["tt"].Value;
+                    if (transverse != "")
+                        transverseT = true;
+
+                    var highlight = false;
+                    var highlightT = m.Groups["hi"].Value;
+                    if (highlightT != "")
+                        highlight = true;
+
+                    IEnumerable<int> labels = ToIntarray(start, ',');
+                    if (!labels.Any())
+                    {
+                        // see if it's a type string instead;
+                        var subRe = new Regex(@"[\+\-]*([A-Za-z0-9\[\]]+)");
+                        var res = subRe.Matches(start);
+                        foreach (Match submatch in res)
+                        {
+                            var modeAdd = !submatch.Value.Contains("-");
+                            // the syntax could be IfcWall[10]
+                            var sbi = new SquareBracketIndexer(submatch.Groups[1].Value);
+                            IEnumerable<int> thisLabels = QueryEngine.EntititesForType(sbi.Property, Model);
+                            thisLabels = sbi.GetItem(thisLabels);
+                            labels = modeAdd
+                                ? labels.Concat(thisLabels)
+                                : labels.Where(t => !thisLabels.Contains(t));
+                        }
+                    }
+                    var ret = QueryEngine.RecursiveQuery(Model, props, labels, transverseT);
+
+                    // textual report
+                    switch (mode.ToLower())
+                    {
+                        case "count ":
+                            ReportAdd(string.Format("Count: {0}", ret.Count()));
+                            break;
+                        case "list ":
                             foreach (var item in ret)
                             {
-                                s.Add(Model.Instances[item]);
+                                ReportAdd(item.ToString(CultureInfo.InvariantCulture));
                             }
-                            _parentWindow.DrawingControl.Selection = s;
+                            break;
+                        case "typelist ":
+                            foreach (var item in ret)
+                            {
+                                ReportAdd(item + "\t" + Model.Instances[item].IfcType().Name);
+                            }
+                            break;
+                        default:
+                            var beVerbose = false;
+                            if (mode.ToLower() == "short ")
+                                beVerbose = false;
+                            if (mode.ToLower() == "full ")
+                                beVerbose = true;
+                            var svtB = (svt != "");
+                            foreach (var item in ret)
+                            {
+                                ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
+                            }
+                            break;
+                    }
+                    // visual selection
+                    if (highlight)
+                    {
+                        var s = new EntitySelection();
+                        foreach (var item in ret)
+                        {
+                            s.Add(Model.Instances[item]);
+                        }
+                        _parentWindow.DrawingControl.Selection = s;
+                    }
+                    continue;
+                }
+
+                m = Regex.Match(cmd, @"^zoom (" +
+                                     @"(?<RegionName>.+$)" +
+                                     ")", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var rName = m.Groups["RegionName"].Value;
+                    var regionData = Model.GetGeometryData(XbimGeometryType.Region).FirstOrDefault();
+                    if (regionData == null)
+                    {
+                        ReportAdd("data not found");
+                    }
+                    var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
+                    var reg = regions.FirstOrDefault(x => x.Name == rName);
+                    if (reg != null)
+                    {
+                        var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
+                        var tC = mcp.Transform(reg.Centre);
+                        var tS = mcp.Transform(reg.Size);
+                        var r3D = new XbimRect3D(
+                            tC.X - tS.X/2, tC.Y - tS.Y/2, tC.Z - tS.Z/2,
+                            tS.X, tS.X, tS.Z
+                            );
+                        _parentWindow.DrawingControl.ZoomTo(r3D);
+                        _parentWindow.Activate();
+                        continue;
+                    }
+                    else
+                    {
+                        ReportAdd(string.Format("Something wrong with region name: '{0}'", rName));
+                        ReportAdd("Names that should work are: ");
+                        foreach (var str in regions)
+                        {
+                            ReportAdd(string.Format(" - '{0}'", str.Name));
                         }
                         continue;
                     }
+                }
 
-                    m = Regex.Match(cmd, @"^zoom (" +
-                                         @"(?<RegionName>.+$)" +
-                                         ")", RegexOptions.IgnoreCase);
-                    if (m.Success)
+                m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    _parentWindow.DrawingControl.ClearCutPlane();
+                    ReportAdd("Clip removed");
+                    _parentWindow.Activate();
+                    continue;
+                }
+
+                m = Regex.Match(cmd, @"^clip (" +
+                                     @"(?<elev>[-+]?([0-9]*\.)?[0-9]+) *$" +
+                                     "|" +
+                                     @"(?<px>[-+]?([0-9]*\.)?[0-9]+) *, *" +
+                                     @"(?<py>[-+]?([0-9]*\.)?[0-9]+) *, *" +
+                                     @"(?<pz>[-+]?([0-9]*\.)?[0-9]+) *, *" +
+                                     @"(?<nx>[-+]?([0-9]*\.)?[0-9]+) *, *" +
+                                     @"(?<ny>[-+]?([0-9]*\.)?[0-9]+) *, *" +
+                                     @"(?<nz>[-+]?([0-9]*\.)?[0-9]+)" +
+                                     "|" +
+                                     @"(?<StoreyName>.+$)" +
+                                     ")", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    double px = 0, py = 0, pz = 0;
+                    double nx = 0, ny = 0, nz = -1;
+
+                    if (m.Groups["elev"].Value != string.Empty)
                     {
-                        var rName = m.Groups["RegionName"].Value;
-                        var regionData = Model.GetGeometryData(XbimGeometryType.Region).FirstOrDefault();
-                        if (regionData == null)
+                        pz = Convert.ToDouble(m.Groups["elev"].Value);
+                    }
+                    else if (m.Groups["StoreyName"].Value != string.Empty)
+                    {
+                        var msg = "";
+                        var storName = m.Groups["StoreyName"].Value;
+                        var storey =
+                            Model.Instances.OfType<IfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
+                        if (storey != null)
                         {
-                            ReportAdd("data not found");
+
+                            //get the object position data (should only be one)
+                            if (Model.GeometrySupportLevel == 1)
+                            {
+                                var geomdata =
+                                    Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly)
+                                        .FirstOrDefault();
+                                if (geomdata != null)
+                                {
+                                    var pt = new XbimPoint3D(0, 0,
+                                        XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
+                                    var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
+                                    var transformed = mcp.Transform(pt);
+                                    msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z, transformed.Z + 1);
+                                    pz = transformed.Z + 1;
+                                }
+                            }
+                            else if (Model.GeometrySupportLevel == 2)
+                            {
+                                var v = new TransformGraph(Model);
+                                v.AddProduct(storey);
+                                var v2 = v[storey].LocalMatrix;
+                                var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
+
+                                var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
+                                var transformed = mcp.Transform(pt);
+                                msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z, transformed.Z + 1);
+                                pz = transformed.Z + 1;
+                            }
                         }
-                        var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
-                        var reg = regions.FirstOrDefault(x => x.Name == rName);
-                        if (reg != null)
+                        if (msg == "")
                         {
-                            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
-                            var tC = mcp.Transform(reg.Centre);
-                            var tS = mcp.Transform(reg.Size);
-                            var r3D = new XbimRect3D(
-                                tC.X - tS.X/2, tC.Y - tS.Y/2, tC.Z - tS.Z/2,
-                                tS.X, tS.X, tS.Z
-                                );
-                            _parentWindow.DrawingControl.ZoomTo(r3D);
-                            _parentWindow.Activate();
-                            continue;
-                        }
-                        else
-                        {
-                            ReportAdd(string.Format("Something wrong with region name: '{0}'", rName));
+                            ReportAdd(string.Format("Something wrong with storey name: '{0}'", storName));
                             ReportAdd("Names that should work are: ");
-                            foreach (var str in regions)
+                            var strs = Model.Instances.OfType<IfcBuildingStorey>();
+                            foreach (var str in strs)
                             {
                                 ReportAdd(string.Format(" - '{0}'", str.Name));
                             }
                             continue;
                         }
+                        ReportAdd(msg);
+                    }
+                    else
+                    {
+                        px = Convert.ToDouble(m.Groups["px"].Value);
+                        py = Convert.ToDouble(m.Groups["py"].Value);
+                        pz = Convert.ToDouble(m.Groups["pz"].Value);
+                        nx = Convert.ToDouble(m.Groups["nx"].Value);
+                        ny = Convert.ToDouble(m.Groups["ny"].Value);
+                        nz = Convert.ToDouble(m.Groups["nz"].Value);
                     }
 
-                    m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
-                    if (m.Success)
+
+                    _parentWindow.DrawingControl.ClearCutPlane();
+                    _parentWindow.DrawingControl.SetCutPlane(
+                        px, py, pz,
+                        nx, ny, nz
+                        );
+
+                    ReportAdd("Clip command sent");
+                    _parentWindow.Activate();
+                    continue;
+                }
+
+                m = Regex.Match(cmd, @"^Styler (?<command>.+)", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var st = _parentWindow.DrawingControl.LayerStyler as LayerStylerTypeAndIfcStyleExtended;
+                    if (st != null)
                     {
-                        _parentWindow.DrawingControl.ClearCutPlane();
-                        ReportAdd("Clip removed");
-                        _parentWindow.Activate();
-                        continue;
+                        var command = m.Groups["command"].Value;
+                        ReportAdd(
+                            st.SendCommand(command, _parentWindow.DrawingControl.Selection)
+                            );
+                        _parentWindow.DrawingControl.ReloadModel();
                     }
-
-                    m = Regex.Match(cmd, @"^clip (" +
-                                         @"(?<elev>[-+]?([0-9]*\.)?[0-9]+) *$" +
-                                         "|" +
-                                         @"(?<px>[-+]?([0-9]*\.)?[0-9]+) *, *" +
-                                         @"(?<py>[-+]?([0-9]*\.)?[0-9]+) *, *" +
-                                         @"(?<pz>[-+]?([0-9]*\.)?[0-9]+) *, *" +
-                                         @"(?<nx>[-+]?([0-9]*\.)?[0-9]+) *, *" +
-                                         @"(?<ny>[-+]?([0-9]*\.)?[0-9]+) *, *" +
-                                         @"(?<nz>[-+]?([0-9]*\.)?[0-9]+)" +
-                                         "|" +
-                                         @"(?<StoreyName>.+$)" +
-                                         ")", RegexOptions.IgnoreCase);
-                    if (m.Success)
+                    else
                     {
-                        double px = 0, py = 0, pz = 0;
-                        double nx = 0, ny = 0, nz = -1;
+                        ReportAdd("Command not valid under current styler configuration.");
+                    }
+                    continue;
+                }
 
-                        if (m.Groups["elev"].Value != string.Empty)
+                m = Regex.Match(cmd, @"^Visual (?<action>list|tree|on|off|mode)( (?<Name>[^ ]+))*",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var parName = m.Groups["Name"].Value;
+                    if (m.Groups["action"].Value.ToLowerInvariant() == "list")
+                    {
+                        foreach (var item in _parentWindow.DrawingControl.ListItems(parName))
                         {
-                            pz = Convert.ToDouble(m.Groups["elev"].Value);
+                            ReportAdd(item);
                         }
-                        else if (m.Groups["StoreyName"].Value != string.Empty)
+                    }
+                    else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
+                    {
+                        foreach (var item in _parentWindow.DrawingControl.LayersTree())
                         {
-                            var msg = "";
-                            var storName = m.Groups["StoreyName"].Value;
-                            var storey =
-                                Model.Instances.OfType<IfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
-                            if (storey != null)
-                            {
-                                //get the object position data (should only be one)
-                                XbimPoint3D p;
-                                if (Model.GeometrySupportLevel == 1)
-                                {
-                                    var geomdata =
-                                        Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly)
-                                            .FirstOrDefault();
-                                    if (geomdata != null)
-                                    {
-                                        var pt = new XbimPoint3D(0, 0,
-                                            XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
-                                        var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
-                                        var transformed = mcp.Transform(pt);
-                                        msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z,
-                                            transformed.Z + 1);
-                                        pz = transformed.Z + 1;
-                                    }
-                                }
-                                else if (Model.GeometrySupportLevel == 2)
-                                {
-                                    var v = new TransformGraph(Model);
-                                    v.AddProduct(storey);
-                                    var v2 = v[storey].LocalMatrix;
-                                    var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
+                            ReportAdd(item);
+                        }
+                    }
+                    else if (m.Groups["action"].Value.ToLowerInvariant() == "mode")
+                    {
+                        parName = parName.ToLowerInvariant();
+                        var sb = new StringBuilder();
 
-                                    var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
-                                    var transformed = mcp.Transform(pt);
-                                    msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z,
-                                        transformed.Z + 1);
-                                    pz = transformed.Z + 1;
-                                }
-                            }
-                            if (msg == "")
+                        // foreach model
+                        if (_parentWindow.DrawingControl.LayerStylerForceVersion1 || Model.GeometrySupportLevel == 1)
+                            ReportAdd(string.Format(@"Current mode is {0}",
+                                _parentWindow.DrawingControl.LayerStyler.GetType())
+                                , Brushes.Green);
+                        else if (Model.GeometrySupportLevel == 2)
+                            ReportAdd(string.Format(@"Current mode is {0}",
+                                _parentWindow.DrawingControl.GeomSupport2LayerStyler.GetType()), Brushes.Green);
+                        else
+                            ReportAdd(@"Visual mode not enabled on GeometrySupportLevel 0", Brushes.Red);
+                        
+
+                        bool stylerSet = false;
+
+                        var v1 = TypesImplementingInterface(typeof (ILayerStyler));
+                        foreach (var instance in v1.Where(IsRealClass))
+                        {
+                            if (instance.Name.ToLowerInvariant() == parName ||
+                                instance.FullName.ToLowerInvariant() == parName)
                             {
-                                ReportAdd(string.Format("Something wrong with storey name: '{0}'", storName));
-                                ReportAdd("Names that should work are: ");
-                                var strs = Model.Instances.OfType<IfcBuildingStorey>();
-                                foreach (var str in strs)
-                                {
-                                    ReportAdd(string.Format(" - '{0}'", str.Name));
-                                }
+                                _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
+                                _parentWindow.DrawingControl.LayerStyler =
+                                    (ILayerStyler) Activator.CreateInstance(instance);
+                                _parentWindow.DrawingControl.FederationLayerStyler =
+                                    (ILayerStyler)Activator.CreateInstance(instance);
+
+
+                                _parentWindow.DrawingControl.ReloadModel(
+                                    options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
+                                    );
+                                ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
+                                stylerSet = true;
                                 continue;
                             }
-                            ReportAdd(msg);
+                            sb.AppendLine(" - " + instance.FullName);
                         }
-                        else
+                        var v2 = TypesImplementingInterface(typeof(ILayerStylerV2));
+                        foreach (var instance in v2.Where(IsRealClass))
                         {
-                            px = Convert.ToDouble(m.Groups["px"].Value);
-                            py = Convert.ToDouble(m.Groups["py"].Value);
-                            pz = Convert.ToDouble(m.Groups["pz"].Value);
-                            nx = Convert.ToDouble(m.Groups["nx"].Value);
-                            ny = Convert.ToDouble(m.Groups["ny"].Value);
-                            nz = Convert.ToDouble(m.Groups["nz"].Value);
+                            if (instance.Name.ToLowerInvariant() == parName ||
+                                instance.FullName.ToLowerInvariant() == parName)
+                            {
+                                _parentWindow.DrawingControl.LayerStylerForceVersion1 = false;
+                                _parentWindow.DrawingControl.GeomSupport2LayerStyler =
+                                    (ILayerStylerV2) Activator.CreateInstance(instance);
+                                _parentWindow.DrawingControl.ReloadModel(
+                                    options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
+                                    );
+                                ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
+                                stylerSet = true;
+                                continue;
+                            }
+                            sb.AppendLine(" - " + instance.FullName);
                         }
-
-
-                        _parentWindow.DrawingControl.ClearCutPlane();
-                        _parentWindow.DrawingControl.SetCutPlane(
-                            px, py, pz,
-                            nx, ny, nz
-                            );
-
-                        ReportAdd("Clip command sent");
-                        _parentWindow.Activate();
-                        continue;
+                        if (!stylerSet)
+                            ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb));
                     }
-
-                    m = Regex.Match(cmd, @"^Styler (?<command>.+)", RegexOptions.IgnoreCase);
-                    if (m.Success)
+                    else
                     {
-                        var st = _parentWindow.DrawingControl.LayerStyler as LayerStylerTypeAndIfcStyleExtended;
-                        if (st != null)
-                        {
-                            var command = m.Groups["command"].Value;
-                            ReportAdd(
-                                st.SendCommand(command, _parentWindow.DrawingControl.Selection)
-                                );
-                            _parentWindow.DrawingControl.ReloadModel();
-                        }
-                        else
-                        {
-                            ReportAdd("Command not valid under current styler configuration.");
-                        }
-                        continue;
+                        var bVis = m.Groups["action"].Value.ToLowerInvariant() == "on";
+                        _parentWindow.DrawingControl.SetVisibility(parName, bVis);
                     }
-
-                    m = Regex.Match(cmd, @"^Visual (?<action>list|tree|on|off|mode)( (?<Name>[^ ]+))*",
-                        RegexOptions.IgnoreCase);
-                    if (m.Success)
-                    {
-                        var parName = m.Groups["Name"].Value;
-                        if (m.Groups["action"].Value.ToLowerInvariant() == "list")
-                        {
-                            foreach (var item in _parentWindow.DrawingControl.ListItems(parName))
-                            {
-                                ReportAdd(item);
-                            }
-                        }
-                        else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
-                        {
-                            foreach (var item in _parentWindow.DrawingControl.LayersTree())
-                            {
-                                ReportAdd(item);
-                            }
-                        }
-                        else if (m.Groups["action"].Value.ToLowerInvariant() == "mode")
-                        {
-                            parName = parName.ToLowerInvariant();
-                            var sb = new StringBuilder();
-
-                            // foreach model
-                            if (_parentWindow.DrawingControl.LayerStylerForceVersion1 || Model.GeometrySupportLevel == 1)
-                                ReportAdd(string.Format(@"Current mode is {0}",
-                                    _parentWindow.DrawingControl.LayerStyler.GetType())
-                                    , Brushes.Green);
-                            else if (Model.GeometrySupportLevel == 2)
-                                ReportAdd(string.Format(@"Current mode is {0}",
-                                    _parentWindow.DrawingControl.GeomSupport2LayerStyler.GetType()), Brushes.Green);
-                            else
-                            {
-                                ReportAdd(string.Format(@"Visual mode not enabled on GeometrySupportLevel 0"),
-                                    Brushes.Red);
-                            }
-
-                            bool stylerSet = false;
-
-                            var v1 = TypesImplementingInterface(typeof (ILayerStyler));
-                            foreach (var instance in v1.Where(IsRealClass))
-                            {
-                                if (instance.Name.ToLowerInvariant() == parName ||
-                                    instance.FullName.ToLowerInvariant() == parName)
-                                {
-                                    _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
-                                    _parentWindow.DrawingControl.LayerStyler =
-                                        (ILayerStyler) Activator.CreateInstance(instance);
-                                    _parentWindow.DrawingControl.FederationLayerStyler =
-                                        (ILayerStyler)Activator.CreateInstance(instance);
-
-
-                                    _parentWindow.DrawingControl.ReloadModel(
-                                        options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
-                                        );
-                                    ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
-                                    stylerSet = true;
-                                    continue;
-                                }
-                                sb.AppendLine(" - " + instance.FullName);
-                            }
-                            var v2 = TypesImplementingInterface(typeof(ILayerStylerV2));
-                            foreach (var instance in v2.Where(IsRealClass))
-                            {
-                                if (instance.Name.ToLowerInvariant() == parName ||
-                                    instance.FullName.ToLowerInvariant() == parName)
-                                {
-                                    _parentWindow.DrawingControl.LayerStylerForceVersion1 = false;
-                                    _parentWindow.DrawingControl.GeomSupport2LayerStyler =
-                                        (ILayerStylerV2) Activator.CreateInstance(instance);
-                                    _parentWindow.DrawingControl.ReloadModel(
-                                        options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
-                                        );
-                                    ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
-                                    stylerSet = true;
-                                    continue;
-                                }
-                                sb.AppendLine(" - " + instance.FullName);
-                            }
-                            if (!stylerSet)
-                                ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb.ToString()));
-                        }
-                        else
-                        {
-                            var bVis = m.Groups["action"].Value.ToLowerInvariant() == "on";
-                            _parentWindow.DrawingControl.SetVisibility(parName, bVis);
-                        }
-                        continue;
-                    }
-                    m = Regex.Match(cmd, @"^SimplifyGUI$", RegexOptions.IgnoreCase);
-                    if (m.Success)
-                    {
-                        var s = new IfcSimplify();
-                        s.Show();
-                        continue;
-                    }
-
-                    m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
-                    if (m.Success)
-                    {
-                        if (SelectedEntity != null)
-                            Debug.Write(SelectedEntity.EntityLabel);
-                        else
-                            Debug.Write(null);
-
-
-                        continue;
-                    }
-                    ReportAdd(string.Format("Command not understood: {0}.", cmd));
+                    continue;
                 }
+                m = Regex.Match(cmd, @"^SimplifyGUI$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var s = new IfcSimplify();
+                    s.Show();
+                    continue;
+                }
+
+                m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    if (SelectedEntity != null)
+                        Debug.Write(SelectedEntity.EntityLabel);
+                    else
+                        Debug.Write(null);
+
+
+                    continue;
+                }
+                ReportAdd(string.Format("Command not understood: {0}.", cmd));
             }
         }
 
@@ -779,22 +770,16 @@ namespace XbimXplorer.Querying
                 if (sa[i].Contains('-'))
                 {
                     var v = sa[i].Split('-');
-                    if (v.Length == 2)
+                    if (v.Length != 2) 
+                        continue;
+                    int iS, iT;
+                    if (!int.TryParse(v[0], out iS) || !int.TryParse(v[1], out iT)) 
+                        continue;
+                    if (iT < iS) 
+                        continue;
+                    for (var iC = iS; iC <= iT; iC++)
                     {
-                        int iS, iT;
-                        if (
-                            int.TryParse(v[0], out iS) &&
-                            int.TryParse(v[1], out iT)
-                            )
-                        {
-                            if (iT >= iS)
-                            {
-                                for (var iC = iS; iC <= iT; iC++)
-                                {
-                                    ia.Add(iC);
-                                }
-                            }
-                        }
+                        ia.Add(iC);
                     }
                 }
                 else
@@ -808,27 +793,7 @@ namespace XbimXplorer.Querying
             }
             return ia.ToArray();
         }
-
-        private string RunTestCode(int i)
-        {
-            var sb = new StringBuilder();
-            var bval = new byte[] {196};
-            var eBase = Encoding.GetEncoding("iso-8859-1");
-            var outV = eBase.GetChars(bval, 0, 1);
-
-            bval = new byte[] {0, 196};
-            var e16 = Encoding.GetEncoding("unicodeFFFE");
-            var out2 = e16.GetChars(bval, 0, 2);
-
-            //var v = Model.Instances.OfType<Xbim.Ifc2x3.MaterialResource.IfcMaterialLayerSetUsage>(true).Where(ent => ent.ForLayerSet.EntityLabel == i);
-            //foreach (var item in v)
-            //{
-            //    sb.AppendFormat("{0}", item.EntityLabel);
-            //}
-
-            return sb.ToString();
-        }
-
+        
         private void DisplayHelp()
         {
             var t = new TextHighliter();
@@ -888,22 +853,8 @@ namespace XbimXplorer.Querying
             t.AppendFormat("If a portion of text is selected, only selected text will be executed.");
 
             t.DropInto(TxtOut.Document);
-
         }
 
-        private static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
-        {
-            while (toCheck != null && toCheck != typeof (object))
-            {
-                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-                if (generic == cur)
-                {
-                    return true;
-                }
-                toCheck = toCheck.BaseType;
-            }
-            return false;
-        }
 
         /// <summary>
         /// Finds relevant classes through reflection by Namespace + Name query
@@ -947,7 +898,7 @@ namespace XbimXplorer.Querying
             {
                 // build the regex string from the typeid
                 //
-                var t = IfcMetaData.IfcType((short)ishort);
+                var t = IfcMetaData.IfcType(ishort);
                 return  @".*\." + t.Name + "$";
             }
 
@@ -1099,7 +1050,7 @@ namespace XbimXplorer.Querying
                 var ifcModule = typeof (IfcActor).Module;
                 var selectSubTypes = ifcModule.GetTypes().Where(
                     t => t.GetInterfaces().Contains(selectType)
-                    );
+                    ).ToArray();
 
                 // CommontIF sets up the infrastructure to check for common interfaces shared by the select type elements
                 Type[] commontIf = null;
@@ -1137,10 +1088,9 @@ namespace XbimXplorer.Querying
                     }
                 }
 
-                foreach (var item in commontIf)
+                foreach (var item in commontIf.Where(item => item != null))
                 {
-                    if (item != null)
-                        sb.AppendFormat(indentationHeader + "Missing Common Interface: {0}", item.Name);
+                    sb.AppendFormat(indentationHeader + "Missing Common Interface: {0}", item.Name);
                 }
                 if (beVerbose == 1)
                 {
@@ -1155,7 +1105,7 @@ namespace XbimXplorer.Querying
             return sb;
         }
 
-        private void ChildTree(IfcType ot, TextHighliter sb, string indentationHeader, int indent)
+        private static void ChildTree(IfcType ot, TextHighliter sb, string indentationHeader, int indent)
         {
             var sSpace = new string(' ', indent*2);
             // sSpace = sSpace.Replace(new string[] { " " }, "  ");
@@ -1255,9 +1205,7 @@ namespace XbimXplorer.Querying
             var propName = prop.PropertyInfo.Name;
             var propType = prop.PropertyInfo.PropertyType;
             var shortTypeName = CleanPropertyName(propType.FullName);
-            var propVal = prop.PropertyInfo.GetValue(entity, null);
-            if (propVal == null)
-                propVal = "<null>";
+            var propVal = prop.PropertyInfo.GetValue(entity, null) ?? "<null>";
 
             if (prop.IfcAttribute.IsEnumerable)
             {
@@ -1308,15 +1256,13 @@ namespace XbimXplorer.Querying
         private static string CleanPropertyName(string shortTypeName)
         {
             var m = Regex.Match(shortTypeName, @"^((?<Mod>.*)`\d\[\[)*Xbim\.(?<Type>[\w\.]*)");
-            if (m.Success)
-            {
-                shortTypeName = m.Groups["Type"].Value; // + m.Groups["Type"].Value + 
-                if (m.Groups["Mod"].Value != string.Empty)
-                {
-                    var getLast = m.Groups["Mod"].Value.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);
-                    shortTypeName += " (" + getLast[getLast.Length - 1] + ")";
-                }
-            }
+            if (!m.Success) 
+                return shortTypeName;
+            shortTypeName = m.Groups["Type"].Value; // + m.Groups["Type"].Value + 
+            if (m.Groups["Mod"].Value == string.Empty) 
+                return shortTypeName;
+            var getLast = m.Groups["Mod"].Value.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);
+            shortTypeName += " (" + getLast[getLast.Length - 1] + ")";
             return shortTypeName;
         }
 
@@ -1387,8 +1333,7 @@ namespace XbimXplorer.Querying
         /// </summary>
         public static DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedEntity", typeof (IPersistIfcEntity), typeof (WdwQuery),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                    new PropertyChangedCallback(OnSelectedEntityChanged)));
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
 
         // Model
@@ -1406,21 +1351,20 @@ namespace XbimXplorer.Querying
         /// </summary>
         public static DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof (XbimModel), typeof (WdwQuery),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                    new PropertyChangedCallback(OnSelectedEntityChanged)));
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // if any UI event should happen it needs to be specified here
             var ctrl = d as WdwQuery;
-            if (ctrl != null)
+            if (ctrl == null) 
+                return;
+            switch (e.Property.Name)
             {
-                if (e.Property.Name == "Model")
-                {
+                case "Model":
                     ctrl.ReportAdd("Model updated");
-                }
-                else if (e.Property.Name == "SelectedEntity")
-                {
+                    break;
+                case "SelectedEntity":
                     if (e.NewValue == null)
                         ctrl.ReportAdd("No entitiy selected");
                     else
@@ -1431,7 +1375,7 @@ namespace XbimXplorer.Querying
                                 Math.Abs(((IPersistIfcEntity) e.NewValue).EntityLabel)
                                 ));
                     }
-                }
+                    break;
             }
         }
 
