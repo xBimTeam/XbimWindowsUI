@@ -16,6 +16,46 @@ namespace Xbim.Presentation
         public XbimRegion LargestRegion;
         public Xbim3DModelContext Context;
         public XbimMatrix3D Transfrom;
+        
+        private double _OneMeter = Double.NaN;
+
+        public double OneMeter
+        {
+            get
+            {
+                if (double.IsNaN(_OneMeter))
+                {
+                    _OneMeter = _model.ModelFactors.OneMetre;
+                }
+                return _OneMeter;
+            }
+        }
+
+        public XbimRect3D GetLargestRegionRectInMeters()
+        {
+            if (LargestRegion == null)
+                return XbimRect3D.Empty;
+            var pts = MinMaxPoints(LargestRegion, OneMeter);
+            return new XbimRect3D(pts[0], pts[1]);
+        }
+
+        private XbimPoint3D[] MinMaxPoints(XbimRegion rect, double oneMeter =  1.0)
+        {
+            var pMin = new XbimPoint3D(
+                (rect.Centre.X - (rect.Size.X / 2)) / oneMeter,
+                (rect.Centre.Y - (rect.Size.Y / 2)) / oneMeter,
+                (rect.Centre.Z - (rect.Size.Z / 2)) / oneMeter
+                );
+
+            var pMax = new XbimPoint3D(
+                (rect.Centre.X + (rect.Size.X / 2)) / oneMeter,
+                (rect.Centre.Y + (rect.Size.Y / 2)) / oneMeter,
+                (rect.Centre.Z + (rect.Size.Z / 2)) / oneMeter
+                );
+
+            return new[] { pMin, pMax };
+        }
+
         private readonly IModel _model;
 
         public XbimModelPositioning(XbimModel model)
@@ -34,6 +74,7 @@ namespace Xbim.Presentation
                     break;
             }
         }
+
 
         
         /// <summary>
@@ -56,10 +97,11 @@ namespace Xbim.Presentation
             return regions.MostPopulated(); // this then returns 
         }
 
-        internal void SetCenter(XbimVector3D modelTranslation)
+        internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
-            var metre = _model.ModelFactors.OneMetre;
-            Transfrom = XbimMatrix3D.CreateTranslation(modelTranslation) * XbimMatrix3D.CreateScale((float)(1 / metre));
+            var translation = XbimMatrix3D.CreateTranslation(modelTranslation * OneMeter);
+            var scaling = XbimMatrix3D.CreateScale((float) (1/OneMeter));
+            Transfrom =  translation * scaling;
         }
     }
 
@@ -79,37 +121,19 @@ namespace Xbim.Presentation
             _collection.Add(model, tmp);
         }
 
-        public XbimRect3D GetEnvelop()
+        public XbimRect3D GetEnvelopeInMeters()
         {
             var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.LargestRegion).Where(r => r != null))
+            foreach (var r in _collection.Values.Select(positioning => positioning.GetLargestRegionRectInMeters()))
             {
-                var pts = MinMaxPoints(r);
-
                 if (bb.IsEmpty)
-                    bb = new XbimRect3D(pts[0], pts[1]);
+                    bb = r;
                 else
                 {
-                    bb.Union(pts[0]);
-                    bb.Union(pts[1]);
+                    bb.Union(r);
                 }
             }
             return bb;
-        }
-
-        private XbimPoint3D[] MinMaxPoints(XbimRegion rect)
-        {
-            var pMin = new XbimPoint3D(
-                rect.Centre.X - (rect.Size.X/2),
-                rect.Centre.Y - (rect.Size.Y/2),
-                rect.Centre.Z - (rect.Size.Z/2));
-
-            var pMax = new XbimPoint3D(
-                rect.Centre.X + (rect.Size.X / 2),
-                rect.Centre.Y + (rect.Size.Y / 2),
-                rect.Centre.Z + (rect.Size.Z / 2));
-
-            return new[] {pMin, pMax};
         }
 
         public XbimRect3D GetEnvelopOfCentes()
@@ -130,11 +154,11 @@ namespace Xbim.Presentation
             _collection = new Dictionary<IModel, XbimModelPositioning>();
         }
 
-        internal void SetCenter(XbimVector3D ModelTranslation)
+        internal void SetCenterInMeters(XbimVector3D ModelTranslation)
         {
             foreach (var model in _collection.Values)
             {
-                model.SetCenter(ModelTranslation);
+                model.SetCenterInMeters(ModelTranslation);
             }
         }
     }

@@ -1263,21 +1263,19 @@ namespace Xbim.Presentation
             model.UserDefinedId = userDefinedId;
             var geometrySupportLevel = model.GeometrySupportLevel;
 
-
+            // model scaling
             ModelPositions.AddModel(model);
             foreach (var refModel in model.ReferencedModels)
             {
                 refModel.Model.UserDefinedId = ++userDefinedId;
                 ModelPositions.AddModel(refModel.Model);
             }
-            var bb = ModelPositions.GetEnvelop();
+            var bb = ModelPositions.GetEnvelopeInMeters();
             var p = bb.Centroid();
             var modelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
-            // var modelTranslation = new XbimVector3D(0, 0, 0);
+            ModelPositions.SetCenterInMeters(modelTranslation);
 
-            ModelPositions.SetCenter(modelTranslation);
-
-            // model scaling
+            // what to do when models are added
             model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
 
             // prepare grouping and layering behaviours
