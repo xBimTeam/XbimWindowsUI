@@ -126,6 +126,8 @@ namespace Xbim.Presentation
             var bb = XbimRect3D.Empty;
             foreach (var r in _collection.Values.Select(positioning => positioning.GetLargestRegionRectInMeters()))
             {
+                if (r.IsEmpty)
+                    continue;
                 if (bb.IsEmpty)
                     bb = r;
                 else

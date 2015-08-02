@@ -172,15 +172,15 @@ namespace Xbim.Presentation.LayerStylingV2
                 var mv = new ModelVisual3D();
                 mv.Content = tmpOpaquesGroup;
                 Control.OpaquesVisual3D.Children.Add(mv);
-                Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
+                // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
             }
             if (tmpTransparentsGroup.Children.Any())
             {
                 var mv = new ModelVisual3D();
                 mv.Content = tmpTransparentsGroup;
                 Control.TransparentsVisual3D.Children.Add(mv);
-                if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
-                else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
+                //if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
+                //else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
             }
             return scene;
         }

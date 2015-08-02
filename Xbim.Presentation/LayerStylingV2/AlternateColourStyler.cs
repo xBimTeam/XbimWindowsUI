@@ -86,7 +86,7 @@ namespace Xbim.Presentation.LayerStylingV2
 
             var mv = new ModelVisual3D { Content = tmpOpaquesGroup };
             Control.OpaquesVisual3D.Children.Add(mv);
-            Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
+            // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
 
             return retScene;
         }

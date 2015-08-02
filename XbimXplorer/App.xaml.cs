@@ -68,20 +68,21 @@ namespace XbimXplorer
         {
             var mainView = new XplorerMainWindow();
             mainView.Show();
-            bool bOneModelLoaded = false;
-            for (int i = 0; i< e.Args.Length; i++)
+            mainView.DrawingControl.ViewHome();
+            var bOneModelLoaded = false;
+            for (var i = 0; i< e.Args.Length; i++)
             {
-                string thisArg = e.Args[i];
-                if (String.Compare("/AccessMode", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
+                var thisArg = e.Args[i];
+                if (string.Compare("/AccessMode", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    string stringMode = e.Args[++i];
+                    var stringMode = e.Args[++i];
                     XbimDBAccess mode;
                     if (Enum.TryParse(stringMode, out mode))
                     {
                         mainView.FileAccessMode = mode;
                     }
                 }
-                else if (String.Compare("/plugin", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Compare("/plugin", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     var pluginName = e.Args[++i];
                     if (!File.Exists(pluginName))
@@ -91,7 +92,7 @@ namespace XbimXplorer
                 }
                 else if (string.Compare("/select", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    string selLabel = e.Args[++i];
+                    var selLabel = e.Args[++i];
                     Debug.Write("Select " + selLabel + "... ");
                     mainView.LoadingComplete += delegate
                     {
