@@ -1,0 +1,78 @@
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xbim.Common.Geometry;
+using Xbim.IO;
+using Xbim.ModelGeometry.Scene;
+using Xbim.Presentation;
+
+namespace Tests
+{
+    
+    [TestClass]
+    public class PositioningTests
+    {
+        [TestMethod]
+        [DeploymentItem(@"FederationPositioningTests\", @"Scale\")]
+        public void ScaledPositioningBoxes()
+        {
+            var m = new List<XbimModel>();
+
+            var m0 = new XbimModel();
+            m0.Open(@"Scale\P1_cm.xBIM");
+            m.Add(m0);
+            
+            var m1 = new XbimModel();
+            m1.Open(@"Scale\P2_cm.xBIM");
+            m.Add(m1);
+
+            var m2 = new XbimModel();
+            m2.Open(@"Scale\P2_mm.xBIM");
+            m.Add(m2);
+
+            var m3 = new XbimModel();
+            m3.Open(@"Scale\GeomV1\P2_mm.xBIM");
+            m.Add(m3);
+
+            //var p = new List<XbimModelPositioning>();
+            var r = new List<XbimRect3D>();
+            foreach (var xbimModel in m)
+            {
+                var tmp = new XbimModelPositioning(xbimModel);
+                // p.Add(tmp);
+                r.Add(tmp.GetLargestRegionRectInMeters());
+            }
+
+            HaveSameSize(r[1], r[2]);
+            HaveSameSize(r[1], r[3]);
+            //HaveSameSize(r[0], r[2]);
+            // HaveSameSize(r[0], r[3]);
+            
+            HaveSameLocation(r[1], r[2]);
+            HaveSameLocation(r[1], r[3]);
+            // NeedToBeSame(r[1], r[0]);
+            //NeedToBeSame(r[0], r[3]);
+
+            foreach (var xbimModel in m)
+            {
+                xbimModel.Close();
+            }            
+        }
+
+        private static void HaveSameSize(XbimRect3D r1, XbimRect3D r2)
+        {
+            const double delta = 0.00001;
+            Assert.AreEqual(r1.SizeX, r2.SizeX, delta, "Size X out of error margin.");
+            Assert.AreEqual(r1.SizeY, r2.SizeY, delta, "Size Y out of error margin.");
+            Assert.AreEqual(r1.SizeZ, r2.SizeZ, delta, "Size Z out of error margin.");
+        }
+
+        private static void HaveSameLocation(XbimRect3D r1, XbimRect3D r2)
+        {
+            const double delta = 0.00001;
+            Assert.AreEqual(r1.Location.X, r2.Location.X, delta, "Position X out of error margin.");
+            Assert.AreEqual(r1.Location.Y, r2.Location.Y, delta, "Position Y out of error margin.");
+            Assert.AreEqual(r1.Location.Z, r2.Location.Z, delta, "Position Z out of error margin.");
+        }
+    }
+}
