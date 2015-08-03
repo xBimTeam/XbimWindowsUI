@@ -218,8 +218,10 @@ namespace Xbim.Presentation
         }
 
 
-        // elements associated with vector polygons drafted interactively on the model by the user
-        private List<Type> _exclude;
+        /// <summary>
+        /// The list of types that the engine will not consider in the generation of the scene
+        /// </summary>
+        public List<Type> ExcludedTypes;
         private LinesVisual3D _userModeledDimLines;
         private PointsVisual3D _userModeledDimPoints;
         public PolylineGeomInfo UserModeledDimension = new PolylineGeomInfo();
