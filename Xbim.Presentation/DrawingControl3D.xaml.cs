@@ -1302,8 +1302,8 @@ namespace Xbim.Presentation
                 scene = BuildScene(model, entityLabels, LayerStyler);
             else if (geometrySupportLevel == 2)
             {
-                GeomSupport2LayerStyler.SetFederationEnvironment(null);                
-                scene = GeomSupport2LayerStyler.BuildScene(model, ModelPositions[model].Context, _exclude);
+                GeomSupport2LayerStyler.SetFederationEnvironment(null);
+                scene = GeomSupport2LayerStyler.BuildScene(model, ModelPositions[model].Context, ExcludedTypes);
             }
             if (scene != null)
             {
@@ -1338,7 +1338,7 @@ namespace Xbim.Presentation
             else if (refModel.Model.GeometrySupportLevel == 2)
             {
                 GeomSupport2LayerStyler.SetFederationEnvironment(refModel);
-                Scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, ModelPositions[refModel.Model].Context, _exclude));
+                Scenes.Add(GeomSupport2LayerStyler.BuildScene(refModel.Model, ModelPositions[refModel.Model].Context, ExcludedTypes));
             }
         }
 
@@ -1698,7 +1698,7 @@ namespace Xbim.Presentation
 
         public void ShowAll()
         {
-            _exclude = new List<Type>
+            ExcludedTypes = new List<Type>
             {
                 typeof (IfcFeatureElement), 
                 typeof (IfcSpace)
@@ -1707,7 +1707,7 @@ namespace Xbim.Presentation
 
         public void HideAll()
         {
-            _exclude = new List<Type>
+            ExcludedTypes = new List<Type>
             {
                 typeof (IfcFeatureElement),
                 typeof (IfcSpace),
