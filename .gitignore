@@ -193,3 +193,4 @@ Xbim.Geometry.Engine[0-9]*.dll
 */Templates/
 /Xbim.Presentation/x86
 */ClickOnce/
+SharedFileVersionInfo.cs
