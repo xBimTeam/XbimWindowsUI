@@ -450,6 +450,7 @@ namespace Xbim.Presentation
         }
         public bool Read(string data, XbimMatrix3D? tr = null)
         {
+            int version = 1;
             using (var sr = new StringReader(data))
             {
                 Matrix3D? m3D = null;
@@ -482,9 +483,11 @@ namespace Xbim.Presentation
 // ReSharper disable once NotAccessedVariable
                             var triangleCount = 256;
                             var normalCount = 512;
-                            if (tokens.Length > 1) 
+                            if (tokens.Length > 0)
+                                version = Int32.Parse(tokens[1]);
+                            if (tokens.Length > 1)
                                 pointCount = Int32.Parse(tokens[2]);
-// ReSharper disable once RedundantAssignment
+                            // ReSharper disable once RedundantAssignment
                             if (tokens.Length > 2) 
                                 faceCount = Int32.Parse(tokens[3]);
 // ReSharper disable once RedundantAssignment
@@ -538,31 +541,40 @@ namespace Xbim.Presentation
 
                                     if (indexNormalPair.Length > 1) //we have a normal defined
                                     {
-                                        var normalStr = indexNormalPair[1].Trim();
-                                        switch (normalStr)
+                                        if (version == 1)
                                         {
-                                            case "F": //Front
-                                                currentNormal = new Vector3D(0, -1, 0);
-                                                break;
-                                            case "B": //Back
-                                                currentNormal = new Vector3D(0, 1, 0);
-                                                break;
-                                            case "L": //Left
-                                                currentNormal = new Vector3D(-1, 0, 0);
-                                                break;
-                                            case "R": //Right
-                                                currentNormal = new Vector3D(1, 0, 0);
-                                                break;
-                                            case "U": //Up
-                                                currentNormal = new Vector3D(0, 0, 1);
-                                                break;
-                                            case "D": //Down
-                                                currentNormal = new Vector3D(0, 0, -1);
-                                                break;
-                                            default: //it is an index number
-                                                int normalIndex = int.Parse(indexNormalPair[1]);
-                                                currentNormal = normalList[normalIndex];
-                                                break;
+                                            var normalStr = indexNormalPair[1].Trim();
+                                            switch (normalStr)
+                                            {
+                                                case "F": //Front
+                                                    currentNormal = new Vector3D(0, -1, 0);
+                                                    break;
+                                                case "B": //Back
+                                                    currentNormal = new Vector3D(0, 1, 0);
+                                                    break;
+                                                case "L": //Left
+                                                    currentNormal = new Vector3D(-1, 0, 0);
+                                                    break;
+                                                case "R": //Right
+                                                    currentNormal = new Vector3D(1, 0, 0);
+                                                    break;
+                                                case "U": //Up
+                                                    currentNormal = new Vector3D(0, 0, 1);
+                                                    break;
+                                                case "D": //Down
+                                                    currentNormal = new Vector3D(0, 0, -1);
+                                                    break;
+                                                default: //it is an index number
+                                                    int normalIndex = int.Parse(indexNormalPair[1]);
+                                                    currentNormal = normalList[normalIndex];
+                                                    break;
+                                            }
+                                        }
+                                        else //we have support for packed normals
+                                        {
+                                            var packedNormal = new XbimPackedNormal(ushort.Parse(indexNormalPair[1]));
+                                            var n = packedNormal.Normal;
+                                            currentNormal = new Vector3D(n.X, n.Y, n.Z);
                                         }
                                         if (tr.HasValue)
                                         {
