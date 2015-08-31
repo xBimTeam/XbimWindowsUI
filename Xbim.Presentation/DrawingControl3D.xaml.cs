@@ -1722,7 +1722,7 @@ namespace Xbim.Presentation
             Viewport.Camera = cam;
         }
 
-        public void ViewHome()
+        public virtual void ViewHome()
         {
             if (Viewport.CameraController != null)
                 Viewport.CameraController.ResetCamera();
