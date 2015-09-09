@@ -174,17 +174,26 @@ namespace Xbim.Presentation
                                     int idx = ReadIndex(br, numVertices);
                                     var normal = br.ReadPackedNormal().Normal;
                                     int writtenIdx;
+                                    var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                                    if (qrd != null) //transform the normal if we have to
+                                        wpfNormal = qrd.Transform(wpfNormal);
                                     if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
                                     {
                                         writtenIdx = vertices.Count;
                                         vertices.Add(uniqueVertices[idx]);
                                         uniqueIndices.Add(idx, writtenIdx);
-                                        var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                                        if (qrd!=null) //transform the normal if we have to
-                                            wpfNormal = qrd.Transform(wpfNormal);
                                         normals.Add(wpfNormal);
                                     }
-                                   
+                                    else
+                                    {
+                                        if (normals[writtenIdx] != wpfNormal) //deal with normals that vary at a node
+                                        {
+                                            writtenIdx = vertices.Count;
+                                            vertices.Add(uniqueVertices[idx]);
+                                            normals.Add(wpfNormal);
+                                        }
+                                    }
+
                                     triangleIndices.Add(indexBase + writtenIdx);
                                 }
                             }
@@ -345,7 +354,14 @@ namespace Xbim.Presentation
                                         }
                                         else //just add the index reference
                                         {
-                                            triangleIndices.Add(alreadyWrittenAt);
+                                            if(normals[alreadyWrittenAt] == currentNormal)
+                                                triangleIndices.Add(alreadyWrittenAt);
+                                            else //we need another
+                                            {
+                                                triangleIndices.Add(positions.Count + m3D.TriangleIndices.Count);
+                                                positions.Add(vertexList[index]);
+                                                normals.Add(currentNormal);
+                                            }
                                         }
                                     }
                                 }

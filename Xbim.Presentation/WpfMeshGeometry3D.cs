@@ -597,8 +597,16 @@ namespace Xbim.Presentation
                                     }
                                     else //just add the index reference
                                     {
-                                        _unfrozenIndices.Add(alreadyWrittenAt);
+                                        if (_unfrozenNormals[alreadyWrittenAt] == currentNormal)
+                                            _unfrozenIndices.Add(alreadyWrittenAt);
+                                        else //we need another
+                                        {
+                                            _unfrozenIndices.Add(PositionCount);
+                                            _unfrozenPositions.Add(vertexList[index]);
+                                            _unfrozenNormals.Add(currentNormal);
+                                        }
                                     }
+                                   
                                 }
                             }
 
