@@ -1551,7 +1551,9 @@ namespace Xbim.Presentation
                     }
                 }
             }
-            Dispatcher.BeginInvoke(new Action(Hide<IfcSpace>), DispatcherPriority.Background);
+            if (_hideAfterLoad != null)
+                Dispatcher.BeginInvoke(new Action(() => Hide(_hideAfterLoad) ), DispatcherPriority.Background);
+            
             return scene;
         }
 
@@ -1628,7 +1630,7 @@ namespace Xbim.Presentation
         }
 
         /// <summary>
-        ///   Hides all instances of the specified type
+        /// Hides all instances of the specified type
         /// </summary>
         public void Hide<T>()
         {
@@ -1636,18 +1638,31 @@ namespace Xbim.Presentation
             Hide(ifcType);
         }
 
+        private List<string> _hideAfterLoad = new List<string>() {"IfcSpace", "IfcOpeningElement"};
+
+        private List<string> HideAfterLoad
+        {
+            get { return _hideAfterLoad; }
+            set { _hideAfterLoad = value; }
+        }
+
         protected void Hide(IfcType ifcType, bool hideSubTypes = true)
         {
-            var toHide = ifcType.Name + ";";
+            var toHide = new List<string> {ifcType.Name};
             if (hideSubTypes)
-                toHide = ifcType.NonAbstractSubTypes.Aggregate(toHide, (current, subType) => current + (subType.Name + ";"));
+                toHide.AddRange(ifcType.NonAbstractSubTypes.Select(x=>x.Name));
+            
+            Hide(toHide);
+        }
 
+        private void Hide(ICollection<string> toHide)
+        {
             foreach (var scene in Scenes)
                 foreach (var layer in scene.SubLayers) //go over top level layers only
-                    if (toHide.Contains(layer.Name + ";"))
+                    if (toHide.Contains(layer.Name))
                         layer.HideAll();
         }
-       
+
         public static readonly DependencyProperty LayerSetProperty =
             DependencyProperty.Register("LayerSet", typeof(List<LayerViewModel>), typeof(DrawingControl3D));
 
