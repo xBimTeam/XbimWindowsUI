@@ -1722,7 +1722,12 @@ namespace Xbim.Presentation
             Viewport.Camera = cam;
         }
 
-        public void ViewHome()
+        /// <summary>
+        /// This fuction is fired when the reset of the camer is invoked.
+        /// It is called from RecalculateView if the parameters of RecalculateView don't exclude it.
+        /// It is also called from the WindowsUI Xplorer menu.
+        /// </summary>
+        public virtual void ViewHome()
         {
             if (Viewport.CameraController != null)
                 Viewport.CameraController.ResetCamera();
