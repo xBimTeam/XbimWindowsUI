@@ -1640,7 +1640,7 @@ namespace Xbim.Presentation
 
         private List<string> _hideAfterLoad = new List<string>() {"IfcSpace", "IfcOpeningElement"};
 
-        private List<string> HideAfterLoad
+        public List<string> HideAfterLoad
         {
             get { return _hideAfterLoad; }
             set { _hideAfterLoad = value; }
