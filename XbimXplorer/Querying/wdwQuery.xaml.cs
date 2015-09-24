@@ -82,8 +82,13 @@ namespace XbimXplorer.Querying
 
         private void txtCommand_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))) 
+            if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl)))
                 return;
+            Execute();
+            e.Handled = true;
+        }
+
+        private void Execute() {
 #if DEBUG
             // stores the commands being launched
             var fname = Path.Combine(Path.GetTempPath(), "xbimquerying.txt");
@@ -95,7 +100,7 @@ namespace XbimXplorer.Querying
             }
 #endif
 
-            e.Handled = true;
+           
             if (_bDoClear)
                 TxtOut.Document = new FlowDocument();
 
@@ -1272,10 +1277,18 @@ namespace XbimXplorer.Querying
             var propLabel = 0;
             if (pe != null)
             {
+                propLabel = pe.EntityLabel;
                 retIds.Add(pe.EntityLabel);
                 pe.Activate(false);
             }
-            var ret = propVal + (
+            var ret = propVal.ToString();
+            if (ret == propVal.GetType().FullName)
+            {
+                ret = propVal.GetType().Name;
+                showPropType = false;
+            }
+            ret +=
+                (
                 (propLabel != 0) 
                 ? " [#" + propLabel + "]" 
                 : ""
@@ -1397,5 +1410,11 @@ namespace XbimXplorer.Querying
         }
 
         #endregion
+
+        private void cmdRun(object sender, RoutedEventArgs e)
+        {
+            Execute();
+            e.Handled = true;
+        }
     }
 }
