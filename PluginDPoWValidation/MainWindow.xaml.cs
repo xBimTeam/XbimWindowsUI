@@ -318,7 +318,8 @@ namespace Validation
                 var valid = assetType.Categories.Any(x => x.Code == selectedCode);
                 if (!valid)
                     continue;
-
+                if (assetType.Assets == null)
+                    continue;
                 foreach (var asset in assetType.Assets)
                 {
                     lst.Add(new AssetViewModel(asset));

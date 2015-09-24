@@ -32,22 +32,9 @@ namespace XbimXplorer
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         public void RefreshPlugins()
         {
-
-            //try
-            //{
-            //    Xbim3DModelContext context = new Xbim3DModelContext(null);
-            //}
-            //catch (Exception)
-            //{
-
-            //}
-
-            string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             if (!string.IsNullOrWhiteSpace(path))
                 path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (path != null)
