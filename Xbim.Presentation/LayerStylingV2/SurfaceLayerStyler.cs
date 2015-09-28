@@ -148,12 +148,12 @@ namespace Xbim.Presentation.LayerStylingV2
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
+                                var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom);
                                 targetMergeMeshByStyle.Add(
                                     shapeGeom.ShapeData,
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
-                                    shapeInstance.InstanceLabel,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
+                                    shapeInstance.InstanceLabel, transform,
                                     model.UserDefinedId);
                                 break;
                             default:

@@ -63,7 +63,7 @@ namespace Xbim.Presentation
             _model = model;
             Context = new Xbim3DModelContext(model);
             var supportLevel = model.GeometrySupportLevel;
-           
+          
             switch (supportLevel)
             {
                 case 1:
@@ -100,7 +100,7 @@ namespace Xbim.Presentation
         internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
             var translation = XbimMatrix3D.CreateTranslation(modelTranslation * OneMeter);
-            var scaling = XbimMatrix3D.CreateScale((float) (1/OneMeter));
+            var scaling = XbimMatrix3D.CreateScale(1/OneMeter);
             Transfrom =  translation * scaling;
         }
     }

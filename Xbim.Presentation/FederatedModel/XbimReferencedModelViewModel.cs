@@ -158,7 +158,7 @@ namespace Xbim.Presentation.FederatedModel
                 {
                     refM.CreateFrom(Name, null, null, true);
                     var m3D = new Xbim3DModelContext(refM);
-                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
+                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: null, adjustWCS: false);
                     Name = Path.ChangeExtension(Name, "xbim");
                 }
                 Name = xbimName;

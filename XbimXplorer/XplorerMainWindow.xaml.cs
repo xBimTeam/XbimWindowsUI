@@ -222,7 +222,7 @@ namespace XbimXplorer
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
                     var context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
-                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress);
+                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress,  adjustWCS: false);
             
                     if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                     {
@@ -633,7 +633,7 @@ namespace XbimXplorer
         private void OpenFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var dlg = new OpenFileDialog();
-            dlg.Filter = "Xbim Federation Files|*.xbimf|Xbim Model Files|*.ifc"; // Filter files by extension 
+            dlg.Filter = "Xbim Federation Files|*.xbimf|Xbim Model Files|*.ifc;*.ifcxml;*.ifczip"; // Filter files by extension 
             dlg.CheckFileExists = true;
             dlg.Multiselect = true;
             var done = dlg.ShowDialog(this);
@@ -660,7 +660,7 @@ namespace XbimXplorer
                             fedModel = new XbimModel();
                             fedModel.Open(dlg.FileNames[0], XbimDBAccess.ReadWrite);
                         }
-                        else if (firstExtension == ".ifc")
+                        else if (firstExtension == ".ifc" || firstExtension == ".ifczip" || firstExtension == ".ifcxml")
                         {
                             //create temp file as a placeholder for the temperory xbim file
                             var filePath = Path.GetTempFileName();
@@ -950,7 +950,7 @@ namespace XbimXplorer
             {
                 ModelProvider.ObjectInstance = null;
                 var m3D = new Xbim3DModelContext(arg.NewModel);
-                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
+                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,progDelegate: null, adjustWCS: false);
                 ModelProvider.ObjectInstance = arg.NewModel;
                 ModelProvider.Refresh();
             };
