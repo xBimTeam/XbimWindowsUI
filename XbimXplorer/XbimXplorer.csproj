@@ -251,7 +251,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Script, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Scripting.3.1.10-V0008\lib\net40\Xbim.Script.dll</HintPath>
+      <HintPath>..\packages\Xbim.Scripting.3.1.10-V0009\lib\net40\Xbim.Script.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
