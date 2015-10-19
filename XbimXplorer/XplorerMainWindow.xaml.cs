@@ -1007,35 +1007,8 @@ namespace XbimXplorer
 
         private void OpenScriptingWindow(object sender, RoutedEventArgs e)
         {
-            var win = new ScriptingWindow();
-            win.Owner = this;
-
-            win.ScriptingControl.DataContext = ModelProvider;
-            var binding = new Binding();
-            win.ScriptingControl.SetBinding(ScriptingControl.ModelProperty, binding);
-
-            win.ScriptingControl.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
-            {
-                ModelProvider.ObjectInstance = null;
-                var m3D = new Xbim3DModelContext(arg.NewModel);
-                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,progDelegate: null, adjustWCS: false);
-                ModelProvider.ObjectInstance = arg.NewModel;
-                ModelProvider.Refresh();
-            };
-
-            win.ScriptingControl.OnScriptParsed += delegate
-            {
-                GroupControl.Regenerate();
-                //SpatialControl.Regenerate();
-            };
-
-
-            ScriptResults.Visibility = Visibility.Visible;
-            win.Closing += delegate {
-                ScriptResults.Visibility = Visibility.Collapsed;
-            };
-
-            win.Show();
+            var sw = new ScriptingWindow();
+            ShowPluginWindow(sw);
         }
 
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)

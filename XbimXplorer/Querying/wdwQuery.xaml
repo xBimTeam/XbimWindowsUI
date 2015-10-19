@@ -17,8 +17,8 @@
         >
     <Grid KeyDown="txtCommand_KeyDown">
         <Grid.RowDefinitions>
-            <RowDefinition Height="75"/>
-            <RowDefinition/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" >
             <TextBox x:Name="TxtCommand" FontFamily="Lucida Console" AcceptsReturn="True" AutoWordSelection="True" Margin="0,0,0,28.2" />

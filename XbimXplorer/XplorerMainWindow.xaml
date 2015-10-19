@@ -176,12 +176,6 @@
                             SelectionMode="Single"
                             MouseDoubleClick="SpatialControl_MouseDoubleClick"  FontSize="10" />
                             </avalonDock:LayoutAnchorable>
-                            <avalonDock:LayoutAnchorable Title="ScriptResults" CanClose="False" >
-                                <TabControl>
-                                    <TabItem Header="Script Results" Visibility="Collapsed" Name="ScriptResults">
-                                    </TabItem>
-                                </TabControl>
-                            </avalonDock:LayoutAnchorable>
                         </avalonDock:LayoutAnchorablePane>
                         <avalonDock:LayoutAnchorablePane>
                             <avalonDock:LayoutAnchorable Title="Properties" CanClose="False" >

@@ -1,10 +1,20 @@
-﻿<Window x:Class="XbimXplorer.Scripting.ScriptingWindow"
+﻿<UserControl
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:xbim="http://schemas.Xbim.com/Presentation"
-        x:Name="This"
-        Title="Scripting Window" Height="400" Width="600">
+        xmlns:presentation="http://schemas.Xbim.com/Presentation"
+        MinWidth="300"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        d:DesignWidth="343.497" d:DesignHeight="330.786"
+    
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        mc:Ignorable="d" x:Class="XbimXplorer.Scripting.ScriptingWindow"
+        >
     <Grid>
-        <xbim:ScriptingControl x:Name="ScriptingControl" />
+        <TabControl>
+            <TabItem Header="Script">
+                <presentation:ScriptingControl x:Name="ScriptingControl" />
+            </TabItem>
+            <TabItem Header="Script Results" Name="ScriptResults" />
+        </TabControl>
     </Grid>
-</Window>
+</UserControl>

@@ -19,7 +19,7 @@ namespace Xbim.Presentation
         public ScriptingControl()
         {
             InitializeComponent();
-            CreateParser();
+            
         }
 
         public XbimVariables Results
@@ -40,23 +40,22 @@ namespace Xbim.Presentation
 
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ScriptingControl sw = d as ScriptingControl;
-            if (sw != null)
-            {
-                XbimModel model = e.NewValue as XbimModel;
-                if (model != null)
-                    //create new parser which is associated to the model if model has been changed
-                    sw.CreateParser(model);
-            }
+            var sw = d as ScriptingControl;
+            if (sw == null) 
+                return;
+            var model = e.NewValue as XbimModel;
+            if (model != null)
+                //create new parser which is associated to the model if model has been changed
+                sw.CreateParser(model);
         }
 
         private XbimQueryParser _parser;
         private StringWriter _output = new StringWriter();
         private void CreateParser(XbimModel model = null)
         {
-            if (model != null) _parser = new XbimQueryParser(model);
-            else _parser = new XbimQueryParser();
-
+            _parser = model != null 
+                ? new XbimQueryParser(model) 
+                : new XbimQueryParser();
 
             _parser.Output = _output;
             _parser.OnScriptParsed += delegate
@@ -85,18 +84,20 @@ namespace Xbim.Presentation
 
         private void SaveScript_Click(object sender, RoutedEventArgs e)
         {
-            string script = ScriptInput.Text;
-            if (String.IsNullOrEmpty(script))
+            var script = ScriptInput.Text;
+            if (string.IsNullOrEmpty(script))
             {
                 MessageBox.Show("There is no script to save.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-            SaveFileDialog dlg = new SaveFileDialog();
-            dlg.AddExtension = true;
-            dlg.DefaultExt = ".bql";
-            dlg.Title = "Set file name of the script...";
-            dlg.OverwritePrompt = true;
-            dlg.ValidateNames = true;
+            var dlg = new SaveFileDialog
+            {
+                AddExtension = true,
+                DefaultExt = ".bql",
+                Title = "Set file name of the script...",
+                OverwritePrompt = true,
+                ValidateNames = true
+            };
             dlg.FileOk += delegate
             {
                 var name = dlg.FileName;
@@ -122,11 +123,13 @@ namespace Xbim.Presentation
 
         private void LoadScript_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.AddExtension = true;
-            dlg.DefaultExt = ".bql";
-            dlg.Title = "Specify the script file...";
-            dlg.ValidateNames = true;
+            var dlg = new OpenFileDialog
+            {
+                AddExtension = true,
+                DefaultExt = ".bql",
+                Title = "Specify the script file...",
+                ValidateNames = true
+            };
             dlg.FileOk += delegate
             {
                 Stream file = null;
@@ -153,7 +156,7 @@ namespace Xbim.Presentation
         private void Execute_Click(object sender, RoutedEventArgs e)
         {
             var script = ScriptInput.Text;
-            if (String.IsNullOrEmpty(script))
+            if (string.IsNullOrEmpty(script))
             {
                 MessageBox.Show("There is no script to execute.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
@@ -205,5 +208,9 @@ namespace Xbim.Presentation
                 OnModelChangedByScript(this, new ModelChangedEventArgs(newModel));
         }
 
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://github.com/xBimTeam/XbimScripting/raw/master/Xbim.Script/BQL_documentation.pdf");
+        }
     }
 }

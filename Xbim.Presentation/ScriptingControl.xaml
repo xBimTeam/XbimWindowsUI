@@ -10,6 +10,7 @@
             <Button Name="SaveScript" Content="Save Script" Click="SaveScript_Click" Margin="2"/>
             <Button Name="LoadScript" Content="Load Script" Click="LoadScript_Click" Margin="2"/>
             <Button Name="Execute" Content="Execute" FontWeight="Bold" Click="Execute_Click" Margin="2"/>
+            <Button Name="Help" Content="Help" FontWeight="Bold" Click="Help_Click" Margin="2"/>
         </StackPanel>
         <TextBlock Name="MsgWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Blue"/>
         <TextBlock Name="ErrorsWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Red"/>
