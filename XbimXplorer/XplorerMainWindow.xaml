@@ -4,7 +4,7 @@
         xmlns:xbim="http://schemas.Xbim.com/Presentation"
     xmlns:xbimView="clr-namespace:Xbim.IO.ViewModels;assembly=Xbim.IO"
         xmlns:local="clr-namespace:XbimXplorer"
-    xmlns:pt="clr-namespace:PropertyTools.Wpf;assembly=PropertyTools.Wpf" 
+        xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
     Title="Xbim Xplorer" Height="600" Width="800" 
     x:Name="MainWindow"
@@ -63,6 +63,7 @@
         <CommandBinding Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}"   Executed="ExportCoBieCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" Executed="CreateFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.CoBieClassFilter}" Executed="CoBieClassFilterCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" Executed="OpenExportWindow" CanExecute="CommandBinding_CanExecute"/>
 
@@ -76,22 +77,20 @@
 
         <Menu Grid.Row="0" >
             <MenuItem Header="_Model">
-                <MenuItem Header="_Open" Command="Open"/>
+                <MenuItem Header="_Open" Command="Open" ToolTip="Load a single Ifc, Xbim, IfcZip or IfcXML file." />
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
                 <MenuItem Header="_Close" Command="Close" />
+                <MenuItem Header="_Federation">
+                    <MenuItem Header="_Open" Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" ToolTip="Load an existing Xbimf federation file." />
+                    <MenuItem Header="_Create" Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" ToolTip="Loads a set of existing Ifc, Xbim, IfcZip or IfcXML files." />
+                    <MenuItem Header="_Edit" Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" ToolTip="Load or unluad federated files and changes their properties." />
+                </MenuItem>
                 <Separator />
                 <MenuItem Header="Recent files" x:Name="MnuRecent" Click="RecentFileClick" />
                 <Separator />
                 <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
-
-                <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
-                <MenuItem Header="S_eparate" Click="SeparateMenuItem_Click" />
             </MenuItem>
-            <MenuItem Header="_Federate">
-                <MenuItem Header="_Open" Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" />
-                <MenuItem Header="_Edit" Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" />
-            </MenuItem>
-
+            
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
                     <MenuItem Header="_Style Reset" Click="SetDefaultModeStyler" />
@@ -101,19 +100,14 @@
                 </MenuItem>
 
                 <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
-                <MenuItem Header="_Copy" Command="Copy"/>
-                <!--
-                <MenuItem Header="_Layers" ItemsSource="{Binding LayerSet, ElementName=DrawingControl}">
-                    <MenuItem.ItemContainerStyle>
-                        <Style>
-                            <Setter Property="MenuItem.Header" Value="{Binding NameOnMenu}"/>
-                            <Setter Property="MenuItem.Command" Value="{Binding Open}"/>
-                        </Style>
-                    </MenuItem.ItemContainerStyle>
-                </MenuItem>
-                -->
                 <MenuItem IsCheckable="True" Header="Show Gridlines" IsChecked="{Binding ShowGridLines, ElementName=DrawingControl}"/>
-                <MenuItem Header="_Query" Click="OpenQuery" />
+                <MenuItem Header="_Copy image" Command="Copy"/>
+                <Separator Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
+                <MenuItem Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
+                    <MenuItem Header="_Query" Click="OpenQuery" />
+                    <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
+                </MenuItem>
+                <Separator />
                 <MenuItem Header="_Settings" Click="DisplaySettingsPage" />
             </MenuItem>
             <MenuItem Header="_Camera">

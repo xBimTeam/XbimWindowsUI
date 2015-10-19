@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Xbim.XbimExtensions;
 using XbimXplorer.Properties;
 
@@ -20,7 +11,7 @@ namespace XbimXplorer.Dialogs
     /// <summary>
     /// Interaction logic for SettingsWindow.xaml
     /// </summary>
-    public partial class SettingsWindow : Window
+    public partial class SettingsWindow
     {
         /// <summary>
         /// 
@@ -35,9 +26,10 @@ namespace XbimXplorer.Dialogs
                 SelFileAccessMode = Settings.Default.FileAccessMode;
                 NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
                 PluginStartupLoad = Settings.Default.PluginStartupLoad;
+                DeveloperMode = Settings.Default.DeveloperMode;
             }
 
-            List<XbimDBAccess> _fileAccessModes = null;
+            List<XbimDBAccess> _fileAccessModes;
             /// <summary>
             /// 
             /// </summary>
@@ -50,7 +42,6 @@ namespace XbimXplorer.Dialogs
 
                     _fileAccessModes = new List<XbimDBAccess>();
                     var values = Enum.GetValues(typeof(XbimDBAccess));
-                    List<XbimDBAccess> ret = new List<XbimDBAccess>();
                     foreach (var item in values)
                     {
                         _fileAccessModes.Add((XbimDBAccess)item);
@@ -71,25 +62,32 @@ namespace XbimXplorer.Dialogs
             internal void SaveSettings()
             {
                 Settings.Default.FileAccessMode = SelFileAccessMode;
-                int iNumber = 4;
-                Int32.TryParse(NumberRecentFiles, out iNumber);
+                int iNumber;
+                if (!int.TryParse(NumberRecentFiles, out iNumber))
+                    iNumber = 4;
                 Settings.Default.MRUFilesCount = iNumber;
                 Settings.Default.PluginStartupLoad = PluginStartupLoad;
+                Settings.Default.DeveloperMode = DeveloperMode;
 
                 Settings.Default.Save();
             }
 
             /// <summary>
-            /// 
+            /// Defines whether to enable plugins at startup.
             /// </summary>
             public bool PluginStartupLoad { get; set; }
+
+            /// <summary>
+            /// Defines whether to enable extra UI elements aimed at developers.
+            /// </summary>
+            public bool DeveloperMode { get; set; }
 
             /// <summary>
             /// </summary>
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
-        SettingWindowVm _vm;
+        readonly SettingWindowVm _vm;
 
         /// <summary>
         /// 
@@ -113,7 +111,7 @@ namespace XbimXplorer.Dialogs
             Close();            
         }
 
-        private bool _settingsChanged = false;
+        private bool _settingsChanged;
         /// <summary>
         /// 
         /// </summary>
@@ -128,18 +126,17 @@ namespace XbimXplorer.Dialogs
         private void ButtonReset_Click(object sender, RoutedEventArgs e)
         {
             var retVal = MessageBox.Show("Are you sure you wish to reset all settings to defalut valuse?", "Reset settings", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-            if (retVal == MessageBoxResult.Yes)
-            {
-                Settings.Default.Reset();
-                _settingsChanged = true;
-                Close();
-            }
+            if (retVal != MessageBoxResult.Yes) 
+                return;
+            Settings.Default.Reset();
+            _settingsChanged = true;
+            Close();
         }
 
         private static bool IsTextAllowed(string text)
         {
-            Int32 v;
-            return Int32.TryParse(text, out v);
+            int v;
+            return int.TryParse(text, out v);
         }
 
         private void IntOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
