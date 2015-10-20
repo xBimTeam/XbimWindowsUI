@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,7 @@ namespace XbimXplorer.Scripting
     /// <summary>
     /// Interaction logic for ScriptingWindow.xaml
     /// </summary>
-    public partial class ScriptingWindow : IXbimXplorerPluginWindow
+    public partial class ScriptingWindow : IXbimXplorerPluginWindow, INotifyPropertyChanged
     {
 
         /// <summary>
@@ -66,10 +67,10 @@ namespace XbimXplorer.Scripting
             {
                 case "Model":
                     Debug.WriteLine("Model Updated");
+                    ctrl.OnPropertyChanged("Model");
                     // ModelProperty =
                     break;
                 case "SelectedEntity":
-
                     break;
             }
         }
@@ -88,8 +89,8 @@ namespace XbimXplorer.Scripting
         {
             // win.Owner = this;
             // _parentWindow = mainWindow;
-
-            SetBinding(ScriptingControl.ModelProperty, new Binding());
+            SetBinding(ModelProperty, new Binding());
+            // SetBinding(ScriptingControl.ModelProperty, new Binding());
 
             //win.ScriptingControl.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
             //{
@@ -115,6 +116,14 @@ namespace XbimXplorer.Scripting
         public PluginWindowDefaultUiShow DefaultUiActivation
         {
             get { return PluginWindowDefaultUiShow.OnMenu; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            var handler = PropertyChanged;
+            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

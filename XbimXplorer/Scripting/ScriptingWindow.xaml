@@ -5,14 +5,14 @@
         MinWidth="300"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         d:DesignWidth="343.497" d:DesignHeight="330.786"
-    
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        mc:Ignorable="d" x:Class="XbimXplorer.Scripting.ScriptingWindow"
-        >
+        xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:io="clr-namespace:Xbim.IO;assembly=Xbim.IO"
+        mc:Ignorable="d" x:Class="XbimXplorer.Scripting.ScriptingWindow">
     <Grid>
         <TabControl>
             <TabItem Header="Script">
-                <presentation:ScriptingControl x:Name="ScriptingControl" />
+                <presentation:ScriptingControl x:Name="ScriptingControl"  Model="{Binding}"/>
             </TabItem>
             <TabItem Header="Script Results" Name="ScriptResults" />
         </TabControl>
