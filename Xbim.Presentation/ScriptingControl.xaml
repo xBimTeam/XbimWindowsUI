@@ -4,14 +4,26 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="500">
+             d:DesignHeight="300" d:DesignWidth="400">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Name="ButtonBar" Orientation="Horizontal" Background="LightGray">
-            <Button Name="SaveScript" Content="Save Script" Click="SaveScript_Click" Margin="2"/>
-            <Button Name="LoadScript" Content="Load Script" Click="LoadScript_Click" Margin="2"/>
-            <Button Name="Execute" Content="Execute" FontWeight="Bold" Click="Execute_Click" Margin="2"/>
-            <Button Name="Help" Content="Help" FontWeight="Bold" Click="Help_Click" Margin="2"/>
-        </StackPanel>
+        <Grid DockPanel.Dock="Top" Background="LightGray">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition  Width="Auto"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Name="ButtonBar" Orientation="Horizontal" Background="LightGray">
+                <Button Padding="5,0" Content="Execute" FontWeight="Bold" Click="Execute_Click" Margin="2"/>
+                <Button Padding="5,0" Content="Save Script" Click="SaveScript_Click" Margin="2"/>
+                <Button Padding="5,0" Content="Load Script" Click="LoadScript_Click" Margin="2"/>
+                
+                
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Grid.Column="1" Orientation="Horizontal" Background="LightGray">
+                <Button Padding="5,0" Content="Help" Click="Help_Click" Margin="2"/>
+                <Button Padding="5,0" Content="Example" Click="Example_Click" Margin="2"/>
+            </StackPanel>
+        </Grid>
+        
         <TextBlock Name="MsgWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Blue"/>
         <TextBlock Name="ErrorsWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Red"/>
         <ScrollViewer DockPanel.Dock="Bottom" Height="150">
@@ -20,7 +32,7 @@
         <ScrollViewer>
             <DockPanel>
                 <TextBlock Name="LineNumbers" Background="LightGray" Padding="2" Text="1" />
-                <TextBox Name="ScriptInput" AcceptsReturn="True" TextChanged="ScriptInput_TextChanged" />
+                <TextBox Name="ScriptInput" AcceptsReturn="True" KeyDown="ScriptInput_OnKeyDown" TextChanged="ScriptInput_TextChanged" />
             </DockPanel>
         </ScrollViewer>
         
