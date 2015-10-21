@@ -37,7 +37,6 @@ namespace XbimXplorer.Scripting
             InitializeComponent();
             MenuText = "Scripting Window";
             WindowTitle = "Scripting Window";
-       
         }
 
         // Model
@@ -87,25 +86,25 @@ namespace XbimXplorer.Scripting
         public string WindowTitle { get; private set; }
         public void BindUi(IXbimXplorerPluginMasterWindow mainWindow)
         {
-            // win.Owner = this;
-            // _parentWindow = mainWindow;
+            _parentWindow = mainWindow;
             SetBinding(ModelProperty, new Binding());
-            // SetBinding(ScriptingControl.ModelProperty, new Binding());
 
-            //win.ScriptingControl.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
-            //{
-            //    ModelProvider.ObjectInstance = null;
-            //    var m3D = new Xbim3DModelContext(arg.NewModel);
-            //    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: null, adjustWCS: false);
-            //    ModelProvider.ObjectInstance = arg.NewModel;
-            //    ModelProvider.Refresh();
-            //};
+            ScriptingControl.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
+            {
+                ModelProperty = null;
+                var m3D = new Xbim3DModelContext(arg.NewModel);
+                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: null, adjustWCS: false);
+                Model = arg.NewModel;
+                // todo: Fire Update request of model property (is it needed?)
+                // ModelProvider.Refresh();
+            };
 
-            //win.ScriptingControl.OnScriptParsed += delegate
-            //{
-            //    GroupControl.Regenerate();
-            //    //SpatialControl.Regenerate();
-            //};
+            ScriptingControl.OnScriptParsed += delegate
+            {
+                // todo: Fire Update request to parent window
+                // GroupControl.Regenerate();
+                // SpatialControl.Regenerate();
+            };
         }
         public PluginWindowDefaultUiContainerEnum DefaultUiContainer
         {

@@ -5,36 +5,41 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="400">
-    <DockPanel>
-        <Grid DockPanel.Dock="Top" Background="LightGray">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition  Width="Auto"/>
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Name="ButtonBar" Orientation="Horizontal" Background="LightGray">
-                <Button Padding="5,0" Content="Execute" FontWeight="Bold" Click="Execute_Click" Margin="2"/>
-                <Button Padding="5,0" Content="Save Script" Click="SaveScript_Click" Margin="2"/>
-                <Button Padding="5,0" Content="Load Script" Click="LoadScript_Click" Margin="2"/>
-                
-                
-            </StackPanel>
-            <StackPanel HorizontalAlignment="Right" Grid.Column="1" Orientation="Horizontal" Background="LightGray">
-                <Button Padding="5,0" Content="Help" Click="Help_Click" Margin="2"/>
-                <Button Padding="5,0" Content="Example" Click="Example_Click" Margin="2"/>
-            </StackPanel>
-        </Grid>
-        
-        <TextBlock Name="MsgWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Blue"/>
-        <TextBlock Name="ErrorsWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Red"/>
-        <ScrollViewer DockPanel.Dock="Bottom" Height="150">
-            <TextBlock Name="OutputWindow" Visibility="Visible" TextWrapping="Wrap" />
-        </ScrollViewer>
-        <ScrollViewer>
-            <DockPanel>
-                <TextBlock Name="LineNumbers" Background="LightGray" Padding="2" Text="1" />
-                <TextBox Name="ScriptInput" AcceptsReturn="True" KeyDown="ScriptInput_OnKeyDown" TextChanged="ScriptInput_TextChanged" />
-            </DockPanel>
-        </ScrollViewer>
-        
-    </DockPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel>
+            <Grid DockPanel.Dock="Top" Background="LightGray">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition  Width="Auto"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Name="ButtonBar" Orientation="Horizontal" Background="LightGray">
+                    <Button Padding="5,0" Content="Execute" FontWeight="Bold" Click="Execute_Click" Margin="2"/>
+                    <Button Padding="5,0" Content="Save Script" Click="SaveScript_Click" Margin="2"/>
+                    <Button Padding="5,0" Content="Load Script" Click="LoadScript_Click" Margin="2"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Right" Grid.Column="1" Orientation="Horizontal" Background="LightGray">
+                    <Button Padding="5,0" Content="?" Click="Help_Click" Margin="2"/>
+                </StackPanel>
+            </Grid>
+            <ScrollViewer Margin="0,0,0,5">
+                <DockPanel>
+                    <TextBlock Name="LineNumbers" Background="LightGray" Padding="2" Text="1" />
+                    <TextBox Name="ScriptInput" AcceptsReturn="True" KeyDown="ScriptInput_OnKeyDown" TextChanged="ScriptInput_TextChanged" />
+                </DockPanel>
+            </ScrollViewer>
+        </DockPanel>
+        <DockPanel  Grid.Row="1">
+            <TextBlock Name="MsgWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Blue"/>
+            <TextBlock Name="ErrorsWindow" DockPanel.Dock="Bottom" Visibility="Collapsed" TextWrapping="Wrap" Foreground="Red"/>
+            <ScrollViewer DockPanel.Dock="Bottom">
+                <TextBlock Name="OutputWindow" Visibility="Visible" TextWrapping="Wrap" />
+            </ScrollViewer>
+        </DockPanel>
+        <GridSplitter Height="5"  Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+    </Grid>
 </UserControl>

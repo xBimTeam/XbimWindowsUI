@@ -244,7 +244,7 @@ namespace Xbim.Presentation
 
         private void Help_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/xBimTeam/XbimScripting/raw/master/Xbim.Script/BQL_documentation.pdf");
+            Process.Start("http://www.overarching.it/dload/BQL_documentation.pdf");
         }
 
         private void Example_Click(object sender, RoutedEventArgs e)
