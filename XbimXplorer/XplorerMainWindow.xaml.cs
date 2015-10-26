@@ -424,13 +424,17 @@ namespace XbimXplorer
 
         private void CreateWorker()
         {
-            _worker = new BackgroundWorker();
-            _worker.WorkerReportsProgress = true;
-            _worker.WorkerSupportsCancellation = true;
+            _worker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
             _worker.ProgressChanged += delegate(object s, ProgressChangedEventArgs args)
             {
+                if (args.ProgressPercentage < 0 || args.ProgressPercentage > 100) 
+                    return;
                 ProgressBar.Value = args.ProgressPercentage;
-                StatusMsg.Text = (string)args.UserState;
+                StatusMsg.Text = (string) args.UserState;
             };
 
             _worker.RunWorkerCompleted += delegate(object s, RunWorkerCompletedEventArgs args)
@@ -444,8 +448,6 @@ namespace XbimXplorer
                     StatusMsg.Text = "Ready";
 
                     AddRecentFile();
-
-
 
                     // todo: file extensions need to be registered to allow an easy use of the jumplist
                     // this is best done in the installer.
@@ -472,12 +474,10 @@ namespace XbimXplorer
                     //jumpList1.JumpItems.Add()
                     //JumpList.AddToRecentCategory(_openedModelFileName);
                     //jumpList1.Apply();
-
-
                 }
                 else //we have a problem
                 {
-                    var errMsg = args.Result as String;
+                    var errMsg = args.Result as string;
                     if (!string.IsNullOrEmpty(errMsg))
                         MessageBox.Show(this, errMsg, "Error Opening File",
                                         MessageBoxButton.OK, MessageBoxImage.Error,
@@ -1073,6 +1073,12 @@ namespace XbimXplorer
         {
             var handler = PropertyChanged;
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void OpenLoggingWindow(object sender, RoutedEventArgs e)
+        {
+            var lw = new LogViewer.LogViewer();
+            ShowPluginWindow(lw);
         }
     }
 }

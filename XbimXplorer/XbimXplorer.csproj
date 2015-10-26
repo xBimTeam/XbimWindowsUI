@@ -290,6 +290,12 @@
     <Compile Include="Dialogs\ExportWindow.xaml.cs">
       <DependentUpon>ExportWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LogViewer\EventAppender.cs" />
+    <Compile Include="LogViewer\EventViewModel.cs" />
+    <Compile Include="LogViewer\LogEventArgs.cs" />
+    <Compile Include="LogViewer\LogViewer.xaml.cs">
+      <DependentUpon>LogViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Querying\TreeQueryItem.cs" />
     <Compile Include="XplorerMainWindow.Plugins.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
@@ -304,6 +310,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LogViewer\LogViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

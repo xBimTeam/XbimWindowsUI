@@ -106,6 +106,7 @@
                 <MenuItem Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
                     <MenuItem Header="_Query" Click="OpenQuery" />
                     <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
+                    <MenuItem Header="_Logging" Click="OpenLoggingWindow" />
                 </MenuItem>
                 <Separator />
                 <MenuItem Header="_Settings" Click="DisplaySettingsPage" />
