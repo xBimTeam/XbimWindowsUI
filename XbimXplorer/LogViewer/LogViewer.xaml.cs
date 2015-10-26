@@ -46,20 +46,26 @@ namespace XbimXplorer.LogViewer
             foreach (var loggingEvent in e.LoggingEvents)
             {
                 var m = new EventViewModel(loggingEvent);
-                LoggedEvents.Add(m);
+                // LoggedEvents.Add(m);
 
-                if (Report.Dispatcher.CheckAccess())
+                App.Current.Dispatcher.BeginInvoke((Action)delegate()
                 {
-                    Report.Text += loggingEvent.RenderedMessage;
-                    Report.Text += loggingEvent.ExceptionObject.Message;
-                }
-                else
-                {
-                    Dispatcher.Invoke((Action)delegate()
-                    {
-                        Report.Text += loggingEvent.RenderedMessage;
-                    });
-                }
+                    LoggedEvents.Add(m);
+                });
+
+                //if (Report.Dispatcher.CheckAccess())
+                //{
+                //    Report.Text += loggingEvent.RenderedMessage;
+                //    Report.Text += loggingEvent.ExceptionObject.Message;
+                //}
+                //else
+                //{
+                //    Dispatcher.Invoke((Action)delegate()
+                //    {
+                //        Report.Text += loggingEvent.RenderedMessage;
+                //    });
+                //}
+
             }
         }
 

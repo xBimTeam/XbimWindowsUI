@@ -10,10 +10,8 @@
             <RowDefinition Height="*" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
+            <RowDefinition Height="Auto" ></RowDefinition>
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="1" x:Name="Report" TextWrapping="Wrap" Visibility="Collapsed" Text=""/>
-        <Button Grid.Row="2" Click="Test" Margin="270,0.2,0.4,0" Visibility="Collapsed" >Test</Button>
-        <Button Grid.Row="2" Click="Clear" Margin="5" >Clear</Button>
         <ListView Grid.Row="0"  x:Name="View" Margin="5" ItemsSource="{Binding LoggedEvents}" >
             <ListView.View>
                 <GridView>
@@ -24,5 +22,10 @@
                 </GridView>
             </ListView.View>
         </ListView>
+        
+        <TextBox Grid.Row="1" x:Name="Report" TextWrapping="Wrap" Visibility="Collapsed" Text=""/>
+        <Button Grid.Row="2" Click="Test" Visibility="Collapsed" Margin="5" >Test</Button>
+        <Button Grid.Row="3" Click="Clear" Margin="5" >Clear</Button>
+        
     </Grid>
 </UserControl>
