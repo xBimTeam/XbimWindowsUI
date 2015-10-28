@@ -118,7 +118,38 @@
                     <DataGridTemplateColumn Header="Image" Width="SizeToCells" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" />
+                                <ContentControl>
+                                    <ContentControl.Style>
+                                        <Style TargetType="{x:Type ContentControl}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Path=IsLabel}" Value="false">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" />
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                <DataTrigger Binding="{Binding Path=IsLabel}" Value="true">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <TextBlock Text="{Binding Path=Name}" Margin="5,0" FontWeight="Bold" >
+                                                                    <Hyperlink NavigateUri="{Binding Path=IfcUri}" Style="{Binding Source={StaticResource HyperlinkStyle}}">
+                                                                        <TextBlock Text=" #" /><TextBlock Text="{Binding Path=IfcLabel}"/>
+                                                                    </Hyperlink>
+                                                                </TextBlock>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                            </Style>
+                                        </ContentControl.Style>
+                                    </ContentControl>
+                                
+                                
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

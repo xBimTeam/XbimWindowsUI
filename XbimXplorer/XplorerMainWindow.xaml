@@ -181,9 +181,8 @@
                         <avalonDock:LayoutAnchorablePane>
                             <avalonDock:LayoutAnchorable Title="Properties" CanClose="False" >
                                 <xbim:IfcMetaDataControl x:Name="PropertiesControl" BorderThickness="1" Grid.Row="2"  
-                                                         SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow}"
-                                         Model="{Binding}"
-                />
+                                                         SelectedEntity="{Binding Path=SelectedItem, ElementName=MainWindow, Mode=TwoWay}"
+                                                         Model="{Binding}" />
                             </avalonDock:LayoutAnchorable>
                         </avalonDock:LayoutAnchorablePane>
                     </avalonDock:LayoutAnchorablePaneGroup>
