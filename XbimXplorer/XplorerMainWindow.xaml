@@ -228,6 +228,20 @@
             <StatusBarItem>
                 <Separator/>
             </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <WrapPanel Visibility="{Binding AnyErrors, ElementName=MainWindow}" PreviewMouseDown="ResetErrors" >
+                    <Ellipse Width="10" Height="10" Fill="Red" Margin="3,0" />
+                    <TextBlock Text="{Binding NumErrors, ElementName=MainWindow}" Margin="3,0" />
+                    <TextBlock> errors</TextBlock>
+                </WrapPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <WrapPanel Visibility="{Binding AnyWarnings, ElementName=MainWindow}" PreviewMouseDown="ResetErrors">
+                    <Ellipse Width="10" Height="10" Fill="Orange" Margin="3,0" />
+                    <TextBlock Text="{Binding NumWarnings, ElementName=MainWindow}" Margin="3,0" />
+                    <TextBlock> warnings</TextBlock>
+                </WrapPanel>
+            </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" Name="ProgressStatusBar" Visibility="Hidden">
                 <Grid>
 

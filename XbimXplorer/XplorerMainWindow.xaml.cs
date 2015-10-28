@@ -42,12 +42,17 @@ using Xbim.COBie;
 using XbimGeometry.Interfaces;
 using XbimXplorer.Dialogs;
 using System.Windows.Media.Imaging;
+using log4net;
+using log4net.Core;
+using log4net.Repository.Hierarchy;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Presentation.FederatedModel;
 using Xbim.Presentation.LayerStylingV2;
+using XbimXplorer.LogViewer;
 using XbimXplorer.Querying;
 using XbimXplorer.Scripting;
 using XbimXplorer.Properties;
+using Xceed.Wpf.AvalonDock.Layout;
 
 #endregion
 
@@ -58,6 +63,50 @@ namespace XbimXplorer
     /// </summary>
     public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
+
+        private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
+
+        private int _numErrors = 0;
+
+        public Visibility AnyErrors
+        {
+            get
+            {
+                if (_numErrors > 0)
+                    return Visibility.Visible;
+                return Visibility.Collapsed;
+            }
+        }
+
+        public int NumErrors
+        {
+            get
+            {
+                return _numErrors;
+            }
+        }
+
+        private int _numWarnings = 0;
+
+        public Visibility AnyWarnings
+        {
+            get
+            {
+                if (_numWarnings > 0)
+                    return Visibility.Visible;
+                return Visibility.Collapsed;
+            }
+        }
+
+        public int NumWarnings
+        {
+            get
+            {
+                return _numWarnings;
+            }
+        }
+
+
         private BackgroundWorker _worker;
         /// <summary>
         /// 
@@ -132,6 +181,8 @@ namespace XbimXplorer
         /// </summary>
         public string CoBieTemplate { get; set; }
 
+        private EventAppender appender;
+
         /// <summary>
         /// 
         /// </summary>
@@ -148,10 +199,32 @@ namespace XbimXplorer
 
             UserFilters = new FilterValues();//COBie Class filters, set to initial defaults
             CoBieTemplate = UkTemplate;
-
             
             if (Settings.Default.PluginStartupLoad)
                 RefreshPlugins();
+            
+        }
+
+        void appender_Logged(object sender, LogEventArgs e)
+        {
+            foreach (var loggingEvent in e.LoggingEvents)
+            {
+                if (loggingEvent.Level == Level.Error)
+                {
+                    _numErrors ++;
+                    if (_numErrors == 1)
+                        OnPropertyChanged("AnyErrors");
+                    OnPropertyChanged("NumErrors");
+                }
+
+                if (loggingEvent.Level == Level.Warn)
+                {
+                    _numWarnings++;
+                    if (_numWarnings == 1)
+                        OnPropertyChanged("AnyWarnings");
+                    OnPropertyChanged("NumWarnings");
+                }
+            }            
         }
 
         public Visibility DeveloperVisible
@@ -230,6 +303,17 @@ namespace XbimXplorer
             model.Initialise();
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
+
+
+            // logging information warnings
+            appender = new EventAppender();
+            appender.Tag = "MainWindow";
+            appender.Logged += appender_Logged;
+
+            var hier = LogManager.GetRepository() as Hierarchy;
+            if (hier != null)
+                hier.Root.AddAppender(appender);
+
         }
 
         void XplorerMainWindow_Closed(object sender, EventArgs e)
@@ -1077,8 +1161,44 @@ namespace XbimXplorer
 
         private void OpenLoggingWindow(object sender, RoutedEventArgs e)
         {
-            var lw = new LogViewer.LogViewer();
-            ShowPluginWindow(lw);
+            OpenOrFocusLoggingWindow();
+        }
+
+        private LayoutContent logWindow;
+
+        private bool OpenOrFocusLoggingWindow()
+        {
+            if (logWindow == null)
+            {
+                var lw = new LogViewer.LogViewer();
+                logWindow = ShowPluginWindow(lw, true);
+                logWindow.Closed += LogWindowOnClosed;
+                return true;
+            }
+            logWindow.IsActive = true;
+            return false;
+        }
+
+        private void LogWindowOnClosed(object sender, EventArgs eventArgs)
+        {
+            logWindow = null;
+        }
+
+        private void ResetErrors(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                if (OpenOrFocusLoggingWindow())
+                    Log.Info("Log is not retained before logging window is opened. You will have to repeat the operation to be investigated.");
+            }
+            else if (e.RightButton == MouseButtonState.Pressed)
+            {
+                _numErrors = 0;
+                OnPropertyChanged("AnyErrors");
+                OnPropertyChanged("NumErrors");
+                OnPropertyChanged("AnyWarnings");
+                OnPropertyChanged("NumWarnings");
+            }
         }
     }
 }

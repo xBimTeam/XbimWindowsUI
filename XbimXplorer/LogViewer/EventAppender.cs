@@ -8,6 +8,8 @@ namespace XbimXplorer.LogViewer
     {
         // Note, you will probably have to override other things here.
 
+        public string Tag;
+
         // The lock for the event.
         private readonly object _eventLock = new object();
 

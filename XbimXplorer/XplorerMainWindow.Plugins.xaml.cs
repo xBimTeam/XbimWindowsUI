@@ -37,19 +37,18 @@ namespace XbimXplorer
             var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             if (!string.IsNullOrWhiteSpace(path))
                 path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (path != null)
-            {
-                path = Path.Combine(path, "Plugins");
+            if (path == null) 
+                return;
+            path = Path.Combine(path, "Plugins");
 
-                DirectoryInfo di = new DirectoryInfo(path);
-                if (!di.Exists)
-                    return;
-                var dirs = di.GetDirectories();
-                foreach (var dir in dirs)
-                {
-                    string fullAssemblyName = Path.Combine(dir.FullName, dir.Name + ".exe");
-                    LoadPlugin(fullAssemblyName);
-                }
+            var di = new DirectoryInfo(path);
+            if (!di.Exists)
+                return;
+            var dirs = di.GetDirectories();
+            foreach (var dir in dirs)
+            {
+                var fullAssemblyName = Path.Combine(dir.FullName, dir.Name + ".exe");
+                LoadPlugin(fullAssemblyName);
             }
         }
 
@@ -85,30 +84,24 @@ namespace XbimXplorer
                     }
                     if (asmName.Name.Equals(refReq.Name))
                     {
-                        //byte[] token = asmName.GetPublicKeyToken();
-                        //string stoken = "";
-                        //if(token != null && token.Length>0)  
-                        //    stoken = token.Select(x => x.ToString("x2")).Aggregate((x, y) => x + y);  
-
                         Debug.WriteLine("Versioning issues:\r\n" +
                                 "Required -> {0}\r\n" +
                                 "Loaded   -> {1}", refReq.FullName, asmName.FullName);
                     }
                 }
-                if (!reqFound)
+                if (reqFound) 
+                    continue;
+                Log.DebugFormat("Will need to load: {0}", refReq.FullName);
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+                try
                 {
-                    Debug.WriteLine(string.Format("Will need to load: {0}", refReq.FullName));
-                    AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-                    try
-                    {
-                        Assembly.Load(refReq);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Problem loading assembly " + refReq + " for " + fullAssemblyName + ", " + ex.Message);
-                    }
-                    AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+                    Assembly.Load(refReq);
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Problem loading assembly " + refReq + " for " + fullAssemblyName + ", " + ex.Message);
+                }
+                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             }
             ICollection<Type> types = new List<Type>();
             try
@@ -155,46 +148,60 @@ namespace XbimXplorer
         Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
             var parts = args.Name.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-            string fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".exe");
+            var fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".exe");
             if (File.Exists(fName))
                 return Assembly.LoadFile(fName);
             fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".dll");
-            if (File.Exists(fName))
-                return Assembly.LoadFile(fName);
-            return null;
+            return File.Exists(fName) 
+                ? Assembly.LoadFile(fName) 
+                : null;
         }
 
-        private void ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow)
+        private LayoutContent ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
         {
-            if (pluginWindow is UserControl)
-            {
-                // preparing user control
-                UserControl uc = pluginWindow as UserControl;
-                uc.HorizontalAlignment = HorizontalAlignment.Stretch;
-                uc.VerticalAlignment = VerticalAlignment.Stretch;
-                //set data binding
-                pluginWindow.BindUi(MainWindow);
+            if (!(pluginWindow is UserControl))
+                return null;
+            // preparing user control
+            var uc = pluginWindow as UserControl;
+            uc.HorizontalAlignment = HorizontalAlignment.Stretch;
+            uc.VerticalAlignment = VerticalAlignment.Stretch;
+            //set data binding
+            pluginWindow.BindUi(MainWindow);
 
-                // add into UI
-                if (pluginWindow.DefaultUiContainer == PluginWindowDefaultUiContainerEnum.LayoutDoc)
+            // add into UI
+            switch (pluginWindow.DefaultUiContainer)
+            {
+                case PluginWindowDefaultUiContainerEnum.LayoutDoc:
                 {
                     // layout document mode
-                    LayoutDocument ld = new LayoutDocument();
-                    ld.Title = pluginWindow.WindowTitle;
-                    ld.Content = uc;
+                    var ld = new LayoutDocument
+                    {
+                        Title = pluginWindow.WindowTitle,
+                        Content = uc
+                    };
                     MainDocPane.Children.Add(ld);
+                    if (setCurrent)
+                        ld.IsActive = true;
+                    return ld;
+                    
                 }
-                else if (pluginWindow.DefaultUiContainer == PluginWindowDefaultUiContainerEnum.LayoutAnchorable)
+                case PluginWindowDefaultUiContainerEnum.LayoutAnchorable:
                 {
-                    LayoutAnchorablePaneGroup pg = GetRightPane();
-                    LayoutAnchorablePane lap = new LayoutAnchorablePane();
+                    var pg = GetRightPane();
+                    var lap = new LayoutAnchorablePane();
                     pg.Children.Add(lap);
-                    LayoutAnchorable ld = new LayoutAnchorable();
-                    ld.Title = pluginWindow.WindowTitle;
-                    ld.Content = uc;
+                    var ld = new LayoutAnchorable
+                    {
+                        Title = pluginWindow.WindowTitle,
+                        Content = uc
+                    };
                     lap.Children.Add(ld);
+                    if (setCurrent)
+                        ld.IsActive = true;
+                    return ld;
                 }
             }
+            return null;
         }
 
         LayoutAnchorablePaneGroup _rightPane;
