@@ -13,9 +13,12 @@
 #region Directives
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -86,6 +89,13 @@ namespace Xbim.Presentation
         {
             InitializeComponent();
             TheTabs.SelectionChanged += TheTabs_SelectionChanged;
+
+            _objectGroups = new ListCollectionView(_objectProperties);
+            if (_objectGroups.GroupDescriptions != null)
+            {
+                _objectGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+                _objectGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+            }
             _propertyGroups = new ListCollectionView(_properties);
             if (_propertyGroups.GroupDescriptions != null)
             {
@@ -137,6 +147,13 @@ namespace Xbim.Presentation
         public ListCollectionView MaterialGroups
         {
             get { return _materialGroups; }
+        }
+
+        private readonly ListCollectionView _objectGroups;
+
+        public ListCollectionView ObjectGroups
+        {
+            get { return _objectGroups; }
         }
 
         private readonly ObservableCollection<PropertyItem> _objectProperties = new ObservableCollection<PropertyItem>();
@@ -277,7 +294,8 @@ namespace Xbim.Presentation
                 var modelUnits = _entity.ModelOf.Instances.OfType<IfcUnitAssignment>().FirstOrDefault();
                 // not optional, should never return void in valid model
 
-                
+                if (asIfcTypeObject.HasPropertySets == null)
+                    return;
                 foreach (var pSet in asIfcTypeObject.HasPropertySets.OfType<IfcElementQuantity>())
                 {
                     AddQuantityPSet(pSet, modelUnits);
@@ -327,6 +345,8 @@ namespace Xbim.Presentation
             else if (_entity is IfcTypeObject)
             {
                 var asIfcTypeObject = _entity as IfcTypeObject;
+                if (asIfcTypeObject.HasPropertySets == null)
+                    return;
                 foreach (var pSet in asIfcTypeObject.HasPropertySets.OfType<IfcPropertySet>())
                 {
                     AddPropertySet(pSet);
@@ -429,27 +449,135 @@ namespace Xbim.Presentation
             }
         }
 
+        private void ReportProp(IPersistIfcEntity entity, IfcMetaProperty prop, bool verbose)
+        {
+            var propVal = prop.PropertyInfo.GetValue(entity, null);
+            if (propVal == null)
+            {
+                if (!verbose)
+                    return;
+                propVal = "<null>";
+            }
+            
+            if (prop.IfcAttribute.IsEnumerable)
+            {
+                var propCollection = propVal as IEnumerable<object>;
+                
+                if (propCollection != null)
+                {
+                    var propVals = propCollection.ToArray();
+
+                    switch (propVals.Length)
+                    {
+                        case 0:
+                            if (!verbose)
+                                return;
+                            _objectProperties.Add(new PropertyItem { Name = prop.PropertyInfo.Name, Value = "<empty>", PropertySetName = "General" });
+                            break;
+                        case 1:
+                            var tmpSingle = GetPropItem(propVals[0]);
+                            tmpSingle.Name = prop.PropertyInfo.Name + " (∞)";
+                            tmpSingle.PropertySetName = "General";
+                            _objectProperties.Add(tmpSingle);
+                            break;
+                        default:
+                            foreach (var item in propVals)
+                            {
+                                var tmpLoop = GetPropItem(item);
+                                tmpLoop.Name = item.GetType().Name;
+                                tmpLoop.PropertySetName = prop.PropertyInfo.Name;
+                                _objectProperties.Add(tmpLoop);
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    if (!verbose)
+                        return;
+                    _objectProperties.Add(new PropertyItem { Name = prop.PropertyInfo.Name, Value = "<not an enumerable>" });
+                }
+            }
+            else
+            {
+                var tmp = GetPropItem(propVal);
+                tmp.Name = prop.PropertyInfo.Name;
+                tmp.PropertySetName = "General";
+                _objectProperties.Add(tmp);
+            }
+        }
+
+        private PropertyItem GetPropItem(object propVal)
+        {
+            var retItem = new PropertyItem();
+
+            var pe = propVal as IPersistIfcEntity;
+            var propLabel = 0;
+            if (pe != null)
+            {
+                propLabel = pe.EntityLabel;
+            }
+            var ret = propVal.ToString();
+            if (ret == propVal.GetType().FullName)
+            {
+                ret = propVal.GetType().Name;
+            }
+
+            retItem.Value = ret;
+            retItem.IfcLabel = propLabel;
+
+            return retItem;
+        }
+
         private void FillObjectData()
         {
             if (_objectProperties.Count > 0) 
                 return; //don't fill unless empty
             if (_entity == null) 
                 return;
+
+            _objectProperties.Add(new PropertyItem { Name = "Ifc Label", Value = "#" + _entity.EntityLabel, PropertySetName = "General" });
+
             var ifcType = IfcMetaData.IfcType(_entity);
-            _objectProperties.Add(new PropertyItem {Name = "Type", Value = ifcType.Type.Name});
-            _objectProperties.Add(new PropertyItem {Name = "Ifc Label", Value = "#" + _entity.EntityLabel});
+            _objectProperties.Add(new PropertyItem {Name = "Type", Value = ifcType.Type.Name, PropertySetName = "General"});
+
+            var ifcObj = _entity as IfcObject;
+            if (ifcObj != null)
+            {
+                var typeEntity = ifcObj.GetDefiningType();
+                if (typeEntity != null)
+                {
+                    _objectProperties.Add(new PropertyItem { Name = "Defining Type", Value = typeEntity.Name, PropertySetName = "General", IfcLabel = typeEntity.EntityLabel });
+                }
+            }
+
+            var props = ifcType.IfcProperties.Values;
+            foreach (var prop in props)
+            {
+                ReportProp(_entity, prop, ChkVerbose.IsChecked.HasValue && ChkVerbose.IsChecked.Value);
+            }
+            var invs = ifcType.IfcInverses;
+            
+            foreach (var inverse in invs)
+            {
+                ReportProp(_entity, inverse, false);
+            }
+
+            
+
             var root = _entity as IfcRoot;
-            if (root == null) 
+            if (root == null)
                 return;
-            _objectProperties.Add(new PropertyItem {Name = "Name", Value = root.Name});
-            _objectProperties.Add(new PropertyItem {Name = "Description", Value = root.Description});
-            _objectProperties.Add(new PropertyItem {Name = "GUID", Value = root.GlobalId});
+            _objectProperties.Add(new PropertyItem {Name = "Name", Value = root.Name, PropertySetName = "OldUI"});
+            _objectProperties.Add(new PropertyItem { Name = "Description", Value = root.Description, PropertySetName = "OldUI" });
+            _objectProperties.Add(new PropertyItem { Name = "GUID", Value = root.GlobalId, PropertySetName = "OldUI" });
             _objectProperties.Add(new PropertyItem
             {
                 Name = "Ownership",
                 Value =
                     root.OwnerHistory.OwningUser + " using " +
-                    root.OwnerHistory.OwningApplication.ApplicationIdentifier
+                    root.OwnerHistory.OwningApplication.ApplicationIdentifier,
+                PropertySetName = "OldUI"
             });
             //now do properties in further specialisations that are text labels
             foreach (var pInfo in ifcType.IfcProperties.Where
@@ -463,7 +591,8 @@ namespace Xbim.Presentation
                 var pi = new PropertyItem
                 {
                     Name = pInfo.Value.PropertyInfo.Name,
-                    Value = ((ExpressType) val).ToPart21
+                    Value = ((ExpressType) val).ToPart21,
+                    PropertySetName = "OldUI"
                 };
                 _objectProperties.Add(pi);
             }
@@ -606,6 +735,12 @@ namespace Xbim.Presentation
                 }
             }
 
+        }
+
+        private void CheckBoxChanged(object sender, RoutedEventArgs e)
+        {
+            _objectProperties.Clear();
+            FillObjectData();
         }
     }
 }
