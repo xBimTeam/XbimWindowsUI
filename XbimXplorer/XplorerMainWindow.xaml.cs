@@ -24,7 +24,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Gat.Controls;
 using Microsoft.Win32;
 using Xbim.IO;
 using Xbim.Presentation;
@@ -1022,33 +1021,8 @@ namespace XbimXplorer
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            var about = new About
-            {
-                Title = "xBIM Xplorer",
-                Hyperlink = new Uri("https://github.com/xBimTeam", UriKind.Absolute),
-                HyperlinkText = "https://github.com/xBimTeam",
-                Publisher = "xBIM Team - Steve Lockley",
-                Description = "This application is designed to demonstrate potential usages of the xBIM toolkit",
-                ApplicationLogo =
-                    new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute)),
-                Copyright = "xBIM Team",
-                AdditionalNotes =
-                    "The xBIM toolkit is an Open Source software initiative to help software developers and " +
-                    "researchers to support the next generation of BIM tools; unlike other open source application " +
-                    "xBIM license is compatible with commercial environments (https://github.com/xBimTeam/XbimEssentials/blob/master/LICENCE.md)"
-            };
-            //
-            // about.PublisherLogo = about.ApplicationLogo;
-            if (Model != null)
-            {
-                about.AdditionalNotes += "\r\n\r\nGeometry information:\r\n";
-                about.AdditionalNotes += string.Format("{0}: {1}\r\n", Model.DatabaseName, Model.GeometrySupportLevel);
-                foreach (var subModel in Model.ReferencedModels)
-                {
-                    about.AdditionalNotes += string.Format("{0}: {1}\r\n", subModel.Model.DatabaseName, subModel.Model.GeometrySupportLevel);    
-                }
-            }
-            about.Show();
+            var w = new AboutWindow {Model = Model};
+            w.Show();
         }
 
         private void UKTemplate_Click(object sender, RoutedEventArgs e)
