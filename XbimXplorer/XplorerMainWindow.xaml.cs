@@ -1168,6 +1168,7 @@ namespace XbimXplorer
             else if (e.RightButton == MouseButtonState.Pressed)
             {
                 _numErrors = 0;
+                _numWarnings = 0;
                 OnPropertyChanged("AnyErrors");
                 OnPropertyChanged("NumErrors");
                 OnPropertyChanged("AnyWarnings");
