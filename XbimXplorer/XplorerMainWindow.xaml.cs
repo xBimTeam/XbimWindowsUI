@@ -303,7 +303,6 @@ namespace XbimXplorer
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
 
-
             // logging information warnings
             appender = new EventAppender();
             appender.Tag = "MainWindow";
@@ -696,6 +695,7 @@ namespace XbimXplorer
                     ModelProvider.ObjectInstance = null;
                     ModelProvider.Refresh();
                 }
+                SetDefaultModeStyler(null, null);
             }
             finally
             {
