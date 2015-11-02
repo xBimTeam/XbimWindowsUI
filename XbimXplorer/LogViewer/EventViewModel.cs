@@ -16,6 +16,11 @@ namespace XbimXplorer.LogViewer
         }
 
 
+        public string Logger
+        {
+            get { return loggingEvent.LoggerName; }
+        }
+
         public string Message
         {
             get { return loggingEvent.RenderedMessage; }
