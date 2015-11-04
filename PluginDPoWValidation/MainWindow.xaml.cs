@@ -1,24 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Diagnostics;
+using log4net;
+using Microsoft.Win32;
+using Xbim.CobieLiteUK.Validation;
+using Xbim.COBieLiteUK;
+using Xbim.IO;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 using Xbim.XbimExtensions.Interfaces;
-using System.IO;
-using System.Linq;
-using Microsoft.Win32;
-using Xbim.COBieLiteUK;
-using Xbim.IO;
-using System.Collections.ObjectModel;
-using Xbim.CobieLiteUK.Validation;
 
-namespace Validation
+namespace XplorerPlugins.DPoWValidation
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -26,13 +25,14 @@ namespace Validation
     [XplorerUiElement]
     public partial class MainWindow : UserControl, IXbimXplorerPluginWindow 
     {
+        private static readonly ILog Log = LogManager.GetLogger("XplorerPlugins.DPoWValidation.MainWindow");
+
         public MainWindow()
         {
             InitializeComponent();
             IsFileOpen = false;
         }
         // xml navigation sample at http://support.microsoft.com/kb/308333
-
 
         private void OpenFile(object sender, RoutedEventArgs e)
         {
@@ -148,7 +148,6 @@ namespace Validation
             switch (e.Property.Name)
             {
                 case "Model":
-                {
                     var model = e.NewValue as XbimModel;
                     if (model != null)
                     {
@@ -158,15 +157,15 @@ namespace Validation
                         }
                         catch (Exception ex)
                         {
+                            Log.Error( "Error in generating Facility from model " + model.DatabaseName, ex);
                             ctrl.ModelFacility = null;
                         }
                     }
                     else
+                    {
                         ctrl.ModelFacility = null;
-                    // ctrl.FacilityViewer.DataContext = new DPoWFacilityViewModel(ctrl.ModelFacility);
+                    }
                     ctrl.TestValidation();
-
-                }
                     break;
                 case "SelectedEntity":
                     break;

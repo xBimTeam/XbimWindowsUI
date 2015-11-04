@@ -71,13 +71,13 @@ namespace MyProject
             files.AddRange(directoryToSearch.GetFiles("*.exe", SearchOption.AllDirectories));
             foreach (var file in files)
             {
-                Assembly a = null;
                 try
                 {
                     ret.Add(Assembly.LoadFile(file.FullName));
                 }
                 catch (Exception ex)
                 {
+                    Debug.Write(ex.Message);
                 }
             }
             return ret;
