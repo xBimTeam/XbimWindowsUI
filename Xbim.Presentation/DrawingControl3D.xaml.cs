@@ -10,7 +10,7 @@
 
 #endregion
 
-#define DOPARALLEL
+//#define DOPARALLEL
 
 #region Directives
 
@@ -18,10 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+// ReSharper disable once RedundantUsingDirective // useful when re-implementing parallel
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -46,6 +46,7 @@ using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.ModelGeomInfo;
 using Xbim.XbimExtensions.Interfaces;
 using XbimGeometry.Interfaces;
+using Xbim.Ifc2x3.PresentationAppearanceResource;
 
 #endregion
 
@@ -304,9 +305,6 @@ namespace Xbim.Presentation
             var snd = sender as HelixViewport3D;
             if (snd == null)
                 return;
-
-            // Debug.WriteLine("UpdatefrustumPlanes " + DateTime.Now);
-
             var middlePoint = _viewBounds.Centroid();
             var centralDistance = Math.Sqrt(
                 Math.Pow(snd.Camera.Position.X, 2) + Math.Pow(middlePoint.X, 2) +
@@ -339,7 +337,7 @@ namespace Xbim.Presentation
 
         protected virtual void DrawingControl3D_Loaded(object sender, RoutedEventArgs e)
         {
-            ShowSpaces = false;
+            
         }
 
         #region Fields
@@ -502,7 +500,7 @@ namespace Xbim.Presentation
                     mc = MouseModifierKeyBehaviour[Keyboard.Modifiers];
                 if (mc != XbimMouseClickActions.Measure)
                 {
-                    // drop the geometry for the measure visualization
+                    // drop the geometry that holds the visualization of the measure
                     // FurtherGeometries.Content = null;
                     UserModeledDimension.Clear();
                     FirePrevPointsChanged();
@@ -542,7 +540,6 @@ namespace Xbim.Presentation
                                 UserModeledDimension.RemoveLast();
                             else
                                 UserModeledDimension.Add(p);
-                            Debug.WriteLine(UserModeledDimension.ToString());
                             FirePrevPointsChanged();
                             break;
                         case XbimMouseClickActions.SetClip:
@@ -564,7 +561,7 @@ namespace Xbim.Presentation
 
         protected virtual void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            Console.WriteLine(e.Delta);
+            
         }
 
         protected virtual ILayerStyler GetCurrentLayerStyler()
@@ -779,11 +776,7 @@ namespace Xbim.Presentation
             MultipleSelection
         }
 
-#if DEBUG
         public SelectionBehaviours SelectionBehaviour = SelectionBehaviours.MultipleSelection;
-#else
-        public SelectionBehaviours SelectionBehaviour = SelectionBehaviours.SingleSelection;
-#endif
 
         public EntitySelection Selection
         {
@@ -956,6 +949,11 @@ namespace Xbim.Presentation
 
         #region TypesShowHide
 
+        /// <summary>
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         public bool ShowSpaces
         {
             get { return (bool) GetValue(ShowSpacesProperty); }
@@ -969,17 +967,14 @@ namespace Xbim.Presentation
 
         private static void OnShowSpacesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var d3D = d as DrawingControl3D;
-            if (d3D == null)
-                return;
-            if (!(e.NewValue is bool))
-                return;
-            if ((bool) e.NewValue)
-                d3D.Show<IfcSpace>();
-            else
-                d3D.Hide<IfcSpace>();
+            // function has been emptied, as Show<T> is now obsolete.
         }
 
+        /// <summary>
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         public bool ShowWalls
         {
             get { return (bool) GetValue(ShowWallsProperty); }
@@ -1005,6 +1000,11 @@ namespace Xbim.Presentation
                 d3D.HideAll();
         }
 
+        /// <summary>
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         public bool ShowDoors
         {
             get { return (bool) GetValue(ShowDoorsProperty); }
@@ -1018,18 +1018,14 @@ namespace Xbim.Presentation
 
         private static void OnShowDoorsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var d3D = d as DrawingControl3D;
-            if (d3D == null)
-                return;
-            if (!(e.NewValue is bool))
-                return;
-            var @on = (bool) e.NewValue;
-            if (@on)
-                d3D.Show<IfcDoor>();
-            else
-                d3D.Hide<IfcDoor>();
+            // function has been emptied, as Show<T> is now obsolete.
         }
 
+        /// <summary>
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         public bool ShowWindows
         {
             get { return (bool) GetValue(ShowWindowsProperty); }
@@ -1043,15 +1039,7 @@ namespace Xbim.Presentation
 
         private static void OnShowWindowsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var d3D = d as DrawingControl3D;
-            if (d3D == null)
-                return;
-            if (!(e.NewValue is bool))
-                return;
-            if ((bool) e.NewValue)
-                d3D.Show<IfcWindow>();
-            else
-                d3D.Hide<IfcWindow>();
+            // function has been emptied, as Show<T> is now obsolete.
         }
 
         public bool ShowSlabs
@@ -1067,17 +1055,14 @@ namespace Xbim.Presentation
 
         private static void OnShowSlabsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var d3D = d as DrawingControl3D;
-            if (d3D == null)
-                return;
-            if (!(e.NewValue is bool))
-                return;
-            if ((bool) e.NewValue)
-                d3D.Show<IfcSlab>();
-            else
-                d3D.Hide<IfcSlab>();
+            // function has been emptied, as Show<T> is now obsolete.
         }
 
+        /// <summary>
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         public bool ShowFurniture
         {
             get { return (bool) GetValue(ShowFurnitureProperty); }
@@ -1091,15 +1076,7 @@ namespace Xbim.Presentation
 
         private static void OnShowFurnitureChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var d3D = d as DrawingControl3D;
-            if (d3D == null)
-                return;
-            if (!(e.NewValue is bool))
-                return;
-            if ((bool) e.NewValue)
-                d3D.Show<IfcFurnishingElement>();
-            else
-                d3D.Hide<IfcFurnishingElement>();
+            // function has been emptied, as Show<T> is now obsolete.
         }
 
         #endregion
@@ -1185,7 +1162,6 @@ namespace Xbim.Presentation
                 // ReSharper disable once ConvertIfStatementToReturnStatement
                 if (oFilter.GetType() == typeof (MeshVisual3D))
                     return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
-                // Debug.WriteLine(oFilter.GetType());
                 return HitTestFilterBehavior.Continue;
             };
 
@@ -1360,8 +1336,6 @@ namespace Xbim.Presentation
             {
                 LoadReferencedModel(refModel);
             }
-            ShowSpaces = false;
-
             RecalculateView();
         }
 
@@ -1548,18 +1522,10 @@ namespace Xbim.Presentation
 
                 var groupedHandlers = layerStyler.GroupLayers(handles);
                 // build dictionary for fast lookup
-                var dic = new Dictionary<int, int>();
-                foreach (var Shape in  ModelPositions[model].Context.ShapeInstances())
-                {
-                    dic.Add(Shape.InstanceLabel, Shape.ShapeGeometryLabel);
-                }
+                var dic = ModelPositions[model].Context.ShapeInstances().ToDictionary(shape => shape.InstanceLabel, shape => shape.ShapeGeometryLabel);
 
                 foreach (var layerName in groupedHandlers.Keys)
                 {
-                    var timer = new Stopwatch();
-
-                    timer.Start();
-
                     var layer = layerStyler.GetLayer(layerName, model, scene);
                     var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
                     var targetMergeMeshByStyle = ((WpfMeshGeometry3D) layer.Visible);
@@ -1570,12 +1536,31 @@ namespace Xbim.Presentation
                     var hndls = groupedHandlers[layerName];
                     foreach (var handle in hndls)
                     {
+                        var tgt = targetMergeMeshByStyle;
+
                         var shapeInstance =
                             ModelPositions[model].Context.ShapeInstancesOf(dic[handle.GeometryLabel])
                                 .FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
 
                         if (shapeInstance == null)
                             continue;
+
+                        if (LayerStyler.UseIfcSubStyles && shapeInstance.HasStyle)
+                        {
+                            var sublayerName = shapeInstance.StyleLabel.ToString();
+                            XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> sub;
+                            if (layer.SubLayers.Contains(sublayerName))
+                                sub = layer.SubLayers[sublayerName];
+                            else
+                            {
+                                var style = model.InstancesLocal[shapeInstance.StyleLabel] as IfcSurfaceStyle;
+                                sub = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, style) { Name = sublayerName };
+                                layer.SubLayers.Add(sub);
+                            }
+                            tgt = ((WpfMeshGeometry3D) sub.Visible);
+                            tgt.BeginUpdate();
+                        }
+
                         IXbimShapeGeometryData shapeGeom =
                             ModelPositions[model].Context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 
@@ -1584,7 +1569,7 @@ namespace Xbim.Presentation
                         {
                             case XbimGeometryType.Polyhedron:
                                 var shapePoly = (XbimShapeGeometry) shapeGeom;
-                                targetMergeMeshByStyle.Add(
+                                tgt.Add(
                                     shapePoly.ShapeData,
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
@@ -1594,7 +1579,7 @@ namespace Xbim.Presentation
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
-                                targetMergeMeshByStyle.Add(
+                                tgt.Add(
                                     shapeGeom.ShapeData,
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
@@ -1605,6 +1590,10 @@ namespace Xbim.Presentation
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
+                        if (tgt != targetMergeMeshByStyle)
+                        {
+                            tgt.EndUpdate();
+                        }
                     }
                     targetMergeMeshByStyle.EndUpdate();
 
@@ -1614,9 +1603,7 @@ namespace Xbim.Presentation
                     {
                         scene.Add(layer);
                     }
-                    Debug.Print("{0} in {1}", layerName, timer.ElapsedMilliseconds);
                 }
-
             }
             if (_hideAfterLoad != null)
                 Dispatcher.BeginInvoke(new Action(() => Hide(_hideAfterLoad)), DispatcherPriority.Background);
@@ -1701,8 +1688,11 @@ namespace Xbim.Presentation
         }
 
         /// <summary>
-        /// Hides all instances of the specified type
+        /// This function used to hide all instances of the specified type
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
         /// </summary>
+        [Obsolete]
         public void Hide<T>()
         {
             var ifcType = IfcMetaData.IfcType(typeof (T));
@@ -1717,6 +1707,12 @@ namespace Xbim.Presentation
             set { _hideAfterLoad = value; }
         }
 
+        /// <summary>
+        /// This function used to hide all instances of the specified type
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         protected void Hide(IfcType ifcType, bool hideSubTypes = true)
         {
             var toHide = new List<string> {ifcType.Name};
@@ -1750,36 +1746,24 @@ namespace Xbim.Presentation
             return ret;
         }
 
+        
+        /// This mechanism for showing/hiding layers is not available any more, layerStylers have to be used instead
+        [Obsolete]
         public void Hide(int hideProduct)
-        {
-            //ModelVisual3D item;
-            //if (_items.TryGetValue(hideProduct, out item))
-            //{
-            //    ModelVisual3D parent = VisualTreeHelper.GetParent(item) as ModelVisual3D;
-            //    if (parent != null)
-            //    {
-            //        _hidden.Add(item, parent);
-            //        parent.Children.Remove(item);
-            //    }
-            //    return;
-            //}
+        {            
         }
 
-        private void Show<T>()
-        {
-            var ifcType = IfcMetaData.IfcType(typeof (T));
-            Show(ifcType);
-        }
-
+        /// <summary>
+        /// This mechanism for showing/hiding layers is not reliable any more.
+        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
+        /// </summary>
+        [Obsolete]
         protected void Show(IfcType ifcType)
         {
             var toShow = ifcType.Name + ";";
-            foreach (var subType in ifcType.NonAbstractSubTypes)
-                toShow += subType.Name + ";";
-            foreach (var scene in Scenes)
-                foreach (var layer in scene.SubLayers) //go over top level layers only
-                    if (toShow.Contains(layer.Name + ";"))
-                        layer.ShowAll();
+            toShow = ifcType.NonAbstractSubTypes.Aggregate(toShow, (current, subType) => current + (subType.Name + ";"));
+            foreach (var eachSublayerInScenes in from scene in Scenes from eachSublayerInScenes in scene.SubLayers where toShow.Contains(eachSublayerInScenes.Name + ";") select eachSublayerInScenes)
+                eachSublayerInScenes.ShowAll();
         }
 
         public void ShowAll()
@@ -1871,10 +1855,8 @@ namespace Xbim.Presentation
             }
             if (r3D.IsEmpty)
                 return;
-            if (r3D.Contains(bounds)) // if bigger than bounds zoom bounds
-                Viewport.ZoomExtents(bounds, 200);
-            else
-                Viewport.ZoomExtents(r3D, 200);
+            // if bigger than bounds zoom bounds
+            Viewport.ZoomExtents(r3D.Contains(bounds) ? bounds : r3D, 200);
         }
 
         public void ZoomTo(XbimRect3D r3D)
@@ -1894,7 +1876,7 @@ namespace Xbim.Presentation
             Viewport.Children.Add(_octreeVisualization);
         }
 
-        private ModelVisual3D _octreeVisualization = new ModelVisual3D();
+        private readonly ModelVisual3D _octreeVisualization = new ModelVisual3D();
 
         private void ShowOctree<T>(XbimOctree<T> octree, int specificLevel = -1, bool onlyWithContent = false)
         {
