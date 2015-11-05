@@ -1283,7 +1283,7 @@ namespace Xbim.Presentation
 
             if (model == null)
             {
-                RecalculateView();
+                RecalculateView(options);
                 return; //nothing to show
             }
 
@@ -1336,7 +1336,7 @@ namespace Xbim.Presentation
             {
                 LoadReferencedModel(refModel);
             }
-            RecalculateView();
+            RecalculateView(options);
         }
 
         private void DefineModelTranslation()
