@@ -1559,6 +1559,7 @@ namespace Xbim.Presentation
                             }
                             tgt = ((WpfMeshGeometry3D) sub.Visible);
                             tgt.BeginUpdate();
+                            tgt.WpfModel.SetValue(TagProperty, tgt);
                         }
 
                         IXbimShapeGeometryData shapeGeom =
