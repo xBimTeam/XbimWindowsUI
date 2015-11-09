@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
       <id>Xbim.WindowsUI</id>
-      <version>3.1.10-V0024</version>
+      <version>3.1.10-V0025</version>
       <title>xBIM WindowsUI</title>
       <authors>xBIM team</authors>
       <owners>xBIM team</owners>
@@ -19,10 +19,9 @@ IOS and Android versions are under development.</description>
     <releaseNotes>3.1 produces net40 signed DLLs.
     3.0 contains the first Nuget release of the BIM Query Language aligned with revamped geometry engine.</releaseNotes>
     <language>en-GB</language>
-    <tags>BIM, IFC, IfcXml, IfcZip, COBie, COBieLite, BIMQL, BIM Query Langauge, .Net, C#, BuildingSmart</tags>
+    <tags>BIM, IFC, IfcXml, IfcZip, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <!-- the solution needs Xbim.Scripting, but Presentation actually only needs Xbim.Geometry at the moment. -->
-      <dependency id="Xbim.Scripting" version="3.1.11-V0003" />
+      <dependency id="Xbim.Geometry" version="3.1.13-V0001" />
       <dependency id="HelixToolkit" version="2015.1.545" />
       <dependency id="PropertyTools.Wpf" version="2015.1.66" />
     </dependencies>

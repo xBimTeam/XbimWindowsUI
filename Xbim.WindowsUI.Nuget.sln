@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XplorerPlugins.Scripting", "XplorerPlugins.Scripting\XplorerPlugins.Scripting.csproj", "{B1BCF899-6B2E-4A99-8998-AA946FC64F3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XplorerPlugins.Cobie", "XplorerPlugins.Cobie\XplorerPlugins.Cobie.csproj", "{771CDB24-CB35-4669-A8AC-4A13800667FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{B1BCF899-6B2E-4A99-8998-AA946FC64F3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1BCF899-6B2E-4A99-8998-AA946FC64F3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1BCF899-6B2E-4A99-8998-AA946FC64F3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{771CDB24-CB35-4669-A8AC-4A13800667FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{771CDB24-CB35-4669-A8AC-4A13800667FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{771CDB24-CB35-4669-A8AC-4A13800667FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{771CDB24-CB35-4669-A8AC-4A13800667FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,5 +73,6 @@ Global
 		{845161EC-C065-413E-8B0B-C4C1D2C6449D} = {0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}
 		{935963BB-7EE9-4C8F-BC60-DE43961F2E98} = {0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}
 		{B1BCF899-6B2E-4A99-8998-AA946FC64F3E} = {0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}
+		{771CDB24-CB35-4669-A8AC-4A13800667FB} = {0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}
 	EndGlobalSection
 EndGlobal

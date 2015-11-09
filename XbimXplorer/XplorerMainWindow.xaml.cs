@@ -202,8 +202,7 @@ namespace XbimXplorer
             EvaluateXbimUiType(typeof(Querying.WdwQuery));
 
             if (Settings.Default.PluginStartupLoad)
-                RefreshPlugins();
-            
+                RefreshPlugins();           
         }
 
         void appender_Logged(object sender, LogEventArgs e)

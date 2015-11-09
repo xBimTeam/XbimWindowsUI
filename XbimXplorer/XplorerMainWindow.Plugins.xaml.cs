@@ -51,6 +51,10 @@ namespace XbimXplorer
                 var fullAssemblyName = Path.Combine(dir.FullName, dir.Name + ".exe");
                 LoadPlugin(fullAssemblyName);
             }
+            
+            PluginMenu.Visibility = PluginMenu.Items.Count == 0 
+                ? Visibility.Collapsed 
+                : Visibility.Visible;
         }
 
         string _assemblyLoadFolder = "";
@@ -167,6 +171,11 @@ namespace XbimXplorer
             {
                 menuHeader = menuHeader.Substring(15);
                 destMenu = DeveloperMenu;
+            }
+            if (att.MenuText.StartsWith(@"File/Export/"))
+            {
+                menuHeader = menuHeader.Substring(12);
+                destMenu = ExportMenu;
             }
             var v = new MenuItem { Header = menuHeader, Tag = type };
             destMenu.Items.Add(v);

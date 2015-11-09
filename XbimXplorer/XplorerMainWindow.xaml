@@ -76,7 +76,7 @@
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0" >
-            <MenuItem Header="_Model">
+            <MenuItem Header="_File">
                 <MenuItem Header="_Open" Command="Open" ToolTip="Load a single Ifc, Xbim, IfcZip or IfcXML file." />
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
                 <MenuItem Header="_Close" Command="Close" />
@@ -88,7 +88,9 @@
                 <Separator />
                 <MenuItem Header="Recent files" x:Name="MnuRecent" Click="RecentFileClick" />
                 <Separator />
-                <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
+                <MenuItem x:Name="ExportMenu" Header="_Export">
+                    <MenuItem Header="_Native" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
