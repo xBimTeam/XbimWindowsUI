@@ -103,11 +103,7 @@
                 <MenuItem IsCheckable="True" Header="Show Gridlines" IsChecked="{Binding ShowGridLines, ElementName=DrawingControl}"/>
                 <MenuItem Header="_Copy image" Command="Copy"/>
                 <Separator Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
-                <MenuItem Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
-                    <MenuItem Header="_Query" Click="OpenQuery" />
-                    <MenuItem Header="S_cripting" Click="OpenScriptingWindow" />
-                    <MenuItem Header="_Logging" Click="OpenLoggingWindow" />
-                </MenuItem>
+                <MenuItem x:Name="DeveloperMenu" Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
                 <Separator />
                 <MenuItem Header="_Settings" Click="DisplaySettingsPage" />
             </MenuItem>

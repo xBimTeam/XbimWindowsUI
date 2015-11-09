@@ -12,6 +12,7 @@ namespace XbimXplorer.LogViewer
     /// <summary>
     /// Interaction logic for LogViewer.xaml
     /// </summary>
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutDoc, PluginWindowActivation.OnMenu, "View/Developer/Information Log")]
     public partial class LogViewer : IXbimXplorerPluginWindow
     {
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
@@ -24,11 +25,7 @@ namespace XbimXplorer.LogViewer
         public LogViewer()
         {
             InitializeComponent();
-            MenuText = "View log";
-            WindowTitle = "Log record";
-            DefaultUiContainer = PluginWindowDefaultUiContainerEnum.LayoutDoc;
-            DefaultUiActivation = PluginWindowDefaultUiShow.OnMenu;
-
+            WindowTitle = "Information Log";
 
             LoggedEvents = new ObservableCollection<EventViewModel>();
             DataContext = this;
@@ -69,15 +66,11 @@ namespace XbimXplorer.LogViewer
             }
         }
 
-        public string MenuText { get; private set; }
         public string WindowTitle { get; private set; }
         public void BindUi(IXbimXplorerPluginMasterWindow mainWindow)
         {
             // nothing needed here
         }
-
-        public PluginWindowDefaultUiContainerEnum DefaultUiContainer { get; private set; }
-        public PluginWindowDefaultUiShow DefaultUiActivation { get; private set; }
 
         private void Test(object sender, System.Windows.RoutedEventArgs e)
         {

@@ -19,7 +19,6 @@ using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Script;
 using Xbim.XbimExtensions.Interfaces;
 using XbimGeometry.Interfaces;
-using XbimXplorer.Querying;
 
 namespace XbimXplorer.Scripting
 {
@@ -106,15 +105,15 @@ namespace XbimXplorer.Scripting
                 // SpatialControl.Regenerate();
             };
         }
-        public PluginWindowDefaultUiContainerEnum DefaultUiContainer
+        public PluginWindowUiContainerEnum DefaultUiContainer
         {
-            get { return PluginWindowDefaultUiContainerEnum.LayoutDoc; }
+            get { return PluginWindowUiContainerEnum.LayoutDoc; }
         }
 
 
-        public PluginWindowDefaultUiShow DefaultUiActivation
+        public PluginWindowActivation DefaultUiActivation
         {
-            get { return PluginWindowDefaultUiShow.OnMenu; }
+            get { return PluginWindowActivation.OnMenu; }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

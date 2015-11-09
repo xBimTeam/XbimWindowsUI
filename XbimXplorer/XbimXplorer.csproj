@@ -294,6 +294,7 @@
     <Compile Include="LogViewer\LogViewer.xaml.cs">
       <DependentUpon>LogViewer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PluginSystem\XbimXplorerPluginWindowExtensions.cs" />
     <Compile Include="Querying\TreeQueryItem.cs" />
     <Compile Include="XplorerMainWindow.Plugins.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
@@ -328,10 +329,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Querying\wdwQuery.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Scripting\ScriptingWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -372,9 +369,6 @@
     <Compile Include="Querying\TreeQuery.cs" />
     <Compile Include="Querying\wdwQuery.xaml.cs">
       <DependentUpon>wdwQuery.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Scripting\ScriptingWindow.xaml.cs">
-      <DependentUpon>ScriptingWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Simplify\FileTextParser.cs" />
     <Compile Include="Simplify\IfcSimplify.xaml.cs">
@@ -478,7 +472,9 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Scripting\" />
+  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <FileAssociation Include=".xBIM">

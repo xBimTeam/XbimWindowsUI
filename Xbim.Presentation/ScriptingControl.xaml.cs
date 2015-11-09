@@ -252,7 +252,8 @@ namespace Xbim.Presentation
             ScriptInput.Text =
                 @"$WallsAndSlabs IS EVERY wall;
 // $WallsAndSlabs IS EVERY slab;
-// $WallsAndSlabs IS NOT EVERY slab WHERE PREDEFINED_TYPE IS ROOF;dump $WallsAndSlabs;";
+// $WallsAndSlabs IS NOT EVERY slab WHERE PREDEFINED_TYPE IS ROOF;
+dump $WallsAndSlabs;";
         }
 
         private void ScriptInput_OnKeyDown(object sender, KeyEventArgs e)

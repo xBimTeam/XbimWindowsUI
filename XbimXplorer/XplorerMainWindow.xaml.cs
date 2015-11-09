@@ -49,7 +49,6 @@ using Xbim.Presentation.FederatedModel;
 using Xbim.Presentation.LayerStylingV2;
 using XbimXplorer.LogViewer;
 using XbimXplorer.Querying;
-using XbimXplorer.Scripting;
 using XbimXplorer.Properties;
 using Xceed.Wpf.AvalonDock.Layout;
 
@@ -198,7 +197,12 @@ namespace XbimXplorer
 
             UserFilters = new FilterValues();//COBie Class filters, set to initial defaults
             CoBieTemplate = UkTemplate;
-            
+
+            // testing ways to isolate the plugins from the menu.
+            // 
+            EvaluateXbimUiType(typeof (LogViewer.LogViewer));
+            EvaluateXbimUiType(typeof(Querying.WdwQuery));
+
             if (Settings.Default.PluginStartupLoad)
                 RefreshPlugins();
             
@@ -278,13 +282,7 @@ namespace XbimXplorer
                 }
             }
         }
-
-        void OpenQuery(object sender, RoutedEventArgs e)
-        {
-            var qw = new WdwQuery();
-            ShowPluginWindow(qw);
-        }
-
+        
         #region "Model File Operations"
 
         void XplorerMainWindow_Closing(object sender, CancelEventArgs e)
@@ -304,8 +302,7 @@ namespace XbimXplorer
             ModelProvider.Refresh();
 
             // logging information warnings
-            appender = new EventAppender();
-            appender.Tag = "MainWindow";
+            appender = new EventAppender {Tag = "MainWindow"};
             appender.Logged += appender_Logged;
 
             var hier = LogManager.GetRepository() as Hierarchy;
@@ -1062,13 +1059,7 @@ namespace XbimXplorer
                 CoBieTemplate = UkTemplate;
             }
         }
-
-        private void OpenScriptingWindow(object sender, RoutedEventArgs e)
-        {
-            var sw = new ScriptingWindow();
-            ShowPluginWindow(sw);
-        }
-
+        
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();
@@ -1133,36 +1124,51 @@ namespace XbimXplorer
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void OpenLoggingWindow(object sender, RoutedEventArgs e)
+        private void OpenWindow(object sender, RoutedEventArgs e)
         {
-            OpenOrFocusLoggingWindow();
+            var mi = sender as MenuItem;
+            if (mi == null)
+                return;
+            OpenOrFocusPluginWindow(mi.Tag as Type);
         }
 
-        private LayoutContent logWindow;
+        Dictionary<Type, LayoutContent> MenuWindows = new Dictionary<Type, LayoutContent>();
 
-        private bool OpenOrFocusLoggingWindow()
+        private bool OpenOrFocusPluginWindow(Type tp)
         {
-            if (logWindow == null)
+            if (!MenuWindows.ContainsKey(tp))
             {
-                var lw = new LogViewer.LogViewer();
-                logWindow = ShowPluginWindow(lw, true);
-                logWindow.Closed += LogWindowOnClosed;
+                var instance = (IXbimXplorerPluginWindow) Activator.CreateInstance(tp);
+                var menuWindow = ShowPluginWindow(instance, true);
+                menuWindow.Closed += LogWindowOnClosed;
+                MenuWindows.Add(tp, menuWindow);
                 return true;
             }
-            logWindow.IsActive = true;
+            MenuWindows[tp].IsActive = true;
             return false;
         }
 
         private void LogWindowOnClosed(object sender, EventArgs eventArgs)
         {
-            logWindow = null;
+            if (sender is LayoutDocument)
+            {
+                var cnt = ((LayoutDocument) sender).Content;
+                if (cnt == null)
+                    return;
+                var vInt = cnt as IXbimXplorerPluginWindow;
+                
+            }
+            if (sender is LayoutAnchorable)
+            {
+                
+            }
         }
 
         private void ResetErrors(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                if (OpenOrFocusLoggingWindow())
+                if (OpenOrFocusPluginWindow(typeof(LogViewer.LogViewer)))
                     Log.Info("Log is not retained before logging window is opened. You will have to repeat the operation to be investigated.");
             }
             else if (e.RightButton == MouseButtonState.Pressed)

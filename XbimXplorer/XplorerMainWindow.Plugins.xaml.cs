@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using Xbim.Presentation.XplorerPluginSystem;
+using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
 
 namespace XbimXplorer
@@ -128,15 +129,45 @@ namespace XbimXplorer
 
             foreach (var tp in types)
             {
-                var instance = Activator.CreateInstance(tp);
+                EvaluateXbimUiType(tp);
+            }
+        }
+
+        private void EvaluateXbimUiType(Type type)
+        {
+            EvaluateXbimUiMenu(type);
+
+            var act = type.GetUiActivation();
+            if (act == PluginWindowActivation.OnLoad)
+            {
+                var instance = Activator.CreateInstance(type);
                 var asPWin = instance as IXbimXplorerPluginWindow;
                 if (asPWin == null)
-                    continue;
+                    return;
                 if (_pluginWindows.Contains(asPWin))
-                    continue;
+                    return;
                 ShowPluginWindow(asPWin);
-                _pluginWindows.Add(asPWin);
+                _pluginWindows.Add(asPWin);    
+            }           
+        }
+
+        private void EvaluateXbimUiMenu(Type type)
+        {
+            var att = type.GetUiAttribute();
+            if (att == null) 
+                return;
+            if (string.IsNullOrEmpty(att.MenuText)) 
+                return;
+            var destMenu = DeveloperMenu;
+            var menuHeader = att.MenuText;
+            if (att.MenuText.StartsWith(@"View/Developer/"))
+            {
+                menuHeader = menuHeader.Substring(15);
+                destMenu = DeveloperMenu;
             }
+            var v = new MenuItem { Header = menuHeader, Tag = type };
+            destMenu.Items.Add(v);
+            v.Click += OpenWindow;
         }
 
         private class PluginWindowCollection : ObservableCollection<IXbimXplorerPluginWindow>
@@ -160,7 +191,10 @@ namespace XbimXplorer
         private LayoutContent ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
         {
             if (!(pluginWindow is UserControl))
+            {
+                Log.ErrorFormat("{0} does not inherit from UserControl as expected", pluginWindow.GetType());
                 return null;
+            }
             // preparing user control
             var uc = pluginWindow as UserControl;
             uc.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -168,43 +202,41 @@ namespace XbimXplorer
             //set data binding
             pluginWindow.BindUi(MainWindow);
 
-            // add into UI
-            switch (pluginWindow.DefaultUiContainer)
+            switch (pluginWindow.GetUiContainerMode())
             {
-                case PluginWindowDefaultUiContainerEnum.LayoutDoc:
-                {
-                    // layout document mode
-                    var ld = new LayoutDocument
+                case PluginWindowUiContainerEnum.LayoutAnchorable:
                     {
-                        Title = pluginWindow.WindowTitle,
-                        Content = uc
-                    };
-                    MainDocPane.Children.Add(ld);
-                    if (setCurrent)
-                        ld.IsActive = true;
-                    return ld;
-                    
-                }
-                case PluginWindowDefaultUiContainerEnum.LayoutAnchorable:
-                {
-                    var pg = GetRightPane();
-                    var lap = new LayoutAnchorablePane();
-                    pg.Children.Add(lap);
-                    var ld = new LayoutAnchorable
+                        var pg = GetRightPane();
+                        var lap = new LayoutAnchorablePane();
+                        pg.Children.Add(lap);
+                        var ld = new LayoutAnchorable
+                        {
+                            Title = pluginWindow.WindowTitle,
+                            Content = uc
+                        };
+                        lap.Children.Add(ld);
+                        if (setCurrent)
+                            ld.IsActive = true;
+                        return ld;
+                    }
+                case PluginWindowUiContainerEnum.LayoutDoc:
+                default:
                     {
-                        Title = pluginWindow.WindowTitle,
-                        Content = uc
-                    };
-                    lap.Children.Add(ld);
-                    if (setCurrent)
-                        ld.IsActive = true;
-                    return ld;
-                }
+                        var ld = new LayoutDocument
+                        {
+                            Title = pluginWindow.WindowTitle,
+                            Content = uc
+                        };
+                        MainDocPane.Children.Add(ld);
+                        if (setCurrent)
+                            ld.IsActive = true;
+                        return ld;
+                    }                  
             }
-            return null;
         }
 
         LayoutAnchorablePaneGroup _rightPane;
+
         private LayoutAnchorablePaneGroup GetRightPane()
         {
             if (_rightPane != null)
@@ -215,6 +247,5 @@ namespace XbimXplorer
             MainPanel.Children.Add(_rightPane);
             return _rightPane;
         }
-
     }
 }

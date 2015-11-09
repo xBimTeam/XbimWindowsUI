@@ -35,6 +35,7 @@ namespace XbimXplorer.Querying
     /// <summary>
     /// Interaction logic for wdwQuery.xaml
     /// </summary>
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "View/Developer/Commands")]
     public partial class WdwQuery : IXbimXplorerPluginWindow
     {
         /// <summary>
@@ -1311,21 +1312,13 @@ namespace XbimXplorer.Querying
         }
 
         #region "Plugin"
-
+        
         /// <summary>
-        /// 
-        /// </summary>
-        public string MenuText
-        {
-            get { return "Querying Window"; }
-        }
-
-        /// <summary>
-        /// 
+        /// Component's header text in the UI
         /// </summary>
         public string WindowTitle
         {
-            get { return "Querying Window"; }
+            get { return "Commands"; }
         }
 
         /// <summary>
@@ -1400,23 +1393,6 @@ namespace XbimXplorer.Querying
                     }
                     break;
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public PluginWindowDefaultUiContainerEnum DefaultUiContainer
-        {
-            get { return PluginWindowDefaultUiContainerEnum.LayoutAnchorable; }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public PluginWindowDefaultUiShow DefaultUiActivation
-        {
-            get { return PluginWindowDefaultUiShow.OnMenu; }
         }
 
         #endregion

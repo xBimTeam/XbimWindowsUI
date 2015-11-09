@@ -300,11 +300,11 @@ namespace Xbim.BCF
         }
 
 
-        public PluginWindowDefaultUiShow DefaultUiActivation
-        { get { return PluginWindowDefaultUiShow.OnLoad; } }
+        public PluginWindowActivation DefaultUiActivation
+        { get { return PluginWindowActivation.OnLoad; } }
 
-        public PluginWindowDefaultUiContainerEnum DefaultUiContainer
-        { get { return PluginWindowDefaultUiContainerEnum.LayoutAnchorable; } }
+        public PluginWindowUiContainerEnum DefaultUiContainer
+        { get { return PluginWindowUiContainerEnum.LayoutAnchorable; } }
 
         public void ProcessMessage(object sender, string messageTypeString, object messageData)
         {

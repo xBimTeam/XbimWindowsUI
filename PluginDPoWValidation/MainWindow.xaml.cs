@@ -22,7 +22,7 @@ namespace XplorerPlugins.DPoWValidation
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    [XplorerUiElement]
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "")]
     public partial class MainWindow : UserControl, IXbimXplorerPluginWindow 
     {
         private static readonly ILog Log = LogManager.GetLogger("XplorerPlugins.DPoWValidation.MainWindow");
@@ -226,11 +226,11 @@ namespace XplorerPlugins.DPoWValidation
         }
 
 
-        public PluginWindowDefaultUiShow DefaultUiActivation
-        { get { return PluginWindowDefaultUiShow.OnLoad; } }
+        public PluginWindowActivation DefaultUiActivation
+        { get { return PluginWindowActivation.OnLoad; } }
 
-        public PluginWindowDefaultUiContainerEnum DefaultUiContainer
-        { get { return PluginWindowDefaultUiContainerEnum.LayoutAnchorable; } }
+        public PluginWindowUiContainerEnum DefaultUiContainer
+        { get { return PluginWindowUiContainerEnum.LayoutAnchorable; } }
 
         private void CloseFile(object sender, RoutedEventArgs e)
         {
