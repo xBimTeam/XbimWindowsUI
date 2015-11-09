@@ -195,19 +195,19 @@
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="Xbim.COBie, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0006\lib\net40\Xbim.COBie.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBie.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLite, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0006\lib\net40\Xbim.COBieLite.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBieLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLiteUK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0006\lib\net40\Xbim.COBieLiteUK.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBieLiteUK.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLiteUK.Validation, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0006\lib\net40\Xbim.COBieLiteUK.Validation.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBieLiteUK.Validation.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Common, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -215,11 +215,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.DPoW, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0006\lib\net40\Xbim.DPoW.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.DPoW.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Exchanger, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0006\lib\net40\Xbim.Exchanger.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.Exchanger.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -404,6 +404,9 @@
     <Content Include="COBie-US-2_4-template.xls">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="IfcToCOBieLiteUK\Classifications\DataFiles\Uniclass2015_Ac_v0_1.csv" />
+    <None Include="IfcToCOBieLiteUK\Classifications\DataFiles\Uniclass2015_Pr_v1_1.csv" />
+    <None Include="IfcToCOBieLiteUK\Classifications\DataFiles\Uniclass2015_Ss_v1_1.csv" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,13 +16,13 @@ using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
 using Xbim.XbimExtensions.Interfaces;
 
-namespace XplorerPlugins.DPoWValidation
+namespace XplorerPlugins.DPoW
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>S
     [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "Digital Plan of Works")]
-    public partial class MainWindow : UserControl, IXbimXplorerPluginWindow 
+    public partial class MainWindow : IXbimXplorerPluginWindow 
     {
         private static readonly ILog Log = LogManager.GetLogger("XplorerPlugins.DPoWValidation.MainWindow");
 
@@ -44,9 +43,8 @@ namespace XplorerPlugins.DPoWValidation
                 "Validation requirement json|*.json"
             };
 
-            var openFile = new OpenFileDialog();
-            openFile.Filter = string.Join("|", supportedFiles);
-                    
+            var openFile = new OpenFileDialog {Filter = string.Join("|", supportedFiles)};
+
             var res = openFile.ShowDialog();
 
             if (res.HasValue && res.Value)
@@ -81,51 +79,51 @@ namespace XplorerPlugins.DPoWValidation
                     Classifications.SelectedItem = 0;
                 }
             }
-            catch 
+            catch
             {
-
-            }            
+                // ignored
+            }
         }
 
         private bool IsFileOpen
         {
             get
             {
-                // return (Doc != null);
                 return false;
             }
             set
             {
+                // ReSharper disable once RedundantBoolCompare
                 if (value == true)
                 {
-                    Ui.Visibility = System.Windows.Visibility.Visible;
-                    OpenButton.Visibility = System.Windows.Visibility.Hidden;
+                    Ui.Visibility = Visibility.Visible;
+                    OpenButton.Visibility = Visibility.Hidden;
                 }
                 else
                 {
-                    Ui.Visibility = System.Windows.Visibility.Hidden;
-                    OpenButton.Visibility = System.Windows.Visibility.Visible;
+                    Ui.Visibility = Visibility.Hidden;
+                    OpenButton.Visibility = Visibility.Visible;
                 }
                 //PropertyChanged.Invoke(this, new PropertyChangedEventArgs("OpenButtonVisibility"));
                 //PropertyChanged.Invoke(this, new PropertyChangedEventArgs("UIVisibility"));
             }
         }
 
-        public Visibility OpenButtonVisibility { get { return (IsFileOpen) ? System.Windows.Visibility.Hidden : System.Windows.Visibility.Visible; } }
-        public Visibility UiVisibility { get { return (!IsFileOpen) ? System.Windows.Visibility.Hidden : System.Windows.Visibility.Visible; } }
+        public Visibility OpenButtonVisibility { get { return (IsFileOpen) ? Visibility.Hidden : Visibility.Visible; } }
+        public Visibility UiVisibility { get { return (!IsFileOpen) ? Visibility.Hidden : Visibility.Visible; } }
         
        
         private IXbimXplorerPluginMasterWindow _xpWindow;
 
-        // ---------------------------
-        // plugin system related stuff
+        // -----------------------------
+        // plugin system related section
         //
 
         public void BindUi(IXbimXplorerPluginMasterWindow mainWindow)
         {
             _xpWindow = mainWindow;
-            this.SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
-            this.SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
+            SetBinding(SelectedItemProperty, new Binding("SelectedItem") { Source = mainWindow, Mode = BindingMode.OneWay });
+            SetBinding(ModelProperty, new Binding()); // whole datacontext binding, see http://stackoverflow.com/questions/8343928/how-can-i-create-a-binding-in-code-behind-that-doesnt-specify-a-path
         }
 
         // SelectedEntity
@@ -137,7 +135,7 @@ namespace XplorerPlugins.DPoWValidation
 
         public static DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnSelectedEntityChanged)));
+                                                                      OnSelectedEntityChanged));
 
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -190,29 +188,18 @@ namespace XplorerPlugins.DPoWValidation
 
         public static DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof(IModel), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
-                                                                      new PropertyChangedCallback(OnSelectedEntityChanged)));
+                                                                      OnSelectedEntityChanged));
 
-        internal Facility ModelFacility = null;
-        internal Facility ReqFacility = null;
-        internal Facility ValFacility = null;
-        internal Facility ViewFacility = null;
-
-        
-        public string MenuText
-        {
-            get { return "DPoW Validation"; }
-        }
+        internal Facility ModelFacility;
+        internal Facility ReqFacility;
+        internal Facility ValFacility;
+        internal Facility ViewFacility;
 
         public string WindowTitle
         {
-            get { return "DPoW Validation"; }
+            get { return "Digital Plan of Work"; }
         }
-
-        private void ModelInfo(object sender, RoutedEventArgs e)
-        {
-            Debug.WriteLine(Model != null);
-        }
-
+        
         private void TrafficLight(object sender, RoutedEventArgs e)
         {
             //var ls = new TrafficLightStyler((XbimModel)this.Model, this);
@@ -225,64 +212,12 @@ namespace XplorerPlugins.DPoWValidation
             //xpWindow.DrawingControl.ReloadModel(/*Options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll*/);
         }
 
-
-        public PluginWindowActivation DefaultUiActivation
-        { get { return PluginWindowActivation.OnLoad; } }
-
-        public PluginWindowUiContainerEnum DefaultUiContainer
-        { get { return PluginWindowUiContainerEnum.LayoutAnchorable; } }
-
         private void CloseFile(object sender, RoutedEventArgs e)
         {
             ReqFacility = null;
             LstAssets.ItemsSource = null;
             Classifications.ItemsSource = null;
             IsFileOpen = false;
-        }
-
-      
-
-        private void AddComment(object sender, RoutedEventArgs e)
-        {
-            //Hyperlink h = sender as Hyperlink;
-            //if (h != null)
-            //{
-            //    ReportResult res = null;
-            //    string title = "";
-            //    if (h.ToolTip.ToString() == "Create ER comment" && LstProjectResults.SelectedItem != null)
-            //    {
-            //        res = LstProjectResults.SelectedItem as ReportResult;
-            //        title = LstProjectResults.SelectedItem.ToString() + " ";
-            //        title += (res.BoolResult) ? "validation passed" : "validation failed";
-            //    }
-            //    else if (h.ToolTip.ToString() == "Create Class comment" && lstClassResults.SelectedItem != null)
-            //    {                    
-            //        res = lstClassResults.SelectedItem as ReportResult;   
-            //        title = (res.BoolResult) ? "Validation passed" : "Validation failed";
-            //    }
-            //    if (res != null)
-            //    {
-            //        var MessageData = new Dictionary<string, object>();
-            //        string VerbalStatus = (res.BoolResult) ? "Information" : "Error";
-            //        string commentText =
-            //            string.Format("Entity {0} ({1}) {2} request {3}",
-            //                "Element " + res.EntityLabel,
-            //                res.EntityLabel,
-            //                (res.BoolResult) ? "passed" : "did not pass",
-            //                res.ConceptName
-            //                );
-
-            //        commentText += "\r\n\r\n" + res.Notes;
-
-            //        MessageData.Add("InstanceTitle", title);
-            //        MessageData.Add("DestinationEmail", "claudio.benghi@gmail.com");
-            //        MessageData.Add("CommentVerbalStatus", VerbalStatus);
-            //        MessageData.Add("CommentAuthor", "CB");
-            //        MessageData.Add("CommentText", commentText);
-            //        // MessageData.Add("DestinationEmail", res.Requirement.Author);
-            //        xpWindow.BroadCastMessage(this, "BcfAddInstance", MessageData);
-            //    }
-            //}
         }
 
         bool _useAmber = true;
@@ -296,18 +231,9 @@ namespace XplorerPlugins.DPoWValidation
             _useAmber = !_useAmber;
         }
 
-        private void LstClassResults_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            _xpWindow.DrawingControl.ZoomSelected();
-        }
-
         private void UpdateList(object sender, SelectionChangedEventArgs e)
         {
             var selectedCode = Classifications.SelectedItem.ToString();
-
-            // var tS = new Dictionary<string, Asset>();
-            // look at classified asset types
-
             var lst = new ObservableCollection<AssetViewModel>();
 
             if (ViewFacility.AssetTypes == null)

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Media.Media3D;
-using NPOI.SS.Formula.Functions;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
@@ -14,11 +10,11 @@ using Xbim.Presentation;
 using Xbim.Presentation.LayerStylingV2;
 using XbimGeometry.Interfaces;
 
-namespace XbimXplorer.Plugins.DPoWValidation
+namespace XplorerPlugins.DPoW
 {
     class ValidationResultStyler : ILayerStylerV2
     {
-        private WpfMeshGeometry3D PrepareMesh(XbimColour col)
+        private static WpfMeshGeometry3D PrepareMesh(XbimColour col)
         {
             var matRed = new WpfMaterial();
             matRed.CreateMaterial(col);
@@ -26,7 +22,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
             return mg;
         }
 
-        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(Xbim.IO.XbimModel model, Xbim3DModelContext context, List<Type> exclude = null)
+        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context, List<Type> exclude = null)
         {
             var tmpOpaquesGroup = new Model3DGroup();
 
@@ -40,7 +36,7 @@ namespace XbimXplorer.Plugins.DPoWValidation
             tmpOpaquesGroup.Children.Add(amber);
 
 
-            int i = 0;
+            var i = 0;
 
             foreach (var shapeInstance in context.ShapeInstances()
                 .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
@@ -101,10 +97,10 @@ namespace XbimXplorer.Plugins.DPoWValidation
             return retScene;
         }
 
-        public Xbim.Presentation.DrawingControl3D Control { get; set; }
+        public DrawingControl3D Control { get; set; }
         
 
-        public void SetFederationEnvironment(Xbim.IO.XbimReferencedModel refModel)
+        public void SetFederationEnvironment(XbimReferencedModel refModel)
         {
             
         }

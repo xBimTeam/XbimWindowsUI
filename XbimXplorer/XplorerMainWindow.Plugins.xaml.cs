@@ -59,10 +59,10 @@ namespace XbimXplorer
         {
             if (!File.Exists(fullAssemblyName))
             {
-                Debug.WriteLine(string.Format("Assembly not found {0}", fullAssemblyName));
+                Log.ErrorFormat("Assembly not found {0}", fullAssemblyName);
                 return;
             }
-            Debug.WriteLine(string.Format("Attempting to load: {0}", fullAssemblyName));
+            Log.InfoFormat("Attempting to load: {0}", fullAssemblyName);
 
             var contPath = Path.GetDirectoryName(fullAssemblyName);
             _assemblyLoadFolder = contPath;
@@ -73,11 +73,8 @@ namespace XbimXplorer
                 //check if the assembly is loaded
                 var asms = AppDomain.CurrentDomain.GetAssemblies();
                 var reqFound = false;
-                foreach (var asm in asms)
+                foreach (var asmName in asms.Select(asm => asm.GetName()))
                 {
-                    
-                    var asmName = asm.GetName();
-                    
                     if (asmName.FullName.Equals(refReq.FullName))
                     {
                         reqFound = true;
@@ -85,9 +82,9 @@ namespace XbimXplorer
                     }
                     if (asmName.Name.Equals(refReq.Name))
                     {
-                        Debug.WriteLine("Versioning issues:\r\n" +
-                                "Required -> {0}\r\n" +
-                                "Loaded   -> {1}", refReq.FullName, asmName.FullName);
+                        Log.WarnFormat("Versioning issues:\r\n" +
+                                       "Required -> {0}\r\n" +
+                                       "Loaded   -> {1}", refReq.FullName, asmName.FullName);
                     }
                 }
                 if (reqFound) 
@@ -100,7 +97,9 @@ namespace XbimXplorer
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Problem loading assembly " + refReq + " for " + fullAssemblyName + ", " + ex.Message);
+                    var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyName;
+                    Log.ErrorFormat(msg, ex);
+                    MessageBox.Show(msg + ", " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             }
