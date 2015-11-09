@@ -21,8 +21,8 @@ namespace XplorerPlugins.DPoWValidation
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "")]
+    /// </summary>S
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "Digital Plan of Works")]
     public partial class MainWindow : UserControl, IXbimXplorerPluginWindow 
     {
         private static readonly ILog Log = LogManager.GetLogger("XplorerPlugins.DPoWValidation.MainWindow");

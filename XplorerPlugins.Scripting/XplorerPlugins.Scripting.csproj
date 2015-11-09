@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Output\Debug\Plugins\XplorerPlugins.Scripting\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -150,6 +150,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Presentation\ScriptingControl.xaml.cs">
+      <DependentUpon>ScriptingControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ScriptingWindow.xaml.cs">
       <DependentUpon>ScriptingWindow.xaml</DependentUpon>
     </Compile>
@@ -199,6 +202,10 @@
     <None Include="Xbim.Script.dll.config" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Presentation\ScriptingControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="ScriptingWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

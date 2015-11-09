@@ -1,40 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Script;
-using Xbim.XbimExtensions.Interfaces;
 using XbimGeometry.Interfaces;
 
-namespace XbimXplorer.Scripting
+namespace XplorerPlugins.Scripting
 {
     /// <summary>
     /// Interaction logic for ScriptingWindow.xaml
     /// </summary>
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutDoc, PluginWindowActivation.OnMenu, "View/Developer/Scripting")]
     public partial class ScriptingWindow : IXbimXplorerPluginWindow, INotifyPropertyChanged
     {
-
         /// <summary>
         /// 
         /// </summary>
         public ScriptingWindow()
         {
             InitializeComponent();
-            MenuText = "Scripting Window";
             WindowTitle = "Scripting Window";
         }
 
@@ -74,14 +61,7 @@ namespace XbimXplorer.Scripting
         }
 
         private IXbimXplorerPluginMasterWindow _parentWindow;
-
-        //public event ScriptParsedHandler OnScriptParsed;
-        //private void ScriptParsed()
-        //{
-        //    if (OnScriptParsed != null)
-        //        OnScriptParsed(this, new ScriptParsedEventArgs());
-        //}
-        public string MenuText { get; private set; }
+        
         public string WindowTitle { get; private set; }
         public void BindUi(IXbimXplorerPluginMasterWindow mainWindow)
         {
@@ -105,17 +85,7 @@ namespace XbimXplorer.Scripting
                 // SpatialControl.Regenerate();
             };
         }
-        public PluginWindowUiContainerEnum DefaultUiContainer
-        {
-            get { return PluginWindowUiContainerEnum.LayoutDoc; }
-        }
-
-
-        public PluginWindowActivation DefaultUiActivation
-        {
-            get { return PluginWindowActivation.OnMenu; }
-        }
-
+    
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)

@@ -3,15 +3,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
+using Microsoft.Win32;
 using Xbim.IO;
+using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Script;
 using Cursors = System.Windows.Input.Cursors;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 
-namespace Xbim.Presentation
+namespace XplorerPlugins.Scripting.Presentation
 {
     /// <summary>
     /// Interaction logic for ScriptingWindow.xaml
@@ -223,9 +224,6 @@ namespace Xbim.Presentation
 
             for (var i = 2; i < num+1; i++)
                 LineNumbers.Text += "\n" + i;
-
-
-
         }
 
         public event ScriptParsedHandler OnScriptParsed;

@@ -1,14 +1,12 @@
 ﻿<UserControl
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:presentation="http://schemas.Xbim.com/Presentation"
         MinWidth="300"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         d:DesignWidth="343.497" d:DesignHeight="330.786"
-        xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:io="clr-namespace:Xbim.IO;assembly=Xbim.IO"
-        mc:Ignorable="d" x:Class="XbimXplorer.Scripting.ScriptingWindow">
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
+        xmlns:presentation="clr-namespace:XplorerPlugins.Scripting.Presentation"
+        mc:Ignorable="d" x:Class="XplorerPlugins.Scripting.ScriptingWindow">
     <Grid>
         <TabControl>
             <TabItem Header="Script">

@@ -158,8 +158,12 @@ namespace XbimXplorer
                 return;
             if (string.IsNullOrEmpty(att.MenuText)) 
                 return;
-            var destMenu = DeveloperMenu;
-            var menuHeader = att.MenuText;
+            var destMenu = PluginMenu;
+            var menuHeader = type.Name;
+            if (!string.IsNullOrEmpty(att.MenuText))
+            {
+                menuHeader = att.MenuText;    
+            }
             if (att.MenuText.StartsWith(@"View/Developer/"))
             {
                 menuHeader = menuHeader.Substring(15);

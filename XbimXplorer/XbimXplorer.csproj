@@ -246,10 +246,6 @@
       <HintPath>..\packages\Xbim.PropertySets.3.1.10\lib\net40\Xbim.Properties.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Xbim.Script, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Scripting.3.1.11-V0002\lib\net40\Xbim.Script.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Xbim.Tessellator, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
       <HintPath>..\packages\Xbim.Geometry.3.1.13-V0001\lib\net40\Xbim.Tessellator.dll</HintPath>
       <Private>True</Private>
@@ -393,22 +389,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Classifications\NRM.csv" />
-    <None Include="Classifications\Uniclass 1.4.csv" />
-    <None Include="Classifications\Uniclass2-Ac.csv" />
-    <None Include="Classifications\Uniclass2-Co.csv" />
-    <None Include="Classifications\Uniclass2-Ee.csv" />
-    <None Include="Classifications\Uniclass2-Ef.csv" />
-    <None Include="Classifications\Uniclass2-En.csv" />
-    <None Include="Classifications\Uniclass2-PP.csv" />
-    <None Include="Classifications\Uniclass2-Pr.csv" />
-    <None Include="Classifications\Uniclass2-Sp.csv" />
-    <None Include="Classifications\Uniclass2-Ss.csv" />
-    <None Include="Classifications\Uniclass2-WR.csv" />
-    <None Include="Classifications\Uniclass2-Zz.csv" />
-    <None Include="Templates\ClassifyModelToNRM.bql" />
-    <None Include="Templates\EmbeddedNRM.bql" />
-    <None Include="Xbim.Script.dll.config" />
     <Resource Include="xBIM.ico" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

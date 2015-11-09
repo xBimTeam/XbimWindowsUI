@@ -20,6 +20,7 @@ namespace Xbim.BCF
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "BCF Editor")]
     public partial class MainWindow : IXbimXplorerPluginWindow, IXbimXplorerPluginMessageReceiver
     {
         string _baseFolder = @"..\..\Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\";
@@ -246,15 +247,10 @@ namespace Xbim.BCF
                 }
             }
         }
-
-        public string MenuText
-        {
-            get { return "BCF Viewer"; }
-        }
-
+        
         public string WindowTitle
         {
-            get { return "BCF Viewer"; }
+            get { return "BCF Editor"; }
         }
 
         public static RenderTargetBitmap Get3DVisual(FrameworkElement element)
@@ -298,13 +294,6 @@ namespace Xbim.BCF
             }
             return bitmapImage;
         }
-
-
-        public PluginWindowActivation DefaultUiActivation
-        { get { return PluginWindowActivation.OnLoad; } }
-
-        public PluginWindowUiContainerEnum DefaultUiContainer
-        { get { return PluginWindowUiContainerEnum.LayoutAnchorable; } }
 
         public void ProcessMessage(object sender, string messageTypeString, object messageData)
         {
