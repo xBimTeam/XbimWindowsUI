@@ -186,6 +186,7 @@
     <Compile Include="FederatedModel\FederatedModelsGrid.xaml.cs">
       <DependentUpon>FederatedModelsGrid.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HistoryCollection.cs" />
     <Compile Include="LayerStylingV2\AlternateColourStyler.cs" />
     <Compile Include="LayerStylingV2\ILayerStylerV2.cs" />
     <Compile Include="LayerStylingV2\SurfaceLayerStyler.cs" />

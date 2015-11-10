@@ -59,7 +59,6 @@ namespace XbimXplorer
     /// </summary>
     public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
-
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
 
         private int _numErrors = 0;
