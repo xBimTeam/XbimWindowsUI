@@ -150,7 +150,7 @@ namespace XbimXplorer
                 if (_pluginWindows.Contains(asPWin))
                     return;
                 ShowPluginWindow(asPWin);
-                _pluginWindows.Add(asPWin);    
+                    
             }           
         }
 
@@ -207,6 +207,8 @@ namespace XbimXplorer
                 Log.ErrorFormat("{0} does not inherit from UserControl as expected", pluginWindow.GetType());
                 return null;
             }
+            if (!_pluginWindows.Contains(pluginWindow))
+                _pluginWindows.Add(pluginWindow);
             // preparing user control
             var uc = pluginWindow as UserControl;
             uc.HorizontalAlignment = HorizontalAlignment.Stretch;
