@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -150,7 +151,6 @@ namespace XbimXplorer
                 if (_pluginWindows.Contains(asPWin))
                     return;
                 ShowPluginWindow(asPWin);
-                    
             }           
         }
 
@@ -199,7 +199,7 @@ namespace XbimXplorer
                 ? Assembly.LoadFile(fName) 
                 : null;
         }
-
+        
         private LayoutContent ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
         {
             if (!(pluginWindow is UserControl))
@@ -220,18 +220,24 @@ namespace XbimXplorer
             {
                 case PluginWindowUiContainerEnum.LayoutAnchorable:
                     {
-                        var pg = GetRightPane();
-                        var lap = new LayoutAnchorablePane();
-                        pg.Children.Add(lap);
-                        var ld = new LayoutAnchorable
+                        var rigthPanel = GetRightPane();
+                        // inner 
+                        var inner = new LayoutAnchorable
                         {
                             Title = pluginWindow.WindowTitle,
                             Content = uc
                         };
-                        lap.Children.Add(ld);
+
+                        // outer
+                        var outer = new LayoutAnchorablePane();
+                        
+                        
+                        rigthPanel.Children.Add(outer);
+                        outer.Children.Add(inner);
+                        
                         if (setCurrent)
-                            ld.IsActive = true;
-                        return ld;
+                            inner.IsActive = true;
+                        return inner;
                     }
                 case PluginWindowUiContainerEnum.LayoutDoc:
                 default:
@@ -242,13 +248,14 @@ namespace XbimXplorer
                             Content = uc
                         };
                         MainDocPane.Children.Add(ld);
+
                         if (setCurrent)
                             ld.IsActive = true;
                         return ld;
                     }                  
             }
         }
-
+        
         LayoutAnchorablePaneGroup _rightPane;
 
         private LayoutAnchorablePaneGroup GetRightPane()
@@ -261,5 +268,47 @@ namespace XbimXplorer
             MainPanel.Children.Add(_rightPane);
             return _rightPane;
         }
+
+        private readonly Dictionary<Type, LayoutContent> _menuWindows = new Dictionary<Type, LayoutContent>();
+        private readonly Dictionary<Type, IXbimXplorerPluginWindow> _retainedControls = new Dictionary<Type, IXbimXplorerPluginWindow>();
+        
+        private bool OpenOrFocusPluginWindow(Type tp)
+        {
+            if (!_menuWindows.ContainsKey(tp))
+            {
+                IXbimXplorerPluginWindow instance;
+                if (_retainedControls.ContainsKey(tp))
+                    instance = _retainedControls[tp];
+                else
+                    instance = (IXbimXplorerPluginWindow)Activator.CreateInstance(tp);
+
+                var menuWindow = ShowPluginWindow(instance, true);
+                _menuWindows.Add(tp, menuWindow);
+                return true;
+            }
+            _menuWindows[tp].IsActive = true;
+            return false;
+        }
+
+        private void PluginWindowClosed(object sender, EventArgs eventArgs)
+        {
+            IXbimXplorerPluginWindow vPlug = null;
+            if (sender is LayoutDocument)
+            {
+                var cnt = ((LayoutDocument)sender).Content;
+                vPlug = cnt as IXbimXplorerPluginWindow;
+            }
+            else if (sender is LayoutAnchorable)
+            {
+
+            }
+            if (vPlug == null)
+                return;
+            var tp = vPlug.GetType();
+            if (vPlug.GetUiAttribute().CloseAction == PluginWindowCloseAction.Hide && !_retainedControls.ContainsKey(tp))
+                _retainedControls.Add(tp, vPlug);
+            _menuWindows.Remove(tp);
+        }
+
     }
 }

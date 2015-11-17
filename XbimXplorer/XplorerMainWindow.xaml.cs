@@ -46,6 +46,7 @@ using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Presentation.FederatedModel;
 using Xbim.Presentation.LayerStylingV2;
 using XbimXplorer.LogViewer;
+using XbimXplorer.PluginSystem;
 using XbimXplorer.Querying;
 using XbimXplorer.Properties;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -1128,37 +1129,7 @@ namespace XbimXplorer
             OpenOrFocusPluginWindow(mi.Tag as Type);
         }
 
-        Dictionary<Type, LayoutContent> MenuWindows = new Dictionary<Type, LayoutContent>();
-
-        private bool OpenOrFocusPluginWindow(Type tp)
-        {
-            if (!MenuWindows.ContainsKey(tp))
-            {
-                var instance = (IXbimXplorerPluginWindow) Activator.CreateInstance(tp);
-                var menuWindow = ShowPluginWindow(instance, true);
-                menuWindow.Closed += LogWindowOnClosed;
-                MenuWindows.Add(tp, menuWindow);
-                return true;
-            }
-            MenuWindows[tp].IsActive = true;
-            return false;
-        }
-
-        private void LogWindowOnClosed(object sender, EventArgs eventArgs)
-        {
-            if (sender is LayoutDocument)
-            {
-                var cnt = ((LayoutDocument) sender).Content;
-                if (cnt == null)
-                    return;
-                var vInt = cnt as IXbimXplorerPluginWindow;
-                
-            }
-            if (sender is LayoutAnchorable)
-            {
-                
-            }
-        }
+       
 
         private void ResetErrors(object sender, MouseButtonEventArgs e)
         {

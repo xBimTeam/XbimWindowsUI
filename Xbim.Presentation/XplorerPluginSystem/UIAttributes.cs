@@ -15,8 +15,27 @@ namespace Xbim.Presentation.XplorerPluginSystem
             MenuText = menuText;
         }
 
+        private PluginWindowCloseAction? _closeAction;
+
+        public PluginWindowCloseAction CloseAction
+        {
+            get
+            {
+                if (_closeAction == null)
+                {
+                    return Activation==PluginWindowActivation.OnLoad 
+                        ? PluginWindowCloseAction.Hide 
+                        : PluginWindowCloseAction.Close;
+                }
+                return _closeAction.Value;
+            }
+            set { _closeAction = value; }
+        }
+
         public string MenuText { get; private set; }
         public PluginWindowUiContainerEnum InitialContainer { get; private set; }
         public PluginWindowActivation Activation { get; private set; }
+
+        
     }
 }
