@@ -319,6 +319,7 @@ namespace Xbim.BCF
                 instance.Markup.Topic.ReferenceLink = destinationEmail;
                 instance.Markup.Comment.Add(cmt);
             }
+            
         }
     }
 }
