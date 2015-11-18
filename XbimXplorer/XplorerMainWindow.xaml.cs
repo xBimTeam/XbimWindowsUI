@@ -50,6 +50,7 @@ using XbimXplorer.PluginSystem;
 using XbimXplorer.Querying;
 using XbimXplorer.Properties;
 using Xceed.Wpf.AvalonDock.Layout;
+using Xceed.Wpf.AvalonDock.Layout.Serialization;
 
 #endregion
 
@@ -1147,6 +1148,20 @@ namespace XbimXplorer
                 OnPropertyChanged("AnyWarnings");
                 OnPropertyChanged("NumWarnings");
             }
+        }
+
+        private void Exit(object sender, RoutedEventArgs e)
+        {
+            using (StringWriter fs = new StringWriter())
+            {
+                var xmlLayout = new XmlLayoutSerializer(DockingManager);
+                xmlLayout.Serialize(fs);
+                var xmlLayoutString = fs.ToString();
+                Clipboard.SetText(xmlLayoutString);
+            }
+
+            // DockingManager
+            Close();
         }
     }
 }

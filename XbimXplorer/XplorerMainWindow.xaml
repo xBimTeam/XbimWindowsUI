@@ -91,6 +91,8 @@
                 <MenuItem x:Name="ExportMenu" Header="_Export">
                     <MenuItem Header="_Native" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="_Exit" Click="Exit" />
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">

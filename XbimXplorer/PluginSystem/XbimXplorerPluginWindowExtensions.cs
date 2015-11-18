@@ -40,6 +40,14 @@ namespace XbimXplorer.PluginSystem
             return GetUiAttribute(info);
         }
 
+        internal static PluginWindowCloseAction GetUiCloseAction(this IXbimXplorerPluginWindow pluginWindow)
+        {
+            var attribute = pluginWindow.GetUiAttribute();
+            return DefaultUiCloseAction(attribute);
+        }
+
+        
+
         internal static XplorerUiElement GetUiAttribute(this IXbimXplorerPluginWindow pluginWindow)
         {
             return GetUiAttribute(pluginWindow.GetType());
@@ -54,7 +62,7 @@ namespace XbimXplorer.PluginSystem
             }
             return attribute;
         }
-
+        
         private static PluginWindowUiContainerEnum DefaultContainer(XplorerUiElement attribute)
         {
             var useContainer = attribute != null
@@ -68,6 +76,14 @@ namespace XbimXplorer.PluginSystem
             var useContainer = attribute != null
                 ? attribute.Activation
                 : PluginWindowActivation.OnLoad;
+            return useContainer;
+        }
+
+        private static PluginWindowCloseAction DefaultUiCloseAction(XplorerUiElement attribute)
+        {
+            var useContainer = attribute != null
+                ? attribute.CloseAction
+                : PluginWindowCloseAction.Close;
             return useContainer;
         }
     }

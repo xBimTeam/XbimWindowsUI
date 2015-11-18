@@ -12,7 +12,7 @@ namespace XbimXplorer.LogViewer
     /// <summary>
     /// Interaction logic for LogViewer.xaml
     /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutDoc, PluginWindowActivation.OnMenu, "View/Developer/Information Log")]
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable , PluginWindowActivation.OnMenu, "View/Developer/Information Log")]
     public partial class LogViewer : IXbimXplorerPluginWindow
     {
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
@@ -31,7 +31,7 @@ namespace XbimXplorer.LogViewer
             DataContext = this;
 
             appender = new EventAppender();
-            appender.Logged += appender_Logged;
+            appender.Logged += appender_Logged; 
             
             var hier = LogManager.GetRepository() as Hierarchy;
             if (hier != null)

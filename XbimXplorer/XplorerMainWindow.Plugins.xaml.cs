@@ -207,6 +207,8 @@ namespace XbimXplorer
                 Log.ErrorFormat("{0} does not inherit from UserControl as expected", pluginWindow.GetType());
                 return null;
             }
+
+            
             if (!_pluginWindows.Contains(pluginWindow))
                 _pluginWindows.Add(pluginWindow);
             // preparing user control
@@ -220,20 +222,14 @@ namespace XbimXplorer
             {
                 case PluginWindowUiContainerEnum.LayoutAnchorable:
                     {
-                        var rigthPanel = GetRightPane();
                         // inner 
-                        var inner = new LayoutAnchorable
+                        var inner = new LayoutAnchorable()
                         {
                             Title = pluginWindow.WindowTitle,
                             Content = uc
                         };
-
-                        // outer
-                        var outer = new LayoutAnchorablePane();
                         
-                        
-                        rigthPanel.Children.Add(outer);
-                        outer.Children.Add(inner);
+                       GetRightPane().Children.Add(inner);
                         
                         if (setCurrent)
                             inner.IsActive = true;
@@ -248,7 +244,7 @@ namespace XbimXplorer
                             Content = uc
                         };
                         MainDocPane.Children.Add(ld);
-
+                        ld.Closed += PluginWindowClosed;
                         if (setCurrent)
                             ld.IsActive = true;
                         return ld;
@@ -256,18 +252,31 @@ namespace XbimXplorer
             }
         }
         
-        LayoutAnchorablePaneGroup _rightPane;
+        LayoutAnchorablePaneGroup _rightPaneGroup;
 
-        private LayoutAnchorablePaneGroup GetRightPane()
+        private LayoutAnchorablePaneGroup GetRightPaneGroup()
+        {
+            if (_rightPaneGroup != null)
+                return _rightPaneGroup;
+            _rightPaneGroup = new LayoutAnchorablePaneGroup();
+            _rightPaneGroup.Orientation = Orientation.Vertical;
+            _rightPaneGroup.DockMinWidth = 300;
+            MainPanel.Children.Add(_rightPaneGroup);
+            return _rightPaneGroup;
+        }
+
+        private LayoutAnchorablePane _rightPane;
+
+        private LayoutAnchorablePane GetRightPane()
         {
             if (_rightPane != null)
                 return _rightPane;
-            _rightPane = new LayoutAnchorablePaneGroup();
-            _rightPane.Orientation = Orientation.Vertical;
-            _rightPane.DockMinWidth = 300;
-            MainPanel.Children.Add(_rightPane);
+            var rigthPanel = GetRightPaneGroup();
+            _rightPane = new LayoutAnchorablePane();
+            rigthPanel.Children.Add(_rightPane);
             return _rightPane;
         }
+
 
         private readonly Dictionary<Type, LayoutContent> _menuWindows = new Dictionary<Type, LayoutContent>();
         private readonly Dictionary<Type, IXbimXplorerPluginWindow> _retainedControls = new Dictionary<Type, IXbimXplorerPluginWindow>();
@@ -286,8 +295,19 @@ namespace XbimXplorer
                 _menuWindows.Add(tp, menuWindow);
                 return true;
             }
-            _menuWindows[tp].IsActive = true;
+            var v = _menuWindows[tp];
+            if (v is LayoutAnchorable)
+            {
+                var anch = v as LayoutAnchorable;
+                
+                if (anch.IsHidden)
+                    anch.Show();
+                v.IsActive = true;
+                return true;
+            }
+
             return false;
+            
         }
 
         private void PluginWindowClosed(object sender, EventArgs eventArgs)
