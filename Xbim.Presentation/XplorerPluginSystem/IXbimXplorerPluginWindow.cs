@@ -1,24 +1,26 @@
 ﻿namespace Xbim.Presentation.XplorerPluginSystem
 {
-    public enum PluginWindowDefaultUiContainerEnum
+    public enum PluginWindowUiContainerEnum
     {
         LayoutDoc,
         LayoutAnchorable
     }
 
-    public enum PluginWindowDefaultUiShow
+    public enum PluginWindowActivation
     {
         OnMenu,
         OnLoad
     }
 
-    
+    public enum PluginWindowCloseAction
+    {
+        Hide,
+        Close
+    }
+
     public interface IXbimXplorerPluginWindow 
     {
-        string MenuText { get; }
         string WindowTitle { get; }
-        void BindUi(IXbimXplorerPluginMasterWindow mainWindow);
-        PluginWindowDefaultUiContainerEnum DefaultUiContainer { get; }
-        PluginWindowDefaultUiShow DefaultUiActivation { get; }
+        void BindUi(IXbimXplorerPluginMasterWindow mainWindow);        
     }
 }

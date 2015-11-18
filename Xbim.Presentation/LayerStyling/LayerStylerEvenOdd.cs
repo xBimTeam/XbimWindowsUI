@@ -2,6 +2,7 @@
 using System.Linq;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -47,5 +48,7 @@ namespace Xbim.Presentation.LayerStyling
         }
 
         public void SetFederationEnvironment(XbimReferencedModel refModel) { }
+
+        public void SetCurrentModel(IModel model) { }
     }
 }

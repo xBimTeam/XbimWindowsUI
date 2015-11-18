@@ -35,12 +35,9 @@ namespace Xbim.Presentation.LayerStylingV2
             green.BeginUpdate();
             
             tmpOpaquesGroup.Children.Add(red);
-            
             tmpOpaquesGroup.Children.Add(green);
-            
 
-            int i = 0;
-
+            var i = 0;
             foreach (var shapeInstance in context.ShapeInstances()
                 .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
                             !typeof(IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
@@ -62,33 +59,34 @@ namespace Xbim.Presentation.LayerStylingV2
                     case XbimGeometryType.Polyhedron:
                         var shapePoly = (XbimShapeGeometry)shapeGeom;
                         targetMergeMesh.Add(
-                   shapePoly.ShapeData,
-                   shapeInstance.IfcTypeId,
-                   shapeInstance.IfcProductLabel,
-                   shapeInstance.InstanceLabel,
-                   XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                            shapePoly.ShapeData,
+                            shapeInstance.IfcTypeId,
+                            shapeInstance.IfcProductLabel,
+                            shapeInstance.InstanceLabel,
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
+                            model.UserDefinedId);
                         break;
-
                     case XbimGeometryType.PolyhedronBinary:
                         targetMergeMesh.Add(
-                  shapeGeom.ShapeData,
-                  shapeInstance.IfcTypeId,
-                  shapeInstance.IfcProductLabel,
-                  shapeInstance.InstanceLabel,
-                  XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                            shapeGeom.ShapeData,
+                            shapeInstance.IfcTypeId,
+                            shapeInstance.IfcProductLabel,
+                            shapeInstance.InstanceLabel,
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
+                            model.UserDefinedId
+                            );
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-
             }
 
             red.EndUpdate();
             green.EndUpdate();
 
             var mv = new ModelVisual3D { Content = tmpOpaquesGroup };
-            Control.Opaques.Children.Add(mv);
-            Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
+            Control.OpaquesVisual3D.Children.Add(mv);
+            // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
 
             return retScene;
         }

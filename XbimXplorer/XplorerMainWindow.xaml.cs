@@ -24,15 +24,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Gat.Controls;
 using Microsoft.Win32;
-using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
 using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.Script;
 using Xbim.XbimExtensions;
 using Xbim.ModelGeometry.Scene;
 using Xbim.XbimExtensions.Interfaces;
@@ -42,11 +39,17 @@ using Xbim.COBie.Serialisers;
 using Xbim.COBie;
 using XbimGeometry.Interfaces;
 using XbimXplorer.Dialogs;
-using System.Windows.Media.Imaging;
+using log4net;
+using log4net.Core;
+using log4net.Repository.Hierarchy;
+using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Presentation.FederatedModel;
+using Xbim.Presentation.LayerStylingV2;
+using XbimXplorer.LogViewer;
+using XbimXplorer.PluginSystem;
 using XbimXplorer.Querying;
-using XbimXplorer.Scripting;
 using XbimXplorer.Properties;
+using Xceed.Wpf.AvalonDock.Layout;
 
 #endregion
 
@@ -55,8 +58,51 @@ namespace XbimXplorer
     /// <summary>
     ///   Interaction logic for Window1.xaml
     /// </summary>
-    public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow
+    public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
+        private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
+
+        private int _numErrors = 0;
+
+        public Visibility AnyErrors
+        {
+            get
+            {
+                if (_numErrors > 0)
+                    return Visibility.Visible;
+                return Visibility.Collapsed;
+            }
+        }
+
+        public int NumErrors
+        {
+            get
+            {
+                return _numErrors;
+            }
+        }
+
+        private int _numWarnings = 0;
+
+        public Visibility AnyWarnings
+        {
+            get
+            {
+                if (_numWarnings > 0)
+                    return Visibility.Visible;
+                return Visibility.Collapsed;
+            }
+        }
+
+        public int NumWarnings
+        {
+            get
+            {
+                return _numWarnings;
+            }
+        }
+
+
         private BackgroundWorker _worker;
         /// <summary>
         /// 
@@ -70,6 +116,8 @@ namespace XbimXplorer
         /// 
         /// </summary>
         public static RoutedCommand OpenFederationCmd = new RoutedCommand();
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -82,19 +130,36 @@ namespace XbimXplorer
         /// 
         /// </summary>
         public static RoutedCommand CoBieClassFilter = new RoutedCommand();
-        private string _openedModelFileName;
+        
         private string _temporaryXbimFileName;
         // private string _defaultFileName;
         const string UkTemplate = "COBie-UK-2012-template.xls";
         const string UsTemplate = "COBie-US-2_4-template.xls";
 
+        private string _openedModelFileName;
+
         /// <summary>
-        /// 
+        /// Deals with the user-defined model file name.
+        /// The underlying XbimModel might be pointing to a temporary file elsewhere.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>String pointing to the file or null if the file is not defined (e.g. not saved federation).</returns>
         public string GetOpenedModelFileName()
         {
             return _openedModelFileName;
+        }
+
+        private void SetOpenedModelFileName(string ifcFilename)
+        {
+            _openedModelFileName = ifcFilename;
+
+            Dispatcher.BeginInvoke(new Action(delegate
+            {
+                // Do your work
+                Title = string.IsNullOrEmpty(ifcFilename)
+                    ? "Xbim Xplorer" :
+                    "Xbim Xplorer - [" + ifcFilename + "]";
+            }));
+           
         }
 
 
@@ -111,6 +176,8 @@ namespace XbimXplorer
         /// 
         /// </summary>
         public string CoBieTemplate { get; set; }
+
+        private EventAppender appender;
 
         /// <summary>
         /// 
@@ -129,14 +196,52 @@ namespace XbimXplorer
             UserFilters = new FilterValues();//COBie Class filters, set to initial defaults
             CoBieTemplate = UkTemplate;
 
-            
+            // testing ways to isolate the plugins from the menu.
+            // 
+            EvaluateXbimUiType(typeof (LogViewer.LogViewer));
+            EvaluateXbimUiType(typeof(Querying.WdwQuery));
+
             if (Settings.Default.PluginStartupLoad)
-                RefreshPlugins();
+                RefreshPlugins();           
         }
+
+        void appender_Logged(object sender, LogEventArgs e)
+        {
+            foreach (var loggingEvent in e.LoggingEvents)
+            {
+                if (loggingEvent.Level == Level.Error)
+                {
+                    _numErrors ++;
+                    if (_numErrors == 1)
+                        OnPropertyChanged("AnyErrors");
+                    OnPropertyChanged("NumErrors");
+                }
+
+                if (loggingEvent.Level == Level.Warn)
+                {
+                    _numWarnings++;
+                    if (_numWarnings == 1)
+                        OnPropertyChanged("AnyWarnings");
+                    OnPropertyChanged("NumWarnings");
+                }
+            }            
+        }
+
+        public Visibility DeveloperVisible
+        {
+            get {
+                return Settings.Default.DeveloperMode 
+                    ? Visibility.Visible 
+                    : Visibility.Collapsed;
+            }
+        }
+            
 
         private void InitFromSettings()
         {
             _fileAccessMode = Settings.Default.FileAccessMode;
+            OnPropertyChanged("DeveloperVisible");
+            
         }
 
         private ObservableMruList<string> _mruFiles = new ObservableMruList<string>();
@@ -174,13 +279,7 @@ namespace XbimXplorer
                 }
             }
         }
-
-        void OpenQuery(object sender, RoutedEventArgs e)
-        {
-            var qw = new WdwQuery();
-            ShowPluginWindow(qw);
-        }
-
+        
         #region "Model File Operations"
 
         void XplorerMainWindow_Closing(object sender, CancelEventArgs e)
@@ -198,6 +297,15 @@ namespace XbimXplorer
             model.Initialise();
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
+
+            // logging information warnings
+            appender = new EventAppender {Tag = "MainWindow"};
+            appender.Logged += appender_Logged;
+
+            var hier = LogManager.GetRepository() as Hierarchy;
+            if (hier != null)
+                hier.Root.AddAppender(appender);
+
         }
 
         void XplorerMainWindow_Closed(object sender, EventArgs e)
@@ -215,13 +323,14 @@ namespace XbimXplorer
             try
             {
                 _temporaryXbimFileName = Path.GetTempFileName();
-                _openedModelFileName = ifcFilename;
+                SetOpenedModelFileName(ifcFilename);
+                
 
                 if (worker != null)
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
                     var context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
-                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress);
+                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress,  adjustWCS: false);
             
                     if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                     {
@@ -231,7 +340,7 @@ namespace XbimXplorer
                             if (File.Exists(_temporaryXbimFileName))
                                 File.Delete(_temporaryXbimFileName); //tidy up;
                             _temporaryXbimFileName = null;
-                            _openedModelFileName = null;
+                            SetOpenedModelFileName(null);
                         }
 // ReSharper disable once EmptyGeneralCatchClause
                         catch
@@ -258,6 +367,8 @@ namespace XbimXplorer
                 args.Result = new Exception(sb.ToString());
             }
         }
+
+      
 
         XbimDBAccess _fileAccessMode = XbimDBAccess.Read;
         /// <summary>
@@ -338,13 +449,14 @@ namespace XbimXplorer
             var fInfo = new FileInfo(modelFileName);
             if (!fInfo.Exists) // file does not exist; do nothing
                 return;
-            if (fInfo.FullName.ToLower() == _openedModelFileName) //same file do nothing
+            if (fInfo.FullName.ToLower() == GetOpenedModelFileName()) //same file do nothing
                 return;
 
             // there's no going back; if it fails after this point the current file should be closed anyway
             CloseAndDeleteTemporaryFiles();
 
-            _openedModelFileName = modelFileName.ToLower();
+            SetOpenedModelFileName(modelFileName.ToLower());
+
             ProgressStatusBar.Visibility = Visibility.Visible;
             CreateWorker();
 
@@ -364,6 +476,7 @@ namespace XbimXplorer
                     _worker.RunWorkerAsync(modelFileName);
                     break;
             }
+            
         }
 
         /// <summary>
@@ -387,13 +500,17 @@ namespace XbimXplorer
 
         private void CreateWorker()
         {
-            _worker = new BackgroundWorker();
-            _worker.WorkerReportsProgress = true;
-            _worker.WorkerSupportsCancellation = true;
+            _worker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
             _worker.ProgressChanged += delegate(object s, ProgressChangedEventArgs args)
             {
+                if (args.ProgressPercentage < 0 || args.ProgressPercentage > 100) 
+                    return;
                 ProgressBar.Value = args.ProgressPercentage;
-                StatusMsg.Text = (string)args.UserState;
+                StatusMsg.Text = (string) args.UserState;
             };
 
             _worker.RunWorkerCompleted += delegate(object s, RunWorkerCompletedEventArgs args)
@@ -407,8 +524,6 @@ namespace XbimXplorer
                     StatusMsg.Text = "Ready";
 
                     AddRecentFile();
-
-
 
                     // todo: file extensions need to be registered to allow an easy use of the jumplist
                     // this is best done in the installer.
@@ -435,12 +550,10 @@ namespace XbimXplorer
                     //jumpList1.JumpItems.Add()
                     //JumpList.AddToRecentCategory(_openedModelFileName);
                     //jumpList1.Apply();
-
-
                 }
                 else //we have a problem
                 {
-                    var errMsg = args.Result as String;
+                    var errMsg = args.Result as string;
                     if (!string.IsNullOrEmpty(errMsg))
                         MessageBox.Show(this, errMsg, "Error Opening File",
                                         MessageBoxButton.OK, MessageBoxImage.Error,
@@ -483,16 +596,15 @@ namespace XbimXplorer
                     if (Model != null)
                     {
                         Model.SaveAs(dlg.FileName);
-                        string s = Path.GetExtension(dlg.FileName);
-                        if (!String.IsNullOrWhiteSpace(s ) )
-                        {
-                            var extension = s.ToLowerInvariant();
-                            if (extension == "xbim" && !string.IsNullOrWhiteSpace(_temporaryXbimFileName))  //we have a temp file open, it is now redundant as we have upgraded to another xbim file
-                            {
-                                File.Delete(_temporaryXbimFileName);
-                                _temporaryXbimFileName = null;
-                            }
-                        }
+                        SetOpenedModelFileName(dlg.FileName);
+                        var s = Path.GetExtension(dlg.FileName);
+                        if (string.IsNullOrWhiteSpace(s)) 
+                            return;
+                        var extension = s.ToLowerInvariant();
+                        if (extension != "xbim" || string.IsNullOrWhiteSpace(_temporaryXbimFileName)) 
+                            return;
+                        File.Delete(_temporaryXbimFileName);
+                        _temporaryXbimFileName = null;
                     }
                     else throw new Exception("Invalid Model Server");
                 }
@@ -509,9 +621,9 @@ namespace XbimXplorer
         private void CommandBinding_SaveAs(object sender, ExecutedRoutedEventArgs e)
         {
             var dlg = new SaveFileDialog();
-            if (_openedModelFileName != null)
+            if (GetOpenedModelFileName() != null)
             {
-                var f = new FileInfo(_openedModelFileName);
+                var f = new FileInfo(GetOpenedModelFileName());
                 dlg.DefaultExt = f.Extension;
                 dlg.InitialDirectory = f.DirectoryName;
                 dlg.FileName = f.Name;
@@ -570,13 +682,14 @@ namespace XbimXplorer
                 if (_worker != null && _worker.IsBusy)
                     _worker.CancelAsync(); //tell it to stop
                 var model = ModelProvider.ObjectInstance as XbimModel;
-                _openedModelFileName = null;
+                SetOpenedModelFileName(null);
                 if (model != null)
                 {
                     model.Dispose();
                     ModelProvider.ObjectInstance = null;
                     ModelProvider.Refresh();
                 }
+                SetDefaultModeStyler(null, null);
             }
             finally
             {
@@ -628,97 +741,122 @@ namespace XbimXplorer
         {
             e.CanExecute = Model != null && Model.IsFederation;
         }
-
+        
         private void OpenFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var dlg = new OpenFileDialog();
-            dlg.Filter = "Xbim Federation Files|*.xbimf|Xbim Model Files|*.ifc"; // Filter files by extension 
+            dlg.Title = "Select an existing federate.";
+            dlg.Filter = "Xbim Federation Files|*.xbimf"; // Filter files by extension 
+            dlg.CheckFileExists = true;
+            dlg.Multiselect = false;
+            
+            var done = dlg.ShowDialog(this);
+
+            if (!done.Value) 
+                return;
+            
+            FederationFromDialogbox(dlg);
+        }
+
+        private void CreateFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog();
+            dlg.Title = "Select model files to federate.";
+            dlg.Filter = "Model Files|*.ifc;*.ifcxml;*.ifczip"; // Filter files by extension 
             dlg.CheckFileExists = true;
             dlg.Multiselect = true;
+
             var done = dlg.ShowDialog(this);
-            if (done.Value)
+
+            if (!done.Value)
+                return;
+
+            FederationFromDialogbox(dlg);
+        }
+
+
+        private void FederationFromDialogbox(OpenFileDialog dlg)
+        {
+            if (!dlg.FileNames.Any())
+                return;
+            //use the first filename it's extension to decide which action should happen
+            var s = Path.GetExtension(dlg.FileNames[0]);
+            if (s == null)
+                return;
+            var firstExtension = s.ToLower();
+
+            XbimModel fedModel = null;
+            switch (firstExtension)
             {
-                if (dlg.FileNames.Any()) // collection is not empty
-                {
-                    //use the first filename it's extension to decide which action should happen
-                    string s = Path.GetExtension(dlg.FileNames[0]);
-                    if (s != null)
+                case ".xbimf":
+                    if (dlg.FileNames.Length > 1)
                     {
-                        var firstExtension = s.ToLower();
+                        var res = MessageBox.Show("Multiple files selected, open " + dlg.FileNames[0] + "?",
+                            "Cannot open multiple Xbim files",
+                            MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                        if (res == MessageBoxResult.Cancel)
+                            return;
+                    }
+                    fedModel = new XbimModel();
+                    fedModel.Open(dlg.FileNames[0], XbimDBAccess.ReadWrite);
+                    break;
+                case ".ifc":
+                case ".ifczip":
+                case ".ifcxml":
+                    //create temp file as a placeholder for the temperory xbim file
+                    var filePath = Path.GetTempFileName();
+                    filePath = Path.ChangeExtension(filePath, "xbimf");
+                    fedModel = XbimModel.CreateModel(filePath);
+                    fedModel.Initialise("Default Author", "Default Organization");
+                    using (var txn = fedModel.BeginTransaction())
+                    {
+                        fedModel.IfcProject.Name = "Default Project Name";
+                        txn.Commit();
+                    }
 
-                        XbimModel fedModel = null;
-                        if (firstExtension == ".xbimf")
+                    var informUser = true;
+                    for (var i = 0; i < dlg.FileNames.Length; i++)
+                    {
+                        var fileName = dlg.FileNames[i];
+                        var builder = new XbimReferencedModelViewModel
                         {
-                            if (dlg.FileNames.Length > 1)
-                            {
-                                var res = MessageBox.Show("Multiple files selected, open " + dlg.FileNames[0] + "?", "Cannot open multiple Xbim files",
-                                    MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                                if (res == MessageBoxResult.Cancel)
-                                    return;
-                            }
-                            fedModel = new XbimModel();
-                            fedModel.Open(dlg.FileNames[0], XbimDBAccess.ReadWrite);
+                            Name = fileName,
+                            OrganisationName = "OrganisationName " + i,
+                            OrganisationRole = "Undefined"
+                        };
+
+                        var buildRes = false;
+                        Exception exception = null;
+                        try
+                        {
+                            buildRes = builder.TryBuild(fedModel);
                         }
-                        else if (firstExtension == ".ifc")
+                        catch (Exception ex)
                         {
-                            //create temp file as a placeholder for the temperory xbim file
-                            var filePath = Path.GetTempFileName();
-                            filePath = Path.ChangeExtension(filePath, "xbimf");
-                            fedModel = XbimModel.CreateModel(filePath);
-                            fedModel.Initialise("Default Author", "Default Organization");
-                            using (var txn = fedModel.BeginTransaction())
-                            {
-                                fedModel.IfcProject.Name = "Default Project Name";
-                                txn.Commit();
-                            }
-
-
-                            var informUser = true;
-                            for (var i = 0; i < dlg.FileNames.Length; i++)
-                            {
-                                var fileName = dlg.FileNames[i];
-                                var builder = new XbimReferencedModelViewModel();
-                                builder.Name = fileName;
-                                builder.OrganisationName = "OrganisationName " + i;
-                                builder.OrganisationRole = "Undefined";
-
-                                var buildRes = false;
-                                Exception exception = null;
-                                try
-                                {
-                                    buildRes = builder.TryBuild(fedModel);
-                                }
-                                catch (Exception ex)
-                                {
-                                    //usually an EsentDatabaseSharingViolationException, user needs to close db first
-                                    exception = ex;
-                                }
-
-                                if (!buildRes && informUser)
-                                {
-                                    var msg = exception == null ? "" : "\r\nMessage: " + exception.Message;
-                                    var res = MessageBox.Show(fileName + " couldn't be opened." + msg + "\r\nShow this message again?",
-                                        "Failed to open a file", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
-                                    if (res == MessageBoxResult.No)
-                                        informUser = false;
-                                    else if (res == MessageBoxResult.Cancel)
-                                    {
-                                        fedModel = null;
-                                        break;
-                                    }
-                                }
-                            }
+                            //usually an EsentDatabaseSharingViolationException, user needs to close db first
+                            exception = ex;
                         }
-                        if (fedModel != null)
-                        {
-                            CloseAndDeleteTemporaryFiles();
-                            ModelProvider.ObjectInstance = fedModel;
-                            ModelProvider.Refresh();
 
+                        if (buildRes || !informUser)
+                            continue;
+                        var msg = exception == null ? "" : "\r\nMessage: " + exception.Message;
+                        var res = MessageBox.Show(fileName + " couldn't be opened." + msg + "\r\nShow this message again?",
+                            "Failed to open a file", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
+                        if (res == MessageBoxResult.No)
+                            informUser = false;
+                        else if (res == MessageBoxResult.Cancel)
+                        {
+                            fedModel = null;
+                            break;
                         }
                     }
-                }
+                    break;
             }
+            if (fedModel == null)
+                return;
+            CloseAndDeleteTemporaryFiles();
+            ModelProvider.ObjectInstance = fedModel;
+            ModelProvider.Refresh();
         }
 
         private void OpenFederationCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -860,33 +998,25 @@ namespace XbimXplorer
             }
         }
 
-        private void SeparateMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            var separate = new ModelSeparation();
+        // Note: Commented out on 2015 10 19 - function threw exception when creating an instance of ModelSeparation
 
-            //set data binding
-            var b = new Binding("DataContext");
-            b.Source = MainFrame;
-            b.Mode = BindingMode.TwoWay;
-            separate.SetBinding(DataContextProperty, b);
+        //private void SeparateMenuItem_Click(object sender, RoutedEventArgs e)
+        //{
+        //    var separate = new ModelSeparation();
 
-            separate.Show();
-        }
+        //    //set data binding
+        //    var b = new Binding("DataContext");
+        //    b.Source = MainFrame;
+        //    b.Mode = BindingMode.TwoWay;
+        //    separate.SetBinding(DataContextProperty, b);
+
+        //    separate.Show();
+        //}
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            var about = new About();
-            //
-            about.Title = "xBIM Xplorer";
-            about.Hyperlink = new Uri("http://xbim.codeplex.com", UriKind.Absolute);
-            about.HyperlinkText = "http://xbim.codeplex.com";
-            about.Publisher = "xBIM Team - Steve Lockley";
-            about.Description = "This application is designed to demonstrate potential usages of the xBIM toolkit";
-            about.ApplicationLogo = new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute));
-            about.Copyright = "Prof. Steve Lockley";
-            // about.PublisherLogo = about.ApplicationLogo;
-            about.AdditionalNotes = "The xBIM toolkit is an Open Source software initiative to help software developers and researchers to support the next generation of BIM tools; unlike other open source application xBIM license is compatible with commercial environments (http://xbim.codeplex.com/license)";
-            about.Show();
+            var w = new AboutWindow {Model = Model};
+            w.Show();
         }
 
         private void UKTemplate_Click(object sender, RoutedEventArgs e)
@@ -926,40 +1056,7 @@ namespace XbimXplorer
                 CoBieTemplate = UkTemplate;
             }
         }
-
-        private void OpenScriptingWindow(object sender, RoutedEventArgs e)
-        {
-            var win = new ScriptingWindow();
-            win.Owner = this;
-
-            win.ScriptingConcrol.DataContext = ModelProvider;
-            var binding = new Binding();
-            win.ScriptingConcrol.SetBinding(ScriptingControl.ModelProperty, binding);
-
-            win.ScriptingConcrol.OnModelChangedByScript += delegate(object o, ModelChangedEventArgs arg)
-            {
-                ModelProvider.ObjectInstance = null;
-                var m3D = new Xbim3DModelContext(arg.NewModel);
-                m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary);
-                ModelProvider.ObjectInstance = arg.NewModel;
-                ModelProvider.Refresh();
-            };
-
-            win.ScriptingConcrol.OnScriptParsed += delegate
-            {
-                GroupControl.Regenerate();
-                //SpatialControl.Regenerate();
-            };
-
-
-            ScriptResults.Visibility = Visibility.Visible;
-            win.Closing += delegate {
-                ScriptResults.Visibility = Visibility.Collapsed;
-            };
-
-            win.Show();
-        }
-
+        
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();
@@ -985,24 +1082,71 @@ namespace XbimXplorer
         private void SetDefaultModeStyler(object sender, RoutedEventArgs e)
         {
             DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
+            DrawingControl.GeomSupport2LayerStyler = new SurfaceLayerStyler();
+            DrawingControl.LayerStylerForceVersion1 = false;
+            DrawingControl.ReloadModel();
+        }
+
+        private void SetStylerVersion1(object sender, RoutedEventArgs e)
+        {
+            DrawingControl.LayerStyler = new LayerStylerTypeAndIfcStyle();
+            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
         private void SetFederationStylerRole(object sender, RoutedEventArgs e)
         {
             DrawingControl.FederationLayerStyler = new LayerStylerSingleColour();
+            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
         private void SetFederationStylerType(object sender, RoutedEventArgs e)
         {
             DrawingControl.FederationLayerStyler = new LayerStylerTypeAndIfcStyle();
+            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
         DrawingControl3D IXbimXplorerPluginMasterWindow.DrawingControl
         {
             get { return DrawingControl; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            var handler = PropertyChanged;
+            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void OpenWindow(object sender, RoutedEventArgs e)
+        {
+            var mi = sender as MenuItem;
+            if (mi == null)
+                return;
+            OpenOrFocusPluginWindow(mi.Tag as Type);
+        }
+
+       
+
+        private void ResetErrors(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                if (OpenOrFocusPluginWindow(typeof(LogViewer.LogViewer)))
+                    Log.Info("Log is not retained before logging window is opened. You will have to repeat the operation to be investigated.");
+            }
+            else if (e.RightButton == MouseButtonState.Pressed)
+            {
+                _numErrors = 0;
+                _numWarnings = 0;
+                OnPropertyChanged("AnyErrors");
+                OnPropertyChanged("NumErrors");
+                OnPropertyChanged("AnyWarnings");
+                OnPropertyChanged("NumWarnings");
+            }
         }
     }
 }

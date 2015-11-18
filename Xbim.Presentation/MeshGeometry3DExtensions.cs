@@ -7,11 +7,86 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
+using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.ProductExtension;
+using Xbim.IO;
+using Xbim.ModelGeometry.Scene;
+using Xbim.XbimExtensions.Interfaces;
+using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
     public static class MeshGeometry3DExtensions
     {
+        public static void AddElements(this MeshGeometry3D m, EntitySelection selection, XbimMatrix3D wcsTransform)
+        {
+            foreach (var item in selection)
+            {
+                m.AddElements(item, wcsTransform);
+            }
+        }
+
+        public static void AddElements(this MeshGeometry3D m, IPersistIfcEntity item, XbimMatrix3D wcsTransform)
+        {
+
+            var fromModel = item.ModelOf as XbimModel;
+            if (fromModel == null || !(item is IfcProduct)) 
+                return;
+            switch (fromModel.GeometrySupportLevel)
+            {
+                case 2:
+                    var context = new Xbim3DModelContext(fromModel);
+
+                    var productShape = context.ShapeInstancesOf((IfcProduct) item)
+                        .Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                        .ToList();
+                    if (!productShape.Any() && item is IfcFeatureElement)
+                    {
+                        productShape = context.ShapeInstancesOf((IfcProduct) item)
+                            .Where(
+                                s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                            .ToList();
+                    }
+
+                    if (!productShape.Any()) 
+                        return;
+                    foreach (var shapeInstance in productShape)
+                    {
+                        IXbimShapeGeometryData shapeGeom =
+                            context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        switch ((XbimGeometryType) shapeGeom.Format)
+                        {
+                            case XbimGeometryType.PolyhedronBinary:
+                                m.Read(shapeGeom.ShapeData,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                                break;
+                            case XbimGeometryType.Polyhedron:
+                                m.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                                break;
+                        }
+                    }
+                    break;
+                case 1:
+                    var xm3d = new XbimMeshGeometry3D();
+                    var geomDataSet = fromModel.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                    foreach (var geomData in geomDataSet)
+                    {
+                        var gd = geomData.TransformBy(wcsTransform);
+                        xm3d.Add(gd);
+                    }
+                    m.Add(xm3d);
+                    break;
+            }
+        }
+
+        public static void Add(this MeshGeometry3D m3D, XbimMeshGeometry3D addedGeometry3D)
+        {
+            m3D.TriangleIndices = Extensions.Utility.GeomUtils.CombineIndexCollection(m3D.TriangleIndices, addedGeometry3D.TriangleIndices, m3D.Positions.Count);
+            m3D.Positions = Extensions.Utility.GeomUtils.CombinePointCollection(m3D.Positions, addedGeometry3D.Positions);
+            m3D.Normals = Extensions.Utility.GeomUtils.CombineVectorCollection(m3D.Normals, addedGeometry3D.Normals);
+        }
+
         /// <summary>
         /// Reads a triangulated model from an array of bytes and adds the mesh to the current state
         ///  </summary>
@@ -99,17 +174,26 @@ namespace Xbim.Presentation
                                     int idx = ReadIndex(br, numVertices);
                                     var normal = br.ReadPackedNormal().Normal;
                                     int writtenIdx;
+                                    var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
+                                    if (qrd != null) //transform the normal if we have to
+                                        wpfNormal = qrd.Transform(wpfNormal);
                                     if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
                                     {
                                         writtenIdx = vertices.Count;
                                         vertices.Add(uniqueVertices[idx]);
                                         uniqueIndices.Add(idx, writtenIdx);
-                                        var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                                        if (qrd!=null) //transform the normal if we have to
-                                            wpfNormal = qrd.Transform(wpfNormal);
                                         normals.Add(wpfNormal);
                                     }
-                                   
+                                    else
+                                    {
+                                        if (normals[writtenIdx] != wpfNormal) //deal with normals that vary at a node
+                                        {
+                                            writtenIdx = vertices.Count;
+                                            vertices.Add(uniqueVertices[idx]);
+                                            normals.Add(wpfNormal);
+                                        }
+                                    }
+
                                     triangleIndices.Add(indexBase + writtenIdx);
                                 }
                             }
@@ -140,7 +224,7 @@ namespace Xbim.Presentation
         }
         public static void Read(this MeshGeometry3D m3D, string shapeData, XbimMatrix3D? transform = null)
         {
-            
+            transform = null;
             RotateTransform3D qrd = new RotateTransform3D();
             Matrix3D? matrix3D = null;
             if (transform.HasValue)
@@ -152,7 +236,7 @@ namespace Xbim.Presentation
             
             using (StringReader sr = new StringReader(shapeData))
             {
-
+                int version = 1;
                 List<Point3D> vertexList = new List<Point3D>(512); //holds the actual unique positions of the vertices in this data set in the mesh
                 List<Vector3D> normalList = new List<Vector3D>(512); //holds the actual unique normals of the vertices in this data set in the mesh
 
@@ -175,6 +259,8 @@ namespace Xbim.Presentation
                             case "P":
                                 vertexList = new List<Point3D>(512);
                                 normalList = new List<Vector3D>(512);
+                                if (tokens.Length > 0)
+                                    version = Int32.Parse(tokens[1]);
                                 break;
                             case "V": //process vertices
                                 for (int i = 1; i < tokens.Length; i++)
@@ -213,31 +299,40 @@ namespace Xbim.Presentation
 
                                         if (indexNormalPair.Length > 1) //we have a normal defined
                                         {
-                                            string normalStr = indexNormalPair[1].Trim();
-                                            switch (normalStr)
+                                            if (version == 1)
                                             {
-                                                case "F": //Front
-                                                    currentNormal = new Vector3D(0, -1, 0);
-                                                    break;
-                                                case "B": //Back
-                                                    currentNormal = new Vector3D(0, 1, 0);
-                                                    break;
-                                                case "L": //Left
-                                                    currentNormal = new Vector3D(-1, 0, 0);
-                                                    break;
-                                                case "R": //Right
-                                                    currentNormal = new Vector3D(1, 0, 0);
-                                                    break;
-                                                case "U": //Up
-                                                    currentNormal = new Vector3D(0, 0, 1);
-                                                    break;
-                                                case "D": //Down
-                                                    currentNormal = new Vector3D(0, 0, -1);
-                                                    break;
-                                                default: //it is an index number
-                                                    int normalIndex = int.Parse(indexNormalPair[1]);
-                                                    currentNormal = normalList[normalIndex];
-                                                    break;
+                                                string normalStr = indexNormalPair[1].Trim();
+                                                switch (normalStr)
+                                                {
+                                                    case "F": //Front
+                                                        currentNormal = new Vector3D(0, -1, 0);
+                                                        break;
+                                                    case "B": //Back
+                                                        currentNormal = new Vector3D(0, 1, 0);
+                                                        break;
+                                                    case "L": //Left
+                                                        currentNormal = new Vector3D(-1, 0, 0);
+                                                        break;
+                                                    case "R": //Right
+                                                        currentNormal = new Vector3D(1, 0, 0);
+                                                        break;
+                                                    case "U": //Up
+                                                        currentNormal = new Vector3D(0, 0, 1);
+                                                        break;
+                                                    case "D": //Down
+                                                        currentNormal = new Vector3D(0, 0, -1);
+                                                        break;
+                                                    default: //it is an index number
+                                                        int normalIndex = int.Parse(indexNormalPair[1]);
+                                                        currentNormal = normalList[normalIndex];
+                                                        break;
+                                                }
+                                            }
+                                            else //we have support for packed normals
+                                            {
+                                                var packedNormal = new XbimPackedNormal(ushort.Parse(indexNormalPair[1]));
+                                                var n = packedNormal.Normal;
+                                                currentNormal = new Vector3D(n.X, n.Y, n.Z);
                                             }
                                             if (matrix3D.HasValue)
                                             { 
@@ -259,11 +354,17 @@ namespace Xbim.Presentation
                                         }
                                         else //just add the index reference
                                         {
-                                            triangleIndices.Add(alreadyWrittenAt);
+                                            if(normals[alreadyWrittenAt] == currentNormal)
+                                                triangleIndices.Add(alreadyWrittenAt);
+                                            else //we need another
+                                            {
+                                                triangleIndices.Add(positions.Count + m3D.TriangleIndices.Count);
+                                                positions.Add(vertexList[index]);
+                                                normals.Add(currentNormal);
+                                            }
                                         }
                                     }
                                 }
-
                                 break;
                             case "F": //skip faces for now, can be used to draw edges
                                 break;
@@ -272,14 +373,11 @@ namespace Xbim.Presentation
 
                         }
                     }
-                   
                 }
-                
                 m3D.Positions = new Point3DCollection(m3D.Positions.Concat(positions)); //we do this for wpf performance issues
                 m3D.Normals = new Vector3DCollection(m3D.Normals.Concat(normals)); //we do this for wpf performance issues
                 m3D.TriangleIndices = new Int32Collection(m3D.TriangleIndices.Concat(triangleIndices)); //we do this for wpf performance issues
             }
-            
         }
 
         //public static void Read(this MeshGeometry3D m3D, byte[] shapeData, XbimMatrix3D? transform = null)

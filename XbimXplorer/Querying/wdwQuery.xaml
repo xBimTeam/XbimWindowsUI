@@ -17,10 +17,14 @@
         >
     <Grid KeyDown="txtCommand_KeyDown">
         <Grid.RowDefinitions>
-            <RowDefinition Height="75"/>
-            <RowDefinition/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="TxtCommand" Grid.Row="0" FontFamily="Lucida Console" AcceptsReturn="True" AutoWordSelection="True" />
+        <Grid Grid.Row="0" >
+            <TextBox x:Name="TxtCommand" FontFamily="Lucida Console" AcceptsReturn="True" AutoWordSelection="True" Margin="0,0,0,28.2" />
+            <Button Content="Run" Height="23" VerticalAlignment="Bottom" Margin="0, 5" Click="cmdRun" />
+        </Grid>
+        
         <RichTextBox x:Name="TxtOut" Grid.Row="1" FontFamily="Lucida Console" Background="#FFFFFFE1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True">
             <RichTextBox.Resources>
                 <Style TargetType="{x:Type Paragraph}">

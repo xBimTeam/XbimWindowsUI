@@ -261,6 +261,7 @@ namespace Xbim.Presentation
             {
                 if (tv != null) //unbind
                 {
+                    tv.UnselectAll();
                     tv.HierarchySource = Enumerable.Empty<XbimModelViewModel>();
                 }
             }

@@ -13,10 +13,12 @@
 #region Directives
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Drawing.Design;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -43,23 +45,37 @@ namespace Xbim.Presentation
     /// </summary>
     public partial class IfcMetaDataControl : INotifyPropertyChanged
     {
-        public class PropertyItem 
+        public class PropertyItem
         {
             public string Units { get; set; }
 
             public string PropertySetName { get; set; }
 
             public string Name { get; set; }
-            
+
+            public int IfcLabel { get; set; }
+
+            public string IfcUri
+            {
+                get { return "xbim://EntityLabel/" + IfcLabel; }
+            }
+
+            public bool IsLabel
+            {
+                get { return IfcLabel > 0; }
+            }
+
             public string Value { get; set; }
 
-            private readonly string[] _schemas = { "file", "ftp", "http", "https" };
-            public bool IsLink 
+            private readonly string[] _schemas = {"file", "ftp", "http", "https"};
+
+
+            public bool IsLink
             {
                 get
                 {
                     Uri uri;
-                    if (!Uri.TryCreate(Value, UriKind.Absolute, out uri)) 
+                    if (!Uri.TryCreate(Value, UriKind.Absolute, out uri))
                         return false;
                     var schema = uri.Scheme;
                     return _schemas.Contains(schema);
@@ -68,22 +84,34 @@ namespace Xbim.Presentation
         }
 
         private IPersistIfcEntity _entity;
+
         public IfcMetaDataControl()
         {
             InitializeComponent();
             TheTabs.SelectionChanged += TheTabs_SelectionChanged;
+
+            _objectGroups = new ListCollectionView(_objectProperties);
+            if (_objectGroups.GroupDescriptions != null)
+            {
+                _objectGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+                _objectGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+            }
             _propertyGroups = new ListCollectionView(_properties);
-            _propertyGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
-            _propertyGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+            if (_propertyGroups.GroupDescriptions != null)
+            {
+                _propertyGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+                _propertyGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+            }
             _materialGroups = new ListCollectionView(_materials);
-            _materialGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+            if (_materialGroups.GroupDescriptions != null)
+                _materialGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
         }
 
-        void TheTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void TheTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count <= 0) 
+            if (e.AddedItems.Count <= 0)
                 return;
-            var selectedTab = e.AddedItems[0] as TabItem;  // Gets selected tab
+            var selectedTab = e.AddedItems[0] as TabItem; // Gets selected tab
             FillTabValues(selectedTab);
         }
 
@@ -113,31 +141,41 @@ namespace Xbim.Presentation
         {
             get { return _propertyGroups; }
         }
+
         private readonly ListCollectionView _materialGroups;
 
         public ListCollectionView MaterialGroups
         {
             get { return _materialGroups; }
         }
-       
+
+        private readonly ListCollectionView _objectGroups;
+
+        public ListCollectionView ObjectGroups
+        {
+            get { return _objectGroups; }
+        }
+
         private readonly ObservableCollection<PropertyItem> _objectProperties = new ObservableCollection<PropertyItem>();
 
         public ObservableCollection<PropertyItem> ObjectProperties
         {
             get { return _objectProperties; }
         }
+
         private readonly ObservableCollection<PropertyItem> _quantities = new ObservableCollection<PropertyItem>();
 
         public ObservableCollection<PropertyItem> Quantities
         {
             get { return _quantities; }
         }
+
         private readonly ObservableCollection<PropertyItem> _properties = new ObservableCollection<PropertyItem>();
 
         public ObservableCollection<PropertyItem> Properties
         {
             get { return _properties; }
-            
+
         }
 
         private readonly ObservableCollection<PropertyItem> _materials = new ObservableCollection<PropertyItem>();
@@ -156,33 +194,34 @@ namespace Xbim.Presentation
 
         public IPersistIfcEntity SelectedEntity
         {
-            get { return (IPersistIfcEntity)GetValue(SelectedEntityProperty); }
+            get { return (IPersistIfcEntity) GetValue(SelectedEntityProperty); }
             set { SetValue(SelectedEntityProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for IfcInstance.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedEntityProperty =
-            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(IfcMetaDataControl),
-                                        new UIPropertyMetadata(null, OnSelectedEntityChanged));
+            DependencyProperty.Register("SelectedEntity", typeof (IPersistIfcEntity), typeof (IfcMetaDataControl),
+                new UIPropertyMetadata(null, OnSelectedEntityChanged));
 
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = d as IfcMetaDataControl;
-            if (ctrl != null && e.NewValue != null && e.NewValue is IPersistIfcEntity)
+            if (ctrl != null && e.NewValue is IPersistIfcEntity)
             {
-                ctrl.DataRebind((IPersistIfcEntity)e.NewValue);
+                ctrl.DataRebind((IPersistIfcEntity) e.NewValue);
             }
-
-            //ctrl.SetUpLinks();
         }
 
         private void DataRebind(IPersistIfcEntity entity)
         {
+            if (_entity != null && !_preventHistory)
+            {
+                _history.Push(_entity);
+                UpdateButtonBack();
+            }
             Clear(); //remove any bindings
-           // ScrollView.ScrollToHome();
             _entity = null;
-
             if (entity != null)
             {
                 _entity = entity;
@@ -192,26 +231,33 @@ namespace Xbim.Presentation
                 _entity = null;
         }
 
+        private void UpdateButtonBack()
+        {
+            BtnBack.IsEnabled = _history.Any();
+        }
+
         private void FillTypeData()
         {
             if (_typeProperties.Count > 0) return; //don't fill unless empty
             var ifcObj = _entity as IfcObject;
-            if (ifcObj == null) 
+            if (ifcObj == null)
                 return;
             var typeEntity = ifcObj.GetDefiningType();
-            if (typeEntity == null) 
+            if (typeEntity == null)
                 return;
             var ifcType = IfcMetaData.IfcType(typeEntity);
-            _typeProperties.Add(new PropertyItem { Name = "Type", Value = ifcType.Type.Name });
-            _typeProperties.Add(new PropertyItem { Name = "Ifc Label", Value = "#" + typeEntity.EntityLabel });
+            _typeProperties.Add(new PropertyItem {Name = "Type", Value = ifcType.Type.Name});
+            _typeProperties.Add(new PropertyItem {Name = "Ifc Label", Value = "#" + typeEntity.EntityLabel});
 
-            _typeProperties.Add(new PropertyItem { Name = "Name", Value = typeEntity.Name });
-            _typeProperties.Add(new PropertyItem { Name = "Description", Value = typeEntity.Description });
-            _typeProperties.Add(new PropertyItem { Name = "GUID", Value = typeEntity.GlobalId });
+            _typeProperties.Add(new PropertyItem {Name = "Name", Value = typeEntity.Name});
+            _typeProperties.Add(new PropertyItem {Name = "Description", Value = typeEntity.Description});
+            _typeProperties.Add(new PropertyItem {Name = "GUID", Value = typeEntity.GlobalId});
             _typeProperties.Add(new PropertyItem
             {
                 Name = "Ownership",
-                Value = typeEntity.OwnerHistory.OwningUser + " using " + typeEntity.OwnerHistory.OwningApplication.ApplicationIdentifier
+                Value =
+                    typeEntity.OwnerHistory.OwningUser + " using " +
+                    typeEntity.OwnerHistory.OwningApplication.ApplicationIdentifier
             });
             //now do properties in further specialisations that are text labels
             foreach (var pInfo in ifcType.IfcProperties.Where
@@ -220,9 +266,9 @@ namespace Xbim.Presentation
                 ) //skip the first for of root, and derived and things that are objects
             {
                 var val = pInfo.Value.PropertyInfo.GetValue(typeEntity, null);
-                if (val == null || !(val is ExpressType)) 
+                if (!(val is ExpressType))
                     continue;
-                var pi = new PropertyItem { Name = pInfo.Value.PropertyInfo.Name, Value = ((ExpressType)val).ToPart21 };
+                var pi = new PropertyItem {Name = pInfo.Value.PropertyInfo.Name, Value = ((ExpressType) val).ToPart21};
                 _typeProperties.Add(pi);
             }
         }
@@ -231,15 +277,18 @@ namespace Xbim.Presentation
         {
             if (_quantities.Count > 0) return; //don't fill unless empty
             //now the property sets for any 
-            
+
             // local cache for efficiency
 
             if (_entity is IfcObject)
             {
                 var ifcObj = _entity as IfcObject;
-                var modelUnits = _entity.ModelOf.Instances.OfType<IfcUnitAssignment>().FirstOrDefault(); // not optional, should never return void in valid model
-                
-                foreach (var relDef in ifcObj.IsDefinedByProperties.Where(r => r.RelatingPropertyDefinition is IfcElementQuantity))
+                var modelUnits = _entity.ModelOf.Instances.OfType<IfcUnitAssignment>().FirstOrDefault();
+                    // not optional, should never return void in valid model
+
+                foreach (
+                    var relDef in
+                        ifcObj.IsDefinedByProperties.Where(r => r.RelatingPropertyDefinition is IfcElementQuantity))
                 {
                     var pSet = relDef.RelatingPropertyDefinition as IfcElementQuantity;
                     AddQuantityPSet(pSet, modelUnits);
@@ -247,10 +296,12 @@ namespace Xbim.Presentation
             }
             else if (_entity is IfcTypeObject)
             {
-                var ifcObj = _entity as IfcTypeObject;
-                var modelUnits = _entity.ModelOf.Instances.OfType<IfcUnitAssignment>().FirstOrDefault(); // not optional, should never return void in valid model
-
                 var asIfcTypeObject = _entity as IfcTypeObject;
+                var modelUnits = _entity.ModelOf.Instances.OfType<IfcUnitAssignment>().FirstOrDefault();
+                // not optional, should never return void in valid model
+
+                if (asIfcTypeObject.HasPropertySets == null)
+                    return;
                 foreach (var pSet in asIfcTypeObject.HasPropertySets.OfType<IfcElementQuantity>())
                 {
                     AddQuantityPSet(pSet, modelUnits);
@@ -266,10 +317,11 @@ namespace Xbim.Presentation
 
         private void AddQuantityPSet(IfcElementQuantity pSet, IfcUnitAssignment modelUnits)
         {
-            if (pSet == null) 
+            if (pSet == null)
                 return;
-            foreach (var item in pSet.Quantities.OfType<IfcPhysicalSimpleQuantity>()) // currently only handles IfcPhysicalSimpleQuantity
-            {  
+            foreach (var item in pSet.Quantities.OfType<IfcPhysicalSimpleQuantity>())
+                // currently only handles IfcPhysicalSimpleQuantity
+            {
                 var v = modelUnits.GetUnitFor(item);
                 _quantities.Add(new PropertyItem
                 {
@@ -283,21 +335,24 @@ namespace Xbim.Presentation
         private void FillPropertyData()
         {
             if (_properties.Any()) //don't try to fill unless empty
-                return; 
+                return;
             //now the property sets for any 
-            
+
             if (_entity is IfcObject)
             {
-                var asIfcObject = _entity as IfcObject;
+                var asIfcObject = (IfcObject) _entity;
                 foreach (
                     var pSet in
                         asIfcObject.IsDefinedByProperties.Select(
-                            relDef => relDef.RelatingPropertyDefinition as IfcPropertySet))
+                            relDef => relDef.RelatingPropertyDefinition as IfcPropertySet)
+                    )
                     AddPropertySet(pSet);
             }
             else if (_entity is IfcTypeObject)
             {
                 var asIfcTypeObject = _entity as IfcTypeObject;
+                if (asIfcTypeObject.HasPropertySets == null)
+                    return;
                 foreach (var pSet in asIfcTypeObject.HasPropertySets.OfType<IfcPropertySet>())
                 {
                     AddPropertySet(pSet);
@@ -322,6 +377,7 @@ namespace Xbim.Presentation
                 }
                 _properties.Add(new PropertyItem
                 {
+                    IfcLabel = item.EntityLabel,
                     PropertySetName = pSet.Name,
                     Name = item.Name,
                     Value = val
@@ -331,9 +387,9 @@ namespace Xbim.Presentation
 
         private void FillMaterialData()
         {
-            if (_materials.Any()) 
+            if (_materials.Any())
                 return; //don't fill unless empty
-            
+
             if (_entity is IfcObject)
             {
                 var ifcObj = _entity as IfcObject;
@@ -359,20 +415,20 @@ namespace Xbim.Presentation
             if (matSel is IfcMaterial) //simplest just add it
                 _materials.Add(new PropertyItem
                 {
-                    Name = string.Format("{0} [#{1}]", ((IfcMaterial)matSel).Name, matSel.EntityLabel),
+                    Name = string.Format("{0} [#{1}]", ((IfcMaterial) matSel).Name, matSel.EntityLabel),
                     PropertySetName = setName,
                     Value = ""
                 });
             else if (matSel is IfcMaterialLayer)
                 _materials.Add(new PropertyItem
                 {
-                    Name = string.Format("{0} [#{1}]", ((IfcMaterialLayer)matSel).Material.Name, matSel.EntityLabel),
-                    Value = ((IfcMaterialLayer)matSel).LayerThickness.Value.ToString(),
+                    Name = string.Format("{0} [#{1}]", ((IfcMaterialLayer) matSel).Material.Name, matSel.EntityLabel),
+                    Value = ((IfcMaterialLayer) matSel).LayerThickness.Value.ToString(),
                     PropertySetName = setName
                 });
             else if (matSel is IfcMaterialList)
             {
-                foreach (var mat in ((IfcMaterialList)matSel).Materials)
+                foreach (var mat in ((IfcMaterialList) matSel).Materials)
                 {
                     _materials.Add(new PropertyItem
                     {
@@ -384,75 +440,192 @@ namespace Xbim.Presentation
             }
             else if (matSel is IfcMaterialLayerSet)
             {
-                foreach (var item in ((IfcMaterialLayerSet)matSel).MaterialLayers) //recursive call to add materials
+                foreach (var item in ((IfcMaterialLayerSet) matSel).MaterialLayers) //recursive call to add materials
                 {
-                    AddMaterialData(item, ((IfcMaterialLayerSet)matSel).LayerSetName);
+                    AddMaterialData(item, ((IfcMaterialLayerSet) matSel).LayerSetName);
                 }
             }
             else if (matSel is IfcMaterialLayerSetUsage)
             {
-                foreach (var item in ((IfcMaterialLayerSetUsage)matSel).ForLayerSet.MaterialLayers) //recursive call to add materials
+                foreach (var item in ((IfcMaterialLayerSetUsage) matSel).ForLayerSet.MaterialLayers)
+                    //recursive call to add materials
                 {
-                    AddMaterialData(item, ((IfcMaterialLayerSetUsage)matSel).ForLayerSet.LayerSetName);
+                    AddMaterialData(item, ((IfcMaterialLayerSetUsage) matSel).ForLayerSet.LayerSetName);
                 }
             }
         }
 
-        private void FillObjectData()
+        private void ReportProp(IPersistIfcEntity entity, IfcMetaProperty prop, bool verbose)
         {
-            if (_objectProperties.Count > 0) return; //don't fill unless empty
-            if (_entity != null)
+            var propVal = prop.PropertyInfo.GetValue(entity, null);
+            if (propVal == null)
             {
-                var ifcType = IfcMetaData.IfcType(_entity);
-                _objectProperties.Add(new PropertyItem { Name = "Type", Value = ifcType.Type.Name });
-                _objectProperties.Add(new PropertyItem { Name = "Ifc Label", Value = "#" + _entity.EntityLabel});
-                var root = _entity as IfcRoot;
-                if (root !=null) //should always be really
+                if (!verbose)
+                    return;
+                propVal = "<null>";
+            }
+            
+            if (prop.IfcAttribute.IsEnumerable)
+            {
+                var propCollection = propVal as IEnumerable<object>;
+                
+                if (propCollection != null)
                 {
-                    _objectProperties.Add(new PropertyItem { Name = "Name", Value = root.Name });
-                    _objectProperties.Add(new PropertyItem { Name = "Description", Value = root.Description });
-                    _objectProperties.Add(new PropertyItem { Name = "GUID", Value = root.GlobalId });
-                    _objectProperties.Add(new PropertyItem
-                    { Name = "Ownership", 
-                        Value = root.OwnerHistory.OwningUser + " using " +root.OwnerHistory.OwningApplication.ApplicationIdentifier });
-                    //now do properties in further specialisations that are text labels
-                    foreach (var pInfo in ifcType.IfcProperties.Where
-                        (p => p.Value.IfcAttribute.Order > 4
-                         && p.Value.IfcAttribute.State != IfcAttributeState.DerivedOverride)
-                        ) //skip the first for of root, and derived and things that are objects
-                    {                      
-                        var val = pInfo.Value.PropertyInfo.GetValue(_entity, null);
-                        if (val == null || !(val is ExpressType)) 
-                            continue;
-                        var pi = new PropertyItem { Name = pInfo.Value.PropertyInfo.Name, Value = ((ExpressType)val).ToPart21 };
-                        _objectProperties.Add(pi);
+                    var propVals = propCollection.ToArray();
+
+                    switch (propVals.Length)
+                    {
+                        case 0:
+                            if (!verbose)
+                                return;
+                            _objectProperties.Add(new PropertyItem { Name = prop.PropertyInfo.Name, Value = "<empty>", PropertySetName = "General" });
+                            break;
+                        case 1:
+                            var tmpSingle = GetPropItem(propVals[0]);
+                            tmpSingle.Name = prop.PropertyInfo.Name + " (∞)";
+                            tmpSingle.PropertySetName = "General";
+                            _objectProperties.Add(tmpSingle);
+                            break;
+                        default:
+                            foreach (var item in propVals)
+                            {
+                                var tmpLoop = GetPropItem(item);
+                                tmpLoop.Name = item.GetType().Name;
+                                tmpLoop.PropertySetName = prop.PropertyInfo.Name;
+                                _objectProperties.Add(tmpLoop);
+                            }
+                            break;
                     }
                 }
+                else
+                {
+                    if (!verbose)
+                        return;
+                    _objectProperties.Add(new PropertyItem { Name = prop.PropertyInfo.Name, Value = "<not an enumerable>" });
+                }
+            }
+            else
+            {
+                var tmp = GetPropItem(propVal);
+                tmp.Name = prop.PropertyInfo.Name;
+                tmp.PropertySetName = "General";
+                _objectProperties.Add(tmp);
+            }
+        }
+
+        private PropertyItem GetPropItem(object propVal)
+        {
+            var retItem = new PropertyItem();
+
+            var pe = propVal as IPersistIfcEntity;
+            var propLabel = 0;
+            if (pe != null)
+            {
+                propLabel = pe.EntityLabel;
+            }
+            var ret = propVal.ToString();
+            if (ret == propVal.GetType().FullName)
+            {
+                ret = propVal.GetType().Name;
+            }
+
+            retItem.Value = ret;
+            retItem.IfcLabel = propLabel;
+
+            return retItem;
+        }
+
+        private void FillObjectData()
+        {
+            if (_objectProperties.Count > 0) 
+                return; //don't fill unless empty
+            if (_entity == null) 
+                return;
+
+            _objectProperties.Add(new PropertyItem { Name = "Ifc Label", Value = "#" + _entity.EntityLabel, PropertySetName = "General" });
+
+            var ifcType = IfcMetaData.IfcType(_entity);
+            _objectProperties.Add(new PropertyItem {Name = "Type", Value = ifcType.Type.Name, PropertySetName = "General"});
+
+            var ifcObj = _entity as IfcObject;
+            if (ifcObj != null)
+            {
+                var typeEntity = ifcObj.GetDefiningType();
+                if (typeEntity != null)
+                {
+                    _objectProperties.Add(new PropertyItem { Name = "Defining Type", Value = typeEntity.Name, PropertySetName = "General", IfcLabel = typeEntity.EntityLabel });
+                }
+            }
+
+            var props = ifcType.IfcProperties.Values;
+            foreach (var prop in props)
+            {
+                ReportProp(_entity, prop, ChkVerbose.IsChecked.HasValue && ChkVerbose.IsChecked.Value);
+            }
+            var invs = ifcType.IfcInverses;
+            
+            foreach (var inverse in invs)
+            {
+                ReportProp(_entity, inverse, false);
+            }
+
+            
+
+            var root = _entity as IfcRoot;
+            if (root == null)
+                return;
+            _objectProperties.Add(new PropertyItem {Name = "Name", Value = root.Name, PropertySetName = "OldUI"});
+            _objectProperties.Add(new PropertyItem { Name = "Description", Value = root.Description, PropertySetName = "OldUI" });
+            _objectProperties.Add(new PropertyItem { Name = "GUID", Value = root.GlobalId, PropertySetName = "OldUI" });
+            _objectProperties.Add(new PropertyItem
+            {
+                Name = "Ownership",
+                Value =
+                    root.OwnerHistory.OwningUser + " using " +
+                    root.OwnerHistory.OwningApplication.ApplicationIdentifier,
+                PropertySetName = "OldUI"
+            });
+            //now do properties in further specialisations that are text labels
+            foreach (var pInfo in ifcType.IfcProperties.Where
+                (p => p.Value.IfcAttribute.Order > 4
+                      && p.Value.IfcAttribute.State != IfcAttributeState.DerivedOverride)
+                ) //skip the first for of root, and derived and things that are objects
+            {
+                var val = pInfo.Value.PropertyInfo.GetValue(_entity, null);
+                if (val == null || !(val is ExpressType))
+                    continue;
+                var pi = new PropertyItem
+                {
+                    Name = pInfo.Value.PropertyInfo.Name,
+                    Value = ((ExpressType) val).ToPart21,
+                    PropertySetName = "OldUI"
+                };
+                _objectProperties.Add(pi);
             }
         }
 
         public XbimModel Model
         {
-            get { return (XbimModel)GetValue(ModelProperty); }
+            get { return (XbimModel) GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Model.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(XbimModel), typeof(IfcMetaDataControl), new PropertyMetadata(null, OnModelChanged));
+            DependencyProperty.Register("Model", typeof (XbimModel), typeof (IfcMetaDataControl),
+                new PropertyMetadata(null, OnModelChanged));
 
 
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = d as IfcMetaDataControl;
-            if (ctrl != null)
+            if (ctrl == null) 
+                return;
+            if (e.NewValue == null)
             {
-                if (e.NewValue == null)
-                {
-                    ctrl.Clear();
-                }
-                ctrl.DataRebind(null);
+                ctrl.Clear();
             }
+            ctrl.DataRebind(null);
         }
 
 
@@ -460,90 +633,18 @@ namespace Xbim.Presentation
         {
             _objectProperties.Clear();
             _quantities.Clear();
-            _properties.Clear() ;
+            _properties.Clear();
             _typeProperties.Clear();
             _materials.Clear();
             NotifyPropertyChanged("Properties");
             NotifyPropertyChanged("PropertySets");
         }
-
-        //////private void LoadMetaData(IPersistIfcEntity item)
-        //////{
-        //////    IfcType ifcType = item.IfcType();
-
-
-        //////    List<PropertyItem> pis = new List<PropertyItem>(ifcType.IfcProperties.Count());
-        //////    PropertyItem plabel = new PropertyItem()
-        //////                              {ID = 0, Name = "Label", Value = "#" + Math.Abs(item.EntityLabel).ToString()};
-        //////    pis.Add(plabel);
-        //////    foreach (var pInfo in ifcType.IfcProperties)
-        //////    {
-        //////        if (pInfo.Value.IfcAttribute.State != IfcAttributeState.DerivedOverride)
-        //////            //only process Ifc Properties and those that are not derived
-        //////        {
-        //////            PropertyItem pi = new PropertyItem()
-        //////                                  {ID = pInfo.Value.IfcAttribute.Order, Name = pInfo.Value.PropertyInfo.Name};
-        //////            pis.Add(pi);
-        //////            object val = pInfo.Value.PropertyInfo.GetValue(item, null);
-        //////            if (val != null)
-        //////            {
-        //////                if (val is ExpressType)
-        //////                    pi.Value = ((ExpressType) val).ToPart21;
-        //////                else if (val.GetType().IsEnum)
-        //////                    pi.Value = string.Format(".{0}.", val.ToString());
-        //////                else //it's a class
-        //////                {
-        //////                    pi.Value = string.Format("{0}", pInfo.Value.PropertyInfo.PropertyType.Name.ToUpper());
-        //////                }
-        //////            }
-        //////            else
-        //////                pi.Value = "null";
-        //////        }
-        //////    }
-
-        //////    _properties = new ObservableCollection<PropertyItem>(pis);
-        //////    NotifyPropertyChanged("Properties");
-        //////    IfcObject ifcObj = item as IfcObject;
-            
-        //////    if (ifcObj != null)
-        //////    {
-        //////        IModel m = ifcObj.ModelOf;
-        //////        //write out any material layers
-        //////        IEnumerable<IfcRelAssociatesMaterial> matRels =
-        //////            ifcObj.HasAssociations.OfType<IfcRelAssociatesMaterial>();
-        //////        foreach (IfcRelAssociatesMaterial matRel in matRels)
-        //////        {
-        //////            _materials.Add(matRel.RelatingMaterial);
-        //////        }
-        //////        //now the property sets
-        //////        foreach (IfcRelDefinesByProperties relDef in ifcObj.IsDefinedByProperties)
-        //////        {
-        //////            IfcPropertySet pSet = relDef.RelatingPropertyDefinition as IfcPropertySet;
-        //////            if (pSet != null)
-        //////                _propertySets.Add(pSet);
-        //////        }
-        //////        ////now the type property sets
-        //////        //IfcTypeObject to = ifcObj.GetDefiningType(m);
-        //////        //if (to != null)
-        //////        //{
-        //////        //    PropertySetDefinitionSet pds = to.HasPropertySets;
-        //////        //    if (pds != null)
-        //////        //    {
-        //////        //        foreach (IfcPropertySetDefinition pSet in pds)
-        //////        //        {
-        //////        //            _typePropertySets.Add(pSet);
-        //////        //        }
-        //////        //    }
-        //////        //}
-        //////    }
-        //////    NotifyPropertyChanged("PropertySets");
-        //////}
-
+        
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void NotifyPropertyChanged(String info)
+        private void NotifyPropertyChanged(string info)
         {
             if (PropertyChanged != null)
             {
@@ -558,7 +659,35 @@ namespace Xbim.Presentation
             var hyperlink = sender as Hyperlink;
             if (hyperlink == null)
                 throw new ArgumentNullException();
-            Process.Start(e.Uri.OriginalString);
+            if (e.Uri.Host == "entitylabel")
+            {
+                var lab = e.Uri.AbsolutePath.Substring(1);
+                var iLabel = 0;
+                if (int.TryParse(lab, out iLabel))
+                {
+                    SelectedEntity = Model.InstancesLocal[iLabel];
+                }
+            }
         }
+
+        private void CheckBoxChanged(object sender, RoutedEventArgs e)
+        {
+            _objectProperties.Clear();
+            FillObjectData();
+        }
+
+        private bool _preventHistory;
+
+        private void Back(object sender, RoutedEventArgs e)
+        {
+            _preventHistory = true;
+            var v = _history.Pop();
+            if (v != null)
+                SelectedEntity = v;
+            _preventHistory = false;
+            UpdateButtonBack();
+        }
+
+        private readonly HistoryCollection<IPersistIfcEntity> _history = new HistoryCollection<IPersistIfcEntity>(20);
     }
 }

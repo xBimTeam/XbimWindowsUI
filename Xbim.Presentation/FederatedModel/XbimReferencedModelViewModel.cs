@@ -4,6 +4,7 @@ using System.Linq;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation.FederatedModel
 {
@@ -29,19 +30,15 @@ namespace Xbim.Presentation.FederatedModel
 
         public string Identifier
         {
-            get 
+            get
             {
-                if (ReferencedModel != null)
-                {
-                    return ReferencedModel.Identifier;
-                }
-
-                return _identifier; 
+                return ReferencedModel != null 
+                    ? ReferencedModel.Identifier 
+                    : _identifier;
             }
             //set
             //{
             //    _identifier = value;
-
             //    if (ReferencedModel != null)
             //    {
             //        ReferencedModel.DocumentInformation.DocumentId = _identifier;
@@ -63,11 +60,10 @@ namespace Xbim.Presentation.FederatedModel
             set 
             {
                 //can't change the model, once it's created. User should delete and add it again.
-                if (ReferencedModel == null)
-                {
-                    _name = value;
-                    OnPropertyChanged("Name");
-                }
+                if (ReferencedModel != null) 
+                    return;
+                _name = value;
+                OnPropertyChanged("Name");
             }
         }
 
@@ -75,12 +71,11 @@ namespace Xbim.Presentation.FederatedModel
         {
             get
             {
-                if (ReferencedModel != null)
-                {
-                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
-                    if (organization != null)
-                        return organization.Name;
-                }
+                if (ReferencedModel == null) 
+                    return _organisationName;
+                var organization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
+                if (organization != null)
+                    return organization.Name;
                 return _organisationName;
             }
             set
@@ -106,18 +101,16 @@ namespace Xbim.Presentation.FederatedModel
         {
             get
             {
-                if (ReferencedModel != null)
-                {
-                    var ownerAsIfcOrganization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
-                    var roles = ownerAsIfcOrganization.Roles;
-                    var role = roles != null ? roles.FirstOrDefault() : null;
-                    if (role == null)
-                        return "";
-                    if (role.Role == IfcRole.UserDefined)
-                        return role.UserDefinedRole.ToString();
-                    return role.Role.ToString();
-                }
-                return _organisationRole;
+                if (ReferencedModel == null) 
+                    return _organisationRole;
+                var ownerAsIfcOrganization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
+                var roles = ownerAsIfcOrganization.Roles;
+                var role = roles != null ? roles.FirstOrDefault() : null;
+                if (role == null)
+                    return "";
+                return role.Role == IfcRole.UserDefined 
+                    ? role.UserDefinedRole.ToString() 
+                    : role.Role.ToString();
             }
             set
             {
@@ -137,10 +130,7 @@ namespace Xbim.Presentation.FederatedModel
             }
         }
 
-        public XbimReferencedModelViewModel()
-        {
-            //default constructor to create objects without model
-        }
+        public XbimReferencedModelViewModel() {}
 
         public XbimReferencedModelViewModel(XbimReferencedModel model)
         {
@@ -160,28 +150,28 @@ namespace Xbim.Presentation.FederatedModel
 
 		    if (string.IsNullOrWhiteSpace(Name))
                 return false;
-            string ext = Path.GetExtension(Name).ToLowerInvariant();
-            using (XbimModel refM = new XbimModel())
+            var ext = Path.GetExtension(Name).ToLowerInvariant();
+            using (var refM = new XbimModel())
             {
-                if (ext != ".xbim")
+                var xbimName = Path.ChangeExtension(Name, "xbim");
+                if (ext != ".xbim" && !File.Exists(xbimName))
                 {
                     refM.CreateFrom(Name, null, null, true);
                     var m3D = new Xbim3DModelContext(refM);
-                    m3D.CreateContext();
+                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: null, adjustWCS: false);
                     Name = Path.ChangeExtension(Name, "xbim");
                 }
+                Name = xbimName;
             }
-
             _xbimReferencedModel = model.AddModelReference(Name, OrganisationName, OrganisationRole);
 
-            if (_xbimReferencedModel != null)
-            {
-                //refresh all
-                OnPropertyChanged("Identifier");
-                OnPropertyChanged("Name");
-                OnPropertyChanged("OrganisationName");
-                OnPropertyChanged("OrganisationRole");
-            }
+            if (_xbimReferencedModel == null) 
+                return ReferencedModel != null;
+            //refresh all
+            OnPropertyChanged("Identifier");
+            OnPropertyChanged("Name");
+            OnPropertyChanged("OrganisationName");
+            OnPropertyChanged("OrganisationRole");
             return ReferencedModel != null;
         }
 

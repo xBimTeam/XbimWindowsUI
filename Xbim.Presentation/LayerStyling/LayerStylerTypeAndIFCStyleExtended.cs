@@ -8,6 +8,7 @@ using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 using Xbim.IO.GroupingAndStyling;
 using Xbim.ModelGeometry.Scene;
+using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -186,5 +187,7 @@ namespace Xbim.Presentation.LayerStyling
         }
 
         public void SetFederationEnvironment(XbimReferencedModel refModel) { }
+        
+        public void SetCurrentModel(IModel model) { }
     }
 }

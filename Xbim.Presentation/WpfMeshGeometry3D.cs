@@ -430,7 +430,7 @@ namespace Xbim.Presentation
             
         }
 
-        public void Add(string mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
+        public void Add(string mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform, short modelId)
         {
             XbimMeshFragment frag = new XbimMeshFragment(PositionCount, TriangleIndexCount, productTypeId, productLabel, geometryLabel, modelId);
             Read(mesh, transform);
@@ -448,11 +448,10 @@ namespace Xbim.Presentation
         {
             Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
         }
-        public bool Read(String data, XbimMatrix3D? tr = null)
+        public bool Read(string data, XbimMatrix3D? tr = null)
         {
-           
-            
-            using (StringReader sr = new StringReader(data))
+            int version = 1;
+            using (var sr = new StringReader(data))
             {
                 Matrix3D? m3D = null;
                 var r = new RotateTransform3D();
@@ -464,79 +463,87 @@ namespace Xbim.Presentation
                                                   tr.Value.OffsetX, tr.Value.OffsetY, tr.Value.OffsetZ, tr.Value.M44);
                     r = tr.Value.GetRotateTransform3D();
                 }
-                Point3DCollection vertexList = new Point3DCollection(); //holds the actual positions of the vertices in this data set in the mesh
-                Vector3DCollection normalList = new Vector3DCollection(); //holds the actual normals of the vertices in this data set in the mesh
-                String line;
+                var vertexList = new Point3DCollection(); //holds the actual positions of the vertices in this data set in the mesh
+                var normalList = new Vector3DCollection(); //holds the actual normals of the vertices in this data set in the mesh
+                string line;
                 // Read and display lines from the data until the end of
                 // the data is reached.
                 while ((line = sr.ReadLine()) != null)
                 {
-                    string[] tokens = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (tokens.Length > 1) //we need a command and some data
+                    var tokens = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (tokens.Length <= 1) 
+                        continue;
+                    var command = tokens[0].Trim().ToUpper();
+                    switch (command)
                     {
-                        string command = tokens[0].Trim().ToUpper();
-                        switch (command)
-                        {
-                            case "P":
-                                int pointCount = 512;
+                        case "P":
+                            var pointCount = 512;
 // ReSharper disable once NotAccessedVariable
-                                int faceCount = 128;
+                            var faceCount = 128;
 // ReSharper disable once NotAccessedVariable
-                                int triangleCount = 256;
-                                int normalCount = 512;
-                                if (tokens.Length > 1) pointCount = Int32.Parse(tokens[2]);
+                            var triangleCount = 256;
+                            var normalCount = 512;
+                            if (tokens.Length > 0)
+                                version = Int32.Parse(tokens[1]);
+                            if (tokens.Length > 1)
+                                pointCount = Int32.Parse(tokens[2]);
+                            // ReSharper disable once RedundantAssignment
+                            if (tokens.Length > 2) 
+                                faceCount = Int32.Parse(tokens[3]);
 // ReSharper disable once RedundantAssignment
-                                if (tokens.Length > 2) faceCount = Int32.Parse(tokens[3]);
-// ReSharper disable once RedundantAssignment
-                                if (tokens.Length > 3) triangleCount = Int32.Parse(tokens[4]);
-                                if (tokens.Length > 4) normalCount = Math.Max(Int32.Parse(tokens[5]),pointCount); //can't really have less normals than points
-                                vertexList = new Point3DCollection(pointCount);
-                                normalList = new Vector3DCollection(normalCount);
-                                //for efficienciency avoid continual regrowing
-                                //this.Mesh.Positions = this.Mesh.Positions.GrowBy(pointCount);
-                                //this.Mesh.Normals = this.Mesh.Normals.GrowBy(normalCount);
-                                //this.Mesh.TriangleIndices = this.Mesh.TriangleIndices.GrowBy(triangleCount*3);
-                                break;
-                            case "F":
-                                break;
-                            case "V": //process vertices
-                                for (int i = 1; i < tokens.Length; i++)
-                                {
-                                    string[] xyz = tokens[i].Split(',');
-                                    Point3D p = new Point3D(Convert.ToDouble(xyz[0], CultureInfo.InvariantCulture),
-                                                                      Convert.ToDouble(xyz[1], CultureInfo.InvariantCulture),
-                                                                      Convert.ToDouble(xyz[2], CultureInfo.InvariantCulture));
-                                    if (m3D.HasValue)
-                                        p = m3D.Value.Transform(p);
-                                    vertexList.Add(p);
-                                }
-                                break;
-                            case "N": //processes normals
-                                for (int i = 1; i < tokens.Length; i++)
-                                {
-                                    string[] xyz = tokens[i].Split(',');
-                                    Vector3D v = new Vector3D(Convert.ToDouble(xyz[0], CultureInfo.InvariantCulture),
-                                                                       Convert.ToDouble(xyz[1], CultureInfo.InvariantCulture),
-                                                                       Convert.ToDouble(xyz[2], CultureInfo.InvariantCulture));
-                                    normalList.Add(v);
-                                }
-                                break;
-                            case "T": //process triangulated meshes
-                                Vector3D currentNormal = new Vector3D();
-                                //each time we start a new mesh face we have to duplicate the vertices to ensure that we get correct shading of planar and non planar faces
-                                Dictionary<int, int> writtenVertices = new Dictionary<int, int>();
+                            if (tokens.Length > 3) 
+                                triangleCount = Int32.Parse(tokens[4]);
+                            if (tokens.Length > 4) 
+                                normalCount = Math.Max(Int32.Parse(tokens[5]),pointCount); //can't really have less normals than points
+                            vertexList = new Point3DCollection(pointCount);
+                            normalList = new Vector3DCollection(normalCount);
+                            //for efficienciency avoid continual regrowing
+                            //this.Mesh.Positions = this.Mesh.Positions.GrowBy(pointCount);
+                            //this.Mesh.Normals = this.Mesh.Normals.GrowBy(normalCount);
+                            //this.Mesh.TriangleIndices = this.Mesh.TriangleIndices.GrowBy(triangleCount*3);
+                            break;
+                        case "F":
+                            break;
+                        case "V": //process vertices
+                            for (int i = 1; i < tokens.Length; i++)
+                            {
+                                string[] xyz = tokens[i].Split(',');
+                                Point3D p = new Point3D(Convert.ToDouble(xyz[0], CultureInfo.InvariantCulture),
+                                    Convert.ToDouble(xyz[1], CultureInfo.InvariantCulture),
+                                    Convert.ToDouble(xyz[2], CultureInfo.InvariantCulture));
+                                if (m3D.HasValue)
+                                    p = m3D.Value.Transform(p);
+                                vertexList.Add(p);
+                            }
+                            break;
+                        case "N": //processes normals
+                            for (int i = 1; i < tokens.Length; i++)
+                            {
+                                string[] xyz = tokens[i].Split(',');
+                                Vector3D v = new Vector3D(Convert.ToDouble(xyz[0], CultureInfo.InvariantCulture),
+                                    Convert.ToDouble(xyz[1], CultureInfo.InvariantCulture),
+                                    Convert.ToDouble(xyz[2], CultureInfo.InvariantCulture));
+                                normalList.Add(v);
+                            }
+                            break;
+                        case "T": //process triangulated meshes
+                            var currentNormal = new Vector3D();
+                            //each time we start a new mesh face we have to duplicate the vertices to ensure that we get correct shading of planar and non planar faces
+                            var writtenVertices = new Dictionary<int, int>();
 
-                                for (int i = 1; i < tokens.Length; i++)
+                            for (var i = 1; i < tokens.Length; i++)
+                            {
+                                var triangleIndices = tokens[i].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (triangleIndices.Length != 3) throw new Exception("Invalid triangle definition");
+                                for (var t = 0; t < 3; t++)
                                 {
-                                    string[] triangleIndices = tokens[i].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                                    if (triangleIndices.Length != 3) throw new Exception("Invalid triangle definition");
-                                    for (int t = 0; t < 3; t++)
+                                    var indexNormalPair = triangleIndices[t].Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                    if (indexNormalPair.Length > 1) //we have a normal defined
                                     {
-                                        string[] indexNormalPair = triangleIndices[t].Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-                                        if (indexNormalPair.Length > 1) //we have a normal defined
+                                        if (version == 1)
                                         {
-                                            string normalStr = indexNormalPair[1].Trim();
+                                            var normalStr = indexNormalPair[1].Trim();
                                             switch (normalStr)
                                             {
                                                 case "F": //Front
@@ -562,35 +569,50 @@ namespace Xbim.Presentation
                                                     currentNormal = normalList[normalIndex];
                                                     break;
                                             }
-                                            if (tr.HasValue)
-                                            {
-                                                currentNormal = r.Transform(currentNormal);
-                                            }
                                         }
-                                        //now add the index
-                                        int index = int.Parse(indexNormalPair[0]);
-
-                                        int alreadyWrittenAt; //in case it is the first mesh
-                                        if (!writtenVertices.TryGetValue(index, out alreadyWrittenAt)) //if we haven't  written it in this mesh pass, add it again unless it is the first one which we know has been written
+                                        else //we have support for packed normals
                                         {
-                                            //all vertices will be unique and have only one normal
-                                            writtenVertices.Add(index, PositionCount);
-                                            Mesh.TriangleIndices.Add(PositionCount);
-                                            Mesh.Positions.Add(vertexList[index]);
-                                            Mesh.Normals.Add(currentNormal);
+                                            var packedNormal = new XbimPackedNormal(ushort.Parse(indexNormalPair[1]));
+                                            var n = packedNormal.Normal;
+                                            currentNormal = new Vector3D(n.X, n.Y, n.Z);
                                         }
-                                        else //just add the index reference
+                                        if (tr.HasValue)
                                         {
-                                            Mesh.TriangleIndices.Add(alreadyWrittenAt);
+                                            currentNormal = r.Transform(currentNormal);
                                         }
                                     }
+                                    //now add the index
+                                    var index = int.Parse(indexNormalPair[0]);
+
+                                    int alreadyWrittenAt; //in case it is the first mesh
+                                    if (!writtenVertices.TryGetValue(index, out alreadyWrittenAt)) //if we haven't  written it in this mesh pass, add it again unless it is the first one which we know has been written
+                                    {
+                                        //all vertices will be unique and have only one normal
+                                        writtenVertices.Add(index, PositionCount);
+
+                                        _unfrozenIndices.Add(PositionCount);
+                                        _unfrozenPositions.Add(vertexList[index]);
+                                        _unfrozenNormals.Add(currentNormal);
+
+                                    }
+                                    else //just add the index reference
+                                    {
+                                        if (_unfrozenNormals[alreadyWrittenAt] == currentNormal)
+                                            _unfrozenIndices.Add(alreadyWrittenAt);
+                                        else //we need another
+                                        {
+                                            _unfrozenIndices.Add(PositionCount);
+                                            _unfrozenPositions.Add(vertexList[index]);
+                                            _unfrozenNormals.Add(currentNormal);
+                                        }
+                                    }
+                                   
                                 }
+                            }
 
-                                break;
-                            default:
-                                throw new Exception("Invalid Geometry Command");
-
-                        }
+                            break;
+                        default:
+                            throw new Exception("Invalid Geometry Command");
                     }
                 }
             }

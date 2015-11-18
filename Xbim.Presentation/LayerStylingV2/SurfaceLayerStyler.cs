@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ProductExtension;
+using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using XbimGeometry.Interfaces;
@@ -24,6 +26,21 @@ namespace Xbim.Presentation.LayerStylingV2
         public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context,
             List<Type> exclude = null)
         {
+            var excludedTypes = new HashSet<short>();
+            if (exclude == null)
+                exclude = new List<Type>()
+                {
+                    typeof(IfcSpace)
+                    // , typeof(IfcFeatureElement)
+                };
+            foreach (var excludedT in exclude)
+            {
+                var ifcT = IfcMetaData.IfcType(excludedT);
+                foreach (var exIfcType in ifcT.NonAbstractSubTypes.Select(IfcMetaData.IfcType))
+                {
+                    excludedTypes.Add(exIfcType.TypeId);
+                }
+            }
 
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
 
@@ -55,16 +72,16 @@ namespace Xbim.Presentation.LayerStylingV2
                     tmpOpaquesGroup.Children.Add(mg);
             }
 
-
             if (!styles.Any()) return scene; //this should always return something
-            int i = 0;
             var shapeInstances = context.ShapeInstances()
-                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
-                            !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
-                        !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
+                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded
+                            &&
+                            !excludedTypes.Contains(s.IfcTypeId));
+                            // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
+                            // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
             foreach (var shapeInstance in shapeInstances)
             {
-                Console.WriteLine(i++);
+                
                 var styleId = shapeInstance.StyleLabel > 0 ? shapeInstance.StyleLabel : shapeInstance.IfcTypeId * -1;
 
                 //GET THE ACTUAL GEOMETRY 
@@ -77,7 +94,7 @@ namespace Xbim.Presentation.LayerStylingV2
                         new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                     mg.BackMaterial = mg.Material;
                     mg.Transform =
-                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
+                        XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom).ToMatrixTransform3D();
                     if (styles[styleId].IsTransparent)
                         tmpTransparentsGroup.Children.Add(mg);
                     else
@@ -106,7 +123,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                         mg.BackMaterial = mg.Material;
                         mg.Transform =
-                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform).ToMatrixTransform3D();
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom).ToMatrixTransform3D();
                         if (styles[styleId].IsTransparent)
                             tmpTransparentsGroup.Children.Add(mg);
                         else
@@ -119,22 +136,25 @@ namespace Xbim.Presentation.LayerStylingV2
                         switch ((XbimGeometryType)shapeGeom.Format)
                         {
                             case XbimGeometryType.Polyhedron:
-                                var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                // var shapePoly = (XbimShapeGeometry)shapeGeom;
+                                var asString = Encoding.UTF8.GetString(shapeGeom.ShapeData.ToArray());
                                 targetMergeMeshByStyle.Add(
-                           shapePoly.ShapeData,
-                           shapeInstance.IfcTypeId,
-                           shapeInstance.IfcProductLabel,
-                           shapeInstance.InstanceLabel,
-                           XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                    asString,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
+                                    model.UserDefinedId);
                                 break;
 
                             case XbimGeometryType.PolyhedronBinary:
+                                var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom);
                                 targetMergeMeshByStyle.Add(
-                          shapeGeom.ShapeData,
-                          shapeInstance.IfcTypeId,
-                          shapeInstance.IfcProductLabel,
-                          shapeInstance.InstanceLabel,
-                          XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.WcsTransform));
+                                    shapeGeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel, transform,
+                                    model.UserDefinedId);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();
@@ -151,16 +171,16 @@ namespace Xbim.Presentation.LayerStylingV2
             {
                 var mv = new ModelVisual3D();
                 mv.Content = tmpOpaquesGroup;
-                Control.Opaques.Children.Add(mv);
-                Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
+                Control.OpaquesVisual3D.Children.Add(mv);
+                // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
             }
             if (tmpTransparentsGroup.Children.Any())
             {
                 var mv = new ModelVisual3D();
                 mv.Content = tmpTransparentsGroup;
-                Control.Transparents.Children.Add(mv);
-                if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
-                else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
+                Control.TransparentsVisual3D.Children.Add(mv);
+                //if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
+                //else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
             }
             return scene;
         }

@@ -24,11 +24,11 @@ namespace XbimXplorer.Querying
         /// <returns></returns>
         public static string GeomInfoBoundBox(XbimModel model, int iEntLabel)
         {
-            XbimGeometryData geomdata = model.GetGeometryData(iEntLabel, XbimGeometryType.BoundingBox).FirstOrDefault();
+            var geomdata = model.GetGeometryData(iEntLabel, XbimGeometryType.BoundingBox).FirstOrDefault();
             if (geomdata == null)
                 return "<not found>";
             
-            XbimRect3D r3D = XbimRect3D.FromArray(geomdata.ShapeData);
+            var r3D = XbimRect3D.FromArray(geomdata.ShapeData);
             return string.Format("Bounding box (position, size): {0}", r3D.ToString());
         }
 

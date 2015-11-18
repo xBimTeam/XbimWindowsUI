@@ -1,7 +1,7 @@
 ﻿<Window x:Class="XbimXplorer.Dialogs.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SettingsWindow" Height="300" Width="500">
+        Title="SettingsWindow" Height="378" Width="500">
     <Grid>
         <DockPanel>
             <Grid DockPanel.Dock="Bottom" >
@@ -50,6 +50,22 @@
 
                     
                     
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="UI Configuration" Margin="10"  DockPanel.Dock="Top">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Developer mode" VerticalAlignment="Center" />
+                    <CheckBox Grid.Column="1" Grid.Row="0" Content="Enabled" IsChecked="{Binding DeveloperMode}"  />
                 </Grid>
             </GroupBox>
         </DockPanel>
