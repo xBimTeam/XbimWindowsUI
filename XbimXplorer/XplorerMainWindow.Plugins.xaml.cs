@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -108,10 +106,15 @@ namespace XbimXplorer
                 }
                 AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             }
-            ICollection<Type> types = new List<Type>();
+            var types = new List<Type>();
             try
             {
-                types = assembly.GetTypes().Where(i => i != null && typeof(UserControl).IsAssignableFrom(i)  && i.Assembly == assembly).ToList();
+                types.AddRange(assembly.GetTypes()
+                        .Where(i => i != null && typeof (UserControl).IsAssignableFrom(i) && i.Assembly == assembly)
+                        );
+                types.AddRange(assembly.GetTypes()
+                        .Where(i => i != null && typeof(Window).IsAssignableFrom(i) && i.Assembly == assembly)
+                        );
             }
             catch (ReflectionTypeLoadException ex)
             {
@@ -124,13 +127,12 @@ namespace XbimXplorer
                     }
                     // This exception list is not exhaustive, modify to suit any reasons
                     // you find for failure to parse a single assembly
-                    catch (BadImageFormatException)
+                    catch (BadImageFormatException bfe)
                     {
-                        // Type not in this assembly - reference to elsewhere ignored
+                        Log.Error("Plugin error, bad format exception.", bfe);
                     }
                 }
             }
-
             foreach (var tp in types)
             {
                 EvaluateXbimUiType(tp);
@@ -182,12 +184,6 @@ namespace XbimXplorer
             v.Click += OpenWindow;
         }
 
-        private class PluginWindowCollection : ObservableCollection<IXbimXplorerPluginWindow>
-        {
-        }
-
-        readonly PluginWindowCollection _pluginWindows = new PluginWindowCollection();
-
         Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
             var parts = args.Name.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
@@ -200,27 +196,45 @@ namespace XbimXplorer
                 : null;
         }
         
-        private LayoutContent ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
+        private object ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
         {
-            if (!(pluginWindow is UserControl))
+            // ReSharper disable once SuspiciousTypeConversion.Global // this is because the type is loaded at runtime
+            if (pluginWindow is Window)
             {
-                Log.ErrorFormat("{0} does not inherit from UserControl as expected", pluginWindow.GetType());
+                // ReSharper disable once SuspiciousTypeConversion.Global // this is because the type is loaded at runtime
+                var aswindow = (Window)pluginWindow;
+                var cmode = pluginWindow.GetUiContainerMode();
+                switch (cmode)
+                {
+                    case PluginWindowUiContainerEnum.Dialog:
+                        pluginWindow.BindUi(MainWindow);
+                        // aswindow.Closed += PluginWindowClosed; // no need to add the closed control... as the code is not progressing until closed
+                        aswindow.ShowDialog();
+                        var closeAction = pluginWindow.GetUiAttribute().CloseAction;
+                        if (closeAction == PluginWindowCloseAction.Hide)
+                            return aswindow;
+                        break;
+                    default:
+                        Log.ErrorFormat("Plugin type {0} has unsuitable containermode ({1}).", pluginWindow.GetType().Name, cmode);
+                        break;
+                }
                 return null;
             }
 
-            
-            if (!_pluginWindows.Contains(pluginWindow))
-                _pluginWindows.Add(pluginWindow);
-            // preparing user control
-            var uc = pluginWindow as UserControl;
-            uc.HorizontalAlignment = HorizontalAlignment.Stretch;
-            uc.VerticalAlignment = VerticalAlignment.Stretch;
-            //set data binding
-            pluginWindow.BindUi(MainWindow);
-
-            switch (pluginWindow.GetUiContainerMode())
+            if (pluginWindow is UserControl)
             {
-                case PluginWindowUiContainerEnum.LayoutAnchorable:
+                if (!_pluginWindows.Contains(pluginWindow))
+                    _pluginWindows.Add(pluginWindow);
+                // preparing user control
+                var uc = pluginWindow as UserControl;
+                uc.HorizontalAlignment = HorizontalAlignment.Stretch;
+                uc.VerticalAlignment = VerticalAlignment.Stretch;
+                //set data binding
+                pluginWindow.BindUi(MainWindow);
+
+                switch (pluginWindow.GetUiContainerMode())
+                {
+                    case PluginWindowUiContainerEnum.LayoutAnchorable:
                     {
                         // inner 
                         var inner = new LayoutAnchorable()
@@ -228,15 +242,14 @@ namespace XbimXplorer
                             Title = pluginWindow.WindowTitle,
                             Content = uc
                         };
-                        
-                       GetRightPane().Children.Add(inner);
-                        
+
+                        GetRightPane().Children.Add(inner);
+
                         if (setCurrent)
                             inner.IsActive = true;
                         return inner;
                     }
-                case PluginWindowUiContainerEnum.LayoutDoc:
-                default:
+                    case PluginWindowUiContainerEnum.LayoutDoc:
                     {
                         var ld = new LayoutDocument
                         {
@@ -248,8 +261,14 @@ namespace XbimXplorer
                         if (setCurrent)
                             ld.IsActive = true;
                         return ld;
-                    }                  
+                    }
+                    default:
+                        Log.ErrorFormat("Plugin type {0} has unsuitable containermode.", pluginWindow.GetType().Name);
+                        break;
+                }
             }
+            Log.ErrorFormat("{0} does not inherit from UserControl as expected", pluginWindow.GetType());
+            return null;
         }
         
         LayoutAnchorablePaneGroup _rightPaneGroup;
@@ -277,58 +296,100 @@ namespace XbimXplorer
             return _rightPane;
         }
 
+        private class SinglePluginItem
+        {
+            public IXbimXplorerPluginWindow pluginInterface;
+            public object UiObject;
+        }
 
-        private readonly Dictionary<Type, LayoutContent> _menuWindows = new Dictionary<Type, LayoutContent>();
-        private readonly Dictionary<Type, IXbimXplorerPluginWindow> _retainedControls = new Dictionary<Type, IXbimXplorerPluginWindow>();
+        // todo: do we need both the following?
+
+        private readonly Dictionary<Type, SinglePluginItem> _retainedControls = new Dictionary<Type, SinglePluginItem>();
+
+        readonly PluginWindowCollection _pluginWindows = new PluginWindowCollection();
+
+        private class PluginWindowCollection : ObservableCollection<IXbimXplorerPluginWindow>
+        {
+        }
+
+        
         
         private bool OpenOrFocusPluginWindow(Type tp)
         {
-            if (!_menuWindows.ContainsKey(tp))
+            if (!_retainedControls.ContainsKey(tp))
             {
                 IXbimXplorerPluginWindow instance;
                 if (_retainedControls.ContainsKey(tp))
-                    instance = _retainedControls[tp];
+                    instance = _retainedControls[tp].pluginInterface;
                 else
-                    instance = (IXbimXplorerPluginWindow)Activator.CreateInstance(tp);
-
+                {
+                    try
+                    {
+                        instance = (IXbimXplorerPluginWindow) Activator.CreateInstance(tp);
+                    }
+                    catch (Exception ex)
+                    {
+                        var msg = string.Format("Error creating instance of type '{0}'", tp);
+                        Log.Error(msg, ex);
+                        return false;
+                    }
+                }
                 var menuWindow = ShowPluginWindow(instance, true);
-                _menuWindows.Add(tp, menuWindow);
+                if (menuWindow == null) 
+                    return true;
+                // if returned the window must be retained.
+                var i = new SinglePluginItem()
+                {
+                    pluginInterface = instance,
+                    UiObject = menuWindow
+                };
+                _retainedControls.Add(tp, i);
                 return true;
             }
-            var v = _menuWindows[tp];
-            if (v is LayoutAnchorable)
+            var v = _retainedControls[tp];
+            if (v.UiObject is LayoutAnchorable)
             {
-                var anch = v as LayoutAnchorable;
-                
+                var anch = v.UiObject as LayoutAnchorable;
                 if (anch.IsHidden)
                     anch.Show();
-                v.IsActive = true;
+                anch.IsActive = true;
                 return true;
             }
-
-            return false;
-            
+            else if (v.UiObject is Window)
+            {
+                // ShowPluginWindow(v, true);
+            }
+            return false;            
         }
 
         private void PluginWindowClosed(object sender, EventArgs eventArgs)
         {
             IXbimXplorerPluginWindow vPlug = null;
+            if (sender is LayoutAnchorable)
+            {
+                // nothing to do here, window is only hidden
+                return;
+            }
+            // here we find the associated plugin item
             if (sender is LayoutDocument)
             {
                 var cnt = ((LayoutDocument)sender).Content;
                 vPlug = cnt as IXbimXplorerPluginWindow;
             }
-            else if (sender is LayoutAnchorable)
+            else if (sender is Window)
             {
-
+                var cnt = (Window)sender;
+                vPlug = cnt as IXbimXplorerPluginWindow;
             }
             if (vPlug == null)
                 return;
             var tp = vPlug.GetType();
-            if (vPlug.GetUiAttribute().CloseAction == PluginWindowCloseAction.Hide && !_retainedControls.ContainsKey(tp))
-                _retainedControls.Add(tp, vPlug);
-            _menuWindows.Remove(tp);
-        }
+            var closeAction = vPlug.GetUiAttribute().CloseAction;
 
+            if (closeAction == PluginWindowCloseAction.Close && _retainedControls.ContainsKey(tp) )
+            {
+                _retainedControls.Remove(tp);
+            }
+        }
     }
 }

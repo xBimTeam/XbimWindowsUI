@@ -1,21 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Xbim.COBieLite;
-using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using XbimGeometry.Interfaces;
 
 namespace XbimXplorer.Dialogs
 {
@@ -39,12 +26,10 @@ namespace XbimXplorer.Dialogs
         public ExportWindow(XplorerMainWindow callingWindow) : this()
         {
             _mainWindow = callingWindow;
-
-            TxtFolderName.Text =
-                Path.Combine(
-                    new FileInfo(_mainWindow.GetOpenedModelFileName()).DirectoryName,
-                    "Export"
-                    );
+            TxtFolderName.Text = Path.Combine(
+                new FileInfo(_mainWindow.GetOpenedModelFileName()).DirectoryName, 
+                "Export" 
+                );
 
         }
 
@@ -52,14 +37,9 @@ namespace XbimXplorer.Dialogs
 
         private void DoExport(object sender, RoutedEventArgs e)
         {
-            int totExports =
-                (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value ? 1 : 0) +
-                (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value ? 1 : 0) +
-                (ChkCobileLiteJson.IsChecked.HasValue && ChkCobileLiteJson.IsChecked.Value ? 1 : 0);
+            var totExports = (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value ? 1 : 0);
             if (totExports == 0)
                 return;
-
-            Cursor = Cursors.Wait;
 
             if (!Directory.Exists(TxtFolderName.Text))
             {
@@ -70,15 +50,16 @@ namespace XbimXplorer.Dialogs
                 catch (Exception)
                 {
                     MessageBox.Show("Error creating directory. Select a different location.");
+                    return;
                 }
             }
 
+            Cursor = Cursors.Wait;
             if (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value)
             {
                 // file preparation
                 //
                 var wexbimFileName = GetExportName("wexbim");
-
                 try
                 {
                     using (var wexBimFile = new FileStream(wexbimFileName, FileMode.Create))
@@ -107,64 +88,6 @@ namespace XbimXplorer.Dialogs
                     }
                 }
                 totExports--;
-            }
-            if (
-                (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value) ||
-                (ChkCobileLiteJson.IsChecked.HasValue && ChkCobileLiteJson.IsChecked.Value)
-                )
-            {
-
-                var helper = new CoBieLiteHelper(_mainWindow.Model, "UniClass");
-                var facilities = helper.GetFacilities();
-
-                if (ChkCobileLiteXml.IsChecked.HasValue && ChkCobileLiteXml.IsChecked.Value)
-                {
-                    try
-                    {
-                        var i = 0;
-                        foreach (var facilityType in facilities)
-                        {
-                            var xportname = GetExportName(".CobieLite.XML", i);
-                            using (TextWriter writer = File.CreateText(xportname))
-                            {
-                                CoBieLiteHelper.WriteXml(writer, facilityType);
-                            }
-                        }
-                    }
-                    catch (Exception ce)
-                    {
-                        if (CancelAfterNotification("Error exporting CobieLite.XML file.", ce, totExports))
-                        {
-                            Cursor = Cursors.Arrow;
-                            return;
-                        }
-                    }
-                    totExports--;
-                }
-                if (ChkCobileLiteJson.IsChecked.HasValue && ChkCobileLiteJson.IsChecked.Value)
-                {
-                    try
-                    {
-                        var i = 0;
-                        foreach (var facilityType in facilities)
-                        {
-                            var xportname = GetExportName(".CobieLite.json", i);
-                            using (TextWriter writer = File.CreateText(xportname))
-                            {
-                                CoBieLiteHelper.WriteJson(writer, facilityType);
-                            }
-                        }
-                    }
-                    catch (Exception ce)
-                    {
-                        if (CancelAfterNotification("Error exporting CobieLite.json file.", ce, totExports))
-                        {
-                            Cursor = Cursors.Arrow;
-                            return;
-                        }
-                    }
-                    totExports--;
-                }
             }
             Cursor = Cursors.Arrow;
             Close();

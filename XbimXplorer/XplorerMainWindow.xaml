@@ -59,12 +59,10 @@
         <CommandBinding Command="Open"   Executed="CommandBinding_Open" CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
-
-        <CommandBinding Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}"   Executed="ExportCoBieCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
+        
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" Executed="CreateFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
-        <CommandBinding Command="{x:Static local:XplorerMainWindow.CoBieClassFilter}" Executed="CoBieClassFilterCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" Executed="OpenExportWindow" CanExecute="CommandBinding_CanExecute"/>
 
     </Window.CommandBindings>
@@ -89,7 +87,7 @@
                 <MenuItem Header="Recent files" x:Name="MnuRecent" Click="RecentFileClick" />
                 <Separator />
                 <MenuItem x:Name="ExportMenu" Header="_Export">
-                    <MenuItem Header="_Native" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
+                    <MenuItem Header="_WexBim" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
                 </MenuItem>
                 <Separator />
                 <MenuItem Header="_Exit" Click="Exit" />
@@ -142,13 +140,6 @@
                 <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraRotationMode, ElementName=DrawingControl}" Header="CameraRotationMode"/>
                 <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraMode, ElementName=DrawingControl}" Header="CameraMode" />
                 -->
-            </MenuItem>
-            <MenuItem Header="C_OBie">
-                <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}" />
-                <MenuItem Header="_ClassFilter" Command="{x:Static local:XplorerMainWindow.CoBieClassFilter}" />
-                <Separator />
-                <MenuItem Header="UK Template" IsCheckable="True" Click="UKTemplate_Click" Name="Uk" IsChecked="True"/>
-                <MenuItem Header="US Template" IsCheckable="True" Click="USTemplate_Click" Name="Us" />
             </MenuItem>
             <MenuItem Header="_About" Click="About_Click"/>
         </Menu>

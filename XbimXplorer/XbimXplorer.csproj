@@ -194,32 +194,8 @@
     <Reference Include="PresentationFramework">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="Xbim.COBie, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBie.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Xbim.COBieLite, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBieLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Xbim.COBieLiteUK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBieLiteUK.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Xbim.COBieLiteUK.Validation, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.COBieLiteUK.Validation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Xbim.Common, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
       <HintPath>..\packages\Xbim.Essentials.3.1.10\lib\net40\Xbim.Common.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Xbim.DPoW, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.DPoW.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Xbim.Exchanger, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.3.1.12-V0009\lib\net40\Xbim.Exchanger.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -240,10 +216,6 @@
     </Reference>
     <Reference Include="Xbim.ModelGeometry.Scene, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
       <HintPath>..\packages\Xbim.Geometry.3.1.13\lib\net40\Xbim.ModelGeometry.Scene.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Xbim.Properties, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.PropertySets.3.1.10\lib\net40\Xbim.Properties.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -283,6 +255,7 @@
     </Compile>
     <Compile Include="Dialogs\ExportWindow.xaml.cs">
       <DependentUpon>ExportWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="LogViewer\EventAppender.cs" />
     <Compile Include="LogViewer\EventViewModel.cs" />
@@ -297,10 +270,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Dialogs\AboutWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\COBieClassFilter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -347,10 +316,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Dialogs\CheckedListItem.cs" />
-    <Compile Include="Dialogs\COBieClassFilter.xaml.cs">
-      <DependentUpon>COBieClassFilter.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
@@ -404,9 +369,6 @@
     <Content Include="COBie-US-2_4-template.xls">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="IfcToCOBieLiteUK\Classifications\DataFiles\Uniclass2015_Ac_v0_1.csv" />
-    <None Include="IfcToCOBieLiteUK\Classifications\DataFiles\Uniclass2015_Pr_v1_1.csv" />
-    <None Include="IfcToCOBieLiteUK\Classifications\DataFiles\Uniclass2015_Ss_v1_1.csv" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
