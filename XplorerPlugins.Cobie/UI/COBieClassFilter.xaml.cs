@@ -77,6 +77,28 @@ namespace XplorerPlugins.Cobie.UI
         {
             _parentWindow = mainWindow;
             SetBinding(ModelProperty, new Binding("Model") { Source = mainWindow.DrawingControl, Mode = BindingMode.OneWay });
+
+
+            ConfigureFolder();
+        }
+
+        private void ConfigureFolder()
+        {
+            var dir = new DirectoryInfo(".");
+            if (_parentWindow != null)
+            {
+                var openedModel = _parentWindow.GetOpenedModelFileName();
+                if (!string.IsNullOrEmpty(openedModel))
+                {
+                    dir = new DirectoryInfo(
+                        Path.Combine(
+                            new FileInfo(_parentWindow.GetOpenedModelFileName()).DirectoryName,
+                            "Export"
+                            ));
+                }
+            }
+            // main folder config
+            TxtFolderName.Text = dir.FullName;
         }
 
         public string SelectedTemplate { get; set; }
@@ -94,22 +116,7 @@ namespace XplorerPlugins.Cobie.UI
         {
             InitializeComponent();
 
-            var dir = new  DirectoryInfo(".");
-            var openedModel = _parentWindow.GetOpenedModelFileName();
-            if (!string.IsNullOrEmpty(openedModel))
-            {
-                dir = new DirectoryInfo(
-                    Path.Combine(
-                        new FileInfo(_parentWindow.GetOpenedModelFileName()).DirectoryName,
-                        "Export"
-                        ));
-
-
-            }
-
-            
-            // main folder config
-            TxtFolderName.Text = dir.FullName;
+            ConfigureFolder();
 
             // prepare templates list
             Templates = new ObservableCollection<string>() {UkTemplate, UsTemplate};
@@ -144,12 +151,21 @@ namespace XplorerPlugins.Cobie.UI
         /// <param name="e"></param>
         private void OK_Click(object sender, RoutedEventArgs e)
         {
-            SetExcludes(ClassFilterComponent, UserFilters.ObjectType.Component);
-            SetExcludes(ClassFilterType, UserFilters.ObjectType.Types);
-            SetExcludes(ClassFilterAssembly, UserFilters.ObjectType.Assembly);
-            ExportCoBie();
-            DialogResult = true;
-            Close();
+            try
+            {
+                SetExcludes(ClassFilterComponent, UserFilters.ObjectType.Component);
+                SetExcludes(ClassFilterType, UserFilters.ObjectType.Types);
+                SetExcludes(ClassFilterAssembly, UserFilters.ObjectType.Assembly);
+                if (!ExportCoBie()) 
+                    return;
+                DialogResult = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                var msg = string.Format("Error exporting cobie from plugin.");
+                Log.Error(msg, ex);
+            }
         }
 
         // todo: rename to cobietemplatename
@@ -158,7 +174,7 @@ namespace XplorerPlugins.Cobie.UI
             get { return UkTemplate; }
         }
 
-        private void ExportCoBie()
+        private bool ExportCoBie()
         {
 
             if (!Directory.Exists(TxtFolderName.Text))
@@ -170,7 +186,7 @@ namespace XplorerPlugins.Cobie.UI
                 catch (Exception)
                 {
                     MessageBox.Show("Error creating directory. Select a different location.");
-                    return;
+                    return false;
                 }
             }
 
@@ -215,7 +231,9 @@ namespace XplorerPlugins.Cobie.UI
                 Log.Error("CurrentUICulture could not restored.", ex);
             }
 
-            Process.Start(outputFile);
+            if (ChkOpenExcel.IsChecked.HasValue && ChkOpenExcel.IsChecked.Value)
+                Process.Start(outputFile);
+            return true;
         }
 
         /// <summary>

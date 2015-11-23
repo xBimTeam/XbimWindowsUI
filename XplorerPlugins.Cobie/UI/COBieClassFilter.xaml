@@ -78,6 +78,5 @@
             </TabItem>
         </TabControl>
         <Button Content="Export" Margin="0,0,9.6,10.4" HorizontalAlignment="Right" Width="123" Height="27" VerticalAlignment="Bottom" x:Name="Export" Click="OK_Click" />
-
     </Grid>
 </Window>
