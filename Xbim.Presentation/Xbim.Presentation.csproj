@@ -204,9 +204,6 @@
     </Compile>
     <Compile Include="XbimMatrix3DExtensions.cs" />
     <Compile Include="MeshGeometry3DExtensions.cs" />
-    <Compile Include="SynchronizedView.xaml.cs">
-      <DependentUpon>SynchronizedView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="EntitySelection.cs" />
     <Compile Include="ModelGeomInfo\PolylineGeomInfo.cs" />
     <Compile Include="ModelGeomInfo\PointGeomInfo.cs" />
@@ -261,10 +258,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SynchronizedView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Themes\Generic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -286,10 +279,10 @@
     <Year>$([System.DateTime]::Now.ToString("yy"))</Year>
     <Month>$([System.DateTime]::Now.ToString("MM"))</Month>
     <Day>$([System.DateTime]::Now.ToString("dd"))</Day>
-	<Minute>$([System.Int32]::Parse($([System.DateTime]::Now.ToString("mm"))))</Minute>
-	<Hour>$([System.Int32]::Parse($([System.DateTime]::Now.ToString("HH"))))</Hour>
-	<MinuteOfDay>$([MSBuild]::Add($(Minute),$([MSBuild]::Multiply($(Hour),60))))</MinuteOfDay>
-	<HalfMinuteOfDay>$([System.Convert]::ToInt16($([MSBuild]::Divide($(MinuteOfDay), 2))))</HalfMinuteOfDay>
+    <Minute>$([System.Int32]::Parse($([System.DateTime]::Now.ToString("mm"))))</Minute>
+    <Hour>$([System.Int32]::Parse($([System.DateTime]::Now.ToString("HH"))))</Hour>
+    <MinuteOfDay>$([MSBuild]::Add($(Minute),$([MSBuild]::Multiply($(Hour),60))))</MinuteOfDay>
+    <HalfMinuteOfDay>$([System.Convert]::ToInt16($([MSBuild]::Divide($(MinuteOfDay), 2))))</HalfMinuteOfDay>
     <AssemblyFileVersionAttribute>[assembly:System.Reflection.AssemblyFileVersion("3.2.$(Year)$(Month).$(Day)$(HalfMinuteOfDay)")];</AssemblyFileVersionAttribute>
   </PropertyGroup>
   <Target Name="BeforeBuild">
