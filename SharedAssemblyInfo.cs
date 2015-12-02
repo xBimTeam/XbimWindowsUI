@@ -8,13 +8,13 @@
 [assembly: AssemblyConfiguration("Release")]
 #endif
 
-[assembly: AssemblyCompany("Lockley Consulting")]
+[assembly: AssemblyCompany("Xbim Team")]
 [assembly: AssemblyProduct("Xbim Library")]
-[assembly: AssemblyCopyright("Copyright © Lockley Consulting 2007-2015")]
-[assembly: AssemblyTrademark("Xbim")]
+[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2015")]
+[assembly: AssemblyTrademark("Xbim Team")]
 [assembly: AssemblyCulture("")]
  
 // AssemblyVersion is the CLR version. Change this only when making breaking changes
 // Whenever breaking changes happen update this.
-[assembly: AssemblyVersion("3.2")]
+[assembly: AssemblyVersion("3.2.1")]
 

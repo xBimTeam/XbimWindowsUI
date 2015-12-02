@@ -18,5 +18,7 @@ namespace Xbim.Presentation.XplorerPluginSystem
 
         bool Activate();
         bool Focus();
+
+        string GetOpenedModelFileName();
     }
 }

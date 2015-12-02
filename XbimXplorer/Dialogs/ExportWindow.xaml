@@ -4,7 +4,7 @@
         Title="Export" Height="315.2" Width="421.6">
     <Grid>
         <TabControl Margin="5,10,4.6,42.4">
-            <TabItem Header="General">
+            <TabItem Header="Wexbim">
                 <Grid Background="#FFE5E5E5" Margin="0,0,-0.4,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -20,22 +20,15 @@
                     <TextBox x:Name="TxtFolderName" Grid.Row="0" Grid.Column="1" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Margin="5"  />
                     
                     <Button Grid.Column="1" HorizontalAlignment="Right" Grid.Row="1" Content="Select folder" Height="23" Margin="5"  />
-
-                    <Label Grid.Column="0" Grid.Row="2" Content="Active exports" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" />
-                    <StackPanel Grid.Column="1" Grid.Row="2" Margin="5">
-                        <CheckBox x:Name="ChkWexbim" Content="Xbim web geometry format (Wexbim)" IsChecked="True" />
-                        <CheckBox x:Name="ChkCobileLiteXml" Content="COBIeLite (XML)" IsChecked="True" />
-                        <CheckBox x:Name="ChkCobileLiteJson" Content="COBIeLite (json)" IsChecked="True" />
-                    </StackPanel>
-                    
+                    <Label Grid.Column="0" Grid.Row="2" Content="Active exports" 
+                           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" 
+                           />
+                    <CheckBox Grid.Column="1" Grid.Row="2"  IsEnabled="False"  x:Name="ChkWexbim" Content="Xbim web geometry format (Wexbim)" IsChecked="True" 
+                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" 
+                              />
                 </Grid>
             </TabItem>
-            <TabItem Header="wexbim">
-                <Grid Background="#FFE5E5E5" Margin="0,0,-0.4,0" />
-            </TabItem>
-
         </TabControl>
         <Button Content="Export" Margin="0,0,9.6,10.4" HorizontalAlignment="Right" Width="123" Height="27" VerticalAlignment="Bottom" Click="DoExport" />
-
     </Grid>
 </Window>

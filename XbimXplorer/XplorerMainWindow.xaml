@@ -59,12 +59,10 @@
         <CommandBinding Command="Open"   Executed="CommandBinding_Open" CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
-
-        <CommandBinding Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}"   Executed="ExportCoBieCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
+        
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" Executed="CreateFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
-        <CommandBinding Command="{x:Static local:XplorerMainWindow.CoBieClassFilter}" Executed="CoBieClassFilterCmdExecuted" CanExecute="ExportCoBieCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" Executed="OpenExportWindow" CanExecute="CommandBinding_CanExecute"/>
 
     </Window.CommandBindings>
@@ -89,8 +87,10 @@
                 <MenuItem Header="Recent files" x:Name="MnuRecent" Click="RecentFileClick" />
                 <Separator />
                 <MenuItem x:Name="ExportMenu" Header="_Export">
-                    <MenuItem Header="_Native" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
+                    <MenuItem Header="_WexBim" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="_Exit" Click="Exit" />
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
@@ -140,13 +140,6 @@
                 <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraRotationMode, ElementName=DrawingControl}" Header="CameraRotationMode"/>
                 <pt:EnumMenuItem SelectedValue="{Binding Viewport.CameraMode, ElementName=DrawingControl}" Header="CameraMode" />
                 -->
-            </MenuItem>
-            <MenuItem Header="C_OBie">
-                <MenuItem Header="_Export" Command="{x:Static local:XplorerMainWindow.ExportCoBieCmd}" />
-                <MenuItem Header="_ClassFilter" Command="{x:Static local:XplorerMainWindow.CoBieClassFilter}" />
-                <Separator />
-                <MenuItem Header="UK Template" IsCheckable="True" Click="UKTemplate_Click" Name="Uk" IsChecked="True"/>
-                <MenuItem Header="US Template" IsCheckable="True" Click="USTemplate_Click" Name="Us" />
             </MenuItem>
             <MenuItem Header="_About" Click="About_Click"/>
         </Menu>
@@ -224,14 +217,14 @@
                 <Slider x:Name="ModelOpacity"  Minimum="0.1" Maximum="1.0" Value="{Binding Path=ModelOpacity, ElementName=DrawingControl}" Width="100" LargeChange=".01"></Slider>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <WrapPanel Visibility="{Binding AnyErrors, ElementName=MainWindow}" PreviewMouseDown="ResetErrors" >
+                <WrapPanel Visibility="{Binding AnyErrors, ElementName=MainWindow}" PreviewMouseDown="ShowErrors" >
                     <Ellipse Width="10" Height="10" Fill="Red" Margin="3,0" />
                     <TextBlock Text="{Binding NumErrors, ElementName=MainWindow}" Margin="3,0" />
                     <TextBlock> errors</TextBlock>
                 </WrapPanel>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <WrapPanel Visibility="{Binding AnyWarnings, ElementName=MainWindow}" PreviewMouseDown="ResetErrors">
+                <WrapPanel Visibility="{Binding AnyWarnings, ElementName=MainWindow}" PreviewMouseDown="ShowErrors">
                     <Ellipse Width="10" Height="10" Fill="Orange" Margin="3,0" />
                     <TextBlock Text="{Binding NumWarnings, ElementName=MainWindow}" Margin="3,0" />
                     <TextBlock> warnings</TextBlock>

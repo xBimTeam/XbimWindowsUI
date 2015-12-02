@@ -20,7 +20,7 @@ namespace Xbim.BCF
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, "BCF Editor")]
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutDoc, PluginWindowActivation.OnMenu, "BCF Editor")]
     public partial class MainWindow : IXbimXplorerPluginWindow, IXbimXplorerPluginMessageReceiver
     {
         string _baseFolder = @"..\..\Examples\BuildingSmart\fdb92063-a353-4882-a4a9-b333fe0b2985\";

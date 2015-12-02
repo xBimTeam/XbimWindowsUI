@@ -66,7 +66,17 @@ namespace XbimXplorer
         /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
-            var mainView = new XplorerMainWindow();
+            // evaluate special parameters before loading MainWindow
+            var blockPlugin = false;
+            foreach (var thisArg in e.Args)
+            {
+                if (string.Compare("/noplugins", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    blockPlugin = true;
+                }
+            }
+
+            var mainView = new XplorerMainWindow(blockPlugin);
             mainView.Show();
             mainView.DrawingControl.ViewHome();
             var bOneModelLoaded = false;
@@ -86,7 +96,11 @@ namespace XbimXplorer
                 {
                     var pluginName = e.Args[++i];
                     if (!File.Exists(pluginName))
-                        MessageBox.Show(pluginName + " not found.");
+                    {
+                        Clipboard.SetText(pluginName);
+                        MessageBox.Show(pluginName + " not found. The full file name has been copied to clipboard.", "Plugin not found", MessageBoxButton.OK, MessageBoxImage.Error);
+                        continue;
+                    }
                     Debug.Write("Xplorer trying to load plugin from CommandLine");
                     mainView.LoadPlugin(pluginName);
                 }

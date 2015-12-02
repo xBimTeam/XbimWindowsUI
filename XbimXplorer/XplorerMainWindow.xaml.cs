@@ -14,9 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -24,32 +25,27 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Microsoft.Win32;
-using Xbim.IO;
-using Xbim.Presentation;
-using Xbim.Presentation.LayerStyling;
-using Xbim.Presentation.ModelGeomInfo;
-using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.XbimExtensions;
-using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
-using System.Threading;
-using System.Diagnostics;
-using Xbim.COBie.Serialisers;
-using Xbim.COBie;
-using XbimGeometry.Interfaces;
-using XbimXplorer.Dialogs;
 using log4net;
 using log4net.Core;
 using log4net.Repository.Hierarchy;
+using Microsoft.Win32;
 using Xbim.Ifc2x3.ProductExtension;
+using Xbim.IO;
+using Xbim.ModelGeometry.Scene;
+using Xbim.Presentation;
 using Xbim.Presentation.FederatedModel;
+using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.LayerStylingV2;
+using Xbim.Presentation.ModelGeomInfo;
+using Xbim.Presentation.XplorerPluginSystem;
+using Xbim.XbimExtensions;
+using Xbim.XbimExtensions.Interfaces;
+using XbimGeometry.Interfaces;
+using XbimXplorer.Dialogs;
 using XbimXplorer.LogViewer;
-using XbimXplorer.PluginSystem;
-using XbimXplorer.Querying;
 using XbimXplorer.Properties;
-using Xceed.Wpf.AvalonDock.Layout;
+using XbimXplorer.Querying;
+using Xceed.Wpf.AvalonDock.Layout.Serialization;
 
 #endregion
 
@@ -132,9 +128,6 @@ namespace XbimXplorer
         public static RoutedCommand CoBieClassFilter = new RoutedCommand();
         
         private string _temporaryXbimFileName;
-        // private string _defaultFileName;
-        const string UkTemplate = "COBie-UK-2012-template.xls";
-        const string UsTemplate = "COBie-US-2_4-template.xls";
 
         private string _openedModelFileName;
 
@@ -161,70 +154,64 @@ namespace XbimXplorer
             }));
            
         }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public FilterValues UserFilters
-        {
-            get { return _userFilters; }
-            set { _userFilters = value; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string CoBieTemplate { get; set; }
-
+        
         private EventAppender appender;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public XplorerMainWindow()
+        public XplorerMainWindow(bool blockPlugin = false)
         {
             InitializeComponent();
+
+            // initialise the internal elements of the UI that behave like plugins
+            EvaluateXbimUiType(typeof(LogViewer.LogViewer));
+            EvaluateXbimUiType(typeof(WdwQuery));
+
             Closed += XplorerMainWindow_Closed;
             Loaded += XplorerMainWindow_Loaded;
             Closing += XplorerMainWindow_Closing;
             DrawingControl.UserModeledDimensionChangedEvent += DrawingControl_MeasureChangedEvent;
             InitFromSettings();
-
             RefreshRecentFiles();
 
-            UserFilters = new FilterValues();//COBie Class filters, set to initial defaults
-            CoBieTemplate = UkTemplate;
+            // logging 
+            LoggedEvents = new ObservableCollection<EventViewModel>();
 
-            // testing ways to isolate the plugins from the menu.
-            // 
-            EvaluateXbimUiType(typeof (LogViewer.LogViewer));
-            EvaluateXbimUiType(typeof(Querying.WdwQuery));
-
-            if (Settings.Default.PluginStartupLoad)
+            // command line arg can prevent plugin loading
+            if (Settings.Default.PluginStartupLoad && !blockPlugin)
                 RefreshPlugins();           
         }
 
-        void appender_Logged(object sender, LogEventArgs e)
+        public ObservableCollection<EventViewModel> LoggedEvents { get; private set; }
+
+        internal void appender_Logged(object sender, LogEventArgs e)
         {
             foreach (var loggingEvent in e.LoggingEvents)
             {
-                if (loggingEvent.Level == Level.Error)
-                {
-                    _numErrors ++;
-                    if (_numErrors == 1)
-                        OnPropertyChanged("AnyErrors");
-                    OnPropertyChanged("NumErrors");
-                }
+                var m = new EventViewModel(loggingEvent);
+                // LoggedEvents.Add(m);
 
-                if (loggingEvent.Level == Level.Warn)
+                Application.Current.Dispatcher.BeginInvoke((Action) delegate()
                 {
+                    LoggedEvents.Add(m);
+                });
+                Application.Current.Dispatcher.BeginInvoke((Action) UpdateLoggerCounts);
+            }
+        }
+
+        internal void UpdateLoggerCounts()
+        {
+            _numErrors = 0;
+            _numWarnings = 0;
+            foreach (var loggedEvent in LoggedEvents)
+            {
+                if (loggedEvent.Level == "ERROR")
+                    _numErrors++;
+                else if (loggedEvent.Level == "WARN")
                     _numWarnings++;
-                    if (_numWarnings == 1)
-                        OnPropertyChanged("AnyWarnings");
-                    OnPropertyChanged("NumWarnings");
-                }
-            }            
+            }
+            OnPropertyChanged("AnyErrors");
+            OnPropertyChanged("NumErrors");
+            OnPropertyChanged("AnyWarnings");
+            OnPropertyChanged("NumWarnings");
         }
 
         public Visibility DeveloperVisible
@@ -920,8 +907,7 @@ namespace XbimXplorer
         // element visible.
         //
         private bool _camChanged;
-        private FilterValues _userFilters;
-
+        
         private void SpatialControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             _camChanged = false;
@@ -942,38 +928,7 @@ namespace XbimXplorer
         {
             DrawingControl.ViewHome();
         }
-
-        private void ExportCoBieCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            var outputFile = Path.ChangeExtension(Model.DatabaseName, ".xls");
-
-            // Build context
-            var context = new COBieContext();
-            context.TemplateFileName = CoBieTemplate;
-            context.Model = Model;
-            //set filter option
-            context.Exclude = UserFilters;
-
-            //set the UI language to get correct resource file for template
-            //if (Path.GetFileName(parameters.TemplateFile).Contains("-UK-"))
-            //{
-            try
-            {
-                var ci = new CultureInfo("en-GB");
-                Thread.CurrentThread.CurrentUICulture = ci;
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch
-            {
-                //to nothing Default culture will still be used
-            }
-
-            var builder = new COBieBuilder(context);
-            var serialiser = new COBieXLSSerialiser(outputFile, context.TemplateFileName) {Excludes = UserFilters};
-            builder.Export(serialiser);
-            Process.Start(outputFile);
-        }
-
+        
         private void OpenExportWindow(object sender, ExecutedRoutedEventArgs executedRoutedEventArgs)
         {
             var wndw = new ExportWindow(this);
@@ -986,16 +941,6 @@ namespace XbimXplorer
             var model = ModelProvider.ObjectInstance as XbimModel;
             var canEdit = (model != null && model.CanEdit && model.Instances.OfType<IfcBuilding>().FirstOrDefault() != null);
             e.CanExecute = canEdit && !(_worker != null && _worker.IsBusy);
-        }
-
-        private void CoBieClassFilterCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            var classFilterDlg = new CoBieClassFilter(UserFilters);
-            var done = classFilterDlg.ShowDialog();
-            if (done.HasValue && done.Value)
-            {
-                UserFilters = classFilterDlg.UserFilters; //not needed, but makes intent clear
-            }
         }
 
         // Note: Commented out on 2015 10 19 - function threw exception when creating an instance of ModelSeparation
@@ -1017,44 +962,6 @@ namespace XbimXplorer
         {
             var w = new AboutWindow {Model = Model};
             w.Show();
-        }
-
-        private void UKTemplate_Click(object sender, RoutedEventArgs e)
-        {
-            var mi = (MenuItem)sender;
-
-            if (mi.IsChecked)
-            {
-                CoBieTemplate = UkTemplate;
-                if (Us.IsChecked)
-                {
-                    Us.IsChecked = false;
-                }
-            }
-            else
-            {
-                Us.IsChecked = true;
-                CoBieTemplate = UsTemplate;
-            }
-        }
-
-        private void USTemplate_Click(object sender, RoutedEventArgs e)
-        {
-            var mi = (MenuItem)sender;
-
-            if (mi.IsChecked)
-            {
-                CoBieTemplate = UsTemplate;
-                if (Uk.IsChecked)
-                {
-                    Uk.IsChecked = false;
-                }
-            }
-            else
-            {
-                Uk.IsChecked = true;
-                CoBieTemplate = UkTemplate;
-            }
         }
         
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
@@ -1129,24 +1036,23 @@ namespace XbimXplorer
             OpenOrFocusPluginWindow(mi.Tag as Type);
         }
 
-       
-
-        private void ResetErrors(object sender, MouseButtonEventArgs e)
+        private void ShowErrors(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
+            OpenOrFocusPluginWindow(typeof (LogViewer.LogViewer));
+        }
+
+        private void Exit(object sender, RoutedEventArgs e)
+        {
+            using (StringWriter fs = new StringWriter())
             {
-                if (OpenOrFocusPluginWindow(typeof(LogViewer.LogViewer)))
-                    Log.Info("Log is not retained before logging window is opened. You will have to repeat the operation to be investigated.");
+                var xmlLayout = new XmlLayoutSerializer(DockingManager);
+                xmlLayout.Serialize(fs);
+                var xmlLayoutString = fs.ToString();
+                Clipboard.SetText(xmlLayoutString);
             }
-            else if (e.RightButton == MouseButtonState.Pressed)
-            {
-                _numErrors = 0;
-                _numWarnings = 0;
-                OnPropertyChanged("AnyErrors");
-                OnPropertyChanged("NumErrors");
-                OnPropertyChanged("AnyWarnings");
-                OnPropertyChanged("NumWarnings");
-            }
+
+            // DockingManager
+            Close();
         }
     }
 }
