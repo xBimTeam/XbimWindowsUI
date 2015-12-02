@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -170,32 +171,47 @@ namespace XbimXplorer
             DrawingControl.UserModeledDimensionChangedEvent += DrawingControl_MeasureChangedEvent;
             InitFromSettings();
             RefreshRecentFiles();
-            
+
+            // logging 
+            LoggedEvents = new ObservableCollection<EventViewModel>();
+
             // command line arg can prevent plugin loading
             if (Settings.Default.PluginStartupLoad && !blockPlugin)
                 RefreshPlugins();           
         }
 
-        void appender_Logged(object sender, LogEventArgs e)
+        public ObservableCollection<EventViewModel> LoggedEvents { get; private set; }
+
+        internal void appender_Logged(object sender, LogEventArgs e)
         {
             foreach (var loggingEvent in e.LoggingEvents)
             {
-                if (loggingEvent.Level == Level.Error)
-                {
-                    _numErrors ++;
-                    if (_numErrors == 1)
-                        OnPropertyChanged("AnyErrors");
-                    OnPropertyChanged("NumErrors");
-                }
+                var m = new EventViewModel(loggingEvent);
+                // LoggedEvents.Add(m);
 
-                if (loggingEvent.Level == Level.Warn)
+                Application.Current.Dispatcher.BeginInvoke((Action) delegate()
                 {
+                    LoggedEvents.Add(m);
+                });
+                Application.Current.Dispatcher.BeginInvoke((Action) UpdateLoggerCounts);
+            }
+        }
+
+        internal void UpdateLoggerCounts()
+        {
+            _numErrors = 0;
+            _numWarnings = 0;
+            foreach (var loggedEvent in LoggedEvents)
+            {
+                if (loggedEvent.Level == "ERROR")
+                    _numErrors++;
+                else if (loggedEvent.Level == "WARN")
                     _numWarnings++;
-                    if (_numWarnings == 1)
-                        OnPropertyChanged("AnyWarnings");
-                    OnPropertyChanged("NumWarnings");
-                }
-            }            
+            }
+            OnPropertyChanged("AnyErrors");
+            OnPropertyChanged("NumErrors");
+            OnPropertyChanged("AnyWarnings");
+            OnPropertyChanged("NumWarnings");
         }
 
         public Visibility DeveloperVisible
@@ -1020,24 +1036,9 @@ namespace XbimXplorer
             OpenOrFocusPluginWindow(mi.Tag as Type);
         }
 
-       
-
-        private void ResetErrors(object sender, MouseButtonEventArgs e)
+        private void ShowErrors(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                if (OpenOrFocusPluginWindow(typeof(LogViewer.LogViewer)))
-                    Log.Info("Log is not retained before logging window is opened. You will have to repeat the operation to be investigated.");
-            }
-            else if (e.RightButton == MouseButtonState.Pressed)
-            {
-                _numErrors = 0;
-                _numWarnings = 0;
-                OnPropertyChanged("AnyErrors");
-                OnPropertyChanged("NumErrors");
-                OnPropertyChanged("AnyWarnings");
-                OnPropertyChanged("NumWarnings");
-            }
+            OpenOrFocusPluginWindow(typeof (LogViewer.LogViewer));
         }
 
         private void Exit(object sender, RoutedEventArgs e)

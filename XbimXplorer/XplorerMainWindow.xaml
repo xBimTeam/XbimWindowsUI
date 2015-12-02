@@ -217,14 +217,14 @@
                 <Slider x:Name="ModelOpacity"  Minimum="0.1" Maximum="1.0" Value="{Binding Path=ModelOpacity, ElementName=DrawingControl}" Width="100" LargeChange=".01"></Slider>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <WrapPanel Visibility="{Binding AnyErrors, ElementName=MainWindow}" PreviewMouseDown="ResetErrors" >
+                <WrapPanel Visibility="{Binding AnyErrors, ElementName=MainWindow}" PreviewMouseDown="ShowErrors" >
                     <Ellipse Width="10" Height="10" Fill="Red" Margin="3,0" />
                     <TextBlock Text="{Binding NumErrors, ElementName=MainWindow}" Margin="3,0" />
                     <TextBlock> errors</TextBlock>
                 </WrapPanel>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <WrapPanel Visibility="{Binding AnyWarnings, ElementName=MainWindow}" PreviewMouseDown="ResetErrors">
+                <WrapPanel Visibility="{Binding AnyWarnings, ElementName=MainWindow}" PreviewMouseDown="ShowErrors">
                     <Ellipse Width="10" Height="10" Fill="Orange" Margin="3,0" />
                     <TextBlock Text="{Binding NumWarnings, ElementName=MainWindow}" Margin="3,0" />
                     <TextBlock> warnings</TextBlock>
