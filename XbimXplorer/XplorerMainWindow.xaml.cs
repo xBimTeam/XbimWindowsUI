@@ -26,10 +26,8 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using log4net;
-using log4net.Core;
 using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
-using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
@@ -58,45 +56,29 @@ namespace XbimXplorer
     {
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
 
-        private int _numErrors = 0;
-
         public Visibility AnyErrors
         {
             get
             {
-                if (_numErrors > 0)
-                    return Visibility.Visible;
-                return Visibility.Collapsed;
+                return NumErrors > 0 
+                    ? Visibility.Visible 
+                    : Visibility.Collapsed;
             }
         }
 
-        public int NumErrors
-        {
-            get
-            {
-                return _numErrors;
-            }
-        }
-
-        private int _numWarnings = 0;
+        public int NumErrors { get; private set; }
 
         public Visibility AnyWarnings
         {
             get
             {
-                if (_numWarnings > 0)
-                    return Visibility.Visible;
-                return Visibility.Collapsed;
+                return NumWarnings > 0 
+                    ? Visibility.Visible 
+                    : Visibility.Collapsed;
             }
         }
 
-        public int NumWarnings
-        {
-            get
-            {
-                return _numWarnings;
-            }
-        }
+        public int NumWarnings { get; private set; }
 
 
         private BackgroundWorker _worker;
@@ -155,7 +137,7 @@ namespace XbimXplorer
            
         }
         
-        private EventAppender appender;
+        private EventAppender _appender;
 
         public XplorerMainWindow(bool blockPlugin = false)
         {
@@ -187,10 +169,7 @@ namespace XbimXplorer
             foreach (var loggingEvent in e.LoggingEvents)
             {
                 var m = new EventViewModel(loggingEvent);
-                // LoggedEvents.Add(m);
-
-                Application.Current.Dispatcher.BeginInvoke((Action) delegate()
-                {
+                Application.Current.Dispatcher.BeginInvoke((Action) delegate {
                     LoggedEvents.Add(m);
                 });
                 Application.Current.Dispatcher.BeginInvoke((Action) UpdateLoggerCounts);
@@ -199,14 +178,19 @@ namespace XbimXplorer
 
         internal void UpdateLoggerCounts()
         {
-            _numErrors = 0;
-            _numWarnings = 0;
+            NumErrors = 0;
+            NumWarnings = 0;
             foreach (var loggedEvent in LoggedEvents)
             {
-                if (loggedEvent.Level == "ERROR")
-                    _numErrors++;
-                else if (loggedEvent.Level == "WARN")
-                    _numWarnings++;
+                switch (loggedEvent.Level)
+                {
+                    case "ERROR":
+                        NumErrors++;
+                        break;
+                    case "WARN":
+                        NumWarnings++;
+                        break;
+                }
             }
             OnPropertyChanged("AnyErrors");
             OnPropertyChanged("NumErrors");
@@ -236,8 +220,7 @@ namespace XbimXplorer
         {
             var s = new List<string>();
             if (Settings.Default.MRUFiles != null)
-                foreach (var item in Settings.Default.MRUFiles)
-                    s.Add(item);
+                s.AddRange(Settings.Default.MRUFiles.Cast<string>());
 
             _mruFiles = new ObservableMruList<string>(s, 4, StringComparer.InvariantCultureIgnoreCase);
             MnuRecent.ItemsSource = _mruFiles;
@@ -286,12 +269,12 @@ namespace XbimXplorer
             ModelProvider.Refresh();
 
             // logging information warnings
-            appender = new EventAppender {Tag = "MainWindow"};
-            appender.Logged += appender_Logged;
+            _appender = new EventAppender {Tag = "MainWindow"};
+            _appender.Logged += appender_Logged;
 
             var hier = LogManager.GetRepository() as Hierarchy;
             if (hier != null)
-                hier.Root.AddAppender(appender);
+                hier.Root.AddAppender(_appender);
 
         }
 
@@ -329,10 +312,9 @@ namespace XbimXplorer
                             _temporaryXbimFileName = null;
                             SetOpenedModelFileName(null);
                         }
-// ReSharper disable once EmptyGeneralCatchClause
-                        catch
+                        catch (Exception ex)
                         {
-                            
+                            Log.Error(ex.Message, ex);
                         }
                         return;
                     }
@@ -545,15 +527,16 @@ namespace XbimXplorer
                         MessageBox.Show(this, errMsg, "Error Opening File",
                                         MessageBoxButton.OK, MessageBoxImage.Error,
                                         MessageBoxResult.None, MessageBoxOptions.None);
-                    if (args.Result is Exception)
+                    var exception = args.Result as Exception;
+                    if (exception != null)
                     {
                         var sb = new StringBuilder();
-                        var ex = args.Result as Exception;
+                        
                         var indent = "";
-                        while (ex != null)
+                        while (exception != null)
                         {
-                            sb.AppendFormat("{0}{1}\n", indent, ex.Message);
-                            ex = ex.InnerException;
+                            sb.AppendFormat("{0}{1}\n", indent, exception.Message);
+                            exception = exception.InnerException;
                             indent += "\t";
                         }
                         MessageBox.Show(this, sb.ToString(), "Error Opening Ifc File",
@@ -629,12 +612,12 @@ namespace XbimXplorer
             {
                 dlg.DefaultExt = "xBIMF";
                 var filterA = fedFilter.Concat(ifcFilter).Concat(corefilters).ToArray();
-                filter = String.Join("|", filterA);
+                filter = string.Join("|", filterA);
             }
             else
             {
                 var filterA = ifcFilter.Concat(corefilters).Concat(fedFilter).ToArray();
-                filter = String.Join("|", filterA);
+                filter = string.Join("|", filterA);
             }
 
             dlg.Filter = filter;// Filter files by extension 
@@ -653,8 +636,8 @@ namespace XbimXplorer
 
         private void CommandBinding_Open(object sender, ExecutedRoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog();
-            dlg.Filter = "Xbim Files|*.xbim;*.xbimf;*.ifc;*.ifcxml;*.ifczip"; // Filter files by extension 
+            // Filter files by extension 
+            var dlg = new OpenFileDialog {Filter = "Xbim Files|*.xbim;*.xbimf;*.ifc;*.ifcxml;*.ifczip"};
             dlg.FileOk += dlg_OpenAnyFile;
             dlg.ShowDialog(this);
         }
@@ -716,12 +699,11 @@ namespace XbimXplorer
         # region "Federation Model operations"
         private void EditFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            var fdlg = new FederatedModelDialog();
-            fdlg.DataContext = Model;
+            var fdlg = new FederatedModelDialog {DataContext = Model};
             var done = fdlg.ShowDialog();
             if (done.HasValue && done.Value)
             {
-
+                // todo: is there something that needs to happen here?
             }
         }
         private void EditFederationCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -731,12 +713,14 @@ namespace XbimXplorer
         
         private void OpenFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog();
-            dlg.Title = "Select an existing federate.";
-            dlg.Filter = "Xbim Federation Files|*.xbimf"; // Filter files by extension 
-            dlg.CheckFileExists = true;
-            dlg.Multiselect = false;
-            
+            var dlg = new OpenFileDialog
+            {
+                Title = "Select an existing federate.",
+                Filter = "Xbim Federation Files|*.xbimf", // Filter files by extension 
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
             var done = dlg.ShowDialog(this);
 
             if (!done.Value) 
@@ -747,11 +731,14 @@ namespace XbimXplorer
 
         private void CreateFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog();
-            dlg.Title = "Select model files to federate.";
-            dlg.Filter = "Model Files|*.ifc;*.ifcxml;*.ifczip"; // Filter files by extension 
-            dlg.CheckFileExists = true;
-            dlg.Multiselect = true;
+            var dlg = new OpenFileDialog
+            {
+                Title = "Select model files to federate.",
+                Filter = "Model Files|*.ifc;*.ifcxml;*.ifczip", // Filter files by extension 
+                CheckFileExists = true,
+                Multiselect = true
+            };
+            
 
             var done = dlg.ShowDialog(this);
 
@@ -935,29 +922,6 @@ namespace XbimXplorer
             wndw.ShowDialog();
         }
 
-        // CanExecuteRoutedEventHandler for the custom color command.
-        private void ExportCoBieCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            var model = ModelProvider.ObjectInstance as XbimModel;
-            var canEdit = (model != null && model.CanEdit && model.Instances.OfType<IfcBuilding>().FirstOrDefault() != null);
-            e.CanExecute = canEdit && !(_worker != null && _worker.IsBusy);
-        }
-
-        // Note: Commented out on 2015 10 19 - function threw exception when creating an instance of ModelSeparation
-
-        //private void SeparateMenuItem_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var separate = new ModelSeparation();
-
-        //    //set data binding
-        //    var b = new Binding("DataContext");
-        //    b.Source = MainFrame;
-        //    b.Mode = BindingMode.TwoWay;
-        //    separate.SetBinding(DataContextProperty, b);
-
-        //    separate.Show();
-        //}
-
         private void About_Click(object sender, RoutedEventArgs e)
         {
             var w = new AboutWindow {Model = Model};
@@ -1043,15 +1007,13 @@ namespace XbimXplorer
 
         private void Exit(object sender, RoutedEventArgs e)
         {
-            using (StringWriter fs = new StringWriter())
+            using (var fs = new StringWriter())
             {
                 var xmlLayout = new XmlLayoutSerializer(DockingManager);
                 xmlLayout.Serialize(fs);
                 var xmlLayoutString = fs.ToString();
                 Clipboard.SetText(xmlLayoutString);
             }
-
-            // DockingManager
             Close();
         }
     }
