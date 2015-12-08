@@ -81,5 +81,16 @@ namespace XbimXplorer.Properties {
                 this["DeveloperMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection PluginSettings {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["PluginSettings"]));
+            }
+            set {
+                this["PluginSettings"] = value;
+            }
+        }
     }
 }

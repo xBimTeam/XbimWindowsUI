@@ -28,8 +28,32 @@ namespace XbimXplorer.PluginSystem
 
         private void Test(object sender, RoutedEventArgs e)
         {
-            var repo = PackageRepositoryFactory.Default.CreateRepository("https://packages.nuget.org/api/v2");
-            var verFnd = repo.FindPackage("ToSpec", new SemanticVersion(3, 1, 1, 1));
+            lst.Items.Clear();
+            var repo = PackageRepositoryFactory.Default.CreateRepository("https://www.myget.org/F/xbim-develop/api/v2");
+            // var verFnd = repo.FindPackage("ToSpec", new SemanticVersion(3, 1, 1, 1));
+
+            var ps = new List<PluginConfiguration>();
+
+            var fnd = repo.Search("XplorerPlugin", true);
+            foreach (var package in fnd)
+            {
+
+
+                if (!package.IsAbsoluteLatestVersion)
+                    return;
+                var pv = new PluginConfiguration
+                {
+                    PluginId = package.Id,
+                    OnLineVersion = package.Version
+                };
+                pv.setOnlinePackage(package);
+                Debug.Print("{0}: {1}", pv.PluginId, pv.OnLineVersion);
+            }
+        }
+
+        private void Download(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

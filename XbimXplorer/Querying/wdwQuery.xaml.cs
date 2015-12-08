@@ -24,6 +24,7 @@ using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.XbimExtensions.Interfaces;
 using Xbim.XbimExtensions.SelectTypes;
 using XbimGeometry.Interfaces;
+using XbimXplorer.PluginSystem;
 using XbimXplorer.Simplify;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
@@ -134,6 +135,14 @@ namespace XbimXplorer.Querying
                 {
                     if (_parentWindow != null)
                         _parentWindow.RefreshPlugins();
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^Plugin Config$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var pc = new PluginsConfig();
+                    pc.Show();
                     continue;
                 }
 
