@@ -9,7 +9,6 @@ using Xbim.Ifc;
 using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.ModelGeometry.Scene;
-using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStylingV2
 {

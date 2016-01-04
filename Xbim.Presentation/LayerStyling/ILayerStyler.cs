@@ -2,7 +2,7 @@
 using Xbim.Common.Federation;
 using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
-using XbimModel = Xbim.IO.XbimModel;
+
 
 namespace Xbim.Presentation.LayerStyling
 {

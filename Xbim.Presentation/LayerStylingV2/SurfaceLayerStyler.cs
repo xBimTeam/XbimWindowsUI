@@ -12,7 +12,6 @@ using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStylingV2
 {
@@ -74,12 +73,13 @@ namespace Xbim.Presentation.LayerStylingV2
                             var prodType = model.Metadata.ExpressType((short) Math.Abs(style));
                             texture = XbimTexture.Create(colourMap[prodType.Name]);
                         }
+                        texture.DefinedObjectId = style;
                         var wpfMaterial = new WpfMaterial();
                         wpfMaterial.CreateMaterial(texture);
-                        styles.Add(texture.DefinedObjectId, wpfMaterial);
+                        styles.Add(style, wpfMaterial);
                         var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
                         mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
-                        styleMeshSets.Add(texture.DefinedObjectId, mg);
+                        styleMeshSets.Add(style, mg);
                         mg.BeginUpdate();
                         if (texture.IsTransparent)
                             tmpTransparentsGroup.Children.Add(mg);

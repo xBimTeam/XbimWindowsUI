@@ -11,7 +11,6 @@ using Xbim.Ifc.ViewModels;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
-using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation
 {

@@ -46,10 +46,8 @@ using Xbim.Presentation.Extensions;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.ModelGeomInfo;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO.Esent;
-using XbimModel = Xbim.IO.XbimModel;
 
 #endregion
 

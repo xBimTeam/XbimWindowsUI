@@ -11,7 +11,6 @@ using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStyling
 {

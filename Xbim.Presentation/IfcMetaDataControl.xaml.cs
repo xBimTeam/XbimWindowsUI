@@ -24,6 +24,7 @@ using System.Windows.Documents;
 using System.Windows.Navigation;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.MaterialResource;
 using Xbim.Ifc2x3.MeasureResource;
@@ -31,7 +32,6 @@ using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.PropertyResource;
 using Xbim.Ifc2x3.QuantityResource;
 using Xbim.Ifc4.Interfaces;
-using Xbim.IO;
 
 #endregion
 

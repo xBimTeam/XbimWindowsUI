@@ -5,7 +5,7 @@ using Xbim.Common.Federation;
 using Xbim.Ifc;
 using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using XbimModel = Xbim.IO.XbimModel;
+using Xbim.Ifc2x3.IO;
 
 namespace Xbim.Presentation.LayerStyling
 {
