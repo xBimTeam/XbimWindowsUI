@@ -1,5 +1,6 @@
 using Xbim.Common;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
+
 
 namespace Xbim.Presentation.XplorerPluginSystem
 {

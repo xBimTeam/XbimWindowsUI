@@ -30,7 +30,7 @@ using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
 using Xbim.Common;
 using Xbim.Common.Geometry;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
@@ -300,7 +300,7 @@ namespace XbimXplorer
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
                     var context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
-                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress,  adjustWCS: false);
+                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress);
             
                     if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                     {
@@ -377,10 +377,12 @@ namespace XbimXplorer
 
                         // sets a convenient integer to all children for model identification
                         // this is used by the federated model selection mechanisms.
-                        var i = 0;
-                        foreach (var item in model.AllModels)
+                        
+                        model.UserDefinedId = 0;
+                        var i = 1;
+                        foreach (var item in model.ReferencedModels)
                         {
-                            item.Tag = i++;
+                            item.Model.UserDefinedId = i++;
                         }
                     }
                 }
@@ -777,53 +779,56 @@ namespace XbimXplorer
                 case ".ifc":
                 case ".ifczip":
                 case ".ifcxml":
-                    //create temp file as a placeholder for the temperory xbim file
-                    var filePath = Path.GetTempFileName();
-                    filePath = Path.ChangeExtension(filePath, "xbimf");
-                    fedModel = XbimModel.CreateModel(filePath);
-                    fedModel.Initialise("Default Author", "Default Organization");
-                    using (var txn = fedModel.BeginTransaction())
-                    {
-                        fedModel.IfcProject.Name = "Default Project Name";
-                        txn.Commit();
-                    }
 
-                    var informUser = true;
-                    for (var i = 0; i < dlg.FileNames.Length; i++)
-                    {
-                        var fileName = dlg.FileNames[i];
-                        var builder = new XbimReferencedModelViewModel
-                        {
-                            Name = fileName,
-                            OrganisationName = "OrganisationName " + i,
-                            OrganisationRole = "Undefined"
-                        };
+                    // todo: restore federation behaviours
 
-                        var buildRes = false;
-                        Exception exception = null;
-                        try
-                        {
-                            buildRes = builder.TryBuild(fedModel);
-                        }
-                        catch (Exception ex)
-                        {
-                            //usually an EsentDatabaseSharingViolationException, user needs to close db first
-                            exception = ex;
-                        }
+                    //// create temp file as a placeholder for the temperory xbim file
+                    //var filePath = Path.GetTempFileName();
+                    //filePath = Path.ChangeExtension(filePath, "xbimf");
+                    //fedModel = XbimModel.CreateModel(filePath);
+                    //fedModel.Initialise("Default Author", "Default Organization");
+                    //using (var txn = fedModel.BeginTransaction())
+                    //{
+                    //    fedModel.IfcProject.Name = "Default Project Name";
+                    //    txn.Commit();
+                    //}
 
-                        if (buildRes || !informUser)
-                            continue;
-                        var msg = exception == null ? "" : "\r\nMessage: " + exception.Message;
-                        var res = MessageBox.Show(fileName + " couldn't be opened." + msg + "\r\nShow this message again?",
-                            "Failed to open a file", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
-                        if (res == MessageBoxResult.No)
-                            informUser = false;
-                        else if (res == MessageBoxResult.Cancel)
-                        {
-                            fedModel = null;
-                            break;
-                        }
-                    }
+                    //var informUser = true;
+                    //for (var i = 0; i < dlg.FileNames.Length; i++)
+                    //{
+                    //    var fileName = dlg.FileNames[i];
+                    //    var builder = new XbimReferencedModelViewModel
+                    //    {
+                    //        Name = fileName,
+                    //        OrganisationName = "OrganisationName " + i,
+                    //        OrganisationRole = "Undefined"
+                    //    };
+
+                    //    var buildRes = false;
+                    //    Exception exception = null;
+                    //    try
+                    //    {
+                    //        buildRes = builder.TryBuild(fedModel);
+                    //    }
+                    //    catch (Exception ex)
+                    //    {
+                    //        //usually an EsentDatabaseSharingViolationException, user needs to close db first
+                    //        exception = ex;
+                    //    }
+
+                    //    if (buildRes || !informUser)
+                    //        continue;
+                    //    var msg = exception == null ? "" : "\r\nMessage: " + exception.Message;
+                    //    var res = MessageBox.Show(fileName + " couldn't be opened." + msg + "\r\nShow this message again?",
+                    //        "Failed to open a file", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
+                    //    if (res == MessageBoxResult.No)
+                    //        informUser = false;
+                    //    else if (res == MessageBoxResult.Cancel)
+                    //    {
+                    //        fedModel = null;
+                    //        break;
+                    //    }
+                    //}
                     break;
             }
             if (fedModel == null)

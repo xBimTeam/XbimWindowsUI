@@ -11,7 +11,7 @@ using Xbim.Ifc4.GeometricModelResource;
 using Xbim.Ifc4.GeometryResource;
 using Xbim.Ifc4.Kernel;
 using Xbim.Ifc4.UtilityResource;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 
 namespace XbimXplorer.Dialogs
 {
@@ -61,7 +61,8 @@ namespace XbimXplorer.Dialogs
                     sb.AppendFormat("- {0} (GeometrySupport: {1})\r\n", Model.DatabaseName, Model.GeometrySupportLevel);
                     foreach (var subModel in Model.ReferencedModels)
                     {
-                        sb.AppendFormat("- {0} (GeometrySupport: {1})\r\n", subModel.Model.DatabaseName, subModel.Model.GeometrySupportLevel);
+                        // todo: restore information for federated models?
+                        // sb.AppendFormat("- {0} (GeometrySupport: {1})\r\n", subModel.Model., subModel.Model.GeometrySupportLevel);
                     }
                     sb.AppendLine();
                     sb.AppendLine("Model information:");

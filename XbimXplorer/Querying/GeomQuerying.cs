@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 using Xbim.Common.Geometry;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 
@@ -37,7 +37,7 @@ namespace XbimXplorer.Querying
         /// <returns></returns>
         public static string GeomInfoMesh(XbimModel model, int iEntLabel)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             var geomdata = model.GetGeometryData(iEntLabel, XbimGeometryType.TriangulatedMesh);
             foreach (var geom in geomdata)
@@ -50,10 +50,10 @@ namespace XbimXplorer.Querying
 
         private static void DumpData(StringBuilder sb, byte[] shapeData)
         {
-            XbimTriangulatedModelStream m = new XbimTriangulatedModelStream(shapeData);
+            var m = new XbimTriangulatedModelStream(shapeData);
 
-            TextMeshDumper md = new TextMeshDumper(sb);
-            XbimMatrix3D id = XbimMatrix3D.Identity;
+            var md = new TextMeshDumper(sb);
+            var id = XbimMatrix3D.Identity;
             m.BuildWithNormals(md, id);
 
             // sb.Append(m.ToString());
@@ -68,7 +68,7 @@ namespace XbimXplorer.Querying
         /// <returns></returns>
         public static string Viewerdata(DrawingControl3D control, XbimModel model, int entityLabel)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             control.ReportData(sb, model, entityLabel);
             return sb.ToString();
         }
@@ -80,7 +80,7 @@ namespace XbimXplorer.Querying
         /// </summary>
         public class TextMeshDumper : IXbimTriangulatesToPositionsNormalsIndices
         {
-            StringBuilder _sb = new StringBuilder();
+            readonly StringBuilder _sb = new StringBuilder();
             int _posPoint = 0;
             int _posNormal = 0;
 

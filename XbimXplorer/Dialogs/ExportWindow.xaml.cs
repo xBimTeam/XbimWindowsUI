@@ -68,8 +68,12 @@ namespace XbimXplorer.Dialogs
                         {
                             try
                             {
-                                var geomContext = new Xbim3DModelContext(_mainWindow.Model);
-                                geomContext.Write(binaryWriter);
+                                // todo: restore wexbim writer
+
+                                //var geomContext = new Xbim3DModelContext(_mainWindow.Model);
+                                //geomContext. Write(binaryWriter);
+
+                                MessageBox.Show("wexbim writer temporary disabled.");
                             }
                             finally
                             {
