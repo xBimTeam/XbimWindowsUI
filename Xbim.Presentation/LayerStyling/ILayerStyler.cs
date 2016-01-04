@@ -1,7 +1,8 @@
-﻿using Xbim.IO;
-using Xbim.IO.GroupingAndStyling;
+﻿using Xbim.Common;
+using Xbim.Common.Federation;
+using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
+using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -38,7 +39,7 @@ namespace Xbim.Presentation.LayerStyling
         /// Leave an empty body in case the behaviour of the styler is independent from the federation context.
         /// </summary>
         /// <param name="refModel">The federation environment; refModel will be null for the main federation file.</param>
-        void SetFederationEnvironment(XbimReferencedModel refModel);
+        void SetFederationEnvironment(IReferencedModel refModel);
 
         /// <summary>
         /// Sets the current model for the layerStyler

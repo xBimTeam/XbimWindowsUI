@@ -5,14 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
-using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -26,10 +25,10 @@ namespace Xbim.Presentation
             }
         }
 
-        public static void AddElements(this MeshGeometry3D m, IPersistIfcEntity item, XbimMatrix3D wcsTransform)
+        public static void AddElements(this MeshGeometry3D m, IPersistEntity item, XbimMatrix3D wcsTransform)
         {
 
-            var fromModel = item.ModelOf as XbimModel;
+            var fromModel = item.Model as XbimModel;
             if (fromModel == null || !(item is IfcProduct)) 
                 return;
             switch (fromModel.GeometrySupportLevel)

@@ -1,5 +1,5 @@
+using Xbim.Common;
 using Xbim.IO;
-using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Presentation.XplorerPluginSystem
 {
@@ -8,7 +8,7 @@ namespace Xbim.Presentation.XplorerPluginSystem
 
         DrawingControl3D DrawingControl { get; }
 
-        IPersistIfcEntity SelectedItem { get; set; }
+        IPersistEntity SelectedItem { get; set; }
 
         XbimModel Model { get; }
 

@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
 using System.IO;
-using System.Linq;
+using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ActorResource;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
-using XbimGeometry.Interfaces;
+using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.FederatedModel
 {
@@ -108,7 +108,7 @@ namespace Xbim.Presentation.FederatedModel
                 var role = roles != null ? roles.FirstOrDefault() : null;
                 if (role == null)
                     return "";
-                return role.Role == IfcRole.UserDefined 
+                return role.Role == IfcRoleEnum.USERDEFINED 
                     ? role.UserDefinedRole.ToString() 
                     : role.Role.ToString();
             }
@@ -158,7 +158,7 @@ namespace Xbim.Presentation.FederatedModel
                 {
                     refM.CreateFrom(Name, null, null, true);
                     var m3D = new Xbim3DModelContext(refM);
-                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: null, adjustWCS: false);
+                    m3D.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary, progDelegate: null);
                     Name = Path.ChangeExtension(Name, "xbim");
                 }
                 Name = xbimName;

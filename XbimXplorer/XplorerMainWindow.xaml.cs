@@ -28,7 +28,10 @@ using System.Windows.Input;
 using log4net;
 using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
+using Xbim.Common;
+using Xbim.Common.Geometry;
 using Xbim.IO;
+using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.FederatedModel;
@@ -36,9 +39,6 @@ using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.ModelGeomInfo;
 using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.XbimExtensions;
-using Xbim.XbimExtensions.Interfaces;
-using XbimGeometry.Interfaces;
 using XbimXplorer.Dialogs;
 using XbimXplorer.LogViewer;
 using XbimXplorer.Properties;
@@ -842,9 +842,9 @@ namespace XbimXplorer
         /// <summary>
         /// 
         /// </summary>
-        public IPersistIfcEntity SelectedItem
+        public IPersistEntity SelectedItem
         {
-            get { return (IPersistIfcEntity)GetValue(SelectedItemProperty); }
+            get { return (IPersistEntity)GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
 
@@ -853,16 +853,16 @@ namespace XbimXplorer
         /// 
         /// </summary>
         public static readonly DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register("SelectedItem", typeof(IPersistIfcEntity), typeof(XplorerMainWindow),
+            DependencyProperty.Register("SelectedItem", typeof(IPersistEntity), typeof(XplorerMainWindow),
                                         new UIPropertyMetadata(null, OnSelectedItemChanged));
 
 
         private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var mw = d as XplorerMainWindow;
-            if (mw != null && e.NewValue is IPersistIfcEntity)
+            if (mw != null && e.NewValue is IPersistEntity)
             {
-                var label = (IPersistIfcEntity)e.NewValue;
+                var label = (IPersistEntity)e.NewValue;
                 mw.EntityLabel.Text = label != null ? "#" + label.EntityLabel : "";
             }
             else if (mw != null) mw.EntityLabel.Text = "";

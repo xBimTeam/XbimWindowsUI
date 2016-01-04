@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.IO;
+using Xbim.Common;
+using Xbim.Common.Federation;
+using Xbim.Ifc;
+using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
+using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -26,15 +28,17 @@ namespace Xbim.Presentation.LayerStyling
             return true;
         }
 
-        public void SetFederationEnvironment(XbimReferencedModel refModel)
+        public void SetFederationEnvironment(IReferencedModel refModel)
         {
             var federationColours = new XbimColourMap(StandardColourMaps.Federation);
-            var key = refModel.DocumentInformation.DocumentOwner.RoleName();
-            _colour = federationColours[key];
-            
+            //TODO fix interface to support doc info
+            //var key = refModel.DocumentInformation.DocumentOwner.RoleName();
+           // _colour = federationColours[key];
+            _colour = federationColours[0];
+
         }
 
-        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(IModel model, XbimGeometryHandleCollection inputHandles)
         {
             var retvalues = new Dictionary<string, XbimGeometryHandleCollection>();
             if (inputHandles.Any() )

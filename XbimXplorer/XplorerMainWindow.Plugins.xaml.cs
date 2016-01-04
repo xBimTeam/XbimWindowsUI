@@ -28,7 +28,7 @@ namespace XbimXplorer
                 if (msging != null)
                 {
                     msging.ProcessMessage(sender, messageTypeString, messageData);
-                }
+                } 
             }
         }
 

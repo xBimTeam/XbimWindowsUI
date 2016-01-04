@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
-using Xbim.IO;
-using Xbim.IO.GroupingAndStyling;
+using Xbim.Common;
+using Xbim.Common.Federation;
+using Xbim.Ifc;
+using Xbim.Ifc2x3.IO;
+using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
+using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -26,9 +29,9 @@ namespace Xbim.Presentation.LayerStyling
         private TypeAndStyle LayerGrouper { get; set; }
 
         // redirects the grouping requirement to the style using the LayerGrouper
-        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(IModel model, XbimGeometryHandleCollection inputHandles)
         {
-            return LayerGrouper.GroupLayers(inputHandles);
+            return LayerGrouper.GroupLayers(model, inputHandles);
         }
 
 
@@ -49,8 +52,10 @@ namespace Xbim.Presentation.LayerStyling
             return true;
         }
 
-        public void SetFederationEnvironment(XbimReferencedModel refModel) { }
+        public void SetFederationEnvironment(IReferencedModel refModel) { }
 
         public void SetCurrentModel(IModel model) { }
+
+ 
     }
 }

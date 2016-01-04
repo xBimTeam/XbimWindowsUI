@@ -12,18 +12,18 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using Xbim.Common;
 using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
+using Xbim.Common.Metadata;
+using Xbim.Ifc4.Kernel;
+using Xbim.Ifc4.MaterialResource;
+using Xbim.Ifc4.ProductExtension;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.XbimExtensions.Interfaces;
-using Xbim.XbimExtensions.SelectTypes;
-using XbimGeometry.Interfaces;
 using XbimXplorer.PluginSystem;
 using XbimXplorer.Simplify;
 
@@ -470,7 +470,7 @@ namespace XbimXplorer.Querying
                         case "typelist ":
                             foreach (var item in ret)
                             {
-                                ReportAdd(item + "\t" + Model.Instances[item].IfcType().Name);
+                                ReportAdd(item + "\t" + Model.Instances[item].ExpressType.Name);
                             }
                             break;
                         default:
@@ -916,14 +916,14 @@ namespace XbimXplorer.Querying
             }
         }
 
-        private static string PrepareRegex(string rex)
+        private  string PrepareRegex(string rex)
         {
             short ishort;
             if (short.TryParse(rex, out ishort))
             {
                 // build the regex string from the typeid
                 //
-                var t = IfcMetaData.IfcType(ishort);
+                var t = Model.Metadata.ExpressType(ishort);
                 return  @".*\." + t.Name + "$";
             }
 
@@ -941,7 +941,7 @@ namespace XbimXplorer.Querying
 
             var sb = new TextHighliter();
 
-            var ot = IfcMetaData.IfcType(type.ToUpper());
+            var ot = Model.Metadata.ExpressType(type.ToUpper());
             if (ot != null)
             {
                 sb.Append(
@@ -953,16 +953,16 @@ namespace XbimXplorer.Querying
                 // sb.AppendFormat(indentationHeader + "Xbim Type Id: {0}", ot.TypeId);
                 sb.DefaultBrush = Brushes.DarkOrange;
                 var supertypes = new List<string>();
-                var iterSuper = ot.IfcSuperType;
+                var iterSuper = ot.SuperType;
                 while (iterSuper != null)
                 {
                     supertypes.Add(iterSuper.Name);
-                    iterSuper = iterSuper.IfcSuperType;
+                    iterSuper = iterSuper.SuperType;
                 }
-                if (ot.IfcSuperType != null)
+                if (ot.SuperType != null)
                     sb.AppendFormat(indentationHeader + "Parents hierarchy: {0}",
                         string.Join(" => ", supertypes.ToArray()));
-                if (ot.IfcSubTypes.Count > 0)
+                if (ot.SubTypes.Count > 0)
                 {
                     if (beVerbose > 1)
                     {
@@ -974,9 +974,9 @@ namespace XbimXplorer.Querying
                     else
                     {
                         sb.DefaultBrush = null;
-                        sb.AppendFormat(indentationHeader + "Subtypes: {0}", ot.IfcSubTypes.Count);
+                        sb.AppendFormat(indentationHeader + "Subtypes: {0}", ot.SubTypes.Count);
                         sb.DefaultBrush = Brushes.DarkOrange;
-                        foreach (var item in ot.IfcSubTypes)
+                        foreach (var item in ot.SubTypes)
                         {
                             sb.AppendFormat(indentationHeader + "- {0}", item);
                         }
@@ -1006,7 +1006,7 @@ namespace XbimXplorer.Querying
 
                     sb.DefaultBrush = null;
                     // sb.DefaultBrush = Brushes.DimGray;
-                    sb.AppendFormat(indentationHeader + "Properties: {0}", ot.IfcProperties.Count());
+                    sb.AppendFormat(indentationHeader + "Properties: {0}", ot.Properties.Count());
                     sb.DefaultBrush = null;
                     var brushArray = new Brush[]
                     {
@@ -1014,16 +1014,16 @@ namespace XbimXplorer.Querying
                         Brushes.DarkGray,
                         Brushes.DimGray
                     };
-                    foreach (var item in ot.IfcProperties.Values)
+                    foreach (var item in ot.Properties.Values)
                     {
 
-                        var topParent = ot.IfcSuperType;
+                        var topParent = ot.SuperType;
                         var sTopParent = "";
                         while (topParent != null &&
-                               topParent.IfcProperties.Any(x => x.Value.PropertyInfo.Name == item.PropertyInfo.Name))
+                               topParent.Properties.Any(x => x.Value.PropertyInfo.Name == item.PropertyInfo.Name))
                         {
                             sTopParent = " \tfrom: " + topParent;
-                            topParent = topParent.IfcSuperType;
+                            topParent = topParent.SuperType;
                         }
                         sb.AppendSpans(
                             new[]
@@ -1037,16 +1037,16 @@ namespace XbimXplorer.Querying
 
                         // sb.AppendFormat(\t{1}{2}", , , );
                     }
-                    sb.AppendFormat(indentationHeader + "Inverses: {0}", ot.IfcInverses.Count());
-                    foreach (var item in ot.IfcInverses)
+                    sb.AppendFormat(indentationHeader + "Inverses: {0}", ot.Inverses.Count());
+                    foreach (var item in ot.Inverses)
                     {
-                        var topParent = ot.IfcSuperType;
+                        var topParent = ot.SuperType;
                         var sTopParent = "";
                         while (topParent != null &&
-                               topParent.IfcInverses.Any(x => x.PropertyInfo.Name == item.PropertyInfo.Name))
+                               topParent.Inverses.Any(x => x.PropertyInfo.Name == item.PropertyInfo.Name))
                         {
                             sTopParent = " \tfrom: " + topParent;
-                            topParent = topParent.IfcSuperType;
+                            topParent = topParent.SuperType;
                         }
                         //sb.AppendFormat(indentationHeader + "- {0}\t{1}{2}", item.PropertyInfo.Name, CleanPropertyName(item.PropertyInfo.PropertyType.FullName), sTopParent);
                         sb.AppendSpans(
@@ -1130,11 +1130,11 @@ namespace XbimXplorer.Querying
             return sb;
         }
 
-        private static void ChildTree(IfcType ot, TextHighliter sb, string indentationHeader, int indent)
+        private static void ChildTree(ExpressType ot, TextHighliter sb, string indentationHeader, int indent)
         {
             var sSpace = new string(' ', indent*2);
             // sSpace = sSpace.Replace(new string[] { " " }, "  ");
-            foreach (var item in ot.IfcSubTypes)
+            foreach (var item in ot.SubTypes)
             {
                 var isAbstract = item.Type.IsAbstract ? " (abstract)" : "";
                 sb.AppendFormat(indentationHeader + sSpace + "- {0} {1}", item, isAbstract);
@@ -1153,13 +1153,13 @@ namespace XbimXplorer.Querying
                 var entity = Model.Instances[entityLabel];
                 if (entity != null)
                 {
-                    var ifcType = IfcMetaData.IfcType(entity);
+                    var ifcType = Model.Metadata.ExpressType(entity);
 
                     sb.Append(
                         string.Format(indentationHeader + "=== {0} [#{1}]", ifcType, entityLabel),
                         Brushes.Blue
                         );
-                    var props = ifcType.IfcProperties.Values;
+                    var props = ifcType.Properties.Values;
                     if (props.Count > 0)
                         sb.AppendFormat(indentationHeader + "Properties: {0}", props.Count);
                     foreach (var prop in props)
@@ -1178,9 +1178,9 @@ namespace XbimXplorer.Querying
                             }
                         }
                     }
-                    var invs = ifcType.IfcInverses;
-                    if (invs.Count > 0)
-                        sb.AppendFormat(indentationHeader + "Inverses: {0}", invs.Count);
+                    var invs = ifcType.Inverses;
+                    if (invs.Count() > 0)
+                        sb.AppendFormat(indentationHeader + "Inverses: {0}", invs.Count());
                     foreach (var inverse in invs)
                     {
                         ReportProp(sb, indentationHeader, entity, inverse, verbose, showValueType);
@@ -1223,8 +1223,8 @@ namespace XbimXplorer.Querying
             return sb;
         }
 
-        private static IEnumerable<int> ReportProp(TextHighliter sb, string indentationHeader, IPersistIfcEntity entity,
-            IfcMetaProperty prop, bool verbose, bool showPropType)
+        private static IEnumerable<int> ReportProp(TextHighliter sb, string indentationHeader, IPersistEntity entity,
+            ExpressMetaProperty prop, bool verbose, bool showPropType)
         {
             var retIds = new List<int>();
             var propName = prop.PropertyInfo.Name;
@@ -1232,7 +1232,7 @@ namespace XbimXplorer.Querying
             var shortTypeName = CleanPropertyName(propType.FullName);
             var propVal = prop.PropertyInfo.GetValue(entity, null) ?? "<null>";
 
-            if (prop.IfcAttribute.IsEnumerable)
+            if (prop.EntityAttribute.IsEnumerable)
             {
                 var propCollection = propVal as IEnumerable<object>;
                 propVal = propVal + " [not an enumerable]";
@@ -1293,7 +1293,7 @@ namespace XbimXplorer.Querying
 
         private static string ReportPropValue(object propVal, ref List<int> retIds, bool showPropType = false)
         {
-            var pe = propVal as IPersistIfcEntity;
+            var pe = propVal as IPersistEntity;
             var propLabel = 0;
             if (pe != null)
             {
@@ -1347,9 +1347,9 @@ namespace XbimXplorer.Querying
         /// <summary>
         /// 
         /// </summary>
-        public IPersistIfcEntity SelectedEntity
+        public IPersistEntity SelectedEntity
         {
-            get { return (IPersistIfcEntity) GetValue(SelectedItemProperty); }
+            get { return (IPersistEntity) GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
 
@@ -1357,7 +1357,7 @@ namespace XbimXplorer.Querying
         /// 
         /// </summary>
         public static DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register("SelectedEntity", typeof (IPersistIfcEntity), typeof (WdwQuery),
+            DependencyProperty.Register("SelectedEntity", typeof (IPersistEntity), typeof (WdwQuery),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
 
@@ -1397,7 +1397,7 @@ namespace XbimXplorer.Querying
                         ctrl.ReportAdd(
                             string.Format(
                                 "Selected entity label is: {0}",
-                                Math.Abs(((IPersistIfcEntity) e.NewValue).EntityLabel)
+                                Math.Abs(((IPersistEntity) e.NewValue).EntityLabel)
                                 ));
                     }
                     break;

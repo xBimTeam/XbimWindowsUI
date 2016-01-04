@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xbim.Common.Geometry;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
-using Xbim.XbimExtensions;
-using XbimGeometry.Interfaces;
 
 namespace XbimXplorer.Querying
 {

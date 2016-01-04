@@ -2,16 +2,16 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xbim="http://schemas.Xbim.com/Presentation"
-    xmlns:xbimView="clr-namespace:Xbim.IO.ViewModels;assembly=Xbim.IO"
         xmlns:local="clr-namespace:XbimXplorer"
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+    xmlns:viewModels="clr-namespace:Xbim.Ifc.ViewModels;assembly=Xbim.Ifc"
     Title="Xbim Xplorer" Height="600" Width="800" 
     x:Name="MainWindow"
         Icon="xBIM.ico">
     <Window.Resources>
         <ObjectDataProvider x:Key="ModelProvider"  IsInitialLoadEnabled="False" ></ObjectDataProvider>
-        <DataTemplate DataType="{x:Type xbimView:XbimModelViewModel}">
+        <DataTemplate DataType="{x:Type viewModels:XbimModelViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -21,7 +21,7 @@
                 <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type xbimView:SpatialViewModel}">
+        <DataTemplate DataType="{x:Type viewModels:SpatialViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -32,7 +32,7 @@
                 <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type xbimView:ContainedElementsViewModel}">
+        <DataTemplate DataType="{x:Type viewModels:ContainedElementsViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -43,7 +43,7 @@
                 <TextBlock Grid.Column="1" Text="{Binding Name}"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type xbimView:IfcProductModelView}">
+        <DataTemplate DataType="{x:Type viewModels:IfcProductModelView}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

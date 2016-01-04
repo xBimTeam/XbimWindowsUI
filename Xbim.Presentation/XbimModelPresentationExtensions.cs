@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Xbim.Common;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.MaterialResource;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
-using Xbim.XbimExtensions.Interfaces;
-using Xbim.XbimExtensions.SelectTypes;
+using Xbim.IO.Esent;
 
 namespace Xbim.Presentation
 {
@@ -17,13 +17,13 @@ namespace Xbim.Presentation
         {
             if (style.IsIfcSurfaceStyle)
             {
-                IfcSurfaceStyle surfaceStyle = style.IfcSurfaceStyle(model);
+                IfcSurfaceStyle surfaceStyle = style.SurfaceStyle<IfcSurfaceStyle>(model);
                 if (surfaceStyle != null)
                     return new XbimMaterialProvider(surfaceStyle.ToMaterial());
 
             }
             //nothing specific go for default of type
-            return ModelDataProvider.GetDefaultMaterial(style.IfcType);
+            return ModelDataProvider.GetDefaultMaterial(model, style.ExpressTypeId);
         }
 
         // adapted from http://stackoverflow.com/questions/713341/comparing-arrays-in-c-sharp
@@ -56,7 +56,7 @@ namespace Xbim.Presentation
         /// True if the function needs to execute a deeper semantical analysis of the relations (it can expand the query result).
         /// False if a direct analysis of explicit associations with the specific MaterialSet.
         /// </param>
-        public static IEnumerable<IfcRoot> GetInstancesOfMaterial(this IXbimInstanceCollection instanceCollection, IfcMaterialSelect matSel, bool deepSearch)
+        public static IEnumerable<IfcRoot> GetInstancesOfMaterial(this IEntityCollection instanceCollection, IfcMaterialSelect matSel, bool deepSearch)
         {
             // Debug.WriteLine(string.Format("GetInstance {0}, {1}", matSel.EntityLabel.ToString(), DeepSearch));
             if (matSel is IfcMaterial)

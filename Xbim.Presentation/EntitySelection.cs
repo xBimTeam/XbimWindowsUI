@@ -2,18 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using Xbim.Common.XbimExtensions;
-using Xbim.XbimExtensions.Interfaces;
+using Xbim.Common;
 
 namespace Xbim.Presentation
 {
     /// <summary>
     /// Provides a container for entity selections capable of undo/redo operations and notification of changes.
     /// </summary>
-    public class EntitySelection : INotifyCollectionChanged, IEnumerable<IPersistIfcEntity>
+    public class EntitySelection : INotifyCollectionChanged, IEnumerable<IPersistEntity>
     {
         private List<SelectionEvent> _selectionLog;
-        private XbimIPersistIfcEntityCollection<IPersistIfcEntity> _selection = new XbimIPersistIfcEntityCollection<IPersistIfcEntity>();
+        private XbimIPersistEntityCollection<IPersistEntity> _selection = new XbimIPersistEntityCollection<IPersistEntity>();
         private int _position = -1;
 
         /// <summary>
@@ -75,9 +74,9 @@ namespace Xbim.Presentation
         }
 
         //add without logging
-        private IEnumerable<IPersistIfcEntity> AddRange(IEnumerable<IPersistIfcEntity> entities)
+        private IEnumerable<IPersistEntity> AddRange(IEnumerable<IPersistEntity> entities)
         { 
-            List<IPersistIfcEntity> check = new List<IPersistIfcEntity>();
+            List<IPersistEntity> check = new List<IPersistEntity>();
             foreach (var item in entities) //check all for redundancy
             {
                 if (!_selection.Contains(item))
@@ -92,9 +91,9 @@ namespace Xbim.Presentation
         }
 
         //remove without logging
-        private IEnumerable<IPersistIfcEntity> RemoveRange(IEnumerable<IPersistIfcEntity> entities)
+        private IEnumerable<IPersistEntity> RemoveRange(IEnumerable<IPersistEntity> entities)
         {
-            List<IPersistIfcEntity> check = new List<IPersistIfcEntity>();
+            List<IPersistEntity> check = new List<IPersistEntity>();
 
             foreach (var item in entities) //check all for existance
             {
@@ -108,32 +107,32 @@ namespace Xbim.Presentation
             return check;
         }
 
-        public void Add(IPersistIfcEntity entity)
+        public void Add(IPersistEntity entity)
         {
             if (entity == null)
                 return;
             Add(new[] { entity });
         }
 
-        public void Add(IEnumerable<IPersistIfcEntity> entity)
+        public void Add(IEnumerable<IPersistEntity> entity)
         {
-            IEnumerable<IPersistIfcEntity> check = AddRange(entity);
+            IEnumerable<IPersistEntity> check = AddRange(entity);
             if (_selectionLog == null)
                 return;
             _selectionLog.Add(new SelectionEvent { Action = Action.Add, Entities = check });
             ResetLog();
         }
 
-        public void Remove(IPersistIfcEntity entity)
+        public void Remove(IPersistEntity entity)
         {
             Remove(new[] { entity });
         }
 
-        public void Remove(IEnumerable<IPersistIfcEntity> entity)
+        public void Remove(IEnumerable<IPersistEntity> entity)
         {
             if (entity == null)
                 return;
-            IEnumerable<IPersistIfcEntity> check = RemoveRange(entity);
+            IEnumerable<IPersistEntity> check = RemoveRange(entity);
             if (_selectionLog == null)
                 return;
             _selectionLog.Add(new SelectionEvent { Action = Action.Remove, Entities = check });
@@ -160,13 +159,13 @@ namespace Xbim.Presentation
         private struct SelectionEvent
         {
             public Action Action;
-            public IEnumerable<IPersistIfcEntity> Entities;
+            public IEnumerable<IPersistEntity> Entities;
         }
 
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
-        private void OnCollectionChanged(NotifyCollectionChangedAction action, IList<IPersistIfcEntity> entities)
+        private void OnCollectionChanged(NotifyCollectionChangedAction action, IList<IPersistEntity> entities)
         {
             if (action != NotifyCollectionChangedAction.Add && action != NotifyCollectionChangedAction.Remove)
                 throw new ArgumentException("Only Add and Remove operations are supported");
@@ -176,7 +175,7 @@ namespace Xbim.Presentation
             }
         }
 
-        public IEnumerator<IPersistIfcEntity> GetEnumerator()
+        public IEnumerator<IPersistEntity> GetEnumerator()
         {
             return _selection.GetEnumerator();
         }
@@ -187,11 +186,11 @@ namespace Xbim.Presentation
         }
 
         /// <summary>
-        /// Toggles the selection state of an IPersistIfcEntity
+        /// Toggles the selection state of an IPersistEntity
         /// </summary>
-        /// <param name="item">the IPersistIfcEntity to add or remove from the selection</param>
+        /// <param name="item">the IPersistEntity to add or remove from the selection</param>
         /// <returns>true if added; false if removed</returns>
-        internal bool Toggle(IPersistIfcEntity item)
+        internal bool Toggle(IPersistEntity item)
         {
             if (_selection.Contains(item))
             {
@@ -206,7 +205,7 @@ namespace Xbim.Presentation
         {
             // to preserve undo capability
             //
-            IPersistIfcEntity[] t = new IPersistIfcEntity[_selection.Count];
+            IPersistEntity[] t = new IPersistEntity[_selection.Count];
             _selection.CopyTo(t, 0);
             RemoveRange(t);
         }

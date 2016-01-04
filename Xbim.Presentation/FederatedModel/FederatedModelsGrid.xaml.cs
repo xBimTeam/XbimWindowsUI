@@ -36,7 +36,7 @@ namespace Xbim.Presentation.FederatedModel
         public FederatedModelsGrid()
         {
             //get available roles
-            var roles = Enum.GetValues(typeof (IfcRole));
+            var roles = Enum.GetValues(typeof (IfcRoleEnum));
             foreach (var role in roles)
             {
                 _roles.Add(role.ToString());
@@ -68,23 +68,24 @@ namespace Xbim.Presentation.FederatedModel
 
         void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    //Remove model
+            //TODO resolve reference models
+            //switch (e.Action)
+            //{
+            //    case NotifyCollectionChangedAction.Add:
+            //        break;
+            //    case NotifyCollectionChangedAction.Remove:
+            //        //Remove model
 
-                    var oldItems = new List<XbimModel>();
-                    foreach (var item in e.OldItems)
-                    {
-                        var model = item as XbimReferencedModelViewModel;
-                        bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
-                        model.ReferencedModel.Model.Close();
-                    }
+            //        var oldItems = new List<XbimModel>();
+            //        foreach (var item in e.OldItems)
+            //        {
+            //            var model = item as XbimReferencedModelViewModel;
+            //            bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
+            //            model.ReferencedModel.Model.Close();
+            //        }
 
-                    break;
-            }
+            //        break;
+            //}
         }
 
         public IEnumerable SelectedItems
@@ -104,7 +105,8 @@ namespace Xbim.Presentation.FederatedModel
 
                 foreach (var refMod in tempRefModHolder)
                 {
-                    _referencedModelsWrappers.Add(new XbimReferencedModelViewModel(refMod));
+                    //TODO resolve reference models
+                 //   _referencedModelsWrappers.Add(new XbimReferencedModelViewModel(refMod));
                 }
             }
         }

@@ -9,9 +9,7 @@ using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions;
 
 namespace Xbim.Presentation
 {
@@ -439,15 +437,13 @@ namespace Xbim.Presentation
             _meshes.Add(frag);
         }
 
-        public void Add(string mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null,short modelId=0)
+        public XbimMeshFragment Add(IXbimGeometryModel geometryModel, Ifc4.Interfaces.IIfcProduct product, XbimMatrix3D transform, double? deflection, short modelId = 0)
         {
-            Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
+            throw new NotImplementedException();
         }
 
-        public void Add(byte[] mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
-        {
-            Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
-        }
+
+
         public bool Read(string data, XbimMatrix3D? tr = null)
         {
             int version = 1;
@@ -761,6 +757,15 @@ namespace Xbim.Presentation
             _unfrozenIndices = new List<int>(Mesh.TriangleIndices);
             _unfrozenNormals = new List<Vector3D>(Mesh.Normals);
             WpfModel.Geometry = null;
+        }
+
+
+
+
+
+        public void Add(string mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
+        {
+            throw new NotImplementedException();
         }
     }
 }

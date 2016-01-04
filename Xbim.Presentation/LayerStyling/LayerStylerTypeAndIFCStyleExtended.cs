@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Xbim.Common;
+using Xbim.Common.Federation;
+using Xbim.Ifc;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.IO;
-using Xbim.IO.GroupingAndStyling;
+using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
+using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -22,25 +25,25 @@ namespace Xbim.Presentation.LayerStyling
         HashSet<Type> _lightTransparentTypes;
 
         HashSet<int> _hiddenEntities;
-        HashSet<Type> _hiddenTypes; 
-
-        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(XbimGeometryHandleCollection inputHandles)
+        HashSet<Type> _hiddenTypes;
+        private IModel _model;
+        public Dictionary<string, XbimGeometryHandleCollection> GroupLayers(IModel model, XbimGeometryHandleCollection inputHandles)
         {
             // creates a new dictionary and then fills it by type enumerating the known non-abstract subtypes of Product
             Dictionary<string, XbimGeometryHandleCollection> result = new Dictionary<string, XbimGeometryHandleCollection>();
-
+            var metaData = _model.Metadata;
             // prepares transparents first
             HashSet<short> traspTypes = new HashSet<short>();
             foreach (var ttp in _lightTransparentTypes)
             {
-                traspTypes.Add(IfcMetaData.IfcTypeId(ttp));
+                traspTypes.Add(metaData.ExpressTypeId(ttp));
             }
             XbimGeometryHandleCollection transp = new XbimGeometryHandleCollection(
                     inputHandles.Where(g =>
-                        traspTypes.Contains(g.IfcTypeId)
+                        traspTypes.Contains(g.ExpressTypeId)
                         ||
                         _lightTransparentEntities.Contains(g.ProductLabel)
-                        )
+                        ),metaData
                     );
             result.Add("_LightBlueTransparent", transp);
 
@@ -48,30 +51,30 @@ namespace Xbim.Presentation.LayerStyling
             HashSet<short> hiddTypes = new HashSet<short>();
             foreach (var htp in _hiddenTypes)
             {
-                hiddTypes.Add(IfcMetaData.IfcTypeId(htp));
+                hiddTypes.Add(metaData.ExpressTypeId(htp));
             }
             XbimGeometryHandleCollection hidd = new XbimGeometryHandleCollection(
                     inputHandles.Where(g =>
-                        hiddTypes.Contains(g.IfcTypeId)
+                        hiddTypes.Contains(g.ExpressTypeId)
                         ||
                         _hiddenEntities.Contains(g.ProductLabel)
-                        )
+                        ), metaData
                     );
 
             // now execute normal type loop, but with the exclusion of hidden and transparent
             //
-            IfcType baseType = IfcMetaData.IfcType(typeof(IfcProduct));
+            var baseType = metaData.ExpressType(typeof(IfcProduct));
             foreach (var subType in baseType.NonAbstractSubTypes)
             {
-                short ifcTypeId = IfcMetaData.IfcTypeId(subType);
+                short ifcTypeId = metaData.ExpressTypeId(subType);
                 XbimGeometryHandleCollection handles = new XbimGeometryHandleCollection(
                     inputHandles.Where(g => 
-                        g.IfcTypeId == ifcTypeId
+                        g.ExpressTypeId == ifcTypeId
                         &&
                         !(transp.Contains(g))
                         &&
                         !(hidd.Contains(g))
-                        )
+                        ), metaData
                     );
                 
                 // only add the item if there are handles in it
@@ -186,8 +189,11 @@ namespace Xbim.Presentation.LayerStyling
             return true;
         }
 
-        public void SetFederationEnvironment(XbimReferencedModel refModel) { }
-        
-        public void SetCurrentModel(IModel model) { }
+        public void SetFederationEnvironment(IReferencedModel refModel) { }
+
+        public void SetCurrentModel(IModel model)
+        {
+            _model = model;
+        }
     }
 }

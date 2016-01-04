@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
+using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
+using Xbim.Ifc;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.ProductExtension;
-using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using XbimGeometry.Interfaces;
+using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.LayerStylingV2
 {
@@ -40,7 +42,7 @@ namespace Xbim.Presentation.LayerStylingV2
             var i = 0;
             foreach (var shapeInstance in context.ShapeInstances()
                 .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
-                            !typeof(IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
+                            !typeof(IfcFeatureElement).IsAssignableFrom(model.Metadata.GetType(s.IfcTypeId)) /*&&
                         !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/))
             {
                 IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
@@ -64,7 +66,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             shapeInstance.IfcProductLabel,
                             shapeInstance.InstanceLabel,
                             XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
-                            model.UserDefinedId);
+                            (short)model.UserDefinedId);
                         break;
                     case XbimGeometryType.PolyhedronBinary:
                         targetMergeMesh.Add(
@@ -73,7 +75,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             shapeInstance.IfcProductLabel,
                             shapeInstance.InstanceLabel,
                             XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
-                            model.UserDefinedId
+                            (short)model.UserDefinedId
                             );
                         break;
                     default:
@@ -94,7 +96,7 @@ namespace Xbim.Presentation.LayerStylingV2
         public DrawingControl3D Control { get; set; }
 
 
-        public void SetFederationEnvironment(XbimReferencedModel refModel)
+        public void SetFederationEnvironment(IReferencedModel refModel)
         {
 
         }

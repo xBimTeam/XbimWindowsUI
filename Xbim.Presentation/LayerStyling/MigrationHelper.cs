@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common.Geometry;
-using Xbim.IO;
+using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
-using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation.LayerStyling
 {
-    static public class MigrationHelper
+    public static class MigrationHelper
     {
         public static XbimGeometryHandleCollection GetApproximateGeometryHandles(this Xbim3DModelContext context, IEnumerable<int> loadLabels = null)
         {

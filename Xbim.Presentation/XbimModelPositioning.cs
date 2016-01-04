@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NPOI.POIFS.Storage;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
-using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -25,6 +22,7 @@ namespace Xbim.Presentation
             {
                 if (double.IsNaN(_OneMeter))
                 {
+                    
                     _OneMeter = _model.ModelFactors.OneMetre;
                 }
                 return _OneMeter;
