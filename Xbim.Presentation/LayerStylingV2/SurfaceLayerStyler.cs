@@ -71,7 +71,8 @@ namespace Xbim.Presentation.LayerStylingV2
                         else
                         {
                             var prodType = model.Metadata.ExpressType((short) Math.Abs(style));
-                            texture = XbimTexture.Create(colourMap[prodType.Name]);
+                            var v = colourMap[prodType.Name];
+                            texture = XbimTexture.Create(v);
                         }
                         texture.DefinedObjectId = style;
                         var wpfMaterial = new WpfMaterial();
