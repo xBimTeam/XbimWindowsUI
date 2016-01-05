@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 
 namespace Xbim.Presentation.FederatedModel
 {

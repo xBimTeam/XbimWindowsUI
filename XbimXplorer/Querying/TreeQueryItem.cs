@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 
 namespace XbimXplorer.Querying
 {
@@ -11,9 +10,9 @@ namespace XbimXplorer.Querying
     /// </summary>
     public class TreeQueryItem
     {
-        private IEnumerable<int> _entityLabelsToParse;
-        private String _queryCommand;
-        private bool _transverse;
+        private readonly IEnumerable<int> _entityLabelsToParse;
+        private readonly string _queryCommand;
+        private readonly bool _transverse;
 
         /// <summary>
         /// 
@@ -42,43 +41,36 @@ namespace XbimXplorer.Querying
                 else if (_queryCommand.Trim() == "")
                     yield return label;
                 var entity = model.Instances[label];
-                if (entity != null)
-                {
-                    var ifcType = model.Metadata.ExpressType(entity);
-                    // directs first
-                    SquareBracketIndexer sbi = new SquareBracketIndexer(_queryCommand);
+                if (entity == null) 
+                    continue;
+                var ifcType = model.Metadata.ExpressType(entity);
+                // directs first
+                var sbi = new SquareBracketIndexer(_queryCommand);
 
-                    var prop = ifcType.Properties.Where(x => x.Value.PropertyInfo.Name == sbi.Property).FirstOrDefault().Value;
-                    if (prop == null) // otherwise test inverses
+                var prop = ifcType.Properties.FirstOrDefault(x => x.Value.PropertyInfo.Name == sbi.Property).Value ??
+                           ifcType.Inverses.FirstOrDefault(x => x.PropertyInfo.Name == sbi.Property);
+                if (prop == null) 
+                    continue;
+                var propVal = prop.PropertyInfo.GetValue(entity, null);
+                if (propVal == null) 
+                    continue;
+                if (prop.EntityAttribute.IsEnumerable)
+                {
+                    var propCollection = propVal as IEnumerable<object>;
+                    if (propCollection == null) 
+                        continue;
+                    propCollection = sbi.GetItem(propCollection);
+                    foreach (var item in propCollection)
                     {
-                        prop = ifcType.Inverses.Where(x => x.PropertyInfo.Name == sbi.Property).FirstOrDefault();
+                        var pe = item as IPersistEntity;
+                        if (pe != null) yield return pe.EntityLabel;
                     }
-                    if (prop != null)
-                    {
-                        object propVal = prop.PropertyInfo.GetValue(entity, null);
-                        if (propVal != null)
-                        {
-                            if (prop.EntityAttribute.IsEnumerable)
-                            {
-                                IEnumerable<object> propCollection = propVal as IEnumerable<object>;
-                                if (propCollection != null)
-                                {
-                                    propCollection = sbi.GetItem(propCollection);
-                                    foreach (var item in propCollection)
-                                    {
-                                        IPersistEntity pe = item as IPersistEntity;
-                                        if (pe != null) yield return pe.EntityLabel;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                IPersistEntity pe = propVal as IPersistEntity;
-                                if (pe != null && sbi.Index < 1) // index is negative (not specified) or 0
-                                    yield return pe.EntityLabel;
-                            }
-                        }
-                    }
+                }
+                else
+                {
+                    var pe = propVal as IPersistEntity;
+                    if (pe != null && sbi.Index < 1) // index is negative (not specified) or 0
+                        yield return pe.EntityLabel;
                 }
             }
         }

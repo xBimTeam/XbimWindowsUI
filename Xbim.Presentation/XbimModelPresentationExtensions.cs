@@ -6,7 +6,7 @@ using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.MaterialResource;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc2x3.ProductExtension;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 using Xbim.IO.Esent;
 
 namespace Xbim.Presentation

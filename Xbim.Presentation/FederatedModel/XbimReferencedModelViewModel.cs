@@ -4,7 +4,6 @@ using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
-using XbimModel = Xbim.IO.XbimModel;
 
 namespace Xbim.Presentation.FederatedModel
 {

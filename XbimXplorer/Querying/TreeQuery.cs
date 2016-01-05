@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 using XbimXplorer.Querying;
 
 namespace XbimXplorer

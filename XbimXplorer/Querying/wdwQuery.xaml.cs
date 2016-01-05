@@ -18,7 +18,7 @@ using Xbim.Common.Metadata;
 using Xbim.Ifc4.Kernel;
 using Xbim.Ifc4.MaterialResource;
 using Xbim.Ifc4.ProductExtension;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStyling;

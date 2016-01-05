@@ -19,7 +19,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Metadata;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 
 #endregion
 

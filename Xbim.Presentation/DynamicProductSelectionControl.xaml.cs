@@ -10,7 +10,7 @@ using Microsoft.CSharp;
 using Microsoft.Win32;
 using Xbim.Common;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 
 namespace Xbim.Presentation
 {

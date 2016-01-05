@@ -9,7 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 using Xbim.Ifc2x3.ActorResource;
-using Xbim.IO;
+using Xbim.Ifc2x3.IO;
 
 namespace Xbim.Presentation.FederatedModel
 {
