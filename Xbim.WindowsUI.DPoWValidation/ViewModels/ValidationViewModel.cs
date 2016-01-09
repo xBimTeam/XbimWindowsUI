@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Microsoft.Practices.Unity;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
+using Xbim.IO.Esent;
 using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Extensions;
 using Xbim.WindowsUI.DPoWValidation.Injection;
@@ -289,9 +290,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                         // this is used by the federated model selection mechanisms.
                         // 
                         var i = 0;
-                        foreach (var item in model.AllModels)
+                        foreach (var item in model.ReferencedModels)
                         {
-                            item.Tag = i++;
+                            item.Model.UserDefinedId = i++;
                         }
                     }
                 }

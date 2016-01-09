@@ -59,18 +59,26 @@ namespace Xbim.Presentation
         public XbimModelPositioning(XbimModel model)
         {
             _model = model;
-            Context = new Xbim3DModelContext(model);
-            var supportLevel = model.GeometrySupportLevel;
-          
-            switch (supportLevel)
+            var geomStore = model.GeometryStore;
+            using (var reader = geomStore.BeginRead())
             {
-                case 1:
-                    LargestRegion = GetLargestRegion(model);
-                    break;
-                case 2:
-                    LargestRegion = Context.GetLargestRegion();
-                    break;
+                var supportLevel = model.GeometrySupportLevel;
+
+                switch (supportLevel)
+                {
+                    case 1:
+                        LargestRegion = GetLargestRegion(model);
+                        break;
+                    case 2:
+                        foreach (var regionColl in reader.ContextRegions)
+                        {
+                            LargestRegion = regionColl.MostPopulated(); //just take the first, need to change this to hold multiple contexts
+                            break;
+                        }
+                        break;
+                }
             }
+
         }
 
 

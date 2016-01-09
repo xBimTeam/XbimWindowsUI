@@ -25,7 +25,7 @@ namespace Xbim.Presentation.LayerStylingV2
         /// <param name="context"></param>
         /// <param name="exclude">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
         /// <returns></returns>
-        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context,
+        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context1,
             List<Type> exclude = null)
         {
             var excludedTypes = new HashSet<short>();
@@ -62,18 +62,10 @@ namespace Xbim.Presentation.LayerStylingV2
                     var colourMap = new XbimColourMap();
                     foreach (var style in sstyles)
                     {
-                        XbimTexture texture;
-                        if (style > 0) //get the ifc style and build it
-                        {
-                            var sStyle = model.Instances[style] as IfcSurfaceStyle;
-                            texture = XbimTexture.Create(sStyle);
-                        }
-                        else
-                        {
-                            var prodType = model.Metadata.ExpressType((short) Math.Abs(style));
-                            var v = colourMap[prodType.Name];
-                            texture = XbimTexture.Create(v);
-                        }
+                        
+                        var sStyle = model.Instances[style] as IfcSurfaceStyle;
+                        var texture = XbimTexture.Create(sStyle);
+                        
                         texture.DefinedObjectId = style;
                         var wpfMaterial = new WpfMaterial();
                         wpfMaterial.CreateMaterial(texture);
@@ -88,8 +80,8 @@ namespace Xbim.Presentation.LayerStylingV2
                             tmpOpaquesGroup.Children.Add(mg);
                     }
 
-                    if (!styles.Any()) return scene; //this should always return something
-                    var shapeInstances = context.ShapeInstances()
+                   
+                    var shapeInstances = geomReader.ShapeInstances
                         .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded
                                     &&
                                     !excludedTypes.Contains(s.IfcTypeId));
@@ -101,7 +93,24 @@ namespace Xbim.Presentation.LayerStylingV2
                         var styleId = shapeInstance.StyleLabel > 0
                             ? shapeInstance.StyleLabel
                             : shapeInstance.IfcTypeId*-1;
-
+                        WpfMaterial material;
+                        if (!styles.TryGetValue(styleId, out material)) //get the ifc style and build it
+                        {
+                            var prodType = model.Metadata.ExpressType(shapeInstance.IfcTypeId);
+                            var v = colourMap[prodType.Name];
+                            var texture = XbimTexture.Create(v);
+                            material = new WpfMaterial();
+                            material.CreateMaterial(texture);
+                            styles.Add(styleId,material);
+                            var mg = new WpfMeshGeometry3D(material, material);
+                            mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
+                            styleMeshSets.Add(styleId, mg);
+                            mg.BeginUpdate();
+                            if (texture.IsTransparent)
+                                tmpTransparentsGroup.Children.Add(mg);
+                            else
+                                tmpOpaquesGroup.Children.Add(mg);
+                        }
                         //GET THE ACTUAL GEOMETRY 
                         MeshGeometry3D wpfMesh;
                         //see if we have already read it
@@ -122,7 +131,7 @@ namespace Xbim.Presentation.LayerStylingV2
                         }
                         else //we need to get the shape geometry
                         {
-                            IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                            IXbimShapeGeometryData shapeGeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 
                             if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                             {

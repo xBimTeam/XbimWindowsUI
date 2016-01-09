@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media.Media3D;
+using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
+using Xbim.Ifc;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.ProductExtension;
-using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.LayerStylingV2;
-using XbimGeometry.Interfaces;
 
 namespace XplorerPlugins.DPoW
 {
@@ -40,7 +41,7 @@ namespace XplorerPlugins.DPoW
 
             foreach (var shapeInstance in context.ShapeInstances()
                 .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded &&
-                            !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
+                            !typeof (IfcFeatureElement).IsAssignableFrom(model.Metadata.GetType(s.IfcTypeId)) /*&&
                         !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/))
             {
                 IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
@@ -69,7 +70,7 @@ namespace XplorerPlugins.DPoW
                    shapeInstance.IfcProductLabel,
                    shapeInstance.InstanceLabel,
                    XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
-                   model.UserDefinedId
+                   (short)model.UserDefinedId
                    );
                         break;
 
@@ -80,7 +81,7 @@ namespace XplorerPlugins.DPoW
                   shapeInstance.IfcProductLabel,
                   shapeInstance.InstanceLabel,
                   XbimMatrix3D.Multiply(shapeInstance.Transformation, Control.ModelPositions[model].Transfrom),
-                  model.UserDefinedId);
+                  (short)model.UserDefinedId);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -98,11 +99,11 @@ namespace XplorerPlugins.DPoW
         }
 
         public DrawingControl3D Control { get; set; }
-        
-
-        public void SetFederationEnvironment(XbimReferencedModel refModel)
+        public void SetFederationEnvironment(IReferencedModel refModel)
         {
             
         }
+
+
     }
 }

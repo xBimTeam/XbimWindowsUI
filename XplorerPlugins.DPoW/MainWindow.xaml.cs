@@ -9,12 +9,12 @@ using System.Windows.Media;
 using log4net;
 using Microsoft.Win32;
 using Xbim.CobieLiteUK.Validation;
+using Xbim.Common;
 using Xbim.COBieLiteUK;
 using Xbim.IO;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
-using Xbim.XbimExtensions.Interfaces;
 
 namespace XplorerPlugins.DPoW
 {

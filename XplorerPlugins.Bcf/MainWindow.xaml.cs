@@ -9,10 +9,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.XbimExtensions.Interfaces;
 
 
 namespace Xbim.BCF
