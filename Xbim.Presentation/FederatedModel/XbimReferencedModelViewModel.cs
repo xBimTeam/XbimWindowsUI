@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel;
 using System.IO;
+using System.Linq;
+using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.ActorResource;
 using Xbim.Ifc2x3.IO;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
+using IfcRoleEnum = Xbim.Ifc2x3.ActorResource.IfcRoleEnum;
 
 namespace Xbim.Presentation.FederatedModel
 {
@@ -14,14 +17,14 @@ namespace Xbim.Presentation.FederatedModel
     public class XbimReferencedModelViewModel : INotifyPropertyChanged
     {
         #region fields
-        XbimReferencedModel _xbimReferencedModel;
+        IReferencedModel _xbimReferencedModel;
         string _identifier = "";
         string _name = "";
         string _organisationName = "";
         string _organisationRole = "";
         #endregion fields
 
-        public XbimReferencedModel ReferencedModel
+        public IReferencedModel ReferencedModel
         {
             get { return _xbimReferencedModel; }
             set { _xbimReferencedModel = value; }
@@ -52,7 +55,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel != null)
                 {
-                    return ReferencedModel.DocumentInformation.Name;
+                    return ReferencedModel.Name;
                 }
                 return _name;
             }
@@ -72,7 +75,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel == null) 
                     return _organisationName;
-                var organization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
+                var organization = ReferencedModel.Name;
                 if (organization != null)
                     return organization.Name;
                 return _organisationName;
@@ -81,7 +84,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel != null)
                 {
-                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
+                    var organization = ReferencedModel.DocumentInformation.DocumentOwner as IIfcOrganization;
                     if (organization != null)
                     {
                         using (var tnx = ReferencedModel.DocumentInfoTransaction)
@@ -102,8 +105,8 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel == null) 
                     return _organisationRole;
-                var ownerAsIfcOrganization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
-                var roles = ownerAsIfcOrganization.Roles;
+                var ownerAsIIfcOrganization = ReferencedModel.DocumentInformation.DocumentOwner as IIfcOrganization;
+                var roles = ownerAsIIfcOrganization.Roles;
                 var role = roles != null ? roles.FirstOrDefault() : null;
                 if (role == null)
                     return "";
@@ -117,8 +120,8 @@ namespace Xbim.Presentation.FederatedModel
 
                 if (ReferencedModel != null)
                 {
-                    var ownerAsIfcOrganization = ReferencedModel.DocumentInformation.DocumentOwner as IfcOrganization;
-                    var role = ownerAsIfcOrganization.Roles.FirstOrDefault(); // assumes the first to be modified
+                    var ownerAsIIfcOrganization = ReferencedModel.DocumentInformation.DocumentOwner as IIfcOrganization;
+                    var role = ownerAsIIfcOrganization.Roles.FirstOrDefault(); // assumes the first to be modified
                     using (var tnx = ReferencedModel.DocumentInfoTransaction)
                     {
                         role.RoleString = value; // the string is converted appropriately by the IfcActorRoleClass
