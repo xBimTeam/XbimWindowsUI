@@ -1,57 +1,29 @@
 ﻿using System.ComponentModel;
-using Xbim.Ifc2x3.IO;
+using Xbim.Common.Federation;
+
 
 namespace Xbim.Presentation.FederatedModel
 {
     public class FederatedModelViewModel: INotifyPropertyChanged
     {
-        XbimModel _model;
+        IReferencedModel _model;
 
-        public XbimModel Model
+        public IReferencedModel Model
         {
             get { return _model; }
             set { _model = value; }
         }
 
-        public string Project
+        
+        public string Role
         {
             get
-            {
-                if (_model == null)
-                    return "";
-                return _model.IfcProject.Name;
+            {              
+                return _model.Role;
             }
             set
             {
-                if (_model == null)
-                    return;
-                using (var txn = _model.BeginTransaction())
-                {
-                    _model.IfcProject.Name = value;
-                    txn.Commit();
-                }
-                OnPropertyChanged("Project");
-            }
-        }
-        public string Author
-        {
-            get
-            {
-                if (_model == null)
-                    return "";
-                return _model.DefaultOwningUser.ThePerson.FamilyName;
-            }
-            set
-            {
-                if (_model == null)
-                    return;
-                using (var txn = _model.BeginTransaction())
-                {
-                    var defUser = _model.DefaultOwningUser;
-                    
-                    _model.DefaultOwningUser.ThePerson.FamilyName = value;
-                    txn.Commit();
-                }
+                _model.Role = value;
                 OnPropertyChanged("Author");
             }
         }
@@ -59,19 +31,12 @@ namespace Xbim.Presentation.FederatedModel
         {
             get
             {
-                if (_model == null)
-                    return "";
-                return _model.DefaultOwningUser.TheOrganization.Name;
+                
+                return _model.OwningOrganisation;
             }
             set
             {
-                if (_model == null)
-                    return;
-                using (var txn = _model.BeginTransaction())
-                {
-                    _model.DefaultOwningUser.TheOrganization.Name = value;
-                    txn.Commit();
-                }
+                _model.OwningOrganisation = value;
                 OnPropertyChanged("Organization");
             }
         }

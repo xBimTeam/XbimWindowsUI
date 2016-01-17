@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using Xbim.Common.Federation;
+using Xbim.Ifc;
 using Xbim.Ifc2x3.IO;
 
 namespace Xbim.Presentation.FederatedModel
@@ -20,7 +22,7 @@ namespace Xbim.Presentation.FederatedModel
 
         void FederatedModelDlg_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            FederatedModel.Model = DataContext as XbimModel;
+            FederatedModel.Model = DataContext as IReferencedModel;
             FederatedModel.NotifyAll();
             //OnPropertyChanged("Project");
             //OnPropertyChanged("Author");

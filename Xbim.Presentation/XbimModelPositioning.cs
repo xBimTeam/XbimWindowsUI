@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -12,20 +11,20 @@ namespace Xbim.Presentation
     {
         public XbimRegion LargestRegion;
         public Xbim3DModelContext Context;
-        public XbimMatrix3D Transfrom;
+        public XbimMatrix3D Transform;
         
-        private double _OneMeter = Double.NaN;
+        private double _oneMeter = Double.NaN;
 
         public double OneMeter
         {
             get
             {
-                if (double.IsNaN(_OneMeter))
+                if (double.IsNaN(_oneMeter))
                 {
                     
-                    _OneMeter = _model.ModelFactors.OneMetre;
+                    _oneMeter = _model.ModelFactors.OneMetre;
                 }
-                return _OneMeter;
+                return _oneMeter;
             }
         }
 
@@ -56,58 +55,26 @@ namespace Xbim.Presentation
 
         private readonly IModel _model;
 
-        public XbimModelPositioning(XbimModel model)
+        public XbimModelPositioning(IModel model)
         {
             _model = model;
             var geomStore = model.GeometryStore;
             using (var reader = geomStore.BeginRead())
             {
-                var supportLevel = model.GeometrySupportLevel;
-
-                switch (supportLevel)
+                foreach (var regionColl in reader.ContextRegions)
                 {
-                    case 1:
-                        LargestRegion = GetLargestRegion(model);
-                        break;
-                    case 2:
-                        foreach (var regionColl in reader.ContextRegions)
-                        {
-                            LargestRegion = regionColl.MostPopulated(); //just take the first, need to change this to hold multiple contexts
-                            break;
-                        }
-                        break;
+                    LargestRegion = regionColl.MostPopulated(); //just take the first, need to change this to hold multiple contexts
+                    break;
                 }
             }
-
         }
 
-
-        
-        /// <summary>
-        /// Works only on models version 1.
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private static XbimRegion GetLargestRegion(XbimModel model)
-        {
-            //get the region data should only be one
-            var project = model.IfcProject;
-            var projectId = 0;
-            if (project != null) projectId = project.EntityLabel;
-            // in version 1.0 there should be only 1 record in the database for the project (storing multiple regions).
-            var regionData = model.GetGeometryData(projectId, XbimGeometryType.Region).FirstOrDefault();
-
-            if (regionData == null)
-                return null;
-            var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
-            return regions.MostPopulated(); // this then returns 
-        }
 
         internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
             var translation = XbimMatrix3D.CreateTranslation(modelTranslation * OneMeter);
             var scaling = XbimMatrix3D.CreateScale(1/OneMeter);
-            Transfrom =  translation * scaling;
+            Transform =  translation * scaling;
         }
     }
 
@@ -121,7 +88,7 @@ namespace Xbim.Presentation
 
         private readonly Dictionary<IModel, XbimModelPositioning> _collection;
 
-        public void AddModel(XbimModel model)
+        public void AddModel(IModel model)
         {
             var tmp = new XbimModelPositioning(model);
             _collection.Add(model, tmp);
@@ -162,11 +129,11 @@ namespace Xbim.Presentation
             _collection = new Dictionary<IModel, XbimModelPositioning>();
         }
 
-        internal void SetCenterInMeters(XbimVector3D ModelTranslation)
+        internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
             foreach (var model in _collection.Values)
             {
-                model.SetCenterInMeters(ModelTranslation);
+                model.SetCenterInMeters(modelTranslation);
             }
         }
     }

@@ -1,5 +1,5 @@
 using Xbim.Common;
-using Xbim.Ifc2x3.IO;
+using Xbim.Ifc;
 
 
 namespace Xbim.Presentation.XplorerPluginSystem
@@ -11,7 +11,7 @@ namespace Xbim.Presentation.XplorerPluginSystem
 
         IPersistEntity SelectedItem { get; set; }
 
-        XbimModel Model { get; }
+        IfcStore Model { get; }
 
         void BroadCastMessage(object sender, string messageTypeString, object messageData);
 

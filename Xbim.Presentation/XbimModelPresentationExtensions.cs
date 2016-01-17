@@ -2,29 +2,14 @@
 using System.Diagnostics;
 using System.Linq;
 using Xbim.Common;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.MaterialResource;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.IO;
-using Xbim.IO.Esent;
+using Xbim.Ifc4.Interfaces;
+
 
 namespace Xbim.Presentation
 {
     public static class XbimModelPresentationExtensions
     {
-        public static XbimMaterialProvider GetRenderMaterial(this XbimModel model, XbimSurfaceStyle style)
-        {
-            if (style.IsIfcSurfaceStyle)
-            {
-                IfcSurfaceStyle surfaceStyle = style.SurfaceStyle<IfcSurfaceStyle>(model);
-                if (surfaceStyle != null)
-                    return new XbimMaterialProvider(surfaceStyle.ToMaterial());
-
-            }
-            //nothing specific go for default of type
-            return ModelDataProvider.GetDefaultMaterial(model, style.ExpressTypeId);
-        }
+       
 
         // adapted from http://stackoverflow.com/questions/713341/comparing-arrays-in-c-sharp
         //
@@ -56,13 +41,13 @@ namespace Xbim.Presentation
         /// True if the function needs to execute a deeper semantical analysis of the relations (it can expand the query result).
         /// False if a direct analysis of explicit associations with the specific MaterialSet.
         /// </param>
-        public static IEnumerable<IfcRoot> GetInstancesOfMaterial(this IEntityCollection instanceCollection, IfcMaterialSelect matSel, bool deepSearch)
+        public static IEnumerable<IIfcDefinitionSelect> GetInstancesOfMaterial(this IEntityCollection instanceCollection, IIfcMaterialSelect matSel, bool deepSearch)
         {
             // Debug.WriteLine(string.Format("GetInstance {0}, {1}", matSel.EntityLabel.ToString(), DeepSearch));
-            if (matSel is IfcMaterial)
+            if (matSel is IIfcMaterial)
             {
                 // straight return of objects of all associations
-                var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                var assocs = instanceCollection.OfType<IIfcRelAssociatesMaterial>().Where(
                     x => x.RelatingMaterial.EntityLabel ==matSel.EntityLabel
                     );
                 foreach (var assoc in assocs)
@@ -74,12 +59,12 @@ namespace Xbim.Presentation
                     }
                 }
             }
-            else if (matSel is IfcMaterialLayer)
+            else if (matSel is IIfcMaterialLayer)
             {
                 if (!deepSearch)
                 {
                     // straight return of objects of all associations
-                    var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                    var assocs = instanceCollection.OfType<IIfcRelAssociatesMaterial>().Where(
                         x =>x.RelatingMaterial.EntityLabel == matSel.EntityLabel
                         );
                     foreach (var assoc in assocs)
@@ -93,16 +78,16 @@ namespace Xbim.Presentation
                 }
                 else // this is deep search
                 {
-                    foreach (var straightMatch in GetInstancesOfMaterial(instanceCollection, ((IfcMaterialLayer)matSel).ToMaterialLayerSet, false))
+                    foreach (var straightMatch in GetInstancesOfMaterial(instanceCollection, ((IIfcMaterialLayer)matSel).ToMaterialLayerSet, false))
                         yield return straightMatch;
                 }
             }
-            else if (matSel is IfcMaterialList)
+            else if (matSel is IIfcMaterialList)
             {
                 if (!deepSearch)
                 {
                     // straight return of objects of all associations
-                    var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                    var assocs = instanceCollection.OfType<IIfcRelAssociatesMaterial>().Where(
                         x =>x.RelatingMaterial.EntityLabel == matSel.EntityLabel
                         );
                     foreach (var assoc in assocs)
@@ -119,11 +104,11 @@ namespace Xbim.Presentation
                     // a problem with this is that some exporters produce multiple IfcMaterialList that 
                     // they share the same underlying set of Materials, so we are looking for a signature of the underlying materials.
                     // 
-                    var baseMatArray = ((IfcMaterialList)matSel).Materials.Select(x => x.EntityLabel).ToArray(); // this is the signature.
+                    var baseMatArray = ((IIfcMaterialList)matSel).Materials.Select(x => x.EntityLabel).ToArray(); // this is the signature.
                     var cmp = EqualityComparer<int>.Default;
-                    foreach (var testingMaterialList in instanceCollection.OfType<IfcMaterialList>())
+                    foreach (var testingMaterialList in instanceCollection.OfType<IIfcMaterialList>())
                     {
-                        bool bDoesMatch = false;
+                        bool bDoesMatch;
                         if (testingMaterialList.EntityLabel == matSel.EntityLabel)
                         { // no need to compare
                             bDoesMatch = true;
@@ -141,14 +126,14 @@ namespace Xbim.Presentation
                     }
                 }
             }
-            else if (matSel is IfcMaterialLayerSet)
+            else if (matSel is IIfcMaterialLayerSet)
             {
                 // no difference in deep mode available for this type
 
                 // given a material layerset ...
                 // ... search for all its usages modes ...
-                var lsUsages = instanceCollection.OfType<IfcMaterialLayerSetUsage>().Where(
-                    x => x.ForLayerSet.EntityLabel ==((IfcMaterialLayerSet)matSel).EntityLabel
+                var lsUsages = instanceCollection.OfType<IIfcMaterialLayerSetUsage>().Where(
+                    x => x.ForLayerSet.EntityLabel ==((IIfcMaterialLayerSet)matSel).EntityLabel
                     );
                 foreach (var lsUsage in lsUsages)
                 {
@@ -159,12 +144,12 @@ namespace Xbim.Presentation
                     }
                 }
             }
-            else if (matSel is IfcMaterialLayerSetUsage)
+            else if (matSel is IIfcMaterialLayerSetUsage)
             {
                 if (deepSearch)
                 {
                     // identify the underlying material layer set and return all its usages.
-                    foreach (var item in instanceCollection.GetInstancesOfMaterial(((IfcMaterialLayerSetUsage)matSel).ForLayerSet, false))
+                    foreach (var item in instanceCollection.GetInstancesOfMaterial(((IIfcMaterialLayerSetUsage)matSel).ForLayerSet, false))
                     {
                         yield return item;
                     }
@@ -172,7 +157,7 @@ namespace Xbim.Presentation
                 else
                 {
                     // straight return of objects of all associations
-                    var assocs = instanceCollection.OfType<IfcRelAssociatesMaterial>().Where(
+                    var assocs = instanceCollection.OfType<IIfcRelAssociatesMaterial>().Where(
                         x => x.RelatingMaterial.EntityLabel == matSel.EntityLabel
                         );
                     foreach (var assoc in assocs)

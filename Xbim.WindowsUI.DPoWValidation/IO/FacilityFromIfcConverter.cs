@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xbim.COBieLiteUK;
+using Xbim.Ifc;
 using Xbim.IO;
 using XbimExchanger.IfcToCOBieLiteUK;
 
@@ -11,7 +12,7 @@ namespace Xbim.WindowsUI.DPoWValidation.IO
 {
     public class FacilityFromIfcConverter
     {
-        public static Facility FacilityFromModel(XbimModel model)
+        public static Facility FacilityFromModel(IfcStore model)
         {
             var facilities = new List<Facility>();
             var ifcToCoBieLiteUkExchanger = new IfcToCOBieLiteUkExchanger(model, facilities);

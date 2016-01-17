@@ -4,40 +4,50 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
+using Xbim.Common.Metadata;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.IO;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.IO.Esent;
-using Xbim.ModelGeometry.Scene;
+using Xbim.Ifc4.Interfaces;
 
-namespace Xbim.Presentation.LayerStylingV2
+namespace Xbim.Presentation.LayerStyling
 {
-    public class SurfaceLayerStyler : ILayerStylerV2
+    public class SurfaceLayerStyler : ILayerStyler
     {
+        // ReSharper disable once CollectionNeverUpdated.Local
+        readonly XbimColourMap _colourMap = new XbimColourMap();
 
         /// <summary>
         /// This version uses the new Geometry representation
         /// </summary>
         /// <param name="model"></param>
-        /// <param name="context"></param>
+        /// <param name="modelTransform">The transform to place the models geometry in the right place</param>
+        /// <param name="opaqueShapes"></param>
+        /// <param name="transparentShapes"></param>
         /// <param name="exclude">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
         /// <returns></returns>
-        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, Xbim3DModelContext context1,
+        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes,
             List<Type> exclude = null)
         {
+            
             var excludedTypes = new HashSet<short>();
             if (exclude == null)
                 exclude = new List<Type>()
                 {
-                    typeof(IfcSpace)
+                    typeof(IIfcSpace)
                     // , typeof(IfcFeatureElement)
                 };
             foreach (var excludedT in exclude)
             {
-                var ifcT = model.Metadata.ExpressType(excludedT);
+                ExpressType ifcT;
+                if (excludedT.IsInterface && excludedT.Name.StartsWith("IIfc"))
+                {
+                    var concreteTypename = excludedT.Name.Substring(1).ToUpper();
+                    ifcT = model.Metadata.ExpressType(concreteTypename);
+                }
+                else
+                    ifcT = model.Metadata.ExpressType(excludedT);
                 foreach (var exIfcType in ifcT.NonAbstractSubTypes.Select(model.Metadata.ExpressType))
                 {
                     excludedTypes.Add(exIfcType.TypeId);
@@ -59,11 +69,11 @@ namespace Xbim.Presentation.LayerStylingV2
                     var tmpTransparentsGroup = new Model3DGroup();
 
                     var sstyles = geomReader.StyleIds;
-                    var colourMap = new XbimColourMap();
+                   
                     foreach (var style in sstyles)
                     {
                         
-                        var sStyle = model.Instances[style] as IfcSurfaceStyle;
+                        var sStyle = model.Instances[style] as IIfcSurfaceStyle;
                         var texture = XbimTexture.Create(sStyle);
                         
                         texture.DefinedObjectId = style;
@@ -97,7 +107,7 @@ namespace Xbim.Presentation.LayerStylingV2
                         if (!styles.TryGetValue(styleId, out material)) //get the ifc style and build it
                         {
                             var prodType = model.Metadata.ExpressType(shapeInstance.IfcTypeId);
-                            var v = colourMap[prodType.Name];
+                            var v = _colourMap[prodType.Name];
                             var texture = XbimTexture.Create(v);
                             material = new WpfMaterial();
                             material.CreateMaterial(texture);
@@ -122,7 +132,7 @@ namespace Xbim.Presentation.LayerStylingV2
                             mg.BackMaterial = mg.Material;
                             mg.Transform =
                                 XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                    Control.ModelPositions[model].Transfrom)
+                                    modelTransform)
                                     .ToMatrixTransform3D();
                             if (styles[styleId].IsTransparent)
                                 tmpTransparentsGroup.Children.Add(mg);
@@ -145,7 +155,6 @@ namespace Xbim.Presentation.LayerStylingV2
                                         wpfMesh.Read(((XbimShapeGeometry) shapeGeom).ShapeData);
                                         break;
                                 }
-
                                 repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                                 var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
                                 mg.SetValue(FrameworkElement.TagProperty,
@@ -153,7 +162,7 @@ namespace Xbim.Presentation.LayerStylingV2
                                 mg.BackMaterial = mg.Material;
                                 mg.Transform =
                                     XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                        Control.ModelPositions[model].Transfrom)
+                                        modelTransform)
                                         .ToMatrixTransform3D();
                                 if (styles[styleId].IsTransparent)
                                     tmpTransparentsGroup.Children.Add(mg);
@@ -163,39 +172,21 @@ namespace Xbim.Presentation.LayerStylingV2
                             else //it is a one off, merge it with shapes of a similar material
                             {
                                 var targetMergeMeshByStyle = styleMeshSets[styleId];
-
-                                switch ((XbimGeometryType) shapeGeom.Format)
+                                if (shapeGeom.Format == (byte)XbimGeometryType.PolyhedronBinary)
                                 {
-                                    case XbimGeometryType.Polyhedron:
-                                        // var shapePoly = (XbimShapeGeometry)shapeGeom;
-                                        var asString = Encoding.UTF8.GetString(shapeGeom.ShapeData.ToArray());
-                                        targetMergeMeshByStyle.Add(
-                                            asString,
-                                            shapeInstance.IfcTypeId,
-                                            shapeInstance.IfcProductLabel,
-                                            shapeInstance.InstanceLabel,
-                                            XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                                Control.ModelPositions[model].Transfrom),
-                                           (short) model.UserDefinedId);
-                                        break;
-
-                                    case XbimGeometryType.PolyhedronBinary:
-                                        var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                            Control.ModelPositions[model].Transfrom);
-                                        targetMergeMeshByStyle.Add(
-                                            shapeGeom.ShapeData,
-                                            shapeInstance.IfcTypeId,
-                                            shapeInstance.IfcProductLabel,
-                                            shapeInstance.InstanceLabel, transform,
-                                           (short)model.UserDefinedId);
-                                        break;
-                                    default:
-                                        throw new ArgumentOutOfRangeException();
-                                }
+                                    var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation,
+                                        modelTransform);
+                                    targetMergeMeshByStyle.Add(
+                                        shapeGeom.ShapeData,
+                                        shapeInstance.IfcTypeId,
+                                        shapeInstance.IfcProductLabel,
+                                        shapeInstance.InstanceLabel, transform,
+                                        (short) model.UserDefinedId);
+                                }                           
                             }
-
                         }
                     }
+
                     foreach (var wpfMeshGeometry3D in styleMeshSets.Values)
                     {
                         wpfMeshGeometry3D.EndUpdate();
@@ -205,14 +196,13 @@ namespace Xbim.Presentation.LayerStylingV2
                     {
                         var mv = new ModelVisual3D();
                         mv.Content = tmpOpaquesGroup;
-                        Control.OpaquesVisual3D.Children.Add(mv);
+                        opaqueShapes.Children.Add(mv);
                         // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
                     }
                     if (tmpTransparentsGroup.Children.Any())
                     {
-                        var mv = new ModelVisual3D();
-                        mv.Content = tmpTransparentsGroup;
-                        Control.TransparentsVisual3D.Children.Add(mv);
+                        var mv = new ModelVisual3D {Content = tmpTransparentsGroup};
+                        transparentShapes.Children.Add(mv);
                         //if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
                         //else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
                     }
@@ -220,11 +210,6 @@ namespace Xbim.Presentation.LayerStylingV2
             }
             return scene;
         }
-
-
-
-
-        public DrawingControl3D Control { get; set; }
 
 
         public void SetFederationEnvironment(IReferencedModel refModel)

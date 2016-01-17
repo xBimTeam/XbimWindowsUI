@@ -11,7 +11,7 @@ using Microsoft.Win32;
 using Xbim.CobieLiteUK.Validation;
 using Xbim.Common;
 using Xbim.COBieLiteUK;
-using Xbim.IO;
+using Xbim.Ifc;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
@@ -146,7 +146,7 @@ namespace XplorerPlugins.DPoW
             switch (e.Property.Name)
             {
                 case "Model":
-                    var model = e.NewValue as XbimModel;
+                    var model = e.NewValue as IfcStore;
                     if (model != null)
                     {
                         try
@@ -155,7 +155,7 @@ namespace XplorerPlugins.DPoW
                         }
                         catch (Exception ex)
                         {
-                            Log.Error( "Error in generating Facility from model " + model.DatabaseName, ex);
+                            Log.Error( "Error in generating Facility from model " + model.FileName, ex);
                             ctrl.ModelFacility = null;
                         }
                     }

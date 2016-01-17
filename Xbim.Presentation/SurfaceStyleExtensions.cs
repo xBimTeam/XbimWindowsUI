@@ -14,7 +14,7 @@
 
 using System.Linq;
 using System.Windows.Media.Media3D;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
+using Xbim.Ifc4.Interfaces;
 
 #endregion
 
@@ -27,46 +27,46 @@ namespace Xbim.Presentation
         /// </summary>
         /// <param name = "sStyle"></param>
         /// <returns></returns>
-        public static Material ToMaterial(this IfcSurfaceStyle sStyle)
+        public static Material ToMaterial(this IIfcSurfaceStyle sStyle)
         {
             // todo: need to change this to return a material group that considers all types of Styles
-            var rendering = sStyle.Styles.OfType<IfcSurfaceStyleRendering>().FirstOrDefault();
+            var rendering = sStyle.Styles.OfType<IIfcSurfaceStyleRendering>().FirstOrDefault();
             if (rendering != null) 
                 return rendering.ToMaterial();
-            var shading = sStyle.Styles.OfType<IfcSurfaceStyleShading>().FirstOrDefault();
+            var shading = sStyle.Styles.OfType<IIfcSurfaceStyleShading>().FirstOrDefault();
             return (shading != null) 
                 ? shading.ToMaterial() 
                 : null;
         }
 
-        public static IfcSurfaceStyleShading GetSurfaceStyleShading(this IfcSurfaceStyle sStyle)
+        public static IIfcSurfaceStyleShading GetSurfaceStyleShading(this IIfcSurfaceStyle sStyle)
         {
-            return sStyle.Styles.OfType<IfcSurfaceStyleShading>().FirstOrDefault();
+            return sStyle.Styles.OfType<IIfcSurfaceStyleShading>().FirstOrDefault();
         }
 
-        public static IfcSurfaceStyleRendering GetSurfaceStyleRendering(this IfcSurfaceStyle sStyle)
+        public static IIfcSurfaceStyleRendering GetSurfaceStyleRendering(this IIfcSurfaceStyle sStyle)
         {
-            return sStyle.Styles.OfType<IfcSurfaceStyleRendering>().FirstOrDefault();
+            return sStyle.Styles.OfType<IIfcSurfaceStyleRendering>().FirstOrDefault();
         }
 
-        public static IfcSurfaceStyleLighting GetSurfaceStyleLighting(this IfcSurfaceStyle sStyle)
+        public static IIfcSurfaceStyleLighting GetSurfaceStyleLighting(this IIfcSurfaceStyle sStyle)
         {
-            return sStyle.Styles.OfType<IfcSurfaceStyleLighting>().FirstOrDefault();
+            return sStyle.Styles.OfType<IIfcSurfaceStyleLighting>().FirstOrDefault();
         }
 
-        public static IfcSurfaceStyleRefraction GetSurfaceStyleRefraction(this IfcSurfaceStyle sStyle)
+        public static IIfcSurfaceStyleRefraction GetSurfaceStyleRefraction(this IIfcSurfaceStyle sStyle)
         {
-            return sStyle.Styles.OfType<IfcSurfaceStyleRefraction>().FirstOrDefault();
+            return sStyle.Styles.OfType<IIfcSurfaceStyleRefraction>().FirstOrDefault();
         }
 
-        public static IfcSurfaceStyleWithTextures GetSurfaceStyleWithTextures(this IfcSurfaceStyle sStyle)
+        public static IIfcSurfaceStyleWithTextures GetSurfaceStyleWithTextures(this IIfcSurfaceStyle sStyle)
         {
-            return sStyle.Styles.OfType<IfcSurfaceStyleWithTextures>().FirstOrDefault();
+            return sStyle.Styles.OfType<IIfcSurfaceStyleWithTextures>().FirstOrDefault();
         }
 
-        public static IfcExternallyDefinedSurfaceStyle GetExternallyDefinedSurfaceStyle(this IfcSurfaceStyle sStyle)
+        public static IIfcExternallyDefinedSurfaceStyle GetExternallyDefinedSurfaceStyle(this IIfcSurfaceStyle sStyle)
         {
-            return sStyle.Styles.OfType<IfcExternallyDefinedSurfaceStyle>().FirstOrDefault();
+            return sStyle.Styles.OfType<IIfcExternallyDefinedSurfaceStyle>().FirstOrDefault();
         }
     }
 }

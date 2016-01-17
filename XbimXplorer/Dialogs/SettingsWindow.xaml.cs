@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using Xbim.IO.Esent;
 using XbimXplorer.Properties;
 
 namespace XbimXplorer.Dialogs
@@ -22,46 +19,20 @@ namespace XbimXplorer.Dialogs
             /// 
             /// </summary>
             public SettingWindowVm()
-            {
-                SelFileAccessMode = Settings.Default.FileAccessMode;
+            {               
                 NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
                 PluginStartupLoad = Settings.Default.PluginStartupLoad;
                 DeveloperMode = Settings.Default.DeveloperMode;
             }
 
-            List<XbimDBAccess> _fileAccessModes;
-            /// <summary>
-            /// 
-            /// </summary>
-            public IEnumerable<XbimDBAccess> FileAccessModes
-            {
-                get
-                {
-                    if (_fileAccessModes != null)
-                        return _fileAccessModes;
-
-                    _fileAccessModes = new List<XbimDBAccess>();
-                    var values = Enum.GetValues(typeof(XbimDBAccess));
-                    foreach (var item in values)
-                    {
-                        _fileAccessModes.Add((XbimDBAccess)item);
-                    }
-                    return _fileAccessModes;
-                }
-            } 
-            /// <summary>
-            /// 
-            /// </summary>
-            public XbimDBAccess SelFileAccessMode { get; set; }
-
+            
             /// <summary>
             /// 
             /// </summary>
             public string NumberRecentFiles { get; set; }
 
             internal void SaveSettings()
-            {
-                Settings.Default.FileAccessMode = SelFileAccessMode;
+            {              
                 int iNumber;
                 if (!int.TryParse(NumberRecentFiles, out iNumber))
                     iNumber = 4;

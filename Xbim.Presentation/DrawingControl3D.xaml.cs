@@ -36,18 +36,12 @@ using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
-using Xbim.Ifc2x3.IO;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc2x3.SharedComponentElements;
+using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.Extensions;
 using Xbim.Presentation.LayerStyling;
-using Xbim.Presentation.LayerStylingV2;
 using Xbim.Presentation.ModelGeomInfo;
-using Xbim.Ifc4.Interfaces;
-using Xbim.IO.Esent;
 
 #endregion
 
@@ -458,7 +452,7 @@ namespace Xbim.Presentation
                 var mesh = hitObject as WpfMeshGeometry3D;
                 var frag = mesh.Meshes.Find(hit.VertexIndex1);
                 var modelId = frag.ModelId;
-                XbimModel modelHit = null; // default to not hit
+                IModel modelHit = null; // default to not hit
                 if (modelId == 0)
                     modelHit = Model;
                 else
@@ -467,7 +461,7 @@ namespace Xbim.Presentation
                     {
                         if (refModel.Model.UserDefinedId != modelId)
                             continue;
-                        modelHit = (XbimModel) refModel.Model;
+                        modelHit = refModel.Model;
                         break;
                     }
                 }
@@ -565,15 +559,7 @@ namespace Xbim.Presentation
             
         }
 
-        protected virtual ILayerStyler GetCurrentLayerStyler()
-        {
-            return LayerStyler ?? (LayerStyler = new LayerStylerTypeAndIfcStyle());
-        }
-
-        protected virtual ILayerStyler GetCurrentFederationLayerStyler()
-        {
-            return FederationLayerStyler ?? (FederationLayerStyler = new LayerStylerSingleColour());
-        }
+       
 
         private PointGeomInfo GetClosestPoint(RayMeshGeometry3DHitTestResult hit)
         {
@@ -624,7 +610,7 @@ namespace Xbim.Presentation
 
             var frag = layer.Visible.Meshes.Find(hit.VertexIndex1);
             var modelId = frag.ModelId;
-            XbimModel modelHit = null; //default to not hit
+            IModel modelHit = null; //default to not hit
             if (modelId == 0) modelHit = Model;
             else
             {
@@ -632,7 +618,7 @@ namespace Xbim.Presentation
                 {
                     if (refModel.Model.UserDefinedId != modelId)
                         continue;
-                    modelHit = (XbimModel)refModel.Model;
+                    modelHit = refModel.Model;
                     break;
                 }
             }
@@ -719,15 +705,15 @@ namespace Xbim.Presentation
             }
         }
 
-        public XbimModel Model
+        public IfcStore Model
         {
-            get { return (XbimModel) GetValue(ModelProperty); }
+            get { return  (IfcStore) GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Model.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof (XbimModel), typeof (DrawingControl3D),
+            DependencyProperty.Register("Model", typeof (IfcStore), typeof (DrawingControl3D),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                     OnModelChanged));
 
@@ -735,15 +721,14 @@ namespace Xbim.Presentation
         {
             var d3D = d as DrawingControl3D;
             if (d3D != null)
-            {
-                // XbimModel model = e.NewValue as XbimModel;
+            {           
                 d3D.ReloadModel();
             }
         }
 
         public void ReloadModel(ModelRefreshOptions options = ModelRefreshOptions.None)
         {
-            LoadGeometry((XbimModel) GetValue(ModelProperty),
+            LoadGeometry((IfcStore)GetValue(ModelProperty),
                 options: options
                 );
             SetValue(LayerSetProperty, LayerSetRefresh());
@@ -861,12 +846,12 @@ namespace Xbim.Presentation
             {
                 foreach (var item in Selection)
                 {
-                    m.AddElements(item, ModelPositions[item.Model].Transfrom);
+                    m.AddElements(item, ModelPositions[item.Model].Transform);
                 }
             }
             else if (newVal != null)
             {
-                m.AddElements(newVal, ModelPositions[newVal.Model].Transfrom);
+                m.AddElements(newVal, ModelPositions[newVal.Model].Transform);
             }
 
             // 2. then determine how to highlight it
@@ -1240,7 +1225,7 @@ namespace Xbim.Presentation
 
         public XbimModelPositioningCollection ModelPositions;
 
-        public ILayerStylerV2 GeomSupport2LayerStyler;
+        public ILayerStyler DefaultLayerStyler;
 
         private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -1274,7 +1259,7 @@ namespace Xbim.Presentation
         /// <param name="model"></param>
         /// <param name="entityLabels">If null loads the whole model, otherwise only elements listed in the enumerable</param>
         /// <param name="options"></param>
-        public void LoadGeometry(XbimModel model, IEnumerable<int> entityLabels = null,
+        public void LoadGeometry(IfcStore model, IEnumerable<int> entityLabels = null,
             ModelRefreshOptions options = ModelRefreshOptions.None)
         {
             // AddLayerToDrawingControl is the function that actually populates the geometry in the viewer.
@@ -1294,50 +1279,48 @@ namespace Xbim.Presentation
             model.UserDefinedId = userDefinedId;
 
             // model scaling is determined on all federated models
-            ModelPositions.AddModel(model);
-            foreach (var refModel in model.ReferencedModels)
+            ModelPositions.AddModel(model.ReferencingModel); //add in the model that holds the main entities
+            var fedModel = model as IFederatedModel; //now add in any referenced models
+            if (fedModel != null)
             {
-                refModel.Model.UserDefinedId = ++userDefinedId;
-                ModelPositions.AddModel((XbimModel)(refModel.Model));
+                foreach (var refModel in fedModel.ReferencedModels)
+                {
+                    refModel.Model.UserDefinedId = ++userDefinedId;
+                    ModelPositions.AddModel(refModel.Model);
+                }
+               // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
             }
             ModelBounds = ModelPositions.GetEnvelopeInMeters();
             DefineModelTranslation();
             ModelPositions.SetCenterInMeters(_modelTranslation);
 
             // what to do when models are added
-            //TODO resolve reference models
-          //  model.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
+          
+  
 
-            // prepare grouping and layering behaviours
-            LayerStyler = GetCurrentLayerStyler();
-            LayerStyler.SetCurrentModel(model);
-            LayerStyler.SetFederationEnvironment(null);
-
-            if (GeomSupport2LayerStyler == null)
-                GeomSupport2LayerStyler = new SurfaceLayerStyler();
-            GeomSupport2LayerStyler.Control = this;
+            if (DefaultLayerStyler == null)
+                DefaultLayerStyler = new SurfaceLayerStyler();
 
             //build the geometric scene and render as we go
-            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
+            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
 
             // loading the main model
-            var geometrySupportLevel = model.GeometrySupportLevel;
-            if (LayerStylerForceVersion1 || geometrySupportLevel == 1)
-                scene = BuildScene(model, entityLabels, LayerStyler);
-            else if (geometrySupportLevel == 2)
-            {
-                GeomSupport2LayerStyler.SetFederationEnvironment(null);
-                scene = GeomSupport2LayerStyler.BuildScene(model, ModelPositions[model].Context, ExcludedTypes);
-            }
+
+            DefaultLayerStyler.SetFederationEnvironment(null);
+            scene = DefaultLayerStyler.BuildScene(model.ReferencingModel,ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
+            
             if (scene != null)
             {
                 if (scene.Layers.Any())
                     Scenes.Add(scene);
             }
-            // loading all referenced models.
-            foreach (var refModel in model.ReferencedModels)
+            if (fedModel != null)
             {
-                LoadReferencedModel(refModel);
+                // loading all referenced models.
+                foreach (var refModel in fedModel.ReferencedModels)
+                {
+                    LoadReferencedModel(refModel);
+                }
             }
             RecalculateView(options);
         }
@@ -1350,27 +1333,12 @@ namespace Xbim.Presentation
 
         private void LoadReferencedModel(IReferencedModel refModel)
         {
-            var xbimModel = refModel.Model as XbimModel;
-            if (xbimModel == null) return;
-            if (LayerStylerForceVersion1 || xbimModel.GeometrySupportLevel == 1)
-            {
-                SetFederationStylerRefModel(refModel);
-                var tSc = BuildScene(xbimModel, null, FederationLayerStyler);
-                if (tSc.Layers.Any())
-                    Scenes.Add(tSc);
-            }
-            else if (xbimModel.GeometrySupportLevel == 2)
-            {
-                GeomSupport2LayerStyler.SetFederationEnvironment(refModel);
-                Scenes.Add(GeomSupport2LayerStyler.BuildScene(xbimModel, ModelPositions[refModel.Model].Context,
-                    ExcludedTypes));
-            }
-        }
-
-        private void SetFederationStylerRefModel(IReferencedModel refModel)
-        {
-            FederationLayerStyler = GetCurrentFederationLayerStyler();
-            FederationLayerStyler.SetFederationEnvironment(refModel);
+           
+            if (refModel.Model == null) return;
+            
+                DefaultLayerStyler.SetFederationEnvironment(refModel);
+                Scenes.Add(DefaultLayerStyler.BuildScene(refModel.Model,ModelPositions[refModel.Model].Transform, Opaques,Transparents, ExcludedTypes));
+            
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1422,213 +1390,16 @@ namespace Xbim.Presentation
 
         public void ReportData(StringBuilder sb, IModel model, int entityLabel)
         {
-            var m = model as XbimModel;
-            if (m == null)
+
+            if (model == null)
                 return;
             foreach (var scene in Scenes)
             {
-                var mesh = scene.GetMeshGeometry3D(model.Instances[entityLabel], (short) m.UserDefinedId);
+                var mesh = scene.GetMeshGeometry3D(model.Instances[entityLabel], (short)model.UserDefinedId);
                 mesh.ReportGeometryTo(sb);
             }
         }
 
-        /// <summary>
-        /// Provides a mechanism to define colouring schemes for elements in DrawingControl3D.
-        /// After setting a new LayerStyler issue a ReloadModel (<see cref="Xbim.Presentation.DrawingControl3D.ReloadModel(ModelRefreshOptions)"/>). 
-        /// </summary>
-        public ILayerStyler LayerStyler;
-
-        /// <summary>
-        /// Provides a mechanism to define colouring schemes for elements in DrawingControl3D.
-        /// After setting a new LayerStyler issue a ReloadModel (<see cref="Xbim.Presentation.DrawingControl3D.ReloadModel(ModelRefreshOptions)"/>). 
-        /// </summary>
-        public ILayerStyler FederationLayerStyler;
-
-        public virtual XbimGeometryHandleCollection GetHandles(XbimModel model, Xbim3DModelContext context,
-            IEnumerable<int> loadLabels)
-        {
-            var handles = new XbimGeometryHandleCollection();
-            switch (model.GeometrySupportLevel)
-            {
-                    //TODO need to restore .Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT
-                case 1:
-                    handles = (loadLabels == null)
-                        ? new XbimGeometryHandleCollection(
-                            model.GetGeometryHandles()/*.Exclude(IfcEntityNameEnum.IFCFEATUREELEMENT)*/,model.Metadata)
-                        : new XbimGeometryHandleCollection(
-                            model.GetGeometryHandles().Where(t => loadLabels.Contains(t.ProductLabel)), model.Metadata);
-                    break;
-                case 2:
-                    handles = (loadLabels == null)
-                        ? context.GetApproximateGeometryHandles()
-                        : context.GetApproximateGeometryHandles(loadLabels);
-                    break;
-            }
-            return handles;
-        }
-
-        private XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(XbimModel model, IEnumerable<int> loadLabels,
-            ILayerStyler layerStyler)
-        {
-            // spaces are not excluded from the model to make the ShowSpaces property meaningful
-            var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
-            scene.LayerColourMap.SetProductTypeColourMap();
-
-            var project = model.IfcProject;
-            if (project == null)
-                return scene;
-
-            var handles = GetHandles(model, ModelPositions[model].Context, loadLabels);
-            var suppLevel = model.GeometrySupportLevel;
-            if (suppLevel == 1) // geometry engine version 1
-            {
-                var groupedHandlers = layerStyler.GroupLayers(model,handles);
-#if DOPARALLEL
-                Parallel.ForEach(groupedHandlers.Keys, layerName =>
-#else
-                foreach (var layerName in groupedHandlers.Keys)
-#endif
-                {
-                    var layer = layerStyler.GetLayer(layerName, model, scene);
-
-                    GeometryModel3D m3D = (WpfMeshGeometry3D) layer.Visible;
-                    m3D.SetValue(TagProperty, layer);
-
-                    var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
-                    var geomColl = model.GetGeometryData(groupedHandlers[layerName]);
-                    // initially add all content into the hidden field (underlying geometry info)
-                    // it will later be moved to the visible WPF implementation by AddLayerToDrawingControl
-                    foreach (var geomData in geomColl)
-                    {
-#pragma warning disable 618
-                        var gd = geomData.TransformBy(ModelPositions[model].Transfrom);
-#pragma warning restore 618
-                        if (LayerStyler.UseIfcSubStyles)
-                            layer.AddToHidden(gd, model);
-                        else
-                            layer.AddToHidden(gd, null, (short)model.UserDefinedId);
-                    }
-
-                    Dispatcher.BeginInvoke(
-                        new Action(() => { AddLayerToDrawingControl(layer, true, isLayerVisible); }),
-                        DispatcherPriority.Background);
-                    lock (scene)
-                    {
-                        scene.Add(layer);
-                    }
-                }
-#if DOPARALLEL
-            );
-#endif
-
-            }
-            else if (suppLevel == 2)
-            {
-                // geometry engine version 2
-
-                var groupedHandlers = layerStyler.GroupLayers(model,handles);
-                // build dictionary for fast lookup
-                var dic = ModelPositions[model].Context.ShapeInstances().ToDictionary(shape => shape.InstanceLabel, shape => shape.ShapeGeometryLabel);
-
-                foreach (var layerName in groupedHandlers.Keys)
-                {
-                    var layer = layerStyler.GetLayer(layerName, model, scene);
-                    var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
-                    var targetMergeMeshByStyle = ((WpfMeshGeometry3D) layer.Visible);
-
-                    targetMergeMeshByStyle.BeginUpdate();
-                    targetMergeMeshByStyle.WpfModel.SetValue(TagProperty, targetMergeMeshByStyle);
-                    // v2 handles
-                    var hndls = groupedHandlers[layerName];
-                    foreach (var handle in hndls)
-                    {
-                        var tgt = targetMergeMeshByStyle;
-
-                        var shapeInstance =
-                            ModelPositions[model].Context.ShapeInstancesOf(dic[handle.GeometryLabel])
-                                .FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
-
-                        if (shapeInstance == null)
-                            continue;
-
-                        if (LayerStyler.UseIfcSubStyles && shapeInstance.HasStyle)
-                        {
-                            var sublayerName = shapeInstance.StyleLabel.ToString();
-                            XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> sub;
-                            if (layer.SubLayers.Contains(sublayerName))
-                                sub = layer.SubLayers[sublayerName];
-                            else
-                            {
-                                var style = model.InstancesLocal[shapeInstance.StyleLabel] as IIfcSurfaceStyle;
-                                sub = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, style) { Name = sublayerName };
-                                layer.SubLayers.Add(sub);
-                            }
-                            tgt = ((WpfMeshGeometry3D) sub.Visible);
-                            tgt.BeginUpdate();
-                            tgt.WpfModel.SetValue(TagProperty, tgt);
-                        }
-
-                        IXbimShapeGeometryData shapeGeom =
-                            ModelPositions[model].Context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-
-                        // var targetMergeMeshByStyle = styleMeshSets[styleId];
-                        switch ((XbimGeometryType) shapeGeom.Format)
-                        {
-                            case XbimGeometryType.Polyhedron:
-                                var shapePoly = (XbimShapeGeometry) shapeGeom;
-                                tgt.Add(
-                                    shapePoly.ShapeData,
-                                    shapeInstance.IfcTypeId,
-                                    shapeInstance.IfcProductLabel,
-                                    shapeInstance.InstanceLabel,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, ModelPositions[model].Transfrom),
-                                    (short)model.UserDefinedId);
-                                break;
-
-                            case XbimGeometryType.PolyhedronBinary:
-                                tgt.Add(
-                                    shapeGeom.ShapeData,
-                                    shapeInstance.IfcTypeId,
-                                    shapeInstance.IfcProductLabel,
-                                    shapeInstance.InstanceLabel,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, ModelPositions[model].Transfrom),
-                                    (short)model.UserDefinedId);
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                        if (tgt != targetMergeMeshByStyle)
-                        {
-                            tgt.EndUpdate();
-                        }
-                    }
-                    targetMergeMeshByStyle.EndUpdate();
-
-                    Dispatcher.BeginInvoke(
-                        new Action(() => { AddLayerToDrawingControl(layer, false, isLayerVisible); }), null);
-                    lock (scene)
-                    {
-                        scene.Add(layer);
-                    }
-                }
-            }
-            if (_hideAfterLoad != null)
-                Dispatcher.BeginInvoke(new Action(() => Hide(_hideAfterLoad)), DispatcherPriority.Background);
-
-            return scene;
-        }
-
-        /// <summary>
-        /// Function that actually populates the geometry from the layer into the viewer meshes.
-        /// If the <paramref name="isLayerVisible"/> is set to false layer becomes hidden.
-        /// </summary>
-        private void AddLayerToDrawingControl(XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> layer, bool addTagProperty,
-            bool isLayerVisible)
-        {
-            AddLayerToDrawingControl(layer, addTagProperty);
-            if (!isLayerVisible)
-                layer.HideAll();
-        }
 
         /// <summary>
         /// function that actually populates the geometry from the layer into the viewer meshes.
@@ -1704,15 +1475,6 @@ namespace Xbim.Presentation
         }
 
 
-
-        private void Hide(ICollection<string> toHide)
-        {
-            foreach (var scene in Scenes)
-                foreach (var layer in scene.SubLayers) //go over top level layers only
-                    if (toHide.Contains(layer.Name))
-                        layer.HideAll();
-        }
-
         public static readonly DependencyProperty LayerSetProperty =
             DependencyProperty.Register("LayerSet", typeof (List<LayerViewModel>), typeof (DrawingControl3D));
 
@@ -1753,8 +1515,8 @@ namespace Xbim.Presentation
         {
             ExcludedTypes = new List<Type>
             {
-                typeof (IfcFeatureElement),
-                typeof (IfcSpace)
+                typeof (IIfcFeatureElement),
+                typeof (IIfcSpace)
             };
         }
 
@@ -1762,11 +1524,11 @@ namespace Xbim.Presentation
         {
             ExcludedTypes = new List<Type>
             {
-                typeof (IfcFeatureElement),
-                typeof (IfcSpace),
-                typeof (IfcFastener),
-                typeof (IfcPlate),
-                typeof (IfcMember)
+                typeof (IIfcFeatureElement),
+                typeof (IIfcSpace),
+                typeof (IIfcFastener),
+                typeof (IIfcPlate),
+                typeof (IIfcMember)
             };
         }
 
@@ -1850,12 +1612,12 @@ namespace Xbim.Presentation
                 ), false);
         }
 
-        public void ShowOctree(XbimOctree<IfcProduct> octree, int specificLevel = -1, bool onlyWithContent = false)
+        public void ShowOctree(XbimOctree<IIfcProduct> octree, int specificLevel = -1, bool onlyWithContent = false)
         {
             if (Viewport.Children.Contains(_octreeVisualization))
                 Viewport.Children.Remove(_octreeVisualization);
             _octreeVisualization.Children.Clear();
-            ShowOctree<IfcProduct>(octree, specificLevel, onlyWithContent);
+            ShowOctree<IIfcProduct>(octree, specificLevel, onlyWithContent);
             Viewport.Children.Add(_octreeVisualization);
         }
 
@@ -1910,7 +1672,7 @@ namespace Xbim.Presentation
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <param name="title"></param>
-        public static void CreateThumbnail(XbimModel model, string bmpFileName, int width, int height,
+        public static void CreateThumbnail(IfcStore model, string bmpFileName, int width, int height,
             string title = null)
         {
             var d3D = new DrawingControl3D();

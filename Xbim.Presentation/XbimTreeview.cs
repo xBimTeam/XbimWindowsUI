@@ -6,11 +6,9 @@ using System.Windows;
 using System.Windows.Controls;
 using PropertyTools.Wpf;
 using Xbim.Common;
-using Xbim.Ifc.Extensions;
+using Xbim.Ifc;
 using Xbim.Ifc.ViewModels;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.IO;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -31,7 +29,7 @@ namespace Xbim.Presentation
                 IPersistEntity p2 = SelectedEntity;
                 if (p2 == null)
                     SelectedEntity = p;
-                else if (!(p.ModelOf == p2.ModelOf && p.EntityLabel==p2.EntityLabel)) 
+                else if (!(p.Model == p2.Model && p.EntityLabel==p2.EntityLabel)) 
                     SelectedEntity = p;
             }
         }
@@ -82,18 +80,18 @@ namespace Xbim.Presentation
                 todo: bonghi: this is still not optimal, because it can only point to simple IPersistEntity and not intermediate IXbimViewModels.
  
                 */
-                IfcProduct p = newVal as IfcProduct;
+                var p = newVal as IIfcProduct;
                 if (p != null)
                 {
                     var found = FindUnderContainingSpace(newVal, p);  // direct search 
                     if (found == null)
                     { 
                         // search for composed object
-                        IfcRelDecomposes decomp = p.Decomposes.FirstOrDefault();
+                        var decomp = p.Decomposes.FirstOrDefault();
                         
-                        if (decomp!=null && decomp.RelatingObject is IfcProduct) // 
+                        if (decomp!=null && decomp.RelatingObject is IIfcProduct) // 
                         {
-                            found = FindUnderContainingSpace(newVal, (IfcProduct)(decomp.RelatingObject));  // direct search of parent through containing space
+                            found = FindUnderContainingSpace(newVal, (IIfcProduct)(decomp.RelatingObject));  // direct search of parent through containing space
                             if (found != null)
                                 found = FindItemDepthFirst(found, newVal); // then search for the child
                         }
@@ -127,9 +125,9 @@ namespace Xbim.Presentation
             }
         }
 
-        private IXbimViewModel FindUnderContainingSpace(IPersistEntity newVal, IfcProduct p)
+        private IXbimViewModel FindUnderContainingSpace(IPersistEntity newVal, IIfcProduct p)
         {
-            var containingSpace = p.IsContainedIn().FirstOrDefault();
+            var containingSpace = p.IsContainedIn;
             if (containingSpace != null)
             {
                 var containingSpaceView = FindItemBreadthFirst(containingSpace);
@@ -224,20 +222,20 @@ namespace Xbim.Presentation
 
 
        
-        public XbimModel Model
+        public IfcStore Model
         {
-            get { return (XbimModel)GetValue(ModelProperty); }
+            get { return (IfcStore)GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Model.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(XbimModel), typeof(XbimTreeview), new UIPropertyMetadata(null, OnModelChanged));
+            DependencyProperty.Register("Model", typeof(IfcStore), typeof(XbimTreeview), new UIPropertyMetadata(null, OnModelChanged));
 
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             XbimTreeview tv = d as XbimTreeview;
-            XbimModel model = e.NewValue as XbimModel;
+            var model = e.NewValue as IfcStore;
             
             if (tv != null && model != null)
             {
@@ -269,7 +267,7 @@ namespace Xbim.Presentation
             }
         }
 
-        void RefencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void RefencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems.Count > 0)
             {  
@@ -300,12 +298,12 @@ namespace Xbim.Presentation
 
         protected void ViewSpatialStructure()
         {
-            IfcProject project = Model.IfcProject;
+            var project = Model.Instances.OfType<IIfcProject>().FirstOrDefault();
             if (project != null)
             {
                 ChildrenPath="Children";
                 List<SpatialViewModel> svList = new List<SpatialViewModel>();
-                foreach (var item in project.GetSpatialStructuralElements())
+                foreach (var item in project.SpatialStructuralElements)
                 {
                     var sv = new SpatialViewModel(item, null);
                     svList.Add(sv); 
@@ -320,7 +318,7 @@ namespace Xbim.Presentation
         }
         private void ViewModel()
         {
-            IfcProject project = Model.IfcProject;
+            var project = Model.Instances.OfType<IIfcProject>().FirstOrDefault();
             if (project != null)
             {
               
@@ -375,9 +373,9 @@ namespace Xbim.Presentation
                 ChildrenPath = "Children";
                 var modelList = new List<GroupViewModel>();
                 
-                var groups = Model.Instances.OfType<IfcGroup>();
-                var groupedObjects = new List<IfcRoot>();
-                foreach (var obj in Model.Instances.OfType<IfcRelAssignsToGroup>())
+                var groups = Model.FederatedInstances.OfType<IIfcGroup>();
+                var groupedObjects = new List<IIfcRoot>();
+                foreach (var obj in Model.FederatedInstances.OfType<IIfcRelAssignsToGroup>())
                 {
                     groupedObjects.AddRange(obj.RelatedObjects.ToList());
                 }
@@ -399,8 +397,8 @@ namespace Xbim.Presentation
         {
             if (Model != null )
             {
-                //TODO resolve reference models
-              //  Model.ReferencedModels.CollectionChanged += RefencedModels_CollectionChanged;
+               
+               // Model.ReferencedModels.CollectionChanged += RefencedModels_CollectionChanged;
                 switch (ViewDefinition)
                 {
                     case XbimViewType.SpatialStructure:

@@ -19,7 +19,8 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Metadata;
-using Xbim.Ifc2x3.IO;
+using Xbim.Ifc;
+
 
 #endregion
 
@@ -136,11 +137,11 @@ namespace Xbim.Presentation
         }
 
 
-        public XbimModel Model
+        public IfcStore Model
         {
             get 
             {
-                return (XbimModel)ObjectInstance;
+                return (IfcStore)ObjectInstance;
             }
             set
             {

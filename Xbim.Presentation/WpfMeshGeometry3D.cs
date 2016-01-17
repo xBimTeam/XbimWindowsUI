@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -317,9 +317,9 @@ namespace Xbim.Presentation
             }
         }
 
-        public XbimMeshFragment Add(IXbimGeometryModel geometryModel, IfcProduct product, XbimMatrix3D transform, double? deflection = null, short modelId=0)
+        XbimMeshFragment IXbimMeshGeometry3D.Add(IXbimGeometryModel geometryModel, IIfcProduct product, XbimMatrix3D transform, double? deflection, short modelId)
         {
-            return geometryModel.MeshTo(this, product, transform, deflection ?? product.ModelOf.ModelFactors.DeflectionTolerance, modelId);
+            return geometryModel.MeshTo(this, product, transform, deflection ?? product.Model.ModelFactors.DeflectionTolerance, modelId);
         }
 
         public void BeginBuild()
@@ -437,7 +437,7 @@ namespace Xbim.Presentation
             _meshes.Add(frag);
         }
 
-        public XbimMeshFragment Add(IXbimGeometryModel geometryModel, Ifc4.Interfaces.IIfcProduct product, XbimMatrix3D transform, double? deflection, short modelId = 0)
+        public XbimMeshFragment Add(IXbimGeometryModel geometryModel, IIfcProduct product, XbimMatrix3D transform, double? deflection, short modelId = 0)
         {
             throw new NotImplementedException();
         }
@@ -720,6 +720,7 @@ namespace Xbim.Presentation
                                 }
                             }
                         }
+                       
                     }
 
                     _unfrozenPositions.AddRange(vertices);

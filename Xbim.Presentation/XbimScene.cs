@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
 {
     [Serializable]
-    public class XbimScene<TVISIBLE, TMATERIAL>
-        where TVISIBLE : IXbimMeshGeometry3D, new()
-        where TMATERIAL : IXbimRenderMaterial, new()
+    public class XbimScene<TVisible, TMaterial>
+        where TVisible : IXbimMeshGeometry3D, new()
+        where TMaterial : IXbimRenderMaterial, new()
     {
         
-        XbimMeshLayerCollection<TVISIBLE, TMATERIAL> _layers = new XbimMeshLayerCollection<TVISIBLE, TMATERIAL>();
+        XbimMeshLayerCollection<TVisible, TMaterial> _layers = new XbimMeshLayerCollection<TVisible, TMaterial>();
 
-        public XbimMeshLayerCollection<TVISIBLE, TMATERIAL> SubLayers
+        public XbimMeshLayerCollection<TVisible, TMaterial> SubLayers
         {
             get { return _layers; }
             set { _layers = value; }
@@ -24,9 +23,9 @@ namespace Xbim.Presentation
        
 
         readonly XbimColourMap _layerColourMap;
-        private XbimModel _model;
+        private IModel _model;
 
-        public XbimModel Model
+        public IModel Model
         {
             get { return _model; }
             set { _model = value; }
@@ -42,7 +41,7 @@ namespace Xbim.Presentation
         /// <summary>
         /// Constructs a scene using the default IfcProductType colour map
         /// </summary>
-        public XbimScene(XbimModel model)
+        public XbimScene(IModel model)
             :this(model,new XbimColourMap())
         {
           
@@ -52,16 +51,16 @@ namespace Xbim.Presentation
         /// Constructs a scene, using the specfified colourmap
         /// </summary>
         /// <param name="colourMap"></param>
-        public XbimScene(XbimModel model, XbimColourMap colourMap)
+        public XbimScene(IModel model, XbimColourMap colourMap)
         {
-            this._layerColourMap = colourMap;
-            this._model = model;
+            _layerColourMap = colourMap;
+            _model = model;
         }
 
         /// <summary>
         /// Returns all the layers including sub layers of this scene
         /// </summary>
-        public IEnumerable<XbimMeshLayer<TVISIBLE, TMATERIAL>> Layers
+        public IEnumerable<XbimMeshLayer<TVisible, TMaterial>> Layers
         {
             get
             {
@@ -79,7 +78,7 @@ namespace Xbim.Presentation
         /// <summary>
         /// Returns all layers and sublayers that have got some graphic content that is visible
         /// </summary>
-        public IEnumerable<XbimMeshLayer<TVISIBLE, TMATERIAL>> VisibleLayers
+        public IEnumerable<XbimMeshLayer<TVisible, TMaterial>> VisibleLayers
         {
             get
             {
@@ -98,7 +97,7 @@ namespace Xbim.Presentation
         /// Add the layer to the scene
         /// </summary>
         /// <param name="layer"></param>
-        public void Add(XbimMeshLayer<TVISIBLE, TMATERIAL> layer)
+        public void Add(XbimMeshLayer<TVisible, TMaterial> layer)
         {
             if (string.IsNullOrEmpty(layer.Name)) //ensure a layer has a unique name if the user has not defined one
                 layer.Name = "Layer " + _layers.Count();
@@ -147,7 +146,7 @@ namespace Xbim.Presentation
         public IXbimMeshGeometry3D GetMeshGeometry3D(IPersistEntity entity, short modelId)
         {
             var geometry = new XbimMeshGeometry3D();
-            IModel m = entity.ModelOf;
+            IModel m = entity.Model;
             foreach (var layer in Layers)
             {
                 // an entity model could be spread across many layers (e.g. in case of different materials)
