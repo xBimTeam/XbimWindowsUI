@@ -297,8 +297,7 @@ namespace XbimXplorer
                 {
                     var context = new Xbim3DModelContext(model);
                         //upgrade to new geometry representation, uses the default 3D model
-                    context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,
-                        progDelegate: worker.ReportProgress);
+                    context.CreateContext( progDelegate: worker.ReportProgress);
                 }
                 if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                 {

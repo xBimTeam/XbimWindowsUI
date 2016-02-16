@@ -132,7 +132,7 @@ namespace Xbim.Presentation.FederatedModel
                 if (refM.GeometryStore.IsEmpty)
                 {
                     m3D = new Xbim3DModelContext(refM);
-                    m3D.CreateContext(XbimGeometryType.PolyhedronBinary);
+                    m3D.CreateContext();
                 }
                 Name = refM.FileName;
             }

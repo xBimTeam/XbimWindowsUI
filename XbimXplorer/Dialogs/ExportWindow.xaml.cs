@@ -2,14 +2,13 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using Xbim.ModelGeometry.Scene;
 
 namespace XbimXplorer.Dialogs
 {
     /// <summary>
     /// Interaction logic for ExportWindow.xaml
     /// </summary>
-    public partial class ExportWindow : Window
+    public partial class ExportWindow
     {
         /// <summary>
         /// 

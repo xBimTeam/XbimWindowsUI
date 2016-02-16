@@ -1273,7 +1273,7 @@ namespace Xbim.Presentation
                 RecalculateView(options);
                 return; //nothing to show
             }
-
+            _hasModelGrid = model.Instances.OfType<IIfcGrid>().Any();
             // set a progressive userDefinedId
             short userDefinedId = 0;
             model.UserDefinedId = userDefinedId;
@@ -1364,6 +1364,7 @@ namespace Xbim.Presentation
         /// </summary>
         private void UpdateGrid()
         {
+            GridLines.Visible = !_hasModelGrid;
             var gridSizeX = Math.Ceiling(_viewBounds.SizeX/10)*10;
             var gridSizeY = Math.Ceiling(_viewBounds.SizeY/10)*10;
 
@@ -1622,6 +1623,7 @@ namespace Xbim.Presentation
         }
 
         private readonly ModelVisual3D _octreeVisualization = new ModelVisual3D();
+        private bool _hasModelGrid;
 
         private void ShowOctree<T>(XbimOctree<T> octree, int specificLevel = -1, bool onlyWithContent = false)
         {
