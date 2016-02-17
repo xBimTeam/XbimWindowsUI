@@ -8,7 +8,7 @@
     xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
     Title="Xbim Xplorer" Height="600" Width="800" 
     x:Name="MainWindow"
-        Icon="xBIM.ico">
+        Icon="xBIM.ico" ContentRendered="RenderedEvents" >
     <Window.Resources>
         <ObjectDataProvider x:Key="ModelProvider"  IsInitialLoadEnabled="False" ></ObjectDataProvider>
         <DataTemplate DataType="{x:Type xbimView:XbimModelViewModel}">

@@ -31,7 +31,7 @@ namespace XbimXplorer
                 }
             }
         }
-
+            
         public void RefreshPlugins()
         {
             var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -62,17 +62,20 @@ namespace XbimXplorer
         {
             if (!File.Exists(fullAssemblyName))
             {
-                Log.ErrorFormat("Assembly not found {0}", fullAssemblyName);
+                Log.ErrorFormat("Plugin loading error: Assembly not found {0}", fullAssemblyName);
                 return;
             }
-            Log.InfoFormat("Attempting to load: {0}", fullAssemblyName);
-
+            Log.InfoFormat("Attempting to load plugin: {0}", fullAssemblyName);
             var contPath = Path.GetDirectoryName(fullAssemblyName);
             _assemblyLoadFolder = contPath;
 
             var assembly = Assembly.LoadFile(fullAssemblyName);
-            foreach (var refReq in assembly.GetReferencedAssemblies())
+            var loadQueue = new Queue<AssemblyName>(assembly.GetReferencedAssemblies());
+
+            while (loadQueue.Any())
             {
+                var refReq = loadQueue.Dequeue();
+            
                 //check if the assembly is loaded
                 var asms = AppDomain.CurrentDomain.GetAssemblies();
                 var reqFound = false;
@@ -85,18 +88,22 @@ namespace XbimXplorer
                     }
                     if (asmName.Name.Equals(refReq.Name))
                     {
-                        Log.WarnFormat("Versioning issues:\r\n" +
+                        Log.DebugFormat("Versioning issues:\r\n" +
                                        "Required -> {0}\r\n" +
                                        "Loaded   -> {1}", refReq.FullName, asmName.FullName);
                     }
                 }
                 if (reqFound) 
                     continue;
-                Log.DebugFormat("Will need to load: {0}", refReq.FullName);
+                Log.DebugFormat("Attempting to load assembly: {0}", refReq.FullName);
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 try
                 {
-                    Assembly.Load(refReq);
+                    var reqAss = Assembly.Load(refReq);
+                    foreach (var referenced in reqAss.GetReferencedAssemblies())
+                    {
+                        loadQueue.Enqueue(referenced);
+                    }
                 }
                 catch (Exception ex)
                 {

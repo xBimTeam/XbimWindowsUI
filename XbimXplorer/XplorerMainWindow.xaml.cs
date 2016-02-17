@@ -157,9 +157,12 @@ namespace XbimXplorer
         
         private EventAppender appender;
 
+        private bool _blockPlugin;
+
         public XplorerMainWindow(bool blockPlugin = false)
         {
             InitializeComponent();
+            _blockPlugin = blockPlugin;
 
             // initialise the internal elements of the UI that behave like plugins
             EvaluateXbimUiType(typeof(LogViewer.LogViewer));
@@ -174,10 +177,6 @@ namespace XbimXplorer
 
             // logging 
             LoggedEvents = new ObservableCollection<EventViewModel>();
-
-            // command line arg can prevent plugin loading
-            if (Settings.Default.PluginStartupLoad && !blockPlugin)
-                RefreshPlugins();           
         }
 
         public ObservableCollection<EventViewModel> LoggedEvents { get; private set; }
@@ -1053,6 +1052,13 @@ namespace XbimXplorer
 
             // DockingManager
             Close();
+        }
+
+        private void RenderedEvents(object sender, EventArgs e)
+        {
+            // command line arg can prevent plugin loading
+            if (Settings.Default.PluginStartupLoad && !_blockPlugin)
+                RefreshPlugins();
         }
     }
 }
