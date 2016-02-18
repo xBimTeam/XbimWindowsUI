@@ -21,7 +21,8 @@ IOS and Android versions are under development.</description>
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <dependency id="Xbim.Geometry" version="4.0.0-V0005" />
+      <dependency id="Xbim.Geometry" version="4.0.0-V0046" />
+      <dependency id="Xbim.Exchange" version="4.0.0-V011" />
       <dependency id="HelixToolkit.Wpf" version="2015.1.629" />
       <dependency id="PropertyTools.Wpf" version="2015.1.66" />
     </dependencies>

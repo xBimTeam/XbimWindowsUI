@@ -29,7 +29,7 @@ namespace Xbim.Presentation
         public bool Contains(TType item)
         {
             HashSet<TType> found;
-            return _dictionary.TryGetValue(item.ModelOf, out found) && found.Contains(item);
+            return _dictionary.TryGetValue(item.Model, out found) && found.Contains(item);
         }
 
         public void CopyTo(TType[] array, int arrayIndex) 
