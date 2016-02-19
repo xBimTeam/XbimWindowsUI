@@ -1554,7 +1554,7 @@ namespace Xbim.Presentation
 
         public void ZoomSelected()
         {
-            if (SelectedEntity == null || Highlighted == null || Highlighted.Mesh == null)
+            if (SelectedEntity == null || Highlighted?.Mesh == null)
                 return;
             var r3D = Highlighted.Mesh.GetBounds();
             ZoomTo(r3D);
@@ -1568,7 +1568,7 @@ namespace Xbim.Presentation
         /// <param name="delta">positive distance of the cutting plane above the base of the selected element.</param>
         public void ClipBaseSelected(double delta)
         {
-            if (SelectedEntity == null || Highlighted == null || Highlighted.Mesh == null)
+            if (SelectedEntity == null || Highlighted?.Mesh == null)
                 return;
             var r3D = Highlighted.Mesh.GetBounds();
             if (r3D.IsEmpty)

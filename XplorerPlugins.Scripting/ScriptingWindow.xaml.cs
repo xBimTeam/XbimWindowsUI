@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Data;
+using Xbim.Common.Geometry;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Script;
-using XbimGeometry.Interfaces;
 
 namespace XplorerPlugins.Scripting
 {
