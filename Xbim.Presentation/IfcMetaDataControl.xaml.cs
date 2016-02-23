@@ -366,11 +366,8 @@ namespace Xbim.Presentation
                 var val = "";
                 if (item.NominalValue != null)
                 {
-                    var nomVal = (ExpressType) (item.NominalValue.Value);
-
-                    val = nomVal != null
-                        ? nomVal.ToString()
-                        : item.NominalValue.ToString();
+                    var nomVal = item.NominalValue;
+                    val = nomVal?.ToString();
                 }
                 _properties.Add(new PropertyItem
                 {
