@@ -48,7 +48,7 @@ namespace Xbim.Presentation.LayerStyling
                 }
                 else
                     ifcT = model.Metadata.ExpressType(excludedT);
-                foreach (var exIfcType in ifcT.NonAbstractSubTypes.Select(model.Metadata.ExpressType))
+                foreach (var exIfcType in ifcT.NonAbstractSubTypes)
                 {
                     excludedTypes.Add(exIfcType.TypeId);
                 }
