@@ -4,6 +4,7 @@
         xmlns:xbim="http://schemas.Xbim.com/Presentation"
         xmlns:local="clr-namespace:XbimXplorer"
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+        xmlns:etb="clr-namespace:XbimXplorer.EditableTextBlock"
     xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
     xmlns:viewModels="clr-namespace:Xbim.Ifc.ViewModels;assembly=Xbim.Ifc"
     Title="Xbim Xplorer" Height="600" Width="800" 
@@ -205,10 +206,10 @@
             <StatusBarItem>
                 <TextBlock Name="ProjectName"></TextBlock>
             </StatusBarItem>
-            <StatusBarItem>
+            <StatusBarItem Height="23" VerticalAlignment="Top">
                 <Separator/>
             </StatusBarItem>
-            <TextBlock Name="EntityLabel"></TextBlock>
+            <etb:EditableTextBlock x:Name="EntityLabel" ValueSet="EntityLabel_KeyDown"></etb:EditableTextBlock>
             <StatusBarItem>
                 <Separator/>
             </StatusBarItem>

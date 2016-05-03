@@ -921,5 +921,17 @@ namespace XbimXplorer
             if (Settings.Default.PluginStartupLoad && !_blockPlugin)
                 RefreshPlugins();
         }
+        
+        private void EntityLabel_KeyDown()
+        {
+            var str = EntityLabel.Text.Trim(new[] { ' ', '#' });
+            int isLabel;
+            if (Int32.TryParse(str, out isLabel))
+            {
+                var entity = Model.Instances[isLabel];
+                if (entity != null)
+                    SelectedItem = entity;
+            }
+        }
     }
 }

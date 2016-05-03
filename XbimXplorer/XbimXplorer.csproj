@@ -291,6 +291,8 @@
       <DependentUpon>ExportWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="EditableTextBlock\EditableTextBlock.cs" />
+    <Compile Include="EditableTextBlock\EditableTextBlockAdorner.cs" />
     <Compile Include="LogViewer\EventAppender.cs" />
     <Compile Include="LogViewer\EventViewModel.cs" />
     <Compile Include="LogViewer\LogEventArgs.cs" />
