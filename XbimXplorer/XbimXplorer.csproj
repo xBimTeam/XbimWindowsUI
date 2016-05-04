@@ -304,6 +304,17 @@
       <DependentUpon>PluginsConfig.xaml</DependentUpon>
     </Compile>
     <Compile Include="PluginSystem\XbimXplorerPluginWindowExtensions.cs" />
+    <Compile Include="Commands\EmbedDoc.xaml.cs">
+      <DependentUpon>EmbedDoc.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Commands\GeomQuerying.cs" />
+    <Compile Include="Commands\SquareBracketIndexer.cs" />
+    <Compile Include="Commands\TextHighliter.cs" />
+    <Compile Include="Commands\TreeQuery.cs" />
+    <Compile Include="Commands\TreeQueryItem.cs" />
+    <Compile Include="Commands\wdwCommands.xaml.cs">
+      <DependentUpon>wdwCommands.xaml</DependentUpon>
+    </Compile>
     <Compile Include="XplorerMainWindow.Plugins.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -327,6 +338,14 @@
     <Page Include="PluginSystem\PluginsConfig.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Commands\EmbedDoc.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Commands\wdwCommands.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Simplify\IfcSimplify.xaml">
       <SubType>Designer</SubType>

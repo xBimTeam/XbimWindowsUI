@@ -18,8 +18,9 @@ namespace XbimXplorer.EditableTextBlock
             }
             set
             {
+                var prevVal = (bool)GetValue(IsInEditModeProperty);
                 SetValue(IsInEditModeProperty, value);
-                if (value)
+                if (prevVal && !value)
                 {
                     _valueSet?.Invoke();
                 }

@@ -157,9 +157,7 @@ namespace Xbim.Presentation
             var sourceValue = pInfo.GetValue(Highlighted, null);
             pInfo.SetValue(TransHighlighted, sourceValue, null);
         }
-
-        public bool LayerStylerForceVersion1 { get; set; }
-
+        
         protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
             var plane = GetCutPlane();

@@ -146,7 +146,8 @@ namespace XbimXplorer
 
             // initialise the internal elements of the UI that behave like plugins
             EvaluateXbimUiType(typeof(LogViewer.LogViewer));
-           
+            EvaluateXbimUiType(typeof(Commands.wdwCommands));
+
 
             Closed += XplorerMainWindow_Closed;
             Loaded += XplorerMainWindow_Loaded;
@@ -853,27 +854,25 @@ namespace XbimXplorer
         private void SetDefaultModeStyler(object sender, RoutedEventArgs e)
         {           
             DrawingControl.DefaultLayerStyler = new SurfaceLayerStyler();
-            DrawingControl.LayerStylerForceVersion1 = false;
             DrawingControl.ReloadModel();
         }
 
+        [Obsolete]
         private void SetStylerVersion1(object sender, RoutedEventArgs e)
         {
-            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
+        [Obsolete]
         private void SetFederationStylerRole(object sender, RoutedEventArgs e)
         {
             
-            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
+        [Obsolete]
         private void SetFederationStylerType(object sender, RoutedEventArgs e)
         {
-            
-            DrawingControl.LayerStylerForceVersion1 = true;
             DrawingControl.ReloadModel();
         }
 
