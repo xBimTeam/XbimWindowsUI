@@ -518,6 +518,8 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
+                
+
                 m = Regex.Match(cmd, @"^clip (" +
                                      @"(?<elev>[-+]?([0-9]*\.)?[0-9]+) *$" +
                                      "|" +
@@ -1268,6 +1270,14 @@ namespace XbimXplorer.Commands
                 ? " [#" + propLabel + "]" 
                 : ""
                 );
+            if (pe as Xbim.Ifc2x3.Interfaces.IIfcCartesianPoint != null)
+            {
+                var n = pe as Xbim.Ifc2x3.Interfaces.IIfcCartesianPoint;
+                var vals = n.Coordinates.Select(x => ((double)x.Value).ToString("0.00"));
+                ret += "\t" + string.Join("\t,\t", vals);
+                
+                
+            }
             if (showPropType)
             {
                 ret += " (" + CleanPropertyName(propVal.GetType().FullName) + ")";
