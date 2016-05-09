@@ -1644,7 +1644,7 @@ namespace Xbim.Presentation
                 m3D.Material = (WpfMaterial) layer.Material;
             if (ForceRenderBothSides) m3D.BackMaterial = m3D.Material;
             _materials.Add(m3D.Material);
-            // SetOpacityPercent(m3d.Material, ModelOpacity);
+            SetOpacityPercent(m3D.Material, ModelOpacity);
             var mv = new ModelVisual3D {Content = m3D};
             if (layer.Style.IsTransparent)
                 Transparents.Children.Add(mv);
