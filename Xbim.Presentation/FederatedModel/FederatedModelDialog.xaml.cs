@@ -22,7 +22,7 @@ namespace Xbim.Presentation.FederatedModel
 
         void FederatedModelDlg_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            FederatedModel.Model = DataContext as IReferencedModel;
+            FederatedModel.Model = DataContext as IfcStore;
             FederatedModel.NotifyAll();
             //OnPropertyChanged("Project");
             //OnPropertyChanged("Author");

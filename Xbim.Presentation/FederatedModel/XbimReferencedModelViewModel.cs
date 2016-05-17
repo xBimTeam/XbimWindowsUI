@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel;
 using System.IO;
-using Xbim.Common;
 using Xbim.Common.Federation;
-using Xbim.Common.Geometry;
 using Xbim.Ifc;
-
+using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation.FederatedModel
@@ -117,7 +115,7 @@ namespace Xbim.Presentation.FederatedModel
         
         /// </summary>
         /// <returns>Returns XbimReferencedModel == null </returns>
-        public bool TryBuild(IfcStore model)
+        public bool TryBuildAndAddTo(IfcStore destinationFederatedModel)
         {
             //it's already build, so no need to recreate it
             if (ReferencedModel != null)
@@ -125,18 +123,21 @@ namespace Xbim.Presentation.FederatedModel
 
 		    if (string.IsNullOrWhiteSpace(Name))
                 return false;
-            var ext = Path.GetExtension(Name).ToLowerInvariant();
-            using (var refM = IfcStore.Open(Name))
+            
+            _xbimReferencedModel = destinationFederatedModel.AddModelReference(Name, OrganisationName, OrganisationRole);
+            if (_xbimReferencedModel.Model.GeometryStore.IsEmpty)
             {
-                Xbim3DModelContext m3D;
-                if (refM.GeometryStore.IsEmpty)
-                {
-                    m3D = new Xbim3DModelContext(refM);
-                    m3D.CreateContext();
-                }
-                Name = refM.FileName;
+                var m3D = new Xbim3DModelContext(_xbimReferencedModel.Model);
+                m3D.CreateContext();
             }
-            _xbimReferencedModel = model.AddModelReference(Name, OrganisationName, OrganisationRole);
+
+            //var tmpModel = IfcStore.Open(Name);
+            //if (tmpModel.GeometryStore.IsEmpty)
+            //{
+            //    var m3D = new Xbim3DModelContext(tmpModel);
+            //    m3D.CreateContext();
+            //}
+
 
             if (_xbimReferencedModel == null) 
                 return ReferencedModel != null;

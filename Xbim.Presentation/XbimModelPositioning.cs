@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Geometry;
+using Xbim.Ifc;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -77,13 +78,49 @@ namespace Xbim.Presentation
             Transform =  translation * scaling;
         }
     }
-
+    
     public class XbimModelPositioningCollection
     {
-        public XbimModelPositioning this[IModel i]
+        public XbimModelPositioning this[IModel modelKey]
         {
-            get { return _collection[i]; }
-            set { _collection[i] = value; }
+            get
+            {
+                var mod = modelKey?.GetHashCode();
+                var s = modelKey as IfcStore;
+                if (s != null)
+                {
+                    var m2 = s.GetHashCode();
+                }
+                XbimModelPositioning returnValue;
+                if (_collection.TryGetValue(modelKey, out returnValue))
+                    return returnValue;
+
+                IModel m = null;
+                // IfcStore and the underlying _models are not the same instances
+                foreach (var key in _collection.Keys)
+                {
+                    if (key == modelKey)
+                    {
+                    }
+
+
+                    if (key.GetHashCode() == modelKey.GetHashCode())
+                    {
+                        m = key;
+                        break;
+                    }
+                }
+                if (m != null)
+                {
+                    // determine the value to return
+                    var retVal = _collection[m];
+                    // add the new key to the collection for faster retrieval in the future
+                    _collection.Add(modelKey, retVal);
+                    return retVal;
+                }
+                return null;
+            }
+            set { _collection[modelKey] = value; }
         }
 
         private readonly Dictionary<IModel, XbimModelPositioning> _collection;

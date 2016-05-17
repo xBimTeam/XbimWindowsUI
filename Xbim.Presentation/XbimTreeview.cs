@@ -173,6 +173,8 @@ namespace Xbim.Presentation
                 {
                     queue.Enqueue(item);
                 }
+                if (!queue.Any())
+                    return null;
                 current = queue.Dequeue();
             }
             return null;

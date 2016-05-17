@@ -845,7 +845,9 @@ namespace Xbim.Presentation
             {
                 foreach (var item in Selection)
                 {
-                    m.AddElements(item, ModelPositions[item.Model].Transform);
+                    var mod = ModelPositions[item.Model];
+                    if (mod != null)
+                        m.AddElements(item, mod.Transform);
                 }
             }
             else if (newVal != null)
@@ -1223,7 +1225,7 @@ namespace Xbim.Presentation
         }
 
         public XbimModelPositioningCollection ModelPositions;
-
+        
         public ILayerStyler DefaultLayerStyler;
 
         private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -1279,13 +1281,17 @@ namespace Xbim.Presentation
 
             // model scaling is determined on all federated models
             ModelPositions.AddModel(model.ReferencingModel); //add in the model that holds the main entities
-            var fedModel = model as IFederatedModel; //now add in any referenced models
-            if (fedModel != null)
+
+            //now add in any referenced models
+            
+            if (model.IsFederation)
             {
-                foreach (var refModel in fedModel.ReferencedModels)
+                foreach (var refModel in model.ReferencedModels)
                 {
                     refModel.Model.UserDefinedId = ++userDefinedId;
-                    ModelPositions.AddModel(refModel.Model);
+                    var v = refModel.Model as IfcStore;
+                    if (v!= null)
+                        ModelPositions.AddModel(v.ReferencingModel);
                 }
                // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
             }
@@ -1293,18 +1299,12 @@ namespace Xbim.Presentation
             DefineModelTranslation();
             ModelPositions.SetCenterInMeters(_modelTranslation);
 
-            // what to do when models are added
-          
-  
-
             if (DefaultLayerStyler == null)
                 DefaultLayerStyler = new SurfaceLayerStyler();
 
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
-
             // loading the main model
-
             DefaultLayerStyler.SetFederationEnvironment(null);
             scene = DefaultLayerStyler.BuildScene(model.ReferencingModel,ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
             
@@ -1313,10 +1313,10 @@ namespace Xbim.Presentation
                 if (scene.Layers.Any())
                     Scenes.Add(scene);
             }
-            if (fedModel != null)
+            if (model.IsFederation)
             {
                 // loading all referenced models.
-                foreach (var refModel in fedModel.ReferencedModels)
+                foreach (var refModel in model.ReferencedModels)
                 {
                     LoadReferencedModel(refModel);
                 }
@@ -1332,12 +1332,23 @@ namespace Xbim.Presentation
 
         private void LoadReferencedModel(IReferencedModel refModel)
         {
-           
-            if (refModel.Model == null) return;
-            
-                DefaultLayerStyler.SetFederationEnvironment(refModel);
-                Scenes.Add(DefaultLayerStyler.BuildScene(refModel.Model,ModelPositions[refModel.Model].Transform, Opaques,Transparents, ExcludedTypes));
-            
+            if (refModel.Model == null)
+                return;
+
+            DefaultLayerStyler.SetFederationEnvironment(refModel);
+            var mod = refModel.Model as IfcStore;
+            if (mod == null)
+                return;
+            var pos = ModelPositions[mod.ReferencingModel].Transform;
+            Scenes.Add(
+                DefaultLayerStyler.BuildScene(
+                    refModel.Model, 
+                    pos, 
+                    Opaques,
+                    Transparents, 
+                    ExcludedTypes)
+                );
+
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1345,8 +1356,7 @@ namespace Xbim.Presentation
             _viewBounds = ModelBounds.IsEmpty
                 ? new XbimRect3D(0, 0, 0, 10, 10, 5)
                 : ModelBounds.Transform(XbimMatrix3D.CreateTranslation(_modelTranslation));
-
-
+            
             // Assumes a NearPlaneDistance of 1/8 of meter.
             //all models are now in metres
             UpdatefrustumPlanes(Canvas, null);

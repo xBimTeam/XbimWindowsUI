@@ -77,8 +77,7 @@ namespace XbimXplorer
         }
 
         public int NumWarnings { get; private set; }
-
-
+        
         private BackgroundWorker _worker;
         /// <summary>
         /// 
@@ -88,12 +87,7 @@ namespace XbimXplorer
         /// 
         /// </summary>
         public static RoutedCommand EditFederationCmd = new RoutedCommand();
-        /// <summary>
-        /// 
-        /// </summary>
-        public static RoutedCommand OpenFederationCmd = new RoutedCommand();
-
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -297,7 +291,20 @@ namespace XbimXplorer
                 {
                     var context = new Xbim3DModelContext(model);
                         //upgrade to new geometry representation, uses the default 3D model
-                    context.CreateContext( progDelegate: worker.ReportProgress);
+                    context.CreateContext(progDelegate: worker.ReportProgress);
+                }
+                foreach (var modelReference in model.ReferencedModels)
+                {
+                    Debug.WriteLine(modelReference.Name);
+                    if (modelReference.Model != null)
+                    {
+                        if (modelReference.Model.GeometryStore.IsEmpty)
+                        {
+                            var context = new Xbim3DModelContext(modelReference.Model);
+                            //upgrade to new geometry representation, uses the default 3D model
+                            context.CreateContext(progDelegate: worker.ReportProgress);
+                        }
+                    }
                 }
                 if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
                 {
@@ -421,7 +428,6 @@ namespace XbimXplorer
                     ProgressBar.Value = 0;
                     StatusMsg.Text = "Ready";
                     AddRecentFile();
-
                 }
                 else //we have a problem
                 {
@@ -501,29 +507,16 @@ namespace XbimXplorer
                 dlg.InitialDirectory = f.DirectoryName;
                 dlg.FileName = f.Name;
             }
+
             // filter starts with basic xbim formats
             var corefilters = new[] {
+                    "Ifc File (*.ifc)|*.ifc",
                     "xBIM File (*.xBIM)|*.xBIM", 
                     "IfcXml File (*.IfcXml)|*.ifcxml", 
                     "IfcZip File (*.IfcZip)|*.ifczip"
                 };
-            var fedFilter = new[] { "xBIM Federation file (*.xBIMF)|*.xbimf" };
-            var ifcFilter = new[] { "Ifc File (*.ifc)|*.ifc" };
-            string filter;
 
-            if (Model.IsFederation)
-            {
-                dlg.DefaultExt = "xBIMF";
-                var filterA = fedFilter.Concat(ifcFilter).Concat(corefilters).ToArray();
-                filter = string.Join("|", filterA);
-            }
-            else
-            {
-                var filterA = ifcFilter.Concat(corefilters).Concat(fedFilter).ToArray();
-                filter = string.Join("|", filterA);
-            }
-
-            dlg.Filter = filter;// Filter files by extension 
+            dlg.Filter = string.Join("|", corefilters);
             dlg.Title = "Save As";
             dlg.AddExtension = true;
 
@@ -608,30 +601,13 @@ namespace XbimXplorer
             {
                 // todo: is there something that needs to happen here?
             }
+            DrawingControl.ReloadModel();
         }
         private void EditFederationCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = Model != null && Model.IsFederation;
         }
-        
-        private void OpenFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            var dlg = new OpenFileDialog
-            {
-                Title = "Select an existing federate.",
-                Filter = "Xbim Federation Files|*.xbimf", // Filter files by extension 
-                CheckFileExists = true,
-                Multiselect = false
-            };
-
-            var done = dlg.ShowDialog(this);
-
-            if (!done.Value) 
-                return;
-            
-            FederationFromDialogbox(dlg);
-        }
-
+       
         private void CreateFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var dlg = new OpenFileDialog
@@ -693,7 +669,7 @@ namespace XbimXplorer
                     for (var i = 0; i < dlg.FileNames.Length; i++)
                     {
                         var fileName = dlg.FileNames[i];
-                        var builder = new XbimReferencedModelViewModel
+                        var temporaryReference = new XbimReferencedModelViewModel
                         {
                             Name = fileName,
                             OrganisationName = "OrganisationName " + i,
@@ -704,7 +680,7 @@ namespace XbimXplorer
                         Exception exception = null;
                         try
                         {
-                            buildRes = builder.TryBuild(fedModel);
+                            buildRes = temporaryReference.TryBuildAndAddTo(fedModel);
                         }
                         catch (Exception ex)
                         {
@@ -733,11 +709,7 @@ namespace XbimXplorer
             ModelProvider.ObjectInstance = fedModel;
             ModelProvider.Refresh();
         }
-
-        private void OpenFederationCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
+        
         #endregion
 
         /// <summary>

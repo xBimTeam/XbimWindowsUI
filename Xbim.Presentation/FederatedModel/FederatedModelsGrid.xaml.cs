@@ -56,7 +56,7 @@ namespace Xbim.Presentation.FederatedModel
             try
             {
                 //if build fails, cancel add row
-                if (!modelWrapper.TryBuild(DataContext as IfcStore))
+                if (!modelWrapper.TryBuildAndAddTo(DataContext as IfcStore))
                 {
                     e.Cancel = true;
                 }
@@ -69,24 +69,24 @@ namespace Xbim.Presentation.FederatedModel
 
         void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            //TODO resolve reference models
-            //switch (e.Action)
-            //{
-            //    case NotifyCollectionChangedAction.Add:
-            //        break;
-            //    case NotifyCollectionChangedAction.Remove:
-            //        //Remove model
+            // TODO: resolve reference models addition and removal.
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    //Remove model
 
-            //        var oldItems = new List<XbimModel>();
-            //        foreach (var item in e.OldItems)
-            //        {
-            //            var model = item as XbimReferencedModelViewModel;
-            //            bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
-            //            model.ReferencedModel.Model.Close();
-            //        }
+                    var oldItems = new List<IfcStore>();
+                    foreach (var item in e.OldItems)
+                    {
+                        var model = item as XbimReferencedModelViewModel;
+                        //bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
+                        //model.ReferencedModel.Model.Close();
+                    }
 
-            //        break;
-            //}
+                    break;
+            }
         }
 
         public IEnumerable SelectedItems
