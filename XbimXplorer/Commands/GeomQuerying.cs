@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Common.Geometry;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.IO;
 using Xbim.ModelGeometry.Scene;
@@ -32,15 +31,13 @@ namespace XbimXplorer.Commands
         /// <param name="model"></param>
         /// <param name="entityLabel"></param>
         /// <returns></returns>
-        public static string Viewerdata(DrawingControl3D control, XbimModel model, int entityLabel)
+        public static string Viewerdata(DrawingControl3D control, IfcStore model, int entityLabel)
         {
             var sb = new StringBuilder();
             control.ReportData(sb, model, entityLabel);
             return sb.ToString();
         }
-
-
-
+        
         /// <summary>
         /// 
         /// </summary>

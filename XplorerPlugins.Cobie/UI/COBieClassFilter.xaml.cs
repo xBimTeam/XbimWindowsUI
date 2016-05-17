@@ -13,6 +13,7 @@ using Xbim.COBie;
 using Xbim.COBie.Serialisers;
 using Xbim.IO;
 using Xbim.Presentation.XplorerPluginSystem;
+using Xbim.Ifc;
 
 namespace XplorerPlugins.Cobie.UI
 {
@@ -30,9 +31,9 @@ namespace XplorerPlugins.Cobie.UI
         public ObservableCollection<String> Templates { get; set; }
 
 
-        public XbimModel Model
+        public IfcStore Model
         {
-            get { return (XbimModel)GetValue(ModelProperty); }
+            get { return (IfcStore)GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
@@ -40,7 +41,7 @@ namespace XplorerPlugins.Cobie.UI
         /// 
         /// </summary>
         public static DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(XbimModel), typeof(CoBieClassFilter),
+            DependencyProperty.Register("Model", typeof(IfcStore), typeof(CoBieClassFilter),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -190,13 +191,14 @@ namespace XplorerPlugins.Cobie.UI
                 }
             }
 
-            var f = new FileInfo(Path.ChangeExtension(Model.DatabaseName, ".xls"));
+            var f = new FileInfo(Path.ChangeExtension(Model.FileName, ".xls"));
             var outputFile = Path.Combine(TxtFolderName.Text, f.Name);
 
             var context = new COBieContext
             {
                 TemplateFileName = CoBieTemplate,
-                Model = Model,
+                // todo: restore model setting
+                // Model = Model,
                 Exclude = UserFilters
             };
 
