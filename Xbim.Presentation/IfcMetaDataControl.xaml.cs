@@ -364,11 +364,9 @@ namespace Xbim.Presentation
             foreach (var item in pSet.HasProperties.OfType<IIfcPropertySingleValue>()) //only handle simple properties
             {
                 var val = "";
-                if (item.NominalValue != null)
-                {
-                    var nomVal = item.NominalValue;
-                    val = nomVal?.ToString();
-                }
+                var nomVal = item.NominalValue;
+                if (nomVal != null)
+                    val = nomVal.ToString();
                 _properties.Add(new PropertyItem
                 {
                     IfcLabel = item.EntityLabel,

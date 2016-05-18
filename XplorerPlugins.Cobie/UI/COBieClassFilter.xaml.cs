@@ -29,8 +29,7 @@ namespace XplorerPlugins.Cobie.UI
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
 
         public ObservableCollection<String> Templates { get; set; }
-
-
+        
         public IfcStore Model
         {
             get { return (IfcStore)GetValue(ModelProperty); }

@@ -20,9 +20,9 @@ namespace XbimXplorer.EditableTextBlock
             {
                 var prevVal = (bool)GetValue(IsInEditModeProperty);
                 SetValue(IsInEditModeProperty, value);
-                if (prevVal && !value)
+                if (prevVal && !value && _valueSet != null)
                 {
-                    _valueSet?.Invoke();
+                    _valueSet.Invoke();
                 }
             }
         }

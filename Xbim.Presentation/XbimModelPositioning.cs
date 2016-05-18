@@ -85,39 +85,9 @@ namespace Xbim.Presentation
         {
             get
             {
-                var mod = modelKey?.GetHashCode();
-                var s = modelKey as IfcStore;
-                if (s != null)
-                {
-                    var m2 = s.GetHashCode();
-                }
                 XbimModelPositioning returnValue;
                 if (_collection.TryGetValue(modelKey, out returnValue))
                     return returnValue;
-
-                IModel m = null;
-                // IfcStore and the underlying _models are not the same instances
-                foreach (var key in _collection.Keys)
-                {
-                    if (key == modelKey)
-                    {
-                    }
-
-
-                    if (key.GetHashCode() == modelKey.GetHashCode())
-                    {
-                        m = key;
-                        break;
-                    }
-                }
-                if (m != null)
-                {
-                    // determine the value to return
-                    var retVal = _collection[m];
-                    // add the new key to the collection for faster retrieval in the future
-                    _collection.Add(modelKey, retVal);
-                    return retVal;
-                }
                 return null;
             }
             set { _collection[modelKey] = value; }

@@ -24,7 +24,10 @@ namespace Xbim.Presentation.FederatedModel
                 if (_model == null)
                     return "";
                 var p = _model.Instances.FirstOrDefault<IIfcProject>();
-                return p?.Name;
+                return 
+                    p != null 
+                    ? (string) p.Name 
+                    : "";
             }
             set
             {
@@ -123,7 +126,10 @@ namespace Xbim.Presentation.FederatedModel
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string prop)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(prop));
+            }
         }
     }
 }
