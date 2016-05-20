@@ -76,7 +76,6 @@ namespace Xbim.Presentation.FederatedModel
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     //Remove model
-
                     var oldItems = new List<IfcStore>();
                     foreach (var item in e.OldItems)
                     {

@@ -126,7 +126,6 @@ namespace XbimXplorer
                     ? "Xbim Xplorer" :
                     "Xbim Xplorer - [" + ifcFilename + "]";
             }));
-           
         }
         
         private EventAppender _appender;
