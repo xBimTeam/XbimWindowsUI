@@ -95,11 +95,12 @@ namespace XbimXplorer
                 }
                 if (reqFound) 
                     continue;
-                Log.DebugFormat("Attempting to load assembly: {0}", refReq.FullName);
+                
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 try
                 {
                     var reqAss = Assembly.Load(refReq);
+                    Log.DebugFormat("Loaded assembly: {0}", refReq.FullName);
                     foreach (var referenced in reqAss.GetReferencedAssemblies())
                     {
                         loadQueue.Enqueue(referenced);
@@ -148,6 +149,11 @@ namespace XbimXplorer
 
         private void EvaluateXbimUiType(Type type)
         {
+            if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
+            {
+                return;
+            }
+
             EvaluateXbimUiMenu(type);
 
             var act = type.GetUiActivation();

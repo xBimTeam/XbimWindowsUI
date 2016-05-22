@@ -252,8 +252,13 @@ namespace XbimXplorer
 
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            // todo: inspect unexpected behaviour in Logging system
+            // Claudio Benghi's Note:
+            // For reasons I am failing to understand if I remove the following line whole Logging system does not work.
+            Xbim.Ifc2x3.IO.XbimModel.CreateTemporaryModel();
+            // somehow the line avove is needed for the Logging system to funcion
+
             var model = IfcStore.Create(null,IfcSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
-          
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
 
