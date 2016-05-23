@@ -430,10 +430,8 @@ namespace Xbim.Presentation
         {
             var pos = e.GetPosition(Canvas);
             var hit = FindHit(pos);
-            if (hit == null)
-                return;
-
-            if (hit.ModelHit == null)
+            
+            if (hit == null || hit.ModelHit == null)
             {
                 Selection.Clear();
                 SelectedEntity = null;
