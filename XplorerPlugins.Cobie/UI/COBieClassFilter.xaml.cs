@@ -14,6 +14,7 @@ using Xbim.COBie.Serialisers;
 using Xbim.IO;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
+using Xbim.Ifc2x3.IO;
 
 namespace XplorerPlugins.Cobie.UI
 {
@@ -174,6 +175,10 @@ namespace XplorerPlugins.Cobie.UI
             get { return UkTemplate; }
         }
 
+        /// <summary>
+        /// Performs the export
+        /// </summary>
+        /// <returns>True on success, false on error.</returns>
         private bool ExportCoBie()
         {
 
@@ -193,11 +198,11 @@ namespace XplorerPlugins.Cobie.UI
             var f = new FileInfo(Path.ChangeExtension(Model.FileName, ".xls"));
             var outputFile = Path.Combine(TxtFolderName.Text, f.Name);
 
+
             var context = new COBieContext
             {
                 TemplateFileName = CoBieTemplate,
-                // todo: restore model setting
-                // Model = Model,
+                Model = Model,
                 Exclude = UserFilters
             };
 

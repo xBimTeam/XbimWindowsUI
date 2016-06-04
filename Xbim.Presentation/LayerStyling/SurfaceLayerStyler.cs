@@ -57,7 +57,6 @@ namespace Xbim.Presentation.LayerStyling
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
 
             using (var geomStore = model.GeometryStore)
-
             {
                 using (var geomReader = geomStore.BeginRead())
                 {

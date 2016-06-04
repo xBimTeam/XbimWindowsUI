@@ -239,7 +239,7 @@ namespace XbimXplorer
                 if (!_pluginWindows.Contains(pluginWindow))
                     _pluginWindows.Add(pluginWindow);
                 // preparing user control
-                var uc = pluginWindow as UserControl;
+                var uc = (UserControl) pluginWindow;
                 uc.HorizontalAlignment = HorizontalAlignment.Stretch;
                 uc.VerticalAlignment = VerticalAlignment.Stretch;
                 //set data binding
