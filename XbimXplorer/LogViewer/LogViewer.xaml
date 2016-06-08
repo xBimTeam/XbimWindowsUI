@@ -12,8 +12,30 @@
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
         </Grid.RowDefinitions>
-       
+
         <ListView Grid.Row="0" x:Name="View" Margin="5" ItemsSource="{Binding LoggedEvents}" >
+            <ListView.Resources>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Level}" Value="DEBUG">
+                            <Setter Property="Foreground" Value="Gray" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Level}" Value="WARN">
+                            <Setter Property="Foreground" Value="OrangeRed" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Level}" Value="ERROR">
+                            <Setter Property="Foreground" Value="Red" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Resources>
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy" Click="DoCopy"/>
+                    <MenuItem Header="Clear 'Debug' entries" Click="ClearDebug"/>
+                    <MenuItem Header="Clear 'Information' entries" Click="ClearInformation"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Time" Width="50" DisplayMemberBinding="{Binding TimeStamp}" />
@@ -27,18 +49,6 @@
 
         <TextBox Grid.Row="1" x:Name="Report" TextWrapping="Wrap" Visibility="Collapsed" Text=""/>
         <Button Grid.Row="2" Click="Test" Visibility="Collapsed" Margin="5" >Test</Button>
-
-        <Grid Grid.Row="3" >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"></ColumnDefinition>
-                <ColumnDefinition Width="1*"></ColumnDefinition>
-                <ColumnDefinition Width="1*"></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Click="Copy" Margin="5" >Copy to Clipboard</Button>
-            <Button Grid.Column="1" Click="ClearDebug" Margin="5" >Clear Debug</Button>
-            <Button Grid.Column="2" Click="Clear" Margin="5" >Clear All</Button>
-        </Grid>
-        
-        
+        <Button Grid.Row="3" Click="Clear" Margin="5" >Clear All</Button>
     </Grid>
 </UserControl>
