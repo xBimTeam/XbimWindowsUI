@@ -5,14 +5,20 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Data;
 using log4net;
 using Xbim.COBie;
 using Xbim.COBie.Serialisers;
+using Xbim.FilterHelper;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
+using XbimExchanger.IfcToCOBieLiteUK.Conversion;
+using System.Text;
+using NPOI.SS.Formula.Functions;
+using XbimExchanger.IfcToCOBieLiteUK;
 
 
 namespace XplorerPlugins.Cobie.UI
@@ -23,12 +29,18 @@ namespace XplorerPlugins.Cobie.UI
     [XplorerUiElement(PluginWindowUiContainerEnum.Dialog, PluginWindowActivation.OnMenu, "File/Export/COBieLiteUk")]
     public partial class COBieLiteUkExport: IXbimXplorerPluginWindow
     {
-        const string UkTemplate = "COBie-UK-2012-template.xls";
-        const string UsTemplate = "COBie-US-2_4-template.xls";
+        private const string UkTemplate = "COBie-UK-2012-template.xls";
+        private const string UsTemplate = "COBie-US-2_4-template.xls";
 
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
 
         public ObservableCollection<String> Templates { get; set; }
+
+        public ObservableCollection<String> ExportTypes { get; set; }
+
+        internal ObservableCollection<SystemModeItem> AvailableSystemModes { get; set; }
+
+        public string SelectedExportType { get; set; }
         
         public IfcStore Model
         {
@@ -111,6 +123,23 @@ namespace XplorerPlugins.Cobie.UI
         
         public ObservableCollection<CheckedListItem<Type>> ClassFilterAssembly { get; set; }
 
+        internal class SystemModeItem
+        {
+            internal SystemModeItem(SystemExtractionMode mode)
+            {
+                Item = mode;
+                IsSelected = true;
+            }
+
+            internal string Name
+            {
+                get { return Item.ToString(); }
+            }
+
+            internal SystemExtractionMode Item;
+            internal bool IsSelected;
+        }
+
         public COBieLiteUkExport()
         {
             InitializeComponent();
@@ -121,6 +150,17 @@ namespace XplorerPlugins.Cobie.UI
             Templates = new ObservableCollection<string>() {UkTemplate, UsTemplate};
             SelectedTemplate = UkTemplate;
 
+            // prepare export
+            ExportTypes = new ObservableCollection<string>() {"XLS", "XLSX", "JSON", "XML", "IFC"};
+            SelectedExportType = "XLSX";
+
+            // prepare system modes
+            AvailableSystemModes = new ObservableCollection<SystemModeItem>();
+            foreach (var valid in Enum.GetValues(typeof(SystemExtractionMode)).OfType<SystemExtractionMode>().Where(r => r != SystemExtractionMode.System))
+            {
+                AvailableSystemModes.Add(new SystemModeItem(valid));
+            }
+            
             // define filters and set defaults
             UserFilters = new FilterValues();
             SetDefaultFilters();
@@ -143,28 +183,192 @@ namespace XplorerPlugins.Cobie.UI
             }
         }
 
+
+        #region Worker Methods
+
         /// <summary>
-        /// OK button event
+        /// Worker Complete method
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OK_Click(object sender, RoutedEventArgs e)
+        /// <param name="s"></param>
+        /// <param name="args"></param>
+        public void WorkerCompleted(object s, RunWorkerCompletedEventArgs args)
         {
             try
             {
-                SetExcludes(ClassFilterComponent, UserFilters.ObjectType.Component);
-                SetExcludes(ClassFilterType, UserFilters.ObjectType.Types);
-                SetExcludes(ClassFilterAssembly, UserFilters.ObjectType.Assembly);
-                if (!ExportCoBie()) 
-                    return;
-                DialogResult = true;
-                Close();
+                var ex = args.Result as Exception;
+                if (ex != null)
+                {
+                    var sb = new StringBuilder();
+
+                    var indent = "";
+                    while (ex != null)
+                    {
+                        sb.AppendFormat("{0}{1}\n", indent, ex.Message);
+                        ex = ex.InnerException;
+                        indent += "\t";
+                    }
+                    AppendLog(sb.ToString());
+                }
+                else
+                {
+                    var errMsg = args.Result as string;
+                    if (!string.IsNullOrEmpty(errMsg))
+                        AppendLog(errMsg);
+
+                }
             }
             catch (Exception ex)
             {
-                var msg = string.Format("Error exporting cobie from plugin.");
-                Log.Error(msg, ex);
+                var sb = new StringBuilder();
+                var indent = "";
+
+                while (ex != null)
+                {
+                    sb.AppendFormat("{0}{1}\n", indent, ex.Message);
+                    ex = ex.InnerException;
+                    indent += "\t";
+                }
+                AppendLog(sb.ToString());
             }
+            finally
+            {
+                btnGenerate.IsEnabled = true;
+            }
+            //open file if ticked to open excel
+            if (ChkOpenExcel.IsChecked != null && ChkOpenExcel.IsChecked.Value && args.Result != null && !string.IsNullOrEmpty(args.Result.ToString()))
+            {
+                Process.Start(args.Result.ToString());
+            }
+            StatusGrid.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Worker Progress Changed
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="args"></param>
+        public void WorkerProgressChanged(object s, ProgressChangedEventArgs args)
+        {
+
+            //Show message in Text List Box
+            if (args.ProgressPercentage == 0)
+            {
+                StatusMsg.Text = string.Empty;
+                StatusGrid.Visibility = Visibility.Collapsed;
+                AppendLog(args.UserState.ToString());
+            }
+            else //show message on status bar and update progress bar
+            {
+                if (StatusGrid.Visibility == Visibility.Collapsed)
+                {
+                    StatusGrid.Visibility = Visibility.Visible;
+                }
+                StatusMsg.Text = args.UserState.ToString();
+                ProgressBar.Value = args.ProgressPercentage;
+            }
+        }
+
+        /// <summary>
+        /// Add string to Text Output List Box 
+        /// </summary>
+        /// <param name="text"></param>
+        private void AppendLog(string text)
+        {
+            // todo: restore log
+            //txtOutput.AppendText(text + Environment.NewLine);
+            //txtOutput.ScrollToCaret();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Get Excel Type From Combo
+        /// </summary>
+        /// <returns>ExcelTypeEnum</returns>
+        private ExportFormatEnum GetExcelType()
+        {
+            return (ExportFormatEnum)Enum.Parse(typeof(ExportFormatEnum), SelectedExportType);
+        }
+
+        private ICobieLiteConverter _cobieWorker;
+
+        private void DoExport(object sender, RoutedEventArgs e)
+        {
+            // todo: does it make sense to restore the flip option?
+            //if (chkBoxFlipFilter.Checked)
+            //{
+            //    // ReSharper disable LocalizableElement
+            //    var result = MessageBox.Show(
+            //        "Flip Filter is ticked, this will show only excluded items, Do you want to continue",
+            //        "Warning", MessageBoxButtons.YesNo);
+            //    if (result == DialogResult.No)
+            //    {
+            //        return;
+            //    }
+            //}
+            btnGenerate.IsEnabled = false;
+
+            if (_cobieWorker == null)
+            {
+                _cobieWorker = new CobieLiteConverter();
+                _cobieWorker.Worker.ProgressChanged += WorkerProgressChanged;
+                _cobieWorker.Worker.RunWorkerCompleted += WorkerCompleted;
+            }
+            //get Excel File Type
+            var excelType = GetExcelType();
+            //set filters
+            // todo: restore filters
+            //var filterRoles = SetRoles();
+            //if (!chkBoxNoFilter.Checked)
+            //{
+            //    _assetfilters.ApplyRoleFilters(filterRoles);
+            //    _assetfilters.FlipResult = chkBoxFlipFilter.Checked;
+            //}
+
+            //set parameters
+            var conversionSettings = new CobieConversionParams
+            {
+                Source = Model,
+                OutputFileName = Path.ChangeExtension(Path.Combine(TxtFolderName.Text, Model.FileName), "Cobie"),
+                TemplateFile = SelectedTemplate,
+                ExportFormat = excelType,
+                ExtId = (UseExternalIds.IsChecked != null && UseExternalIds.IsChecked.Value) ? EntityIdentifierMode.IfcEntityLabels : EntityIdentifierMode.GloballyUniqueIds,
+                SysMode = SetSystemMode(),
+                Filter = new OutPutFilters(), // todo: restore filters // chkBoxNoFilter.Checked ? new OutPutFilters() : _assetfilters,
+                ConfigFile = "", // todo: restore config ConfigFile.FullName,
+                Log = true
+            };
+
+            //run worker
+            _cobieWorker.Run(conversionSettings);
+
+        }
+
+        /// <summary>
+        /// Set the System extraction Methods
+        /// </summary>
+        /// <returns></returns>
+        private SystemExtractionMode SetSystemMode()
+        {
+            var sysMode = SystemExtractionMode.System;
+            
+            //add the checked system modes
+            foreach (var item in AvailableSystemModes)
+            {
+                try
+                {
+                    if (!item.IsSelected) 
+                        continue;
+                    var mode = (SystemExtractionMode) Enum.Parse(typeof(SystemExtractionMode), item.ToString());
+                    sysMode |= mode;
+                }
+                catch (Exception)
+                {
+                    AppendLog("Error: Failed to get requested system extraction mode");
+                }
+            }
+
+            return sysMode;
         }
 
         // todo: rename to cobietemplatename
@@ -179,7 +383,6 @@ namespace XplorerPlugins.Cobie.UI
         /// <returns>True on success, false on error.</returns>
         private bool ExportCoBie()
         {
-
             if (!Directory.Exists(TxtFolderName.Text))
             {
                 try

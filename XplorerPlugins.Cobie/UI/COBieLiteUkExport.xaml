@@ -11,7 +11,9 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="51*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -21,62 +23,36 @@
                     <TextBox x:Name="TxtFolderName" Grid.Row="0" Grid.Column="1" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Margin="5"  />
 
                     <Button Grid.Column="1" HorizontalAlignment="Right" Grid.Row="1" Content="Select folder" Height="23" Margin="5"  />
+                    
                     <Label Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Options</Label>
                     <CheckBox Grid.Column="1" Grid.Row="2" x:Name="ChkOpenExcel" Content="Open excel file when export is completed" IsChecked="False" 
                               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" 
                               />
                     <Label Grid.Column="0" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Template</Label>
                     <ComboBox Grid.Column="1" Grid.Row="3"  HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5" SelectedItem="{Binding SelectedTemplate}"  ItemsSource="{Binding Templates}" />
-                    
-                </Grid>
-            </TabItem>
-            <TabItem Header="Exclusions">
-                <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="1*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
 
-                    <Label FontWeight="Bold" Grid.Column="0" Grid.Row="0">Component Sheet Excludes</Label>
-                    <Label FontWeight="Bold" Grid.Column="1" Grid.Row="0">Type Sheet Excludes</Label>
-                    <Label FontWeight="Bold" Grid.Column="2" Grid.Row="0">Assembly Sheet Excludes</Label>
+                    <Label Grid.Column="0" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Export format</Label>
+                    <ComboBox Grid.Column="1" Grid.Row="4"  HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5" SelectedItem="{Binding SelectedExportType}"  ItemsSource="{Binding ExportTypes}" />
 
-                    <Label FontStyle="Italic" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2">Ticked items are excluded</Label>
+                    <Label Grid.Column="0" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Identification</Label>
+                    <CheckBox Grid.Column="1" Grid.Row="5" x:Name="UseExternalIds" Content="Use GUID for Entity identification" IsChecked="False" 
+                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" />
 
-
-                    <ListBox Grid.Row="1" Margin="4" Grid.Column="0" ItemsSource="{Binding ClassFilterComponent}" >
+                    <Label Grid.Column="0" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Identification</Label>
+                    <ListBox Grid.Column="1" Grid.Row="6" ItemsSource="{Binding AvailableSystemModes}" >
                         <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Path=Item.Name}" />
-                            </DataTemplate>
+                            <HierarchicalDataTemplate>
+                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}"/>
+                            </HierarchicalDataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <ListBox Grid.Row="1" Margin="4" Grid.Column="1" ItemsSource="{Binding ClassFilterType}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Path=Item.Name}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <ListBox Grid.Row="1" Margin="4" Grid.Column="2" ItemsSource="{Binding ClassFilterAssembly}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Path=Item.Name}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <Button Grid.Column="2" Grid.Row="2" Margin="4" Click="SetDefaultFilters"  >Set defaults</Button>
-                    
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button Content="Export" Margin="0,0,9.6,10.4" HorizontalAlignment="Right" Width="123" Height="27" VerticalAlignment="Bottom" x:Name="Export" Click="OK_Click" />
+        <Button Content="Export" Margin="0,0,9.6,10.4" HorizontalAlignment="Right" Width="123" Height="27" VerticalAlignment="Bottom" x:Name="btnGenerate" Click="DoExport" />
+        <Grid x:Name="StatusGrid" Margin="10,301,0,0" HorizontalAlignment="Left" Width="218" Height="27" VerticalAlignment="Top" >
+            <ProgressBar x:Name="ProgressBar" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" />
+            <TextBlock Name="StatusMsg" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">Status</TextBlock>
+        </Grid>
     </Grid>
 </Window>
