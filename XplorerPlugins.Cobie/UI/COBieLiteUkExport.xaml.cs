@@ -17,7 +17,6 @@ using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
 using XbimExchanger.IfcToCOBieLiteUK.Conversion;
 using System.Text;
-using NPOI.SS.Formula.Functions;
 using XbimExchanger.IfcToCOBieLiteUK;
 
 
@@ -38,7 +37,7 @@ namespace XplorerPlugins.Cobie.UI
 
         public ObservableCollection<String> ExportTypes { get; set; }
 
-        internal ObservableCollection<SystemModeItem> AvailableSystemModes { get; set; }
+        public ObservableCollection<SystemModeItem> AvailableSystemModes { get; set; }
 
         public string SelectedExportType { get; set; }
         
@@ -72,6 +71,8 @@ namespace XplorerPlugins.Cobie.UI
             }
         }
 
+        public FileInfo ConfigFile { get; private set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
@@ -89,21 +90,46 @@ namespace XplorerPlugins.Cobie.UI
             _parentWindow = mainWindow;
             SetBinding(ModelProperty, new Binding("Model") { Source = mainWindow.DrawingControl, Mode = BindingMode.OneWay });
 
-
             ConfigureFolder();
+        }
+
+        public void CreateDefaultAppConfig(FileInfo configFile)
+        {
+            var asss = System.Reflection.Assembly.GetAssembly(typeof(IfcToCOBieLiteUkExchanger));
+
+            using (var input = asss.GetManifestResourceStream("XbimExchanger.IfcToCOBieLiteUK.COBieAttributes.config"))
+            {
+                if (input != null)
+                    using (var output = configFile.Create())
+                    {
+                        input.CopyTo(output);
+                    }
+            }
+            configFile.Refresh();
         }
 
         private void ConfigureFolder()
         {
+            var asss = System.Reflection.Assembly.GetAssembly(GetType());
+            var pluginDir = new FileInfo(asss.Location).Directory;
+
+            ConfigFile = new FileInfo(Path.Combine(pluginDir.FullName, "COBieAttributesCustom.config"));
+            if (!ConfigFile.Exists)
+            {
+                AppendLog("Creating Config File");
+                CreateDefaultAppConfig(ConfigFile);
+                ConfigFile.Refresh();
+            }
+
+            // defaults to current directory
             var dir = new DirectoryInfo(".");
             if (_parentWindow != null)
             {
                 var openedModel = _parentWindow.GetOpenedModelFileName();
+                // if we have a model then use its direcotry
                 if (!string.IsNullOrEmpty(openedModel))
                 {
-                    dir = new DirectoryInfo(
-                        Path.Combine(
-                            new FileInfo(_parentWindow.GetOpenedModelFileName()).DirectoryName,
+                    dir = new DirectoryInfo(Path.Combine(new FileInfo(_parentWindow.GetOpenedModelFileName()).DirectoryName,
                             "Export"
                             ));
                 }
@@ -123,21 +149,22 @@ namespace XplorerPlugins.Cobie.UI
         
         public ObservableCollection<CheckedListItem<Type>> ClassFilterAssembly { get; set; }
 
-        internal class SystemModeItem
+        public class SystemModeItem
         {
-            internal SystemModeItem(SystemExtractionMode mode)
+            public SystemModeItem(SystemExtractionMode mode)
             {
                 Item = mode;
                 IsSelected = true;
             }
 
-            internal string Name
+            public string Name
             {
                 get { return Item.ToString(); }
             }
 
-            internal SystemExtractionMode Item;
-            internal bool IsSelected;
+            public SystemExtractionMode Item { get; set; }
+        
+            public bool IsSelected { get; set; }
         }
 
         public COBieLiteUkExport()
@@ -183,7 +210,6 @@ namespace XplorerPlugins.Cobie.UI
             }
         }
 
-
         #region Worker Methods
 
         /// <summary>
@@ -219,6 +245,8 @@ namespace XplorerPlugins.Cobie.UI
             }
             catch (Exception ex)
             {
+                Log.Error(string.Format("Error on work completion: {0}", ex.Message), ex);
+
                 var sb = new StringBuilder();
                 var indent = "";
 
@@ -268,15 +296,22 @@ namespace XplorerPlugins.Cobie.UI
             }
         }
 
+        private const int _maxCapacity = 300;
+
+        private Queue<string> _messageQueue = new Queue<string>(_maxCapacity);
+
         /// <summary>
         /// Add string to Text Output List Box 
         /// </summary>
         /// <param name="text"></param>
         private void AppendLog(string text)
         {
-            // todo: restore log
-            //txtOutput.AppendText(text + Environment.NewLine);
-            //txtOutput.ScrollToCaret();
+            _messageQueue.Enqueue(text);
+            while (_messageQueue.Count >= _maxCapacity)
+            {
+                _messageQueue.Dequeue();
+            }
+            LogBlock.Text = string.Join("\r\n", _messageQueue.ToArray());
         }
 
         #endregion
@@ -335,7 +370,7 @@ namespace XplorerPlugins.Cobie.UI
                 ExtId = (UseExternalIds.IsChecked != null && UseExternalIds.IsChecked.Value) ? EntityIdentifierMode.IfcEntityLabels : EntityIdentifierMode.GloballyUniqueIds,
                 SysMode = SetSystemMode(),
                 Filter = new OutPutFilters(), // todo: restore filters // chkBoxNoFilter.Checked ? new OutPutFilters() : _assetfilters,
-                ConfigFile = "", // todo: restore config ConfigFile.FullName,
+                ConfigFile = ConfigFile.FullName,
                 Log = true
             };
 

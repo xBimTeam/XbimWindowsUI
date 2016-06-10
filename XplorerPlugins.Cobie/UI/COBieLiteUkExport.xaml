@@ -1,7 +1,7 @@
 ﻿<Window x:Class="XplorerPlugins.Cobie.UI.COBieLiteUkExport"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="COBie Class Filter" Height="368" Width="746" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="COBie Class Filter" Height="396" Width="672" WindowStartupLocation="CenterOwner">
     <Grid>
         <TabControl Margin="10,10,10,45">
             <TabItem Header="General">
@@ -12,7 +12,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
+
                         <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -23,34 +23,39 @@
                     <TextBox x:Name="TxtFolderName" Grid.Row="0" Grid.Column="1" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Margin="5"  />
 
                     <Button Grid.Column="1" HorizontalAlignment="Right" Grid.Row="1" Content="Select folder" Height="23" Margin="5"  />
-                    
+
                     <Label Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Options</Label>
-                    <CheckBox Grid.Column="1" Grid.Row="2" x:Name="ChkOpenExcel" Content="Open excel file when export is completed" IsChecked="False" 
-                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" 
-                              />
+                    <StackPanel Grid.Column="1" Grid.Row="2" >
+                        <CheckBox x:Name="ChkOpenExcel" Content="Open excel file when export is completed" IsChecked="False" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" />
+                        <CheckBox Grid.Column="1" Grid.Row="5" x:Name="UseExternalIds" Content="Use GUID for Entity identification" IsChecked="False" 
+                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" />
+                    </StackPanel>
+
                     <Label Grid.Column="0" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Template</Label>
                     <ComboBox Grid.Column="1" Grid.Row="3"  HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5" SelectedItem="{Binding SelectedTemplate}"  ItemsSource="{Binding Templates}" />
 
                     <Label Grid.Column="0" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Export format</Label>
                     <ComboBox Grid.Column="1" Grid.Row="4"  HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5" SelectedItem="{Binding SelectedExportType}"  ItemsSource="{Binding ExportTypes}" />
 
-                    <Label Grid.Column="0" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Identification</Label>
-                    <CheckBox Grid.Column="1" Grid.Row="5" x:Name="UseExternalIds" Content="Use GUID for Entity identification" IsChecked="False" 
-                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" />
+                    <Label Grid.Column="0" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">System sources</Label>
 
-                    <Label Grid.Column="0" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">Identification</Label>
-                    <ListBox Grid.Column="1" Grid.Row="6" ItemsSource="{Binding AvailableSystemModes}" >
+                    <ListBox Margin="5" Grid.Column="1" Grid.Row="5" ItemsSource="{Binding AvailableSystemModes}" >
                         <ListBox.ItemTemplate>
                             <HierarchicalDataTemplate>
-                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}"/>
+                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}"/>
                             </HierarchicalDataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </Grid>
             </TabItem>
+            <TabItem Header="Local log">
+                <Grid Background="#FFE5E5E5">
+                    <TextBox Background="Transparent" IsReadOnly="True" Margin="5" x:Name="LogBlock" ></TextBox>
+                </Grid>
+            </TabItem>
         </TabControl>
         <Button Content="Export" Margin="0,0,9.6,10.4" HorizontalAlignment="Right" Width="123" Height="27" VerticalAlignment="Bottom" x:Name="btnGenerate" Click="DoExport" />
-        <Grid x:Name="StatusGrid" Margin="10,301,0,0" HorizontalAlignment="Left" Width="218" Height="27" VerticalAlignment="Top" >
+        <Grid x:Name="StatusGrid" Margin="10,0,0,10" HorizontalAlignment="Left" Width="325" Height="27" VerticalAlignment="Bottom" >
             <ProgressBar x:Name="ProgressBar" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" />
             <TextBlock Name="StatusMsg" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">Status</TextBlock>
         </Grid>
