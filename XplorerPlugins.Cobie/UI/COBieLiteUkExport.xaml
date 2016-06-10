@@ -1,4 +1,4 @@
-﻿<Window x:Class="XplorerPlugins.Cobie.UI.CoBieClassFilter"
+﻿<Window x:Class="XplorerPlugins.Cobie.UI.COBieLiteUkExport"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="COBie Class Filter" Height="368" Width="746" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">

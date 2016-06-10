@@ -11,18 +11,17 @@ using System.Windows.Data;
 using log4net;
 using Xbim.COBie;
 using Xbim.COBie.Serialisers;
-using Xbim.IO;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.IO;
+
 
 namespace XplorerPlugins.Cobie.UI
 {
     /// <summary>
     /// Interaction logic for COBieClassFilter.xaml
     /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.Dialog, PluginWindowActivation.OnMenu, "File/Export/COBie")]
-    public partial class CoBieClassFilter: IXbimXplorerPluginWindow
+    [XplorerUiElement(PluginWindowUiContainerEnum.Dialog, PluginWindowActivation.OnMenu, "File/Export/COBieLiteUk")]
+    public partial class COBieLiteUkExport: IXbimXplorerPluginWindow
     {
         const string UkTemplate = "COBie-UK-2012-template.xls";
         const string UsTemplate = "COBie-US-2_4-template.xls";
@@ -41,13 +40,13 @@ namespace XplorerPlugins.Cobie.UI
         /// 
         /// </summary>
         public static DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(IfcStore), typeof(CoBieClassFilter),
+            DependencyProperty.Register("Model", typeof(IfcStore), typeof(COBieLiteUkExport),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // if any UI event should happen it needs to be specified here
-            var ctrl = d as CoBieClassFilter;
+            var ctrl = d as COBieLiteUkExport;
             if (ctrl == null)
                 return;
             switch (e.Property.Name)
@@ -55,7 +54,6 @@ namespace XplorerPlugins.Cobie.UI
                 case "Model":
                     Debug.WriteLine("Model Updated");
                     ctrl.OnPropertyChanged("Model");
-                    // ModelProperty =
                     break;
                 case "SelectedEntity":
                     break;
@@ -113,7 +111,7 @@ namespace XplorerPlugins.Cobie.UI
         
         public ObservableCollection<CheckedListItem<Type>> ClassFilterAssembly { get; set; }
 
-        public CoBieClassFilter()
+        public COBieLiteUkExport()
         {
             InitializeComponent();
 
