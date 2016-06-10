@@ -90,5 +90,21 @@ namespace XbimXplorer.LogViewer
                 return;
             _mw.UpdateLoggerCounts();
         }
+
+        private void DoCopy(object sender, RoutedEventArgs e)
+        {
+            Copy(null, null);
+        }
+
+        private void ClearInformation(object sender, RoutedEventArgs e)
+        {
+            LoggedEvents.RemoveAll(x => 
+                x.Level == "DEBUG"
+                || x.Level == "INFO"
+                );
+            if (_mw == null)
+                return;
+            _mw.UpdateLoggerCounts();
+        }
     }
 }
