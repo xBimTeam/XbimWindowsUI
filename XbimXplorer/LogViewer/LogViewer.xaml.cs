@@ -26,7 +26,6 @@ namespace XbimXplorer.LogViewer
             WindowTitle = "Information Log";
            
             DataContext = this;
-
         }
 
         public string WindowTitle { get; private set; }
@@ -39,12 +38,12 @@ namespace XbimXplorer.LogViewer
             LoggedEvents = mWindow.LoggedEvents;
         }
 
-        private void Test(object sender, System.Windows.RoutedEventArgs e)
+        private void Test(object sender, RoutedEventArgs e)
         {
             Log.Debug("Test");
         }
 
-        private void Clear(object sender, System.Windows.RoutedEventArgs e)
+        private void Clear(object sender, RoutedEventArgs e)
         {
             LoggedEvents.Clear();
             if (_mw == null)
@@ -52,7 +51,7 @@ namespace XbimXplorer.LogViewer
             _mw.UpdateLoggerCounts();
         }
 
-        private void Copy(object sender, System.Windows.RoutedEventArgs e)
+        private void Copy()
         {
             var sb = new StringBuilder();
             if (View.SelectedItems.Count > 0)
@@ -93,7 +92,7 @@ namespace XbimXplorer.LogViewer
 
         private void DoCopy(object sender, RoutedEventArgs e)
         {
-            Copy(null, null);
+            Copy();
         }
 
         private void ClearInformation(object sender, RoutedEventArgs e)

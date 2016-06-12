@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows;
 using System.Windows.Data;
 using log4net;
 using Xbim.COBie;
-using Xbim.COBie.Serialisers;
 using Xbim.FilterHelper;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
 using XbimExchanger.IfcToCOBieLiteUK.Conversion;
 using System.Text;
+using Xbim.COBieLiteUK;
 using XbimExchanger.IfcToCOBieLiteUK;
 
 
@@ -26,14 +24,11 @@ namespace XplorerPlugins.Cobie.UI
     /// Interaction logic for COBieClassFilter.xaml
     /// </summary>
     [XplorerUiElement(PluginWindowUiContainerEnum.Dialog, PluginWindowActivation.OnMenu, "File/Export/COBieLiteUk")]
-    public partial class COBieLiteUkExport: IXbimXplorerPluginWindow
+    public partial class CobieLiteUkExport: IXbimXplorerPluginWindow
     {
-        private const string UkTemplate = "COBie-UK-2012-template.xls";
-        private const string UsTemplate = "COBie-US-2_4-template.xls";
-
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
 
-        public ObservableCollection<String> Templates { get; set; }
+        public ObservableCollection<string> AvailableTemplates { get; set; }
 
         public ObservableCollection<String> ExportTypes { get; set; }
 
@@ -51,13 +46,13 @@ namespace XplorerPlugins.Cobie.UI
         /// 
         /// </summary>
         public static DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(IfcStore), typeof(COBieLiteUkExport),
+            DependencyProperty.Register("Model", typeof(IfcStore), typeof(CobieLiteUkExport),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // if any UI event should happen it needs to be specified here
-            var ctrl = d as COBieLiteUkExport;
+            var ctrl = d as CobieLiteUkExport;
             if (ctrl == null)
                 return;
             switch (e.Property.Name)
@@ -110,16 +105,6 @@ namespace XplorerPlugins.Cobie.UI
 
         private void ConfigureFolder()
         {
-            var asss = System.Reflection.Assembly.GetAssembly(GetType());
-            var pluginDir = new FileInfo(asss.Location).Directory;
-
-            ConfigFile = new FileInfo(Path.Combine(pluginDir.FullName, "COBieAttributesCustom.config"));
-            if (!ConfigFile.Exists)
-            {
-                AppendLog("Creating Config File");
-                CreateDefaultAppConfig(ConfigFile);
-                ConfigFile.Refresh();
-            }
 
             // defaults to current directory
             var dir = new DirectoryInfo(".");
@@ -129,13 +114,29 @@ namespace XplorerPlugins.Cobie.UI
                 // if we have a model then use its direcotry
                 if (!string.IsNullOrEmpty(openedModel))
                 {
-                    dir = new DirectoryInfo(Path.Combine(new FileInfo(_parentWindow.GetOpenedModelFileName()).DirectoryName,
-                            "Export"
-                            ));
+                    var directoryName = new FileInfo(openedModel).DirectoryName;
+                    if (directoryName != null)
+                        dir = new DirectoryInfo(Path.Combine(directoryName, "Export"));
                 }
             }
             // main folder config
             TxtFolderName.Text = dir.FullName;
+
+            // configure settings for exporter
+            var asss = System.Reflection.Assembly.GetAssembly(GetType());
+            var pluginDir = new FileInfo(asss.Location).Directory;
+            if (pluginDir == null)
+            {
+                Log.ErrorFormat("Failed to get plugin folder.");
+                return;
+            }
+
+            ConfigFile = new FileInfo(Path.Combine(pluginDir.FullName, "COBieAttributesCustom.config"));
+            if (ConfigFile.Exists) 
+                return;
+            AppendLog("Creating Config File");
+            CreateDefaultAppConfig(ConfigFile);
+            ConfigFile.Refresh();
         }
 
         public string SelectedTemplate { get; set; }
@@ -167,15 +168,19 @@ namespace XplorerPlugins.Cobie.UI
             public bool IsSelected { get; set; }
         }
 
-        public COBieLiteUkExport()
+        public CobieLiteUkExport()
         {
             InitializeComponent();
 
             ConfigureFolder();
 
             // prepare templates list
-            Templates = new ObservableCollection<string>() {UkTemplate, UsTemplate};
-            SelectedTemplate = UkTemplate;
+            AvailableTemplates = new ObservableCollection<string>();
+            foreach (var avail in Templates.GetAvalilableTemplateTypes())
+            {
+                AvailableTemplates.Add(avail);
+            }
+            SelectedTemplate = AvailableTemplates.FirstOrDefault();
 
             // prepare export
             ExportTypes = new ObservableCollection<string>() {"XLS", "XLSX", "JSON", "XML", "IFC"};
@@ -263,9 +268,13 @@ namespace XplorerPlugins.Cobie.UI
                 btnGenerate.IsEnabled = true;
             }
             //open file if ticked to open excel
-            if (ChkOpenExcel.IsChecked != null && ChkOpenExcel.IsChecked.Value && args.Result != null && !string.IsNullOrEmpty(args.Result.ToString()))
+            if (ChkOpenExcel.IsChecked != null && ChkOpenExcel.IsChecked.Value && args.Result is IEnumerable<string>)
             {
-                Process.Start(args.Result.ToString());
+                var ien = (IEnumerable<string>) args.Result;
+                foreach (var file in ien)
+                {
+                    Process.Start(file);    
+                }
             }
             StatusGrid.Visibility = Visibility.Collapsed;
         }
@@ -277,7 +286,6 @@ namespace XplorerPlugins.Cobie.UI
         /// <param name="args"></param>
         public void WorkerProgressChanged(object s, ProgressChangedEventArgs args)
         {
-
             //Show message in Text List Box
             if (args.ProgressPercentage == 0)
             {
@@ -296,9 +304,9 @@ namespace XplorerPlugins.Cobie.UI
             }
         }
 
-        private const int _maxCapacity = 300;
+        private const int MaxCapacity = 300;
 
-        private Queue<string> _messageQueue = new Queue<string>(_maxCapacity);
+        private readonly Queue<string> _messageQueue = new Queue<string>(MaxCapacity);
 
         /// <summary>
         /// Add string to Text Output List Box 
@@ -307,7 +315,7 @@ namespace XplorerPlugins.Cobie.UI
         private void AppendLog(string text)
         {
             _messageQueue.Enqueue(text);
-            while (_messageQueue.Count >= _maxCapacity)
+            while (_messageQueue.Count >= MaxCapacity)
             {
                 _messageQueue.Dequeue();
             }
@@ -394,7 +402,7 @@ namespace XplorerPlugins.Cobie.UI
                 {
                     if (!item.IsSelected) 
                         continue;
-                    var mode = (SystemExtractionMode) Enum.Parse(typeof(SystemExtractionMode), item.ToString());
+                    var mode = (SystemExtractionMode) Enum.Parse(typeof(SystemExtractionMode), item.Name);
                     sysMode |= mode;
                 }
                 catch (Exception)
@@ -406,103 +414,6 @@ namespace XplorerPlugins.Cobie.UI
             return sysMode;
         }
 
-        // todo: rename to cobietemplatename
-        private string CoBieTemplate
-        {
-            get { return UkTemplate; }
-        }
-
-        /// <summary>
-        /// Performs the export
-        /// </summary>
-        /// <returns>True on success, false on error.</returns>
-        private bool ExportCoBie()
-        {
-            if (!Directory.Exists(TxtFolderName.Text))
-            {
-                try
-                {
-                    Directory.CreateDirectory(TxtFolderName.Text);
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("Error creating directory. Select a different location.");
-                    return false;
-                }
-            }
-
-            var f = new FileInfo(Path.ChangeExtension(Model.FileName, ".xls"));
-            var outputFile = Path.Combine(TxtFolderName.Text, f.Name);
-
-
-            var context = new COBieContext
-            {
-                TemplateFileName = CoBieTemplate,
-                Model = Model,
-                Exclude = UserFilters
-            };
-
-            // setting culture for thread; the current one will be restored later.
-            CultureInfo exisitingCultureInfo = null;
-            try
-            {
-                var ci = new CultureInfo("en-GB");
-                exisitingCultureInfo = Thread.CurrentThread.CurrentUICulture;
-                Thread.CurrentThread.CurrentUICulture = ci;
-            }
-            catch (Exception ex)
-            {
-                Log.Error("CurrentUICulture could not be set to en-GB.", ex);
-            }
-
-            // actual export code
-            var builder = new COBieBuilder(context);
-            var serialiser = new COBieXLSSerialiser(outputFile, context.TemplateFileName) { Excludes = UserFilters };
-            builder.Export(serialiser);
-
-
-            // restoring culture for thread;
-            try
-            {
-                if (exisitingCultureInfo != null)
-                    Thread.CurrentThread.CurrentUICulture = exisitingCultureInfo;
-                
-            }
-            catch (Exception ex)
-            {
-                Log.Error("CurrentUICulture could not restored.", ex);
-            }
-
-            if (ChkOpenExcel.IsChecked.HasValue && ChkOpenExcel.IsChecked.Value)
-                Process.Start(outputFile);
-            return true;
-        }
-
-        /// <summary>
-        /// set the UserFilters to the required class types to exclude 
-        /// </summary>
-        /// <param name="obsColl">ObservableCollection</param>
-        /// <param name="userExcludeTypes">List of Type, holding user's  list of class types</param>
-        private static void SetExcludes(IEnumerable<CheckedListItem<Type>> obsColl, ICollection<Type> userExcludeTypes)
-        {
-            foreach (var item in obsColl)
-            {
-                if (item.IsChecked)
-                {
-                    if (!userExcludeTypes.Contains(item.Item))
-                        userExcludeTypes.Add(item.Item);
-                }
-                else
-                {
-                    userExcludeTypes.Remove(item.Item);
-                }
-            }
-        }
-
-        private void SetDefaultFilters(object sender, RoutedEventArgs e)
-        {
-            SetDefaultFilters();
-        }
 
         private void SetDefaultFilters()
         {
@@ -520,6 +431,11 @@ namespace XplorerPlugins.Cobie.UI
             InitExcludes(ClassFilterComponent, defaultFilters.ObjectType.Component, UserFilters.ObjectType.Component);
             InitExcludes(ClassFilterType, defaultFilters.ObjectType.Types, UserFilters.ObjectType.Types);
             InitExcludes(ClassFilterAssembly, defaultFilters.ObjectType.Assembly, UserFilters.ObjectType.Assembly);
+        }
+
+        private void ClearLog(object sender, RoutedEventArgs e)
+        {
+            LogBlock.Text = "";
         }
     }
 }

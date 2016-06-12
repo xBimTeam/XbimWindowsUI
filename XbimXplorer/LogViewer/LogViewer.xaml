@@ -21,7 +21,7 @@
                             <Setter Property="Foreground" Value="Gray" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Level}" Value="WARN">
-                            <Setter Property="Foreground" Value="OrangeRed" />
+                            <Setter Property="Foreground" Value="Orange" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Level}" Value="ERROR">
                             <Setter Property="Foreground" Value="Red" />
