@@ -94,9 +94,6 @@
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
                     <MenuItem Header="_Style Reset" Click="SetDefaultModeStyler" />
-                    <MenuItem Header="_Use old styler" Click="SetStylerVersion1" />
-                    <MenuItem Header="Federation style by _Role" Click="SetFederationStylerRole" />
-                    <MenuItem Header="Federation style by _Element type" Click="SetFederationStylerType" />
                 </MenuItem>
 
                 <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
@@ -107,7 +104,7 @@
                 <Separator />
                 <MenuItem Header="_Settings" Click="DisplaySettingsPage" />
             </MenuItem>
-            <MenuItem x:Name="PluginMenu" Header="_Plugins" />
+            <MenuItem x:Name="PluginMenu" Header="_Plugins" Visibility="{Binding PluginMenuVisibility, ElementName=MainWindow}" />
             <MenuItem Header="_Camera">
                 <MenuItem IsCheckable="True" Header="RotateAroundMouseDownPoint" IsChecked="{Binding Viewport.RotateAroundMouseDownPoint, ElementName=DrawingControl}"/>
                 <MenuItem IsCheckable="True" Header="ZoomAroundMouseDownPoint" IsChecked="{Binding Viewport.ZoomAroundMouseDownPoint, ElementName=DrawingControl}"/>

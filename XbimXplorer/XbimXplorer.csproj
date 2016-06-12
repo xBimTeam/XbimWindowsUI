@@ -313,6 +313,10 @@
     <Compile Include="Commands\wdwCommands.xaml.cs">
       <DependentUpon>wdwCommands.xaml</DependentUpon>
     </Compile>
+	<Compile Include="XplorerMainWindow.Logging.xaml.cs">
+      <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XplorerMainWindow.Plugins.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

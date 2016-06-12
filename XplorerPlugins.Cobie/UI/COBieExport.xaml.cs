@@ -21,7 +21,7 @@ namespace XplorerPlugins.Cobie.UI
     /// <summary>
     /// Interaction logic for COBieClassFilter.xaml
     /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.Dialog, PluginWindowActivation.OnMenu, "File/Export/COBie")]
+    [XplorerUiElement(PluginWindowUiContainerEnum.Dialog, PluginWindowActivation.OnMenu, "File/Export/COBie (legacy exporter)")]
     public partial class COBieExport: IXbimXplorerPluginWindow
     {
         const string UkTemplate = "COBie-UK-2012-template.xls";

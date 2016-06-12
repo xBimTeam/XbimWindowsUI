@@ -116,7 +116,7 @@ namespace XplorerPlugins.Cobie.UI
                 {
                     var directoryName = new FileInfo(openedModel).DirectoryName;
                     if (directoryName != null)
-                        dir = new DirectoryInfo(Path.Combine(directoryName, "Export"));
+                        dir = new DirectoryInfo(directoryName);
                 }
             }
             // main folder config
@@ -367,12 +367,14 @@ namespace XplorerPlugins.Cobie.UI
             //    _assetfilters.ApplyRoleFilters(filterRoles);
             //    _assetfilters.FlipResult = chkBoxFlipFilter.Checked;
             //}
+            var v = new FileInfo(Model.FileName);
+            var exportFileName = Path.ChangeExtension(Path.Combine(TxtFolderName.Text, v.Name), "tempExtension");
 
             //set parameters
             var conversionSettings = new CobieConversionParams
             {
                 Source = Model,
-                OutputFileName = Path.ChangeExtension(Path.Combine(TxtFolderName.Text, Model.FileName), "Cobie"),
+                OutputFileName = exportFileName,
                 TemplateFile = SelectedTemplate,
                 ExportFormat = excelType,
                 ExtId = (UseExternalIds.IsChecked != null && UseExternalIds.IsChecked.Value) ? EntityIdentifierMode.IfcEntityLabels : EntityIdentifierMode.GloballyUniqueIds,
@@ -381,10 +383,8 @@ namespace XplorerPlugins.Cobie.UI
                 ConfigFile = ConfigFile.FullName,
                 Log = true
             };
-
             //run worker
-            _cobieWorker.Run(conversionSettings);
-
+            _cobieWorker.Run(conversionSettings);    
         }
 
         /// <summary>
