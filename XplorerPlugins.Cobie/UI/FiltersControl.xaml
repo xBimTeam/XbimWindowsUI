@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="XplorerPlugins.Cobie.UI.FiltersControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="700">
+    <Grid Background="Azure">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0" >
+            <Label Content="Components" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Top"/>
+            <ListView Margin="5,31,5,5" ItemsSource="{Binding ProductFilters}" >
+                <ListBox.ItemTemplate>
+                    <HierarchicalDataTemplate>
+                        <CheckBox Content="{Binding TypeName}" IsChecked="{Binding Export}"/>
+                    </HierarchicalDataTemplate>
+                </ListBox.ItemTemplate>
+            </ListView>
+        </Grid>
+        <Grid Grid.Column="1" >
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <Grid Row="0" >
+                    <Label Content="Types" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Top"/>
+                    <ListView Margin="5,31,5,5">
+                    </ListView>
+                </Grid>
+                <Grid Row="1" >
+                    <Label Content="Defined types" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Top"/>
+                    <ListView Margin="5,31,36.6,4.6">
+                    </ListView>
+                    <Button Content="+" Margin="0,32,4.6,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="27" />
+                    <Button Content="-" Margin="0,56,4.6,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="27" />
+                </Grid>
+            </Grid>
+        </Grid>
+        <Grid Grid.Column="2" >
+            <Label Content="Assemblies" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Top"/>
+            <ListView Margin="5,31,5,5">
+            </ListView>
+        </Grid>
+
+    </Grid>
+</UserControl>

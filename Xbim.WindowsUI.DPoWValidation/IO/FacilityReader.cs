@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xbim.COBieLiteUK;
+﻿using System.IO;
+using Xbim.CobieLiteUk;
 
 namespace Xbim.WindowsUI.DPoWValidation.IO
 {

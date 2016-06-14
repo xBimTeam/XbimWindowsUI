@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Forms;
 using Microsoft.Practices.Unity;
-using Xbim.COBieLiteUK;
+using Xbim.CobieLiteUk;
 using Xbim.WindowsUI.DPoWValidation.Injection;
 using Xbim.WindowsUI.DPoWValidation.Properties;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;

@@ -8,9 +8,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using log4net;
 using Microsoft.Win32;
-using Xbim.CobieLiteUK.Validation;
+using Xbim.CobieLiteUk.Validation;
 using Xbim.Common;
-using Xbim.COBieLiteUK;
+using Xbim.CobieLiteUk;
 using Xbim.Ifc;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.WindowsUI.DPoWValidation.IO;
@@ -47,12 +47,11 @@ namespace XplorerPlugins.DPoW
 
             var res = openFile.ShowDialog();
 
-            if (res.HasValue && res.Value)
-            {
-                var r = new FacilityReader();
-                ReqFacility = r.LoadFacility(openFile.FileName);
-                TestValidation();
-            }
+            if (!res.HasValue || !res.Value) 
+                return;
+            var r = new FacilityReader();
+            ReqFacility = r.LoadFacility(openFile.FileName);
+            TestValidation();
         }
 
         private void SetFacility(Facility facility)

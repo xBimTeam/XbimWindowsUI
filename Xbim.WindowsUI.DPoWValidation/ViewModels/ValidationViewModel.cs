@@ -7,14 +7,14 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Practices.Unity;
-using Xbim.COBieLiteUK;
+using Xbim.CobieLiteUk;
 using Xbim.Ifc;
 using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Extensions;
 using Xbim.WindowsUI.DPoWValidation.Injection;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.Models;
-using cobieUKValidation = Xbim.CobieLiteUK.Validation;
+using cobieUKValidation = Xbim.CobieLiteUk.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {

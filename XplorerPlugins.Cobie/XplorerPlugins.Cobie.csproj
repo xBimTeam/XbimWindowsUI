@@ -81,7 +81,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="Xbim.COBie, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.4.0.0-V029\lib\net40\Xbim.COBie.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.4.0.0-V031\lib\net40\Xbim.COBie.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.CobieExpress, Version=3.2.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -93,15 +93,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLite, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.4.0.0-V029\lib\net40\Xbim.COBieLite.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.4.0.0-V031\lib\net40\Xbim.COBieLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLiteUK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.4.0.0-V029\lib\net40\Xbim.COBieLiteUK.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.4.0.0-V031\lib\net40\Xbim.COBieLiteUK.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.COBieLiteUK.Validation, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.4.0.0-V029\lib\net40\Xbim.COBieLiteUK.Validation.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.4.0.0-V031\lib\net40\Xbim.COBieLiteUK.Validation.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Common, Version=3.2.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -109,11 +109,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.DPoW, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.4.0.0-V029\lib\net40\Xbim.DPoW.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.4.0.0-V031\lib\net40\Xbim.DPoW.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Exchanger, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Exchange.4.0.0-V029\lib\net40\Xbim.Exchanger.dll</HintPath>
+      <HintPath>..\packages\Xbim.Exchange.4.0.0-V031\lib\net40\Xbim.Exchanger.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=3.1.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
@@ -177,6 +177,14 @@
     <Compile Include="UI\COBieExport.xaml.cs">
       <DependentUpon>COBieExport.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\FiltersControl.xaml.cs">
+      <DependentUpon>FiltersControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\FilterTypeConfig.cs" />
+    <Compile Include="UI\FilterViewModel.cs" />
+    <Compile Include="UI\Window1.xaml.cs">
+      <DependentUpon>Window1.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExportTypeEnum.cs" />
@@ -221,6 +229,14 @@
     <Page Include="UI\COBieExport.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\FiltersControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Window1.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

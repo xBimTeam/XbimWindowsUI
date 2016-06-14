@@ -9,12 +9,12 @@ using System.Windows;
 using System.Windows.Data;
 using log4net;
 using Xbim.COBie;
-using Xbim.FilterHelper;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
 using XbimExchanger.IfcToCOBieLiteUK.Conversion;
 using System.Text;
-using Xbim.COBieLiteUK;
+using Xbim.CobieLiteUk;
+using Xbim.CobieLiteUk.FilterHelper;
 using XbimExchanger.IfcToCOBieLiteUK;
 
 
@@ -436,6 +436,12 @@ namespace XplorerPlugins.Cobie.UI
         private void ClearLog(object sender, RoutedEventArgs e)
         {
             LogBlock.Text = "";
+        }
+
+        private void Tests(object sender, RoutedEventArgs e)
+        {
+            var w = new Window1();
+            w.Show();
         }
     }
 }
