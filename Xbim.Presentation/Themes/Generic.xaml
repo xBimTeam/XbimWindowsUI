@@ -20,7 +20,6 @@
                                    ViewCubeBackText="L"
                                    Background="{TemplateBinding Background}"
                                    >
-
                         <helixToolkit:HelixViewport3D.DefaultCamera>
                             <PerspectiveCamera Position="100,-100,30" LookDirection="-100,100,-30" UpDirection="0,0,1" FieldOfView="61" NearPlaneDistance="125"/>
                         </helixToolkit:HelixViewport3D.DefaultCamera>

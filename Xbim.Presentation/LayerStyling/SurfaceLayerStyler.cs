@@ -48,6 +48,8 @@ namespace Xbim.Presentation.LayerStyling
                 }
                 else
                     ifcT = model.Metadata.ExpressType(excludedT);
+                if (ifcT == null) // it could be a type that does not belong in the model schema
+                    continue;
                 foreach (var exIfcType in ifcT.NonAbstractSubTypes)
                 {
                     excludedTypes.Add(exIfcType.TypeId);

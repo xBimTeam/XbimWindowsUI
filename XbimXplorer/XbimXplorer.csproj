@@ -286,6 +286,17 @@
     <Compile Include="Dialogs\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ExcludedTypes\ExpressTypeExpander.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ExcludedTypes\ITreeElement.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ExcludedTypes\ObjectViewModel.cs" />
+    <Compile Include="Dialogs\ExcludedTypes\StylerConfiguration.xaml.cs">
+      <DependentUpon>StylerConfiguration.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ExcludedTypes\VirtualToggleButton.cs" />
     <Compile Include="Dialogs\ExportWindow.xaml.cs">
       <DependentUpon>ExportWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -313,7 +324,7 @@
     <Compile Include="Commands\wdwCommands.xaml.cs">
       <DependentUpon>wdwCommands.xaml</DependentUpon>
     </Compile>
-	<Compile Include="XplorerMainWindow.Logging.xaml.cs">
+    <Compile Include="XplorerMainWindow.Logging.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -324,6 +335,10 @@
     <Page Include="Dialogs\AboutWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ExcludedTypes\StylerConfiguration.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\ExportWindow.xaml">
       <SubType>Designer</SubType>

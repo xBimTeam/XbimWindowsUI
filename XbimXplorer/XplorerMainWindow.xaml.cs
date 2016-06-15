@@ -34,6 +34,7 @@ using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.Dialogs;
+using XbimXplorer.Dialogs.ExcludedTypes;
 using XbimXplorer.LogViewer;
 using XbimXplorer.Properties;
 
@@ -809,6 +810,16 @@ namespace XbimXplorer
             var entity = Model.Instances[isLabel];
             if (entity != null)
                 SelectedItem = entity;
+        }
+
+        private void ConfigureStyler(object sender, RoutedEventArgs e)
+        {
+            var c = new SurfaceLayerStylerConfiguration(Model);
+            c.ShowDialog();
+            if (!c.MustUpdate) 
+                return;
+            DrawingControl.ExcludedTypes = c.ExcludedTypes;
+            DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
         }
     }
 }

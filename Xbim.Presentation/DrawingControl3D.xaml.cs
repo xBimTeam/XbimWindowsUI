@@ -220,9 +220,9 @@ namespace Xbim.Presentation
             ClipHandler = null;
         }
 
-
         /// <summary>
-        /// The list of types that the engine will not consider in the generation of the scene
+        /// The list of types that the engine will not consider in the generation of the scene, the exclusion code needs to be correctly implemented in the 
+        /// configued ILayerStyler for the exclusion to work.
         /// </summary>
         public List<Type> ExcludedTypes;
 
