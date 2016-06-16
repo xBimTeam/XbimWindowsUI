@@ -833,6 +833,14 @@ namespace Xbim.Presentation
             d3D.HighlighSelected(newVal);
         }
 
+        [Flags]
+        public enum ComponentSelectionMode
+        {
+            None = 0,
+            IsDecomposedBy = 1,
+            All = 1
+        }
+
         /// <summary>
         /// Executed when a new entity is selected
         /// </summary>
@@ -845,14 +853,12 @@ namespace Xbim.Presentation
             {
                 foreach (var item in Selection)
                 {
-                    var mod = ModelPositions[item.Model];
-                    if (mod != null)
-                        m.AddElements(item, mod.Transform);
+                    AddElement(m, item);
                 }
             }
-            else if (newVal != null)
+            else if (newVal != null) // single element selection
             {
-                m.AddElements(newVal, ModelPositions[newVal.Model].Transform);
+                AddElement(m, newVal);
             }
 
             // 2. then determine how to highlight it
@@ -929,6 +935,28 @@ namespace Xbim.Presentation
                     ShowAll();
                 }
                 Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
+            }
+        }
+
+        public ComponentSelectionMode ComponentSelectionDisplay = ComponentSelectionMode.All;
+        
+        private void AddElement(MeshGeometry3D m, IPersistEntity item)
+        {
+            var mod = ModelPositions[item.Model];
+            if (mod != null)
+                m.AddElements(item, mod.Transform);
+            if (ComponentSelectionDisplay == ComponentSelectionMode.None)
+                return;
+            if ((ComponentSelectionDisplay & ComponentSelectionMode.IsDecomposedBy) ==
+                ComponentSelectionMode.IsDecomposedBy && item is IIfcObjectDefinition)
+            {
+                foreach (var relation in ((IIfcObjectDefinition)item).IsDecomposedBy)
+                {
+                    foreach (var relObject in relation.RelatedObjects)
+                    {
+                        AddElement(m, relObject);
+                    }
+                }
             }
         }
 
