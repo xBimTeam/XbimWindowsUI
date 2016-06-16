@@ -81,5 +81,13 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
         {
             Close();
         }
+
+        public void InitialiseSettings(List<Type> excludedTypes)
+        {
+            foreach (var item in TypesTree.Items.OfType<ObjectViewModel>())
+            {
+                item.InitialiseSettings(excludedTypes);
+            }            
+        }
     }
 }

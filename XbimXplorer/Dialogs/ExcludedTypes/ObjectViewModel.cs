@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Xbim.Ifc;
@@ -162,5 +163,21 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
+
+        public void InitialiseSettings(List<Type> excludedTypes)
+        {
+            var th = _object as ExpressTypeExpander;
+            if (th == null)
+                return;
+            if (excludedTypes.Contains(th.ExpressType.Type))
+                IsChecked = false;
+            else
+            {
+                foreach (var child in Children)
+                {
+                    child.InitialiseSettings(excludedTypes);
+                }
+            }
+        }
     }
 }

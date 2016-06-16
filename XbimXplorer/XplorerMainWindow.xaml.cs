@@ -815,6 +815,8 @@ namespace XbimXplorer
         private void ConfigureStyler(object sender, RoutedEventArgs e)
         {
             var c = new SurfaceLayerStylerConfiguration(Model);
+            if (DrawingControl.ExcludedTypes != null)
+                c.InitialiseSettings(DrawingControl.ExcludedTypes);
             c.ShowDialog();
             if (!c.MustUpdate) 
                 return;
