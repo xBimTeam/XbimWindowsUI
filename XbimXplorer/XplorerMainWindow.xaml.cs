@@ -21,6 +21,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using log4net;
 using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
@@ -43,29 +44,24 @@ using XbimXplorer.Properties;
 namespace XbimXplorer
 {
     /// <summary>
-    ///   Interaction logic for Window1.xaml
+    /// Interaction logic for XplorerMainWindow
     /// </summary>
     public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
         private BackgroundWorker _worker;
         /// <summary>
-        /// 
+        /// Used for the creation of a new federation file
         /// </summary>
         public static RoutedCommand CreateFederationCmd = new RoutedCommand();
         /// <summary>
-        /// 
+        /// Edit the current federation environment
         /// </summary>
         public static RoutedCommand EditFederationCmd = new RoutedCommand();
-        
         /// <summary>
-        /// 
+        /// Currently supoorts the export function for Wexbim
         /// </summary>
         public static RoutedCommand OpenExportWindowCmd = new RoutedCommand();
-        /// <summary>
-        /// 
-        /// </summary>
-        public static RoutedCommand ExportCoBieCmd = new RoutedCommand();
-     
+
         private string _temporaryXbimFileName;
 
         private string _openedModelFileName;
@@ -83,16 +79,15 @@ namespace XbimXplorer
         private void SetOpenedModelFileName(string ifcFilename)
         {
             _openedModelFileName = ifcFilename;
-
+            // try to update the window title through a delegate for multithreading
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                // Do your work
                 Title = string.IsNullOrEmpty(ifcFilename)
                     ? "Xbim Xplorer" :
                     "Xbim Xplorer - [" + ifcFilename + "]";
             }));
         }
-        
+
         public XplorerMainWindow(bool preventPluginLoad = false)
         {
             InitializeComponent();
@@ -209,7 +204,7 @@ namespace XbimXplorer
         }
 
 
-        private void OpenIfcFile(object s, DoWorkEventArgs args)
+        private void OpenAcceptableExtension(object s, DoWorkEventArgs args)
         {
             var worker = s as BackgroundWorker;
             var ifcFilename = args.Argument as string;
@@ -294,11 +289,9 @@ namespace XbimXplorer
 
             // there's no going back; if it fails after this point the current file should be closed anyway
             CloseAndDeleteTemporaryFiles();
-
             SetOpenedModelFileName(modelFileName.ToLower());
-
             ProgressStatusBar.Visibility = Visibility.Visible;
-            CreateWorker();
+            SetWorkerForFileLoad();
 
             var ext = fInfo.Extension.ToLower();
             switch (ext)
@@ -309,7 +302,6 @@ namespace XbimXplorer
                 case ".zip": //it is a zip file containing xbim or ifc File
                 case ".xbimf":
                 case ".xbim":
-                    _worker.DoWork += OpenIfcFile;
                     _worker.RunWorkerAsync(modelFileName);
                     break;              
                 default:
@@ -337,60 +329,67 @@ namespace XbimXplorer
             }
         }
 
-        private void CreateWorker()
+        private void SetWorkerForFileLoad()
         {
             _worker = new BackgroundWorker
             {
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
             };
-            _worker.ProgressChanged += delegate(object s, ProgressChangedEventArgs args)
-            {
-                if (args.ProgressPercentage < 0 || args.ProgressPercentage > 100) 
-                    return;
-                ProgressBar.Value = args.ProgressPercentage;
-                StatusMsg.Text = (string) args.UserState;
-            };
+            _worker.ProgressChanged += OnProgressChanged;
+            _worker.DoWork += OpenAcceptableExtension;
+            _worker.RunWorkerCompleted += FileLoadCompleted;
+        }
 
-            _worker.RunWorkerCompleted += delegate(object s, RunWorkerCompletedEventArgs args)
+        private void FileLoadCompleted(object s, RunWorkerCompletedEventArgs args)
+        {
+            if (args.Result is IfcStore) //all ok
             {
-                if (args.Result is IfcStore) //all ok
+                ModelProvider.ObjectInstance = args.Result; //this Triggers the event to load the model into the views 
+                // PropertiesControl.Model = (XbimModel)args.Result; // // done thtough binding in xaml
+                ModelProvider.Refresh();
+                ProgressBar.Value = 0;
+                StatusMsg.Text = "Ready";
+                AddRecentFile();
+            }
+            else //we have a problem
+            {
+                var errMsg = args.Result as string;
+                if (!string.IsNullOrEmpty(errMsg))
+                    MessageBox.Show(this, errMsg, "Error Opening File", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.None);
+                var exception = args.Result as Exception;
+                if (exception != null)
                 {
-                    ModelProvider.ObjectInstance = args.Result; //this Triggers the event to load the model into the views 
-                    // PropertiesControl.Model = (XbimModel)args.Result; // // done thtough binding in xaml
-                    ModelProvider.Refresh();
-                    ProgressBar.Value = 0;
-                    StatusMsg.Text = "Ready";
-                    AddRecentFile();
-                }
-                else //we have a problem
-                {
-                    var errMsg = args.Result as string;
-                    if (!string.IsNullOrEmpty(errMsg))
-                        MessageBox.Show(this, errMsg, "Error Opening File",
-                                        MessageBoxButton.OK, MessageBoxImage.Error,
-                                        MessageBoxResult.None, MessageBoxOptions.None);
-                    var exception = args.Result as Exception;
-                    if (exception != null)
+                    var sb = new StringBuilder();
+
+                    var indent = "";
+                    while (exception != null)
                     {
-                        var sb = new StringBuilder();
-                        
-                        var indent = "";
-                        while (exception != null)
-                        {
-                            sb.AppendFormat("{0}{1}\n", indent, exception.Message);
-                            exception = exception.InnerException;
-                            indent += "\t";
-                        }
-                        MessageBox.Show(this, sb.ToString(), "Error Opening Ifc File",
-                                        MessageBoxButton.OK, MessageBoxImage.Error,
-                                        MessageBoxResult.None, MessageBoxOptions.None);
+                        sb.AppendFormat("{0}{1}\n", indent, exception.Message);
+                        exception = exception.InnerException;
+                        indent += "\t";
                     }
-                    ProgressBar.Value = 0;
-                    StatusMsg.Text = "Error/Ready";
+                    MessageBox.Show(this, sb.ToString(), "Error Opening Ifc File", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.None);
                 }
-                FireLoadingComplete(s, args);
-            };
+                ProgressBar.Value = 0;
+                StatusMsg.Text = "Error/Ready";
+            }
+            FireLoadingComplete(s, args);
+        }
+
+        private void OnProgressChanged(object s, ProgressChangedEventArgs args)
+        {
+            if (args.ProgressPercentage < 0 || args.ProgressPercentage > 100)
+                return;
+
+            Application.Current.Dispatcher.BeginInvoke(
+                DispatcherPriority.Send,
+                new Action(() =>
+                {
+                    ProgressBar.Value = args.ProgressPercentage;
+                    StatusMsg.Text = (string) args.UserState;
+                }));
+
         }
 
         private void dlg_FileSaveAs(object sender, CancelEventArgs e)
@@ -486,7 +485,8 @@ namespace XbimXplorer
                     ModelProvider.ObjectInstance = null;
                     ModelProvider.Refresh();
                 }
-                SetDefaultModeStyler(null, null);
+                if (!(DrawingControl.DefaultLayerStyler is SurfaceLayerStyler))
+                    SetDefaultModeStyler(null, null);
             }
             finally
             {
@@ -740,21 +740,29 @@ namespace XbimXplorer
         private void RecentFileClick(object sender, RoutedEventArgs e)
         {
             var obMenuItem = e.OriginalSource as MenuItem;
-            if (obMenuItem != null)
+            if (obMenuItem == null) 
+                return;
+            var fileName = obMenuItem.Header.ToString();
+            if (!File.Exists(fileName))
             {
-                var fileName = obMenuItem.Header.ToString();
-                if (!File.Exists(fileName))
-                {
-                    return;
-                }
-                LoadAnyModel(fileName);
+                return;
             }
+            LoadAnyModel(fileName);
         }
 
         private void SetDefaultModeStyler(object sender, RoutedEventArgs e)
         {           
             DrawingControl.DefaultLayerStyler = new SurfaceLayerStyler();
+            ConnectStylerFeedBack();
             DrawingControl.ReloadModel();
+        }
+
+        private void ConnectStylerFeedBack()
+        {
+            if (DrawingControl.DefaultLayerStyler is IProgressiveLayerStyler)
+            {
+                ((IProgressiveLayerStyler)DrawingControl.DefaultLayerStyler).ProgressChanged += OnProgressChanged;
+            }
         }
 
         DrawingControl3D IXbimXplorerPluginMasterWindow.DrawingControl
@@ -792,13 +800,14 @@ namespace XbimXplorer
         }
 
         /// <summary>
-        /// this event is run after the window is fully loaded.
+        /// this event is run after the window is fully rendered.
         /// </summary>
         private void RenderedEvents(object sender, EventArgs e)
         {
             // command line arg can prevent plugin loading
             if (Settings.Default.PluginStartupLoad && !_preventPluginLoad)
                 RefreshPlugins();
+            ConnectStylerFeedBack();
         }
         
         private void EntityLabel_KeyDown()

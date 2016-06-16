@@ -1225,8 +1225,17 @@ namespace Xbim.Presentation
         }
 
         public XbimModelPositioningCollection ModelPositions;
-        
-        public ILayerStyler DefaultLayerStyler;
+
+        private ILayerStyler _defaultLayerStyler;
+
+        public ILayerStyler DefaultLayerStyler
+        {
+            get { return _defaultLayerStyler; }
+            set
+            {
+                _defaultLayerStyler = value;
+            }
+        }
 
         private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {

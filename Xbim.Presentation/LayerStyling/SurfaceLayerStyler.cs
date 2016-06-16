@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -13,8 +14,10 @@ using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Presentation.LayerStyling
 {
-    public class SurfaceLayerStyler : ILayerStyler
+    public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
     {
+        public event ProgressChangedEventHandler ProgressChanged;
+
         // ReSharper disable once CollectionNeverUpdated.Local
         readonly XbimColourMap _colourMap = new XbimColourMap();
 
@@ -73,7 +76,6 @@ namespace Xbim.Presentation.LayerStyling
                    
                     foreach (var style in sstyles)
                     {
-                        
                         var sStyle = model.Instances[style] as IIfcSurfaceStyle;
                         var texture = XbimTexture.Create(sStyle);
                         
@@ -96,10 +98,21 @@ namespace Xbim.Presentation.LayerStyling
                         .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded
                                     &&
                                     !excludedTypes.Contains(s.IfcTypeId));
+
+                    var tot = shapeInstances.Count();
+                    var prog = 0;
+                    var lastProgress = 0;
+
                     // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
                     foreach (var shapeInstance in shapeInstances)
                     {
+                        var currentProgress = 100 * prog++ / tot;
+                        if (currentProgress != lastProgress && ProgressChanged != null)
+                        {
+                            ProgressChanged(this, new ProgressChangedEventArgs(currentProgress, "Creating visualisation"));
+                            lastProgress = currentProgress;
+                        }
 
                         var styleId = shapeInstance.StyleLabel > 0
                             ? shapeInstance.StyleLabel
@@ -208,6 +221,10 @@ namespace Xbim.Presentation.LayerStyling
                         //else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
                     }
                 }
+            }
+            if (ProgressChanged != null)
+            {
+                ProgressChanged(this, new ProgressChangedEventArgs(0, "Ready"));
             }
             return scene;
         }

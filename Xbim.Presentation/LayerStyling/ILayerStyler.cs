@@ -12,4 +12,10 @@ namespace Xbim.Presentation.LayerStyling
         XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes ,List<Type> exclude = null);
         void SetFederationEnvironment(IReferencedModel refModel);
     }
+
+    public interface IProgressiveLayerStyler
+    {
+        event System.ComponentModel.ProgressChangedEventHandler ProgressChanged;
+    }
+
 }
