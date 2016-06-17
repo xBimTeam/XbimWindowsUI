@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using XbimGeometry.Interfaces;
@@ -15,6 +14,11 @@ namespace Xbim.Presentation.LayerStylingV2
 {
     public class SurfaceLayerStyler : ILayerStylerV2
     {
+        /// <summary>
+        /// Looking into efficiency of WPF loading loops it looks like the styler is much more efficient when it ignores the instancing of maps 
+        /// and merges new geometries in the large meshes instead. 
+        /// </summary>
+        public bool UseMaps = false;
 
         /// <summary>
         /// This version uses the new Geometry representation
@@ -87,7 +91,7 @@ namespace Xbim.Presentation.LayerStylingV2
                 //GET THE ACTUAL GEOMETRY 
                 MeshGeometry3D wpfMesh;
                 //see if we have already read it
-                if (repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
+                if (UseMaps && repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
                 {
                     var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
                     mg.SetValue(FrameworkElement.TagProperty,
@@ -103,8 +107,8 @@ namespace Xbim.Presentation.LayerStylingV2
                 else //we need to get the shape geometry
                 {
                     IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                    
-                    if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
+
+                    if (UseMaps && shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                     {
                         wpfMesh = new MeshGeometry3D();
                         switch ((XbimGeometryType)shapeGeom.Format)
