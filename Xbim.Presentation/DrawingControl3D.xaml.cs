@@ -1322,6 +1322,9 @@ namespace Xbim.Presentation
             //build the geometric scene and render as we go
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 
+            var timer = new Stopwatch();
+            timer.Start();
+            
             // loading the main model
             var geometrySupportLevel = model.GeometrySupportLevel;
             if (LayerStylerForceVersion1 || geometrySupportLevel == 1)
@@ -1336,10 +1339,15 @@ namespace Xbim.Presentation
                 if (scene.Layers.Any())
                     Scenes.Add(scene);
             }
+            timer.Stop();
+            Log.DebugFormat("Model scene: {0} seconds", timer.Elapsed.TotalSeconds.ToString("F3"));
             // loading all referenced models.
             foreach (var refModel in model.ReferencedModels)
             {
+                timer.Restart();
                 LoadReferencedModel(refModel);
+                timer.Stop();
+                Log.DebugFormat("Refmodel scene: {0} seconds.", timer.Elapsed.TotalSeconds.ToString("F3"));
             }
             RecalculateView(options);
         }
@@ -1472,9 +1480,6 @@ namespace Xbim.Presentation
             // spaces are not excluded from the model to make the ShowSpaces property meaningful
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             scene.LayerColourMap.SetProductTypeColourMap();
-
-            var timer = new Stopwatch();
-            timer.Start();
 
             var project = model.IfcProject;
             if (project == null)
@@ -1633,7 +1638,6 @@ namespace Xbim.Presentation
             }
             if (_hideAfterLoad != null)
                 Dispatcher.BeginInvoke(new Action(() => Hide(_hideAfterLoad)), DispatcherPriority.Background);
-            Log.DebugFormat("Time to build scene: {0} seconds", timer.Elapsed.TotalSeconds.ToString("F3"));
             return scene;
         }
 
