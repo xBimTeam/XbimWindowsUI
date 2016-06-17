@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
+using log4net;
 using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
@@ -16,7 +17,7 @@ namespace Xbim.Presentation.LayerStyling
 {
     public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
     {
-        // private static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
+        private static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
 
         public event ProgressChangedEventHandler ProgressChanged;
 
@@ -64,7 +65,8 @@ namespace Xbim.Presentation.LayerStyling
             }
             
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
-
+            var timer = new Stopwatch();
+            timer.Start();
             using (var geomStore = model.GeometryStore)
             {
                 using (var geomReader = geomStore.BeginRead())
@@ -96,8 +98,7 @@ namespace Xbim.Presentation.LayerStyling
                     var prog = 0;
                     var lastProgress = 0;
 
-                    var timer = new Stopwatch();
-                    timer.Start();
+                    
 
                     // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
@@ -209,6 +210,8 @@ namespace Xbim.Presentation.LayerStyling
                     }
                 }
             }
+            Log.DebugFormat("Time to load visual components: {0} seconds", timer.Elapsed.TotalSeconds.ToString("F3"));
+            
             if (ProgressChanged != null)
             {
                 ProgressChanged(this, new ProgressChangedEventArgs(0, "Ready"));
