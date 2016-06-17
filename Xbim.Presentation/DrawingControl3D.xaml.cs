@@ -853,6 +853,14 @@ namespace Xbim.Presentation
             d3D.HighlighSelected(newVal);
         }
 
+        [Flags]
+        public enum ComponentSelectionMode
+        {
+            None = 0,
+            IsDecomposedBy = 1,
+            All = 1
+        }
+
         /// <summary>
         /// Executed when a new entity is selected
         /// </summary>
@@ -865,12 +873,12 @@ namespace Xbim.Presentation
             {
                 foreach (var item in Selection)
                 {
-                    m.AddElements(item, ModelPositions[item.ModelOf].Transfrom);
+                    AddElement(m, item);
                 }
             }
-            else if (newVal != null)
+            else if (newVal != null) // single element selection
             {
-                m.AddElements(newVal, ModelPositions[newVal.ModelOf].Transfrom);
+                AddElement(m, newVal);
             }
 
             // 2. then determine how to highlight it
@@ -947,6 +955,28 @@ namespace Xbim.Presentation
                     ShowAll();
                 }
                 Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
+            }
+        }
+
+        public ComponentSelectionMode ComponentSelectionDisplay = ComponentSelectionMode.All;
+        
+        private void AddElement(MeshGeometry3D m, IPersistIfcEntity item)
+        {
+            var mod = ModelPositions[item.ModelOf];
+            if (mod != null)
+                m.AddElements(item, mod.Transfrom);
+            if (ComponentSelectionDisplay == ComponentSelectionMode.None)
+                return;
+            if ((ComponentSelectionDisplay & ComponentSelectionMode.IsDecomposedBy) ==
+                ComponentSelectionMode.IsDecomposedBy && item is IfcObjectDefinition)
+            {
+                foreach (var relation in ((IfcObjectDefinition)item).IsDecomposedBy)
+                {
+                    foreach (var relObject in relation.RelatedObjects)
+                    {
+                        AddElement(m, relObject);
+                    }
+                }
             }
         }
 
