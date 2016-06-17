@@ -1558,16 +1558,21 @@ namespace Xbim.Presentation
                             var sublayerName = shapeInstance.StyleLabel.ToString();
                             XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial> sub;
                             if (layer.SubLayers.Contains(sublayerName))
+                            {
                                 sub = layer.SubLayers[sublayerName];
+                            }
                             else
                             {
                                 var style = model.InstancesLocal[shapeInstance.StyleLabel] as IfcSurfaceStyle;
-                                sub = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, style) { Name = sublayerName };
+                                sub = new XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>(model, style)
+                                {
+                                    Name = sublayerName
+                                };
                                 layer.SubLayers.Add(sub);
+                                sub.Visible.BeginUpdate();
+                                ((WpfMeshGeometry3D)sub.Visible).WpfModel.SetValue(TagProperty, (WpfMeshGeometry3D)sub.Visible);
                             }
                             tgt = ((WpfMeshGeometry3D) sub.Visible);
-                            tgt.BeginUpdate();
-                            tgt.WpfModel.SetValue(TagProperty, tgt);
                         }
 
                         IXbimShapeGeometryData shapeGeom =
@@ -1599,10 +1604,11 @@ namespace Xbim.Presentation
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
-                        if (tgt != targetMergeMeshByStyle)
-                        {
-                            tgt.EndUpdate();
-                        }
+                       
+                    }
+                    foreach (var subLayer in layer.SubLayers)
+                    {
+                        subLayer.Visible.EndUpdate();
                     }
                     targetMergeMeshByStyle.EndUpdate();
 

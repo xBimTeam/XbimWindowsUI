@@ -187,7 +187,6 @@
                                    Width="Auto" 
                                    Height="Auto" 
                                    MouseDoubleClick="SpatialControl_MouseDoubleClick"
-                                   ModelOpacity="0.75"
                                    >
                                 <xbim:DrawingControl3D.Background>
                                     <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
