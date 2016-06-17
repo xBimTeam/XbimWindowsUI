@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common;
@@ -16,10 +16,14 @@ namespace Xbim.Presentation.LayerStyling
 {
     public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
     {
+        // private static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
+
         public event ProgressChangedEventHandler ProgressChanged;
 
         // ReSharper disable once CollectionNeverUpdated.Local
         readonly XbimColourMap _colourMap = new XbimColourMap();
+
+        public bool UseMaps = false;
 
         /// <summary>
         /// This version uses the new Geometry representation
@@ -58,39 +62,28 @@ namespace Xbim.Presentation.LayerStyling
                     excludedTypes.Add(exIfcType.TypeId);
                 }
             }
-
+            
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
 
             using (var geomStore = model.GeometryStore)
             {
                 using (var geomReader = geomStore.BeginRead())
                 {
-                    //get a list of all the unique styles
-                    var styles = new Dictionary<int, WpfMaterial>();
+                    var materialsByStyleId = new Dictionary<int, WpfMaterial>();
                     var repeatedShapeGeometries = new Dictionary<int, MeshGeometry3D>();
-                    var styleMeshSets = new Dictionary<int, WpfMeshGeometry3D>();
+                    var meshesByStyleId = new Dictionary<int, WpfMeshGeometry3D>();
                     var tmpOpaquesGroup = new Model3DGroup();
                     var tmpTransparentsGroup = new Model3DGroup();
 
-                    var sstyles = geomReader.StyleIds;
-                   
-                    foreach (var style in sstyles)
+                    //get a list of all the unique style ids then build their style and mesh
+                    var sstyleIds = geomReader.StyleIds;
+                    foreach (var styleId in sstyleIds)
                     {
-                        var sStyle = model.Instances[style] as IIfcSurfaceStyle;
-                        var texture = XbimTexture.Create(sStyle);
+                        var wpfMaterial = GetWpfMaterial(model, styleId);
+                        materialsByStyleId.Add(styleId, wpfMaterial);
                         
-                        texture.DefinedObjectId = style;
-                        var wpfMaterial = new WpfMaterial();
-                        wpfMaterial.CreateMaterial(texture);
-                        styles.Add(style, wpfMaterial);
-                        var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
-                        mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
-                        styleMeshSets.Add(style, mg);
-                        mg.BeginUpdate();
-                        if (texture.IsTransparent)
-                            tmpTransparentsGroup.Children.Add(mg);
-                        else
-                            tmpOpaquesGroup.Children.Add(mg);
+                        var mg = GetNewStyleMesh(wpfMaterial, tmpTransparentsGroup, tmpOpaquesGroup);
+                        meshesByStyleId.Add(styleId, mg);
                     }
 
                    
@@ -103,44 +96,44 @@ namespace Xbim.Presentation.LayerStyling
                     var prog = 0;
                     var lastProgress = 0;
 
+                    var timer = new Stopwatch();
+                    timer.Start();
+
                     // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
                     foreach (var shapeInstance in shapeInstances)
                     {
+                        // logging 
                         var currentProgress = 100 * prog++ / tot;
                         if (currentProgress != lastProgress && ProgressChanged != null)
                         {
-                            ProgressChanged(this, new ProgressChangedEventArgs(currentProgress, "Creating visualisation"));
+                            ProgressChanged(this, new ProgressChangedEventArgs(currentProgress, "Creating visuals"));
                             lastProgress = currentProgress;
+                            // Log.DebugFormat("Progress to {0}% time: {1} seconds", lastProgress,  timer.Elapsed.TotalSeconds.ToString("F3"));
+                            // Debug.Print("Progress to {0}% time:\t{1} seconds", lastProgress, timer.Elapsed.TotalSeconds.ToString("F3"));
                         }
 
+                        // work out style
                         var styleId = shapeInstance.StyleLabel > 0
                             ? shapeInstance.StyleLabel
                             : shapeInstance.IfcTypeId*-1;
-                        WpfMaterial material;
-                        if (!styles.TryGetValue(styleId, out material)) //get the ifc style and build it
+                        
+                        if (!materialsByStyleId.ContainsKey(styleId)) 
                         {
-                            var prodType = model.Metadata.ExpressType(shapeInstance.IfcTypeId);
-                            var v = _colourMap[prodType.Name];
-                            var texture = XbimTexture.Create(v);
-                            material = new WpfMaterial();
-                            material.CreateMaterial(texture);
-                            styles.Add(styleId,material);
-                            var mg = new WpfMeshGeometry3D(material, material);
-                            mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
-                            styleMeshSets.Add(styleId, mg);
-                            mg.BeginUpdate();
-                            if (texture.IsTransparent)
-                                tmpTransparentsGroup.Children.Add(mg);
-                            else
-                                tmpOpaquesGroup.Children.Add(mg);
+                            // if the style is not available we build one by ExpressType
+                            var material2 = GetWpfMaterialByType(model, shapeInstance.IfcTypeId);
+                            materialsByStyleId.Add(styleId, material2);
+
+                            var mg = GetNewStyleMesh(material2, tmpTransparentsGroup, tmpOpaquesGroup);
+                            meshesByStyleId.Add(styleId, mg);
                         }
+
                         //GET THE ACTUAL GEOMETRY 
                         MeshGeometry3D wpfMesh;
                         //see if we have already read it
-                        if (repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
+                        if (UseMaps && repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
                         {
-                            var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
+                            var mg = new GeometryModel3D(wpfMesh, materialsByStyleId[styleId]);
                             mg.SetValue(FrameworkElement.TagProperty,
                                 new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                             mg.BackMaterial = mg.Material;
@@ -148,7 +141,7 @@ namespace Xbim.Presentation.LayerStyling
                                 XbimMatrix3D.Multiply(shapeInstance.Transformation,
                                     modelTransform)
                                     .ToMatrixTransform3D();
-                            if (styles[styleId].IsTransparent)
+                            if (materialsByStyleId[styleId].IsTransparent)
                                 tmpTransparentsGroup.Children.Add(mg);
                             else
                                 tmpOpaquesGroup.Children.Add(mg);
@@ -157,7 +150,7 @@ namespace Xbim.Presentation.LayerStyling
                         {
                             IXbimShapeGeometryData shapeGeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 
-                            if (shapeGeom.ReferenceCount > 1) //only store if we are going to use again
+                            if (UseMaps && shapeGeom.ReferenceCount > 1) //only store if we are going to use again
                             {
                                 wpfMesh = new MeshGeometry3D();
                                 switch ((XbimGeometryType) shapeGeom.Format)
@@ -170,46 +163,40 @@ namespace Xbim.Presentation.LayerStyling
                                         break;
                                 }
                                 repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
-                                var mg = new GeometryModel3D(wpfMesh, styles[styleId]);
+                                var mg = new GeometryModel3D(wpfMesh, materialsByStyleId[styleId]);
                                 mg.SetValue(FrameworkElement.TagProperty,
                                     new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                                 mg.BackMaterial = mg.Material;
-                                mg.Transform =
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                        modelTransform)
-                                        .ToMatrixTransform3D();
-                                if (styles[styleId].IsTransparent)
+                                mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform).ToMatrixTransform3D();
+                                if (materialsByStyleId[styleId].IsTransparent)
                                     tmpTransparentsGroup.Children.Add(mg);
                                 else
                                     tmpOpaquesGroup.Children.Add(mg);
                             }
-                            else //it is a one off, merge it with shapes of a similar material
+                            else //it is a one off, merge it with shapes of same style
                             {
-                                var targetMergeMeshByStyle = styleMeshSets[styleId];
-                                if (shapeGeom.Format == (byte)XbimGeometryType.PolyhedronBinary)
-                                {
-                                    var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                        modelTransform);
-                                    targetMergeMeshByStyle.Add(
-                                        shapeGeom.ShapeData,
-                                        shapeInstance.IfcTypeId,
-                                        shapeInstance.IfcProductLabel,
-                                        shapeInstance.InstanceLabel, transform,
-                                        (short) model.UserDefinedId);
-                                }                           
+                                var targetMergeMeshByStyle = meshesByStyleId[styleId];
+                                if (shapeGeom.Format != (byte) XbimGeometryType.PolyhedronBinary) 
+                                    continue;
+                                var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
+                                targetMergeMeshByStyle.Add(
+                                    shapeGeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel, transform,
+                                    (short) model.UserDefinedId);
                             }
                         }
                     }
 
-                    foreach (var wpfMeshGeometry3D in styleMeshSets.Values)
+                    foreach (var wpfMeshGeometry3D in meshesByStyleId.Values)
                     {
                         wpfMeshGeometry3D.EndUpdate();
                     }
                     //}
                     if (tmpOpaquesGroup.Children.Any())
                     {
-                        var mv = new ModelVisual3D();
-                        mv.Content = tmpOpaquesGroup;
+                        var mv = new ModelVisual3D {Content = tmpOpaquesGroup};
                         opaqueShapes.Children.Add(mv);
                         // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
                     }
@@ -227,6 +214,41 @@ namespace Xbim.Presentation.LayerStyling
                 ProgressChanged(this, new ProgressChangedEventArgs(0, "Ready"));
             }
             return scene;
+        }
+
+        
+
+        private static WpfMeshGeometry3D GetNewStyleMesh(WpfMaterial wpfMaterial, Model3DGroup tmpTransparentsGroup,
+            Model3DGroup tmpOpaquesGroup)
+        {
+            var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
+            mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
+            mg.BeginUpdate();
+            if (wpfMaterial.IsTransparent)
+                tmpTransparentsGroup.Children.Add(mg);
+            else
+                tmpOpaquesGroup.Children.Add(mg);
+            return mg;
+        }
+
+        private static WpfMaterial GetWpfMaterial(IModel model, int styleId)
+        {
+            var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
+            var texture = XbimTexture.Create(sStyle);
+            texture.DefinedObjectId = styleId;
+            var wpfMaterial = new WpfMaterial();
+            wpfMaterial.CreateMaterial(texture);
+            return wpfMaterial;
+        }
+
+        private WpfMaterial GetWpfMaterialByType(IModel model, short typeid)
+        {
+            var prodType = model.Metadata.ExpressType(typeid);
+            var v = _colourMap[prodType.Name];
+            var texture = XbimTexture.Create(v);
+            var material2 = new WpfMaterial();
+            material2.CreateMaterial(texture);
+            return material2;
         }
 
 
