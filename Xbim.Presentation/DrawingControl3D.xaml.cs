@@ -1528,11 +1528,11 @@ namespace Xbim.Presentation
             {
                 // geometry engine version 2
 
-                var groupedHandlers = layerStyler.GroupLayers(handles);
                 // build dictionary for fast lookup
-                var dic = ModelPositions[model].Context.ShapeInstances().ToDictionary(shape => shape.InstanceLabel, shape => shape.ShapeGeometryLabel);
-
-                foreach (var layerName in groupedHandlers.Keys)
+                // todo: should remove instances of OpeningsAndAdditionsExcluded/Included?
+                var dic = ModelPositions[model].Context.ShapeInstances().ToDictionary(shape => shape.InstanceLabel, shape => shape);
+                var handlesByLayer = layerStyler.GroupLayers(handles);
+                foreach (var layerName in handlesByLayer.Keys)
                 {
                     var layer = layerStyler.GetLayer(layerName, model, scene);
                     var isLayerVisible = layerStyler.IsVisibleLayer(layerName);
@@ -1541,15 +1541,26 @@ namespace Xbim.Presentation
                     targetMergeMeshByStyle.BeginUpdate();
                     targetMergeMeshByStyle.WpfModel.SetValue(TagProperty, targetMergeMeshByStyle);
                     // v2 handles
-                    var hndls = groupedHandlers[layerName];
-                    foreach (var handle in hndls)
+                    // var tinst = new Stopwatch();
+                   
+                    
+                    var hndls = handlesByLayer[layerName];
+
+                    //var tot = hndls.Count();
+                    //var prog = 0;
+                    //var lastProgress = 0;
+
+                    foreach (var geomHandle in hndls)
                     {
+                        //// logging 
+                        //var currentProgress = 100 * prog++ / tot;
+                        //if (currentProgress != lastProgress)
+                        //{
+                        //    lastProgress = currentProgress;
+                        //    Debug.Print("Progress to {0}% time:\t{1}\tseconds", lastProgress, tinst.Elapsed.TotalSeconds.ToString("F3"));
+                        //}
                         var tgt = targetMergeMeshByStyle;
-
-                        var shapeInstance =
-                            ModelPositions[model].Context.ShapeInstancesOf(dic[handle.GeometryLabel])
-                                .FirstOrDefault(si => si.InstanceLabel == handle.GeometryLabel);
-
+                        var shapeInstance = dic[geomHandle.GeometryLabel];
                         if (shapeInstance == null)
                             continue;
 
