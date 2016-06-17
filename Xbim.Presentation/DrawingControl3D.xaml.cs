@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -32,6 +33,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using HelixToolkit.Wpf;
+using log4net;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3;
 using Xbim.Ifc2x3.Kernel;
@@ -68,6 +70,9 @@ namespace Xbim.Presentation
     [TemplatePart(Name = TemplateGridLines, Type = typeof (GridLinesVisual3D))]
     public class DrawingControl3D : UserControl
     {
+
+        private static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.DrawingControl3D");
+
         #region Template defined variables
 
         private const string TemplateCanvas = "Canvas";
@@ -1468,6 +1473,9 @@ namespace Xbim.Presentation
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             scene.LayerColourMap.SetProductTypeColourMap();
 
+            var timer = new Stopwatch();
+            timer.Start();
+
             var project = model.IfcProject;
             if (project == null)
                 return scene;
@@ -1608,7 +1616,7 @@ namespace Xbim.Presentation
             }
             if (_hideAfterLoad != null)
                 Dispatcher.BeginInvoke(new Action(() => Hide(_hideAfterLoad)), DispatcherPriority.Background);
-
+            Log.DebugFormat("Time to build scene: {0} seconds", timer.Elapsed.TotalSeconds.ToString("F3"));
             return scene;
         }
 

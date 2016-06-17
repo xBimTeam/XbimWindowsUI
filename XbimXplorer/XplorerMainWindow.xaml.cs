@@ -658,7 +658,16 @@ namespace XbimXplorer
                     ModelProvider.ObjectInstance = null;
                     ModelProvider.Refresh();
                 }
-                SetDefaultModeStyler(null, null);
+                // reset layer styler only if not set to defaults
+                if (
+                    DrawingControl.LayerStylerForceVersion1 &&
+                    !(DrawingControl.LayerStyler is LayerStylerTypeAndIfcStyle)
+                    ||
+                    !(DrawingControl.GeomSupport2LayerStyler is SurfaceLayerStyler)
+                    )
+                {
+                    SetDefaultModeStyler(null, null);
+                }
             }
             finally
             {
