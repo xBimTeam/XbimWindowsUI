@@ -14,6 +14,8 @@ namespace Tests
         [DeploymentItem(@"FederationPositioningTests\", @"Scale\")]
         public void ScaledPositioningBoxes()
         {
+            // this test is currently failing because some core functions do not work on old geometry models
+            // it has to be decided if the function needs to be implemented for v3.1 models as well.
             var m = new List<XbimModel>();
 
             var m0 = new XbimModel();
