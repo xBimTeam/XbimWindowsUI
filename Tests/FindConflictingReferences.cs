@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
- 
+using Xbim.Ifc2x3.SharedBldgElements;
+using Xbim.Presentation.Extensions;
+
 namespace MyProject
 {
     // this function to investigate the warining sometimes received:
@@ -13,6 +15,14 @@ namespace MyProject
     [TestClass]
     public class UtilityTest
     {
+        [TestMethod]
+        public void CanReadFileInfo()
+        {
+            var a = new XbimAssemblyInfo(typeof(IfcWall));
+            var dt = a.CompilationTime;
+            Assert.AreNotEqual(dt, DateTime.MinValue);
+        }
+
         [TestMethod]
         public void FindConflictingReferences()
         {

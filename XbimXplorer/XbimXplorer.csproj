@@ -286,6 +286,7 @@
     <Compile Include="Dialogs\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\AssemblyInformation.cs" />
     <Compile Include="Dialogs\ExcludedTypes\ExpressTypeExpander.cs">
       <SubType>Code</SubType>
     </Compile>

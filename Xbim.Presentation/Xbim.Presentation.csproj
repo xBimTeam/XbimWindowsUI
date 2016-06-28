@@ -204,6 +204,7 @@
     <Compile Include="Extensions\ObservableMeshVisual3D.cs" />
     <Compile Include="Extensions\Utility\GeomUtils.cs" />
     <Compile Include="Extensions\Utility\PropertyHelper.cs" />
+    <Compile Include="Extensions\XbimAssemblyInfo.cs" />
     <Compile Include="FederatedModel\FederatedModelDialog.xaml.cs">
       <DependentUpon>FederatedModelDialog.xaml</DependentUpon>
     </Compile>

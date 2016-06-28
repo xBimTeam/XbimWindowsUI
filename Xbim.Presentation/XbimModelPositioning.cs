@@ -61,7 +61,7 @@ namespace Xbim.Presentation
             _model = model;
             var geomStore = model.GeometryStore;
             if (_model.GeometryStore.IsEmpty)
-                throw new Exception("No geometry found in model, possibly an old format.");
+                return;
             using (var reader = geomStore.BeginRead())
             {
                 foreach (var regionColl in reader.ContextRegions)

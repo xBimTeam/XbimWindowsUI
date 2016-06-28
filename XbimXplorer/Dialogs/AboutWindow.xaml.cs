@@ -11,6 +11,7 @@ using Xbim.Ifc4.GeometricModelResource;
 using Xbim.Ifc4.GeometryResource;
 using Xbim.Ifc4.Kernel;
 using Xbim.Ifc4.UtilityResource;
+using Xbim.Presentation.Extensions;
 
 
 namespace XbimXplorer.Dialogs
@@ -49,6 +50,23 @@ namespace XbimXplorer.Dialogs
             }
         }
 
+        public string AssembliesInfo
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat("Name\tAssembly version\tFile version:\tCompile date signature:\r\n");
+                var refs = Assembly.GetEntryAssembly().MyGetReferencedAssembliesRecursive();
+                foreach (var key in refs.Keys.Where(x=>x.ToLowerInvariant().Contains("xbim")).OrderBy(x=>x))
+                {
+                    var a = refs[key];
+                    var xa = new XbimAssemblyInfo(a);
+                    sb.AppendFormat("{0}\t{1}\t{2}\t{3}\r\n", key, xa.AssemblyVersion, xa.FileVersion, xa.CompilationTime);
+                }
+                var ret = sb.ToString();
+                return ret;
+            }
+        }
 
         public string ModelInfo
         {
