@@ -16,6 +16,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -725,7 +726,11 @@ namespace XbimXplorer
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            var w = new AboutWindow {Model = Model};
+            var w = new AboutWindow
+            {
+                Model = Model,
+                Assemblies = _pluginAssemblies
+            };
             w.Show();
         }
         

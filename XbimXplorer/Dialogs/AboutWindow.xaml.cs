@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -21,7 +22,6 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     public partial class AboutWindow
     {
-
         private readonly Assembly _assembly;
 
         public AboutWindow()
@@ -56,16 +56,39 @@ namespace XbimXplorer.Dialogs
             {
                 var sb = new StringBuilder();
                 sb.AppendFormat("Name\tAssembly version\tFile version:\tCompile date signature:\r\n");
-                var refs = Assembly.GetEntryAssembly().MyGetReferencedAssembliesRecursive();
-                foreach (var key in refs.Keys.Where(x=>x.ToLowerInvariant().Contains("xbim")).OrderBy(x=>x))
+                var baseAssembly = Assembly.GetEntryAssembly();
+                DocumentAssembly(baseAssembly, sb);
+                if (Assemblies != null)
                 {
-                    var a = refs[key];
-                    var xa = new XbimAssemblyInfo(a);
-                    sb.AppendFormat("{0}\t{1}\t{2}\t{3}\r\n", key, xa.AssemblyVersion, xa.FileVersion, xa.CompilationTime);
+                    foreach (var assembly in Assemblies)
+                    {
+                        DocumentSingleAssembly(assembly, sb);
+                    }
                 }
+                
                 var ret = sb.ToString();
                 return ret;
             }
+        }
+
+        private static void DocumentAssembly(Assembly assembly, StringBuilder sb)
+        {
+            var refs = assembly.MyGetReferencedAssembliesRecursive();
+            foreach (var key in refs.Keys.Where(x => x.ToLowerInvariant().Contains("xbim")).OrderBy(x => x))
+            {
+                var a = refs[key];
+                DocumentSingleAssembly(a, sb);
+            }
+        }
+
+        private static void DocumentSingleAssembly(Assembly a, StringBuilder sb)
+        {
+            if (!a.GetName().Name.ToLowerInvariant().Contains(@"xbim"))
+                return;
+            var xa = new XbimAssemblyInfo(a);
+            var assemblyDescription = string.Format("{0}\t{1}\t{2}\t{3}\r\n", a.GetName().Name, xa.AssemblyVersion,
+                xa.FileVersion, xa.CompilationTime);
+            sb.Append(assemblyDescription);
         }
 
         public string ModelInfo
@@ -112,6 +135,7 @@ namespace XbimXplorer.Dialogs
         }
 
         public IfcStore Model { get; set; }
+        public List<Assembly> Assemblies { get; set; }
 
         private void UserControl_MouseLeftButtonDown(object sender, MouseButtonEventArgs eventArgs)
         {

@@ -78,6 +78,8 @@ namespace XbimXplorer
             _assemblyLoadFolder = contPath;
 
             var assembly = Assembly.LoadFile(fullAssemblyName);
+            _pluginAssemblies.Add(assembly);
+
             var loadQueue = new Queue<AssemblyName>(assembly.GetReferencedAssemblies());
 
             while (loadQueue.Any())
@@ -108,6 +110,8 @@ namespace XbimXplorer
                 try
                 {
                     var reqAss = Assembly.Load(refReq);
+                    if (!_pluginAssemblies.Contains(reqAss))
+                        _pluginAssemblies.Add(reqAss);
                     Log.DebugFormat("Loaded assembly: {0}", refReq.FullName);
                     foreach (var referenced in reqAss.GetReferencedAssemblies())
                     {
@@ -332,6 +336,7 @@ namespace XbimXplorer
         // todo: do we need both the following?
         private readonly Dictionary<Type, SinglePluginItem> _retainedControls = new Dictionary<Type, SinglePluginItem>();
         private readonly PluginWindowCollection _pluginWindows = new PluginWindowCollection();
+        private readonly List<Assembly> _pluginAssemblies = new List<Assembly>();
 
         private class PluginWindowCollection : ObservableCollection<IXbimXplorerPluginWindow>
         {
