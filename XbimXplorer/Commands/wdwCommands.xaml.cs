@@ -202,7 +202,7 @@ namespace XbimXplorer.Commands
                         ReportAdd(string.Format("Autoclear set to {0}", option.ToLower()));
                         continue;
                     }
-// ReSharper disable once EmptyGeneralCatchClause
+                    // ReSharper disable once EmptyGeneralCatchClause
                     catch
                     {
                     }
@@ -210,7 +210,17 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
+                mdbclosed = Regex.Match(cmd, @"^SimplifyGUI$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var s = new IfcSimplify();
+                    s.Show();
+                    continue;
+                }
 
+                // above here functions that do not need an opened model
+                // ################################################################
+                
                 if (Model == null)
                 {
                     ReportAdd("Plaese open a database.", Brushes.Red);
@@ -380,6 +390,7 @@ namespace XbimXplorer.Commands
 
                 m = Regex.Match(cmd,
                     @"^(select|se) " +
+                    @"(top (?<top>\d+) )*" +
                     @"(?<mode>(count|list|typelist|short|full) )*" +
                     @"(?<tt>(transverse|tt) )*" +
                     @"(?<hi>(highlight|hi) )*" +
@@ -392,6 +403,10 @@ namespace XbimXplorer.Commands
                     var props = m.Groups["props"].Value;
                     var mode = m.Groups["mode"].Value;
                     var svt = m.Groups["svt"].Value;
+                    var top = m.Groups["top"].Value;
+                    var iTop = -1;
+                    if (top != string.Empty)
+                        iTop = Convert.ToInt32(top);
 
 
                     // transverse tree mode
@@ -424,6 +439,8 @@ namespace XbimXplorer.Commands
                         }
                     }
                     var ret = QueryEngine.RecursiveQuery(Model, props, labels, transverseT);
+                    if (iTop != -1)
+                        ret = ret.Take(iTop);
 
                     // textual report
                     switch (mode.ToLower())
@@ -464,7 +481,10 @@ namespace XbimXplorer.Commands
                         {
                             s.Add(Model.Instances[item]);
                         }
+                        var sw = new Stopwatch();
+                        sw.Start();
                         _parentWindow.DrawingControl.Selection = s;
+                        Debug.WriteLine(sw.ElapsedMilliseconds);
                     }
                     continue;
                 }
@@ -707,14 +727,6 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                m = Regex.Match(cmd, @"^SimplifyGUI$", RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    var s = new IfcSimplify();
-                    s.Show();
-                    continue;
-                }
-
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
