@@ -476,6 +476,34 @@ namespace XbimXplorer.Commands
                     // visual selection
                     if (highlight)
                     {
+                        using (var geomstore = Model.GeometryStore)
+                        {
+                            using (var geomReader = geomstore.BeginRead())
+                            {
+                                var tgt = new WpfMeshGeometry3D();
+                                tgt.BeginUpdate();
+                                foreach (var item in ret)
+                                {
+                                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item))
+                                    {
+                                        var shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                        if (shapegeom.Format != Xbim.Common.Geometry.XbimGeometryType.PolyhedronBinary)
+                                            continue;
+                                        var transform = shapeInstance.Transformation; // * modeltransform
+                                        tgt.Add(
+                                            shapegeom.ShapeData,
+                                            shapeInstance.IfcTypeId,
+                                            shapeInstance.IfcProductLabel,
+                                            shapeInstance.InstanceLabel,
+                                            transform,
+                                            (short)Model.UserDefinedId
+                                            );
+                                    }
+
+                                }
+                                tgt.EndUpdate();
+                            }
+                        }
                         var s = new EntitySelection();
                         foreach (var item in ret)
                         {
