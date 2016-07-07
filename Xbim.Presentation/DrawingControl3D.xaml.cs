@@ -848,17 +848,15 @@ namespace Xbim.Presentation
         protected virtual void HighlighSelected(IPersistEntity newVal)
         {
             // 1. get the geometry first
-            var m = new MeshGeometry3D();
+
+            WpfMeshGeometry3D m = null;
             if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
             {
-                foreach (var item in Selection)
-                {
-                    AddElement(m, item);
-                }
+                m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions);
             }
             else if (newVal != null) // single element selection
             {
-                AddElement(m, newVal);
+                m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform);
             }
 
             // 2. then determine how to highlight it
@@ -866,35 +864,39 @@ namespace Xbim.Presentation
             if (SelectionHighlightMode == SelectionHighlightModes.WholeMesh)
             {
                 // Highlighted is defined in the XAML of drawingcontrol3d
-                Highlighted.Mesh = new Mesh3D(m.Positions, m.TriangleIndices);
+                Highlighted.Content = m;
             }
             else if (SelectionHighlightMode == SelectionHighlightModes.Normals)
             {
                 // prepares the normals to faces (or points)
                 var axesMeshBuilder = new MeshBuilder();
+                var Pos = m.Positions.ToArray();
+                var Nor = m.Normals.ToArray();
+                
                 for (var i = 0; i < m.TriangleIndices.Count; i += 3)
                 {
                     var p1 = m.TriangleIndices[i];
                     var p2 = m.TriangleIndices[i + 1];
                     var p3 = m.TriangleIndices[i + 2];
 
-                    if (m.Normals[p1] == m.Normals[p2] && m.Normals[p1] == m.Normals[p3]) // same normals
+                    if (Nor[p1] == Nor[p2] && Nor[p1] == Nor[p3]) // same normals
                     {
-                        var cnt = FindCentroid(new[] {m.Positions[p1], m.Positions[p2], m.Positions[p3]});
-                        CreateNormal(cnt, m.Normals[p1], axesMeshBuilder);
+                        var cnt = FindCentroid(new[] { Pos[p1], Pos[p2], Pos[p3] });
+                        CreateNormal(cnt, Nor[p1], axesMeshBuilder);
                     }
                     else
                     {
-                        CreateNormal(m.Positions[p1], m.Normals[p1], axesMeshBuilder);
-                        CreateNormal(m.Positions[p2], m.Normals[p2], axesMeshBuilder);
-                        CreateNormal(m.Positions[p3], m.Normals[p3], axesMeshBuilder);
+                        CreateNormal(Pos[p1], Nor[p1], axesMeshBuilder);
+                        CreateNormal(Pos[p2], Nor[p2], axesMeshBuilder);
+                        CreateNormal(Pos[p3], Nor[p3], axesMeshBuilder);
                     }
                 }
                 Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
             }
-            else
+            else if (SelectionHighlightMode == SelectionHighlightModes.WireFrame)
             {
                 var axesMeshBuilder = new MeshBuilder();
+                var Pos = m.Positions.ToArray();
                 if (newVal != null)
                 {
                     var box = XbimRect3D.Empty;
@@ -905,9 +907,9 @@ namespace Xbim.Presentation
                         var p3 = m.TriangleIndices[i + 2];
 
                         // box evaluation
-                        box.Union(new XbimPoint3D(m.Positions[p1].X, m.Positions[p1].Y, m.Positions[p1].Z));
-                        box.Union(new XbimPoint3D(m.Positions[p2].X, m.Positions[p2].Y, m.Positions[p2].Z));
-                        box.Union(new XbimPoint3D(m.Positions[p3].X, m.Positions[p3].Y, m.Positions[p3].Z));
+                        box.Union(Pos[p1]);
+                        box.Union(Pos[p2]);
+                        box.Union(Pos[p3]);
                     }
 
                     var bl = box.Length();
@@ -919,12 +921,11 @@ namespace Xbim.Presentation
                         var p2 = m.TriangleIndices[i + 1];
                         var p3 = m.TriangleIndices[i + 2];
 
-
                         var path = new List<Point3D>
                         {
-                            new Point3D(m.Positions[p1].X, m.Positions[p1].Y, m.Positions[p1].Z),
-                            new Point3D(m.Positions[p2].X, m.Positions[p2].Y, m.Positions[p2].Z),
-                            new Point3D(m.Positions[p3].X, m.Positions[p3].Y, m.Positions[p3].Z)
+                            new Point3D(Pos[p1].X, Pos[p1].Y, Pos[p1].Z),
+                            new Point3D(Pos[p2].X, Pos[p2].Y, Pos[p2].Z),
+                            new Point3D(Pos[p3].X, Pos[p3].Y, Pos[p3].Z)
                         };
                         axesMeshBuilder.AddTube(path, lineThickness, 9, true);
                     }
@@ -1132,7 +1133,7 @@ namespace Xbim.Presentation
             DependencyProperty.Register("Viewport", typeof (HelixViewport3D), typeof (DrawingControl3D),
                 new PropertyMetadata(null));
 
-        public static Point3D FindCentroid(Point3D[] p)
+        public static XbimPoint3D FindCentroid(XbimPoint3D[] p)
         {
             double x = 0;
             double y = 0;
@@ -1146,15 +1147,16 @@ namespace Xbim.Presentation
                 n++;
             }
             if (n <= 0)
-                return new Point3D(x, y, z);
+                return new XbimPoint3D(x, y, z);
             x /= n;
             y /= n;
             z /= n;
-            return new Point3D(x, y, z);
+            return new XbimPoint3D(x, y, z);
         }
 
-        private static void CreateNormal(Point3D cnt, Vector3D vector3D, MeshBuilder axesMeshBuilder)
+        private static void CreateNormal(XbimPoint3D pnt, XbimVector3D vector3D, MeshBuilder axesMeshBuilder)
         {
+            var cnt = new Point3D() { X = pnt.X, Y = pnt.Y, Z = pnt.Z };
             var path = new List<Point3D> {cnt};
             const double nrmRatio = .2;
             path.Add(

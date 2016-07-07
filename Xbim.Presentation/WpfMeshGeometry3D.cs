@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc4.Interfaces;
@@ -68,6 +69,75 @@ namespace Xbim.Presentation
                     sb.AppendLine();
                 }
             }
+        }
+
+        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform)
+        {
+            var tgt = new WpfMeshGeometry3D();
+            tgt.BeginUpdate();
+            using (var geomstore = selection.Model.GeometryStore)
+            {
+                using (var geomReader = geomstore.BeginRead())
+                {
+                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection))
+                    {
+                        var shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        if (shapegeom.Format != Xbim.Common.Geometry.XbimGeometryType.PolyhedronBinary)
+                            continue;
+                        var transform = shapeInstance.Transformation * modelTransform;
+                        tgt.Add(
+                            shapegeom.ShapeData,
+                            shapeInstance.IfcTypeId,
+                            shapeInstance.IfcProductLabel,
+                            shapeInstance.InstanceLabel,
+                            transform,
+                            (short)selection.Model.UserDefinedId
+                            );
+                    }
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
+        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions)
+        {
+            var tgt = new WpfMeshGeometry3D();
+            tgt.BeginUpdate();
+            foreach (var modelgroup in selection.GroupBy(i => i.Model))
+            {
+                var model = modelgroup.Key;
+                var modelTransform = positions[model].Transform;
+                using (var geomstore = model.GeometryStore)
+                {
+                    using (var geomReader = geomstore.BeginRead())
+                    {
+
+                        foreach (var item in modelgroup)
+                        {
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item))
+                            {
+                                IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                if (shapegeom.Format != (byte)Xbim.Common.Geometry.XbimGeometryType.PolyhedronBinary)
+                                    continue;
+                                var transform = shapeInstance.Transformation * modelTransform;
+                                tgt.Add(
+                                    shapegeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    transform,
+                                    (short)model.UserDefinedId
+                                    );
+                            }
+
+                        }
+                        
+                    }
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
         }
 
         public WpfMeshGeometry3D()
