@@ -96,6 +96,11 @@
                     <MenuItem Header="_Styler Reset" Click="SetDefaultModeStyler" />
                     <MenuItem Header="Styler _Configuration" Click="ConfigureStyler" />
                 </MenuItem>
+                <MenuItem Header="Selection view _mode">
+                    <MenuItem x:Name="WholeMesh" Header="Whole mesh" Click="SelectionMode" IsChecked="True" />
+                    <MenuItem x:Name="Normals" Header="Normals" Click="SelectionMode" />
+                    <MenuItem x:Name="WireFrame" Header="WireFrame" Click="SelectionMode" />
+                </MenuItem>
 
                 <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
                 <MenuItem IsCheckable="True" Header="Show Gridlines" IsChecked="{Binding ShowGridLines, ElementName=DrawingControl}"/>

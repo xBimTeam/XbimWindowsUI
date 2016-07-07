@@ -841,22 +841,35 @@ namespace Xbim.Presentation
             All = 1
         }
 
+        private Color _selectionColor = Colors.Blue;
+
+        public Color SelectionColor
+        {
+            get { return _selectionColor; }
+            set { _selectionColor = value; }
+        }
+
         /// <summary>
         /// Executed when a new entity is selected
         /// </summary>
         /// <param name="newVal"></param>
         protected virtual void HighlighSelected(IPersistEntity newVal)
         {
-            // 1. get the geometry first
+            // 0. prepare
+            var mat = new WpfMaterial();
+            mat.CreateMaterial(new XbimColour(
+                "Selection", SelectionColor.ScR, SelectionColor.ScG, SelectionColor.ScB, SelectionColor.ScA)
+                );
 
+            // 1. get the geometry first
             WpfMeshGeometry3D m = null;
             if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
             {
-                m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions);
+                m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);               
             }
             else if (newVal != null) // single element selection
             {
-                m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform);
+                m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
             }
 
             // 2. then determine how to highlight it
@@ -870,8 +883,8 @@ namespace Xbim.Presentation
             {
                 // prepares the normals to faces (or points)
                 var axesMeshBuilder = new MeshBuilder();
-                var Pos = m.Positions.ToArray();
-                var Nor = m.Normals.ToArray();
+                var pos = m.Positions.ToArray();
+                var nor = m.Normals.ToArray();
                 
                 for (var i = 0; i < m.TriangleIndices.Count; i += 3)
                 {
@@ -879,16 +892,16 @@ namespace Xbim.Presentation
                     var p2 = m.TriangleIndices[i + 1];
                     var p3 = m.TriangleIndices[i + 2];
 
-                    if (Nor[p1] == Nor[p2] && Nor[p1] == Nor[p3]) // same normals
+                    if (nor[p1] == nor[p2] && nor[p1] == nor[p3]) // same normals
                     {
-                        var cnt = FindCentroid(new[] { Pos[p1], Pos[p2], Pos[p3] });
-                        CreateNormal(cnt, Nor[p1], axesMeshBuilder);
+                        var cnt = FindCentroid(new[] { pos[p1], pos[p2], pos[p3] });
+                        CreateNormal(cnt, nor[p1], axesMeshBuilder);
                     }
                     else
                     {
-                        CreateNormal(Pos[p1], Nor[p1], axesMeshBuilder);
-                        CreateNormal(Pos[p2], Nor[p2], axesMeshBuilder);
-                        CreateNormal(Pos[p3], Nor[p3], axesMeshBuilder);
+                        CreateNormal(pos[p1], nor[p1], axesMeshBuilder);
+                        CreateNormal(pos[p2], nor[p2], axesMeshBuilder);
+                        CreateNormal(pos[p3], nor[p3], axesMeshBuilder);
                     }
                 }
                 Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
@@ -896,7 +909,7 @@ namespace Xbim.Presentation
             else if (SelectionHighlightMode == SelectionHighlightModes.WireFrame)
             {
                 var axesMeshBuilder = new MeshBuilder();
-                var Pos = m.Positions.ToArray();
+                var pos = m.Positions.ToArray();
                 if (newVal != null)
                 {
                     var box = XbimRect3D.Empty;
@@ -907,9 +920,9 @@ namespace Xbim.Presentation
                         var p3 = m.TriangleIndices[i + 2];
 
                         // box evaluation
-                        box.Union(Pos[p1]);
-                        box.Union(Pos[p2]);
-                        box.Union(Pos[p3]);
+                        box.Union(pos[p1]);
+                        box.Union(pos[p2]);
+                        box.Union(pos[p3]);
                     }
 
                     var bl = box.Length();
@@ -923,9 +936,9 @@ namespace Xbim.Presentation
 
                         var path = new List<Point3D>
                         {
-                            new Point3D(Pos[p1].X, Pos[p1].Y, Pos[p1].Z),
-                            new Point3D(Pos[p2].X, Pos[p2].Y, Pos[p2].Z),
-                            new Point3D(Pos[p3].X, Pos[p3].Y, Pos[p3].Z)
+                            new Point3D(pos[p1].X, pos[p1].Y, pos[p1].Z),
+                            new Point3D(pos[p2].X, pos[p2].Y, pos[p2].Z),
+                            new Point3D(pos[p3].X, pos[p3].Y, pos[p3].Z)
                         };
                         axesMeshBuilder.AddTube(path, lineThickness, 9, true);
                     }

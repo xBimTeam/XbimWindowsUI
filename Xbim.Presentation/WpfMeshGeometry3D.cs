@@ -9,6 +9,7 @@ using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
+using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
@@ -71,9 +72,9 @@ namespace Xbim.Presentation
             }
         }
 
-        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform)
+        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, WpfMaterial mat)
         {
-            var tgt = new WpfMeshGeometry3D();
+            var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             using (var geomstore = selection.Model.GeometryStore)
             {
@@ -82,7 +83,7 @@ namespace Xbim.Presentation
                     foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection))
                     {
                         var shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                        if (shapegeom.Format != Xbim.Common.Geometry.XbimGeometryType.PolyhedronBinary)
+                        if (shapegeom.Format != XbimGeometryType.PolyhedronBinary)
                             continue;
                         var transform = shapeInstance.Transformation * modelTransform;
                         tgt.Add(
@@ -100,9 +101,9 @@ namespace Xbim.Presentation
             return tgt;
         }
 
-        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions)
+        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions, WpfMaterial mat)
         {
-            var tgt = new WpfMeshGeometry3D();
+            var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             foreach (var modelgroup in selection.GroupBy(i => i.Model))
             {
@@ -118,7 +119,7 @@ namespace Xbim.Presentation
                             foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item))
                             {
                                 IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                                if (shapegeom.Format != (byte)Xbim.Common.Geometry.XbimGeometryType.PolyhedronBinary)
+                                if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
                                     continue;
                                 var transform = shapeInstance.Transformation * modelTransform;
                                 tgt.Add(
@@ -142,8 +143,7 @@ namespace Xbim.Presentation
 
         public WpfMeshGeometry3D()
         {
-            WpfModel = new GeometryModel3D();
-            WpfModel.Geometry = new MeshGeometry3D();
+            WpfModel = new GeometryModel3D {Geometry = new MeshGeometry3D()};
             Mesh.Positions = new WpfPoint3DCollection(0);
             Mesh.Normals = new WpfVector3DCollection();
             Mesh.TriangleIndices = new Int32Collection();
@@ -152,8 +152,7 @@ namespace Xbim.Presentation
 
         public WpfMeshGeometry3D(IXbimMeshGeometry3D mesh)
         {
-            WpfModel = new GeometryModel3D();
-            WpfModel.Geometry = new MeshGeometry3D();
+            WpfModel = new GeometryModel3D {Geometry = new MeshGeometry3D()};
             Mesh.Positions = new WpfPoint3DCollection(mesh.Positions);
             Mesh.Normals = new WpfVector3DCollection(mesh.Normals);
             Mesh.TriangleIndices = new Int32Collection (mesh.TriangleIndices);
@@ -162,16 +161,16 @@ namespace Xbim.Presentation
 
         public WpfMeshGeometry3D(WpfMaterial material, WpfMaterial backMaterial = null)
         {
-            WpfModel = new GeometryModel3D(new MeshGeometry3D(),material);
-           
-            if (backMaterial != null) WpfModel.BackMaterial = backMaterial;
+            WpfModel = new GeometryModel3D(new MeshGeometry3D(), material);
+            if (backMaterial != null) 
+                WpfModel.BackMaterial = backMaterial;
         }
-        
+
         public static implicit operator GeometryModel3D(WpfMeshGeometry3D mesh)
         {
-             if(mesh.WpfModel==null)
-                mesh.WpfModel=new GeometryModel3D();
-             return mesh.WpfModel;
+            if (mesh.WpfModel == null)
+                mesh.WpfModel = new GeometryModel3D();
+            return mesh.WpfModel;
         }
 
         public MeshGeometry3D Mesh

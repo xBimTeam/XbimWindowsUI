@@ -837,5 +837,30 @@ namespace XbimXplorer
             DrawingControl.ExcludedTypes = c.ExcludedTypes;
             DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
         }
+
+        private void SelectionMode(object sender, RoutedEventArgs e)
+        {
+            var mi = sender as MenuItem;
+            if (mi == null)
+            {  
+                return;
+            }
+            WholeMesh.IsChecked = false;
+            Normals.IsChecked = false;
+            WireFrame.IsChecked = false;
+            mi.IsChecked = true;
+            switch (mi.Name)
+            {
+                case "WholeMesh":
+                    DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.WholeMesh;
+                    break;
+                case "Normals":
+                    DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.Normals;
+                    break;
+                case "WireFrame":
+                    DrawingControl.SelectionHighlightMode = DrawingControl3D.SelectionHighlightModes.WireFrame;
+                    break;
+            }
+        }
     }
 }
