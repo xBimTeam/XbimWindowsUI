@@ -15,6 +15,7 @@ namespace Xbim.Presentation
     {
         public XbimRegion LargestRegion;
         public Xbim3DModelContext Context;
+        // todo: rename this
         public XbimMatrix3D Transfrom;
         
         private double _OneMeter = Double.NaN;

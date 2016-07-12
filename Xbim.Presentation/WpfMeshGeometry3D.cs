@@ -9,9 +9,12 @@ using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.XbimExtensions;
+using Xbim.XbimExtensions.Interfaces;
+using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -95,8 +98,8 @@ namespace Xbim.Presentation
         public WpfMeshGeometry3D(WpfMaterial material, WpfMaterial backMaterial = null)
         {
             WpfModel = new GeometryModel3D(new MeshGeometry3D(),material);
-           
-            if (backMaterial != null) WpfModel.BackMaterial = backMaterial;
+            if (backMaterial != null) 
+                WpfModel.BackMaterial = backMaterial;
         }
         
         public static implicit operator GeometryModel3D(WpfMeshGeometry3D mesh)
@@ -148,7 +151,41 @@ namespace Xbim.Presentation
         /// <param name="modelId"></param>
         public bool Add(XbimGeometryData geometryMeshData, short modelId)
         {
-            throw new NotImplementedException();
+            var transform = XbimMatrix3D.FromArray(geometryMeshData.DataArray2);
+            if (geometryMeshData.GeometryType == XbimGeometryType.TriangulatedMesh)
+            {
+                var strm = new XbimTriangulatedModelStream(geometryMeshData.ShapeData);
+                var fragment = strm.BuildWithNormals(this, transform, modelId);
+                if (fragment.EntityLabel == -1) //nothing was added due to size being exceeded
+                    return false;
+                fragment.EntityLabel = geometryMeshData.IfcProductLabel;
+                fragment.EntityTypeId = geometryMeshData.IfcTypeId;
+                _meshes.Add(fragment);
+            }
+            else if (geometryMeshData.GeometryType == XbimGeometryType.BoundingBox)
+            {
+                var r3D = XbimRect3D.FromArray(geometryMeshData.ShapeData);
+                Add(XbimMeshGeometry3D.MakeBoundingBox(r3D, transform), geometryMeshData.IfcProductLabel, IfcMetaData.GetType(geometryMeshData.IfcTypeId), modelId);
+            }
+            else
+                throw new Common.Exceptions.XbimException("Illegal geometry type found");
+            return true;
+        }
+
+        //adds the content of the toAdd to this, it is added as a single mesh fragment, any meshes in toAdd are lost
+        public void Add(IXbimMeshGeometry3D toAdd, int entityLabel, Type ifcType, short modelId)
+        {
+            var startPosition = Mesh.Positions.Count;
+            var fragment = new XbimMeshFragment(startPosition, TriangleIndexCount, modelId);
+            _unfrozenPositions.AddRange(toAdd.Positions.Select(x => new Point3D(x.X, x.Y, x.Z)));
+            _unfrozenNormals.AddRange(toAdd.Normals.Select(x => new Vector3D(x.X, x.Y, x.Z)));
+            foreach (var idx in toAdd.TriangleIndices)
+                TriangleIndices.Add(idx + startPosition);
+            fragment.EndPosition = PositionCount - 1;
+            fragment.EndTriangleIndex = TriangleIndexCount - 1;
+            fragment.EntityLabel = entityLabel;
+            fragment.EntityTypeId = IfcMetaData.IfcTypeId(ifcType);
+            _meshes.Add(fragment);
         }
 
         public IEnumerable<XbimPoint3D> Positions
@@ -761,6 +798,139 @@ namespace Xbim.Presentation
             _unfrozenIndices = new List<int>(Mesh.TriangleIndices);
             _unfrozenNormals = new List<Vector3D>(Mesh.Normals);
             WpfModel.Geometry = null;
+        }
+
+        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions, WpfMaterial mat)
+        {
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            
+            foreach (var modelgroup in selection.GroupBy(i => i.ModelOf))
+            {
+                var model = modelgroup.Key as XbimModel;
+                var modelTransform = positions[model].Transfrom;
+                if (model == null)
+                    continue;
+
+                foreach (var item in modelgroup)
+                {
+                    switch (model.GeometrySupportLevel)
+                    {
+                        case 2:
+                            var context = new Xbim3DModelContext(model);
+
+                            var productShape = context.ShapeInstancesOf((IfcProduct) item)
+                                .Where(
+                                    s =>
+                                        s.RepresentationType !=
+                                        XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                                .ToList();
+                            if (!productShape.Any() && item is IfcFeatureElement)
+                            {
+                                productShape = context.ShapeInstancesOf((IfcProduct) item)
+                                    .Where(
+                                        s =>
+                                            s.RepresentationType ==
+                                            XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                                    .ToList();
+                            }
+
+                            if (!productShape.Any())
+                                continue;
+                            foreach (var shapeInstance in productShape)
+                            {
+                                IXbimShapeGeometryData shapeGeom =
+                                    context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                switch ((XbimGeometryType) shapeGeom.Format)
+                                {
+                                    case XbimGeometryType.PolyhedronBinary:
+                                        tgt.Read(shapeGeom.ShapeData,
+                                            XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
+                                        break;
+                                    case XbimGeometryType.Polyhedron:
+                                        tgt.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
+                                            XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
+                                        break;
+                                }
+                            }
+                            break;
+                        case 1:
+                            // todo: there needs to be a switch that depends on the ShapeData type added dhere.
+                            var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                            foreach (var shapeGeom in geomDataSet)
+                            {
+                                var gd = shapeGeom.TransformBy(modelTransform);
+                                tgt.Add(gd, model.UserDefinedId);
+                            }
+                            break;
+                    }
+                }              
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
+
+        internal static WpfMeshGeometry3D GetGeometry(IPersistIfcEntity item, XbimMatrix3D modelTransform,
+            WpfMaterial mat)
+        {
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+
+            var model = item.ModelOf as XbimModel;
+
+            if (model != null)
+            {
+                switch (model.GeometrySupportLevel)
+                {
+                    case 2:
+                        var context = new Xbim3DModelContext(model);
+
+                        var productShape = context.ShapeInstancesOf((IfcProduct) item)
+                            .Where(
+                                s =>
+                                    s.RepresentationType !=
+                                    XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                            .ToList();
+                        if (!productShape.Any() && item is IfcFeatureElement)
+                        {
+                            productShape = context.ShapeInstancesOf((IfcProduct) item)
+                                .Where(
+                                    s =>
+                                        s.RepresentationType ==
+                                        XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                                .ToList();
+                        }
+
+                        foreach (var shapeInstance in productShape)
+                        {
+                            IXbimShapeGeometryData shapeGeom =
+                                context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                            switch ((XbimGeometryType) shapeGeom.Format)
+                            {
+                                case XbimGeometryType.PolyhedronBinary:
+                                    tgt.Read(shapeGeom.ShapeData,
+                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
+                                    break;
+                                case XbimGeometryType.Polyhedron:
+                                    tgt.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
+                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
+                                    break;
+                            }
+                        }
+                        break;
+                    case 1:
+                        // todo: there needs to be a switch that depends on the ShapeData type added dhere.
+                        var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                        foreach (var shapeGeom in geomDataSet)
+                        {
+                            tgt.Read(shapeGeom.ShapeData, modelTransform);
+                        }
+                        break;
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
         }
     }
 }
