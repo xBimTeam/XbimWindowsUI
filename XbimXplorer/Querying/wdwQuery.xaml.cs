@@ -410,6 +410,7 @@ namespace XbimXplorer.Querying
 
                 m = Regex.Match(cmd,
                     @"^(select|se) " +
+                    @"(top (?<top>\d+) )*" +
                     @"(?<mode>(count|list|typelist|short|full) )*" +
                     @"(?<tt>(transverse|tt) )*" +
                     @"(?<hi>(highlight|hi) )*" +
@@ -422,6 +423,10 @@ namespace XbimXplorer.Querying
                     var props = m.Groups["props"].Value;
                     var mode = m.Groups["mode"].Value;
                     var svt = m.Groups["svt"].Value;
+                    var top = m.Groups["top"].Value;
+                    var iTop = -1;
+                    if (top != string.Empty)
+                        iTop = Convert.ToInt32(top);
 
 
                     // transverse tree mode
@@ -454,6 +459,8 @@ namespace XbimXplorer.Querying
                         }
                     }
                     var ret = QueryEngine.RecursiveQuery(Model, props, labels, transverseT);
+                    if (iTop != -1)
+                        ret = ret.Take(iTop);
 
                     // textual report
                     switch (mode.ToLower())
@@ -494,7 +501,12 @@ namespace XbimXplorer.Querying
                         {
                             s.Add(Model.Instances[item]);
                         }
+                        var t = new Stopwatch();
+                        t.Start();
                         _parentWindow.DrawingControl.Selection = s;
+                        t.Stop();
+                        Debug.WriteLine("SelectionHighlight: \t" + t.ElapsedMilliseconds);
+
                     }
                     continue;
                 }
