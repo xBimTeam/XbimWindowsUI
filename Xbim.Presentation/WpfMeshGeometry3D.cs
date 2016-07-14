@@ -802,14 +802,12 @@ namespace Xbim.Presentation
                 var modelTransform = positions[model].Transfrom;
                 if (model == null)
                     continue;
-
-                foreach (var item in modelgroup)
+                switch (model.GeometrySupportLevel)
                 {
-                    switch (model.GeometrySupportLevel)
-                    {
-                        case 2:
-                            var context = new Xbim3DModelContext(model);
-
+                    case 2:
+                        var context = new Xbim3DModelContext(model);
+                        foreach (var item in modelgroup)
+                        {
                             var productShape = context.ShapeInstancesOf((IfcProduct) item)
                                 .Where(
                                     s =>
@@ -842,29 +840,30 @@ namespace Xbim.Presentation
                                         tgt.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
                                             XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
                                         break;
-                                    
+
                                 }
                             }
-                            break;
-                        case 1:
-                            // todo: there needs to be a switch that depends on the ShapeData type added dhere.
-                            var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                        }
+                        break;
+                    case 1:
+                        foreach (var item in modelgroup)
+                        {
+                            var geomDataSet = model.GetGeometryData(item.EntityLabel,
+                                XbimGeometryType.TriangulatedMesh);
                             var g3D = new XbimMeshGeometry3D();
                             foreach (var shapeGeom in geomDataSet)
                             {
                                 var gd = shapeGeom.TransformBy(modelTransform);
                                 // tgt.Add(gd, model.UserDefinedId);
                                 g3D.Add(gd, model.UserDefinedId);
-                                
+
                             }
                             tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
-                            break;
-                    }
-                }              
-            }
-            
-                
-            
+                           
+                        }
+                        break;
+                }
+            }           
             tgt.EndUpdate();
             return tgt;
         }
@@ -912,7 +911,7 @@ namespace Xbim.Presentation
                             {
                                 case XbimGeometryType.PolyhedronBinary:
                                     tgt.Read(
-                                        shapeGeom.ShapeData, 
+                                        shapeGeom.ShapeData,
                                         XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform)
                                         );
                                     break;
@@ -926,12 +925,16 @@ namespace Xbim.Presentation
                         }
                         break;
                     case 1:
-                        // todo: there needs to be a switch that depends on the ShapeData type added here.
                         var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                        var g3D = new XbimMeshGeometry3D();
                         foreach (var shapeGeom in geomDataSet)
                         {
-                            tgt.Read(shapeGeom.ShapeData, modelTransform);
+                            var gd = shapeGeom.TransformBy(modelTransform);
+                            // tgt.Add(gd, model.UserDefinedId);
+                            g3D.Add(gd, model.UserDefinedId);
+
                         }
+                        tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
                         break;
                 }
             }
