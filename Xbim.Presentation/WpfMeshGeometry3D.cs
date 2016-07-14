@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -37,7 +38,8 @@ namespace Xbim.Presentation
 
         private void Init()
         {
-            _indexOffset = (uint)Mesh.Positions.Count;
+            var mesh = Mesh;
+            _indexOffset = (uint)mesh.Positions.Count;
         }
 
         private void StandardBeginPolygon(TriangleType meshType)
@@ -91,22 +93,27 @@ namespace Xbim.Presentation
             WpfModel.Geometry = new MeshGeometry3D();
             Mesh.Positions = new WpfPoint3DCollection(mesh.Positions);
             Mesh.Normals = new WpfVector3DCollection(mesh.Normals);
-            Mesh.TriangleIndices = new Int32Collection (mesh.TriangleIndices);
+            Mesh.TriangleIndices = new Int32Collection(mesh.TriangleIndices);
             _meshes = new XbimMeshFragmentCollection(mesh.Meshes);
         }
 
         public WpfMeshGeometry3D(WpfMaterial material, WpfMaterial backMaterial = null)
         {
-            WpfModel = new GeometryModel3D(new MeshGeometry3D(),material);
-            if (backMaterial != null) 
+            var g = new MeshGeometry3D();
+            g.Positions = new WpfPoint3DCollection(0);
+            g.Normals = new WpfVector3DCollection();
+            g.TriangleIndices = new Int32Collection();
+            WpfModel = new GeometryModel3D(g, material);
+            
+            if (backMaterial != null)
                 WpfModel.BackMaterial = backMaterial;
         }
-        
+
         public static implicit operator GeometryModel3D(WpfMeshGeometry3D mesh)
         {
-             if(mesh.WpfModel==null)
-                mesh.WpfModel=new GeometryModel3D();
-             return mesh.WpfModel;
+            if (mesh.WpfModel == null)
+                mesh.WpfModel = new GeometryModel3D() {Geometry = new MeshGeometry3D()};
+            return mesh.WpfModel;
         }
 
         public MeshGeometry3D Mesh
@@ -114,26 +121,10 @@ namespace Xbim.Presentation
             get
             {
                 if (WpfModel == null)
-                    WpfModel = new GeometryModel3D();
+                    WpfModel = new GeometryModel3D() {Geometry = new MeshGeometry3D()};
                 return WpfModel.Geometry as MeshGeometry3D;
             }
         }
-        //public IEnumerable<XbimPoint3D> Positions
-        //{
-        //    get { return Mesh.Positions; }
-        //}
-
-        //public IList<XbimVector3D> Normals
-        //{
-        //    get { return Mesh.Normals; }
-        //}
-
-        //public IList<int> TriangleIndices
-        //{
-        //    get { return Mesh.TriangleIndices; }
-        //}
-
-
 
         public XbimMeshFragmentCollection Meshes
         {
@@ -851,21 +842,29 @@ namespace Xbim.Presentation
                                         tgt.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
                                             XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
                                         break;
+                                    
                                 }
                             }
                             break;
                         case 1:
                             // todo: there needs to be a switch that depends on the ShapeData type added dhere.
                             var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
+                            var g3D = new XbimMeshGeometry3D();
                             foreach (var shapeGeom in geomDataSet)
                             {
                                 var gd = shapeGeom.TransformBy(modelTransform);
-                                tgt.Add(gd, model.UserDefinedId);
+                                // tgt.Add(gd, model.UserDefinedId);
+                                g3D.Add(gd, model.UserDefinedId);
+                                
                             }
+                            //tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
                             break;
                     }
                 }              
             }
+            
+                
+            
             tgt.EndUpdate();
             return tgt;
         }
@@ -875,6 +874,9 @@ namespace Xbim.Presentation
             WpfMaterial mat)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
+            // var tgt = new XbimMeshGeometry3D();
+            
+            
             tgt.BeginUpdate();
 
             var model = item.ModelOf as XbimModel;
@@ -909,18 +911,22 @@ namespace Xbim.Presentation
                             switch ((XbimGeometryType) shapeGeom.Format)
                             {
                                 case XbimGeometryType.PolyhedronBinary:
-                                    tgt.Read(shapeGeom.ShapeData,
-                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
+                                    tgt.Read(
+                                        shapeGeom.ShapeData, 
+                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform)
+                                        );
                                     break;
                                 case XbimGeometryType.Polyhedron:
-                                    tgt.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
-                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
+                                    tgt.Read(
+                                        ((XbimShapeGeometry) shapeGeom).ShapeData,
+                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform)
+                                        );
                                     break;
                             }
                         }
                         break;
                     case 1:
-                        // todo: there needs to be a switch that depends on the ShapeData type added dhere.
+                        // todo: there needs to be a switch that depends on the ShapeData type added here.
                         var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
                         foreach (var shapeGeom in geomDataSet)
                         {
