@@ -315,7 +315,7 @@ namespace Xbim.Presentation
         {
             if (pSet == null)
                 return;
-            if (modelUnits == null) throw new ArgumentNullException("modelUnits");
+            if (modelUnits == null) throw new ArgumentNullException(nameof(modelUnits));
             foreach (var item in pSet.Quantities.OfType<IIfcPhysicalSimpleQuantity>())
                 // currently only handles IfcPhysicalSimpleQuantity
             {
@@ -323,9 +323,70 @@ namespace Xbim.Presentation
                 {
                     PropertySetName = pSet.Name,
                     Name = item.Name,
-                    Value = item + " " + item.Unit.FullName
+                    Value = GetValueString(item, modelUnits)
                 });
             }
+        }
+
+        private static string GetValueString(IIfcPhysicalSimpleQuantity quantity, IIfcUnitAssignment modelUnits)
+        {
+            if (quantity == null)
+                return "";
+
+            string value = null;
+            var unit = quantity.Unit?.FullName;
+
+            var length = quantity as IIfcQuantityLength;
+            if (length != null)
+            {
+                value = length.LengthValue.ToString();
+                if (quantity.Unit == null)
+                    unit = GetUnit(modelUnits, IfcUnitEnum.LENGTHUNIT);
+            }
+            var area = quantity as IIfcQuantityArea;
+            if (area != null)
+            {
+                value = area.AreaValue.ToString();
+                if (quantity.Unit == null)
+                    unit = GetUnit(modelUnits, IfcUnitEnum.AREAUNIT);
+            }
+            var weight = quantity as IIfcQuantityWeight;
+            if (weight != null)
+            {
+                value = weight.WeightValue.ToString();
+                if (quantity.Unit == null)
+                    unit = GetUnit(modelUnits, IfcUnitEnum.MASSUNIT);
+            }
+            var time = quantity as IIfcQuantityTime;
+            if (time != null)
+            {
+                value = time.TimeValue.ToString();
+                if (quantity.Unit == null)
+                    unit = GetUnit(modelUnits, IfcUnitEnum.TIMEUNIT);
+            }
+            var volume = quantity as IIfcQuantityVolume;
+            if (volume != null)
+            {
+                value = volume.VolumeValue.ToString();
+                if (quantity.Unit == null)
+                    unit = GetUnit(modelUnits, IfcUnitEnum.VOLUMEUNIT);
+            }
+            var count = quantity as IIfcQuantityCount;
+            if (count != null)
+                value = count.CountValue.ToString();
+
+
+            if (string.IsNullOrWhiteSpace(value))
+                return "";
+
+            return string.IsNullOrWhiteSpace(unit) ? 
+                value : 
+                $"{value} {unit}";
+        }
+
+        private static string GetUnit(IIfcUnitAssignment units, IfcUnitEnum type)
+        {
+            return units?.Units.OfType<IIfcNamedUnit>().FirstOrDefault(u => u.UnitType == type)?.FullName;
         }
 
         private void FillPropertyData()
