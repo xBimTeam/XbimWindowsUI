@@ -166,12 +166,12 @@ namespace Xbim.Presentation
         //adds the content of the toAdd to this, it is added as a single mesh fragment, any meshes in toAdd are lost
         public void Add(IXbimMeshGeometry3D toAdd, int entityLabel, Type ifcType, short modelId)
         {
-            var startPosition = Mesh.Positions.Count;
+            var startPosition = _unfrozenPositions.Count;
             var fragment = new XbimMeshFragment(startPosition, TriangleIndexCount, modelId);
             _unfrozenPositions.AddRange(toAdd.Positions.Select(x => new Point3D(x.X, x.Y, x.Z)));
             _unfrozenNormals.AddRange(toAdd.Normals.Select(x => new Vector3D(x.X, x.Y, x.Z)));
             foreach (var idx in toAdd.TriangleIndices)
-                TriangleIndices.Add(idx + startPosition);
+                _unfrozenIndices.Add(idx + startPosition);
             fragment.EndPosition = PositionCount - 1;
             fragment.EndTriangleIndex = TriangleIndexCount - 1;
             fragment.EntityLabel = entityLabel;
@@ -857,7 +857,7 @@ namespace Xbim.Presentation
                                 g3D.Add(gd, model.UserDefinedId);
                                 
                             }
-                            //tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
+                            tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
                             break;
                     }
                 }              
