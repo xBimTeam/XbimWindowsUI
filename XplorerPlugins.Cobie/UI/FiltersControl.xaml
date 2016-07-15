@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="700">
     <Grid Background="Azure">
@@ -13,7 +14,7 @@
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0" >
             <Label Content="Components" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Top"/>
-            <ListView Margin="5,31,5,5" ItemsSource="{Binding ProductFilters}" >
+            <ListView Margin="5,31,5,5" ItemsSource="{Binding ProductFilters, diag:PresentationTraceSources.TraceLevel=High}" >
                 <ListBox.ItemTemplate>
                     <HierarchicalDataTemplate>
                         <CheckBox Content="{Binding TypeName}" IsChecked="{Binding Export}"/>

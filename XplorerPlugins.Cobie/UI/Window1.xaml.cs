@@ -25,10 +25,8 @@ namespace XplorerPlugins.Cobie.UI
         public Window1()
         {
             InitializeComponent();
-            
-            var f = new OutPutFilters();
+            var f = OutPutFilters.GetDefaults(RoleFilter.Unknown);
             Filters = new FilterViewModel(f);
-            
         }
     }
 }

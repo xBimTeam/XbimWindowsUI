@@ -333,57 +333,43 @@ namespace XplorerPlugins.Cobie.UI
             return (ExportFormatEnum)Enum.Parse(typeof(ExportFormatEnum), SelectedExportType);
         }
 
+        OutPutFilters _assetfilters = new OutPutFilters();
+
         private ICobieLiteConverter _cobieWorker;
 
         private void DoExport(object sender, RoutedEventArgs e)
         {
-            // todo: does it make sense to restore the flip option?
-            //if (chkBoxFlipFilter.Checked)
-            //{
-            //    // ReSharper disable LocalizableElement
-            //    var result = MessageBox.Show(
-            //        "Flip Filter is ticked, this will show only excluded items, Do you want to continue",
-            //        "Warning", MessageBoxButtons.YesNo);
-            //    if (result == DialogResult.No)
-            //    {
-            //        return;
-            //    }
-            //}
             btnGenerate.IsEnabled = false;
-
+            
             if (_cobieWorker == null)
             {
                 _cobieWorker = new CobieLiteConverter();
                 _cobieWorker.Worker.ProgressChanged += WorkerProgressChanged;
                 _cobieWorker.Worker.RunWorkerCompleted += WorkerCompleted;
             }
-            //get Excel File Type
+
+            // get Excel File Type
             var excelType = GetExcelType();
-            //set filters
-            // todo: restore filters
-            //var filterRoles = SetRoles();
-            //if (!chkBoxNoFilter.Checked)
-            //{
-            //    _assetfilters.ApplyRoleFilters(filterRoles);
-            //    _assetfilters.FlipResult = chkBoxFlipFilter.Checked;
-            //}
             var v = new FileInfo(Model.FileName);
             var exportFileName = Path.ChangeExtension(Path.Combine(TxtFolderName.Text, v.Name), "tempExtension");
 
-            //set parameters
+            // set parameters
             var conversionSettings = new CobieConversionParams
             {
                 Source = Model,
                 OutputFileName = exportFileName,
                 TemplateFile = SelectedTemplate,
                 ExportFormat = excelType,
-                ExtId = (UseExternalIds.IsChecked != null && UseExternalIds.IsChecked.Value) ? EntityIdentifierMode.IfcEntityLabels : EntityIdentifierMode.GloballyUniqueIds,
+                ExtId = (UseExternalIds.IsChecked != null && UseExternalIds.IsChecked.Value) 
+                    ? EntityIdentifierMode.IfcEntityLabels 
+                    : EntityIdentifierMode.GloballyUniqueIds,
                 SysMode = SetSystemMode(),
-                Filter = new OutPutFilters(), // todo: restore filters // chkBoxNoFilter.Checked ? new OutPutFilters() : _assetfilters,
+                Filter = _assetfilters,
                 ConfigFile = ConfigFile.FullName,
                 Log = true
             };
-            //run worker
+
+            // run worker
             _cobieWorker.Run(conversionSettings);    
         }
 
@@ -410,11 +396,9 @@ namespace XplorerPlugins.Cobie.UI
                     AppendLog("Error: Failed to get requested system extraction mode");
                 }
             }
-
             return sysMode;
         }
-
-
+        
         private void SetDefaultFilters()
         {
             var defaultFilters = new FilterValues(); //gives us the initial list of types
