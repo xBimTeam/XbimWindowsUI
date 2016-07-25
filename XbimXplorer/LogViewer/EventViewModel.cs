@@ -36,9 +36,16 @@ namespace XbimXplorer.LogViewer
         {
             get
             {
-                return loggingEvent.ExceptionObject != null 
-                    ? loggingEvent.ExceptionObject.Message
-                    : "";
+                if (loggingEvent.ExceptionObject == null)
+                    return "";
+                var sb = new StringBuilder();
+                var ex = loggingEvent.ExceptionObject;
+                while (ex != null)
+                {
+                    sb.AppendLine(ex.Message);
+                    ex = ex.InnerException;
+                }
+                return sb.ToString();
             }
         }
         public string TimeStamp {
