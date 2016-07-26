@@ -17,5 +17,4 @@ namespace Xbim.Presentation.LayerStyling
     {
         event System.ComponentModel.ProgressChangedEventHandler ProgressChanged;
     }
-
 }

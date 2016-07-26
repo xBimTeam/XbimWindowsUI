@@ -38,32 +38,8 @@ namespace Xbim.Presentation.LayerStyling
         public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes,
             List<Type> exclude = null)
         {
-            
-            var excludedTypes = new HashSet<short>();
-            if (exclude == null)
-                exclude = new List<Type>()
-                {
-                    typeof(IIfcSpace)
-                    // , typeof(IfcFeatureElement)
-                };
-            foreach (var excludedT in exclude)
-            {
-                ExpressType ifcT;
-                if (excludedT.IsInterface && excludedT.Name.StartsWith("IIfc"))
-                {
-                    var concreteTypename = excludedT.Name.Substring(1).ToUpper();
-                    ifcT = model.Metadata.ExpressType(concreteTypename);
-                }
-                else
-                    ifcT = model.Metadata.ExpressType(excludedT);
-                if (ifcT == null) // it could be a type that does not belong in the model schema
-                    continue;
-                foreach (var exIfcType in ifcT.NonAbstractSubTypes)
-                {
-                    excludedTypes.Add(exIfcType.TypeId);
-                }
-            }
-            
+            var excludedTypes = model.DefaultExclusions(exclude);
+
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             var timer = new Stopwatch();
             timer.Start();
