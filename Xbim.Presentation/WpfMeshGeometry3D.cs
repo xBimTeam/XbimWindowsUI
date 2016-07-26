@@ -80,11 +80,11 @@ namespace Xbim.Presentation
             {
                 using (var geomReader = geomstore.BeginRead())
                 {
-                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection))
+                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                     {
-                        var shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                        if (shapegeom.Format != XbimGeometryType.PolyhedronBinary)
-                            continue;
+                        IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        if(shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                                    continue;
                         var transform = shapeInstance.Transformation * modelTransform;
                         tgt.Add(
                             shapegeom.ShapeData,
@@ -113,10 +113,9 @@ namespace Xbim.Presentation
                 {
                     using (var geomReader = geomstore.BeginRead())
                     {
-
                         foreach (var item in modelgroup)
                         {
-                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item))
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x=>x.RepresentationType==XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                             {
                                 IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                                 if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
@@ -131,9 +130,7 @@ namespace Xbim.Presentation
                                     (short)model.UserDefinedId
                                     );
                             }
-
-                        }
-                        
+                        }                        
                     }
                 }
             }

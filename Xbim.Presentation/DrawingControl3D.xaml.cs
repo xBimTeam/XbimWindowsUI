@@ -435,7 +435,6 @@ namespace Xbim.Presentation
             {
                 Selection.Clear();
                 SelectedEntity = null;
-                HighlighSelected(null);
                 return;
             }
 
@@ -867,9 +866,13 @@ namespace Xbim.Presentation
             {
                 m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);               
             }
-            else if (newVal != null) // single element selection
+            else if (newVal != null) // single element selection, requires the newval to get the model
             {
                 m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
+            }
+            else // otherwise we create an empty mesh
+            {
+                m = new WpfMeshGeometry3D();
             }
 
             // 2. then determine how to highlight it
