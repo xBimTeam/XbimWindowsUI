@@ -60,7 +60,6 @@ namespace Xbim.Presentation
 
             private readonly string[] _schemas = {"file", "ftp", "http", "https"};
 
-
             public bool IsLink
             {
                 get
@@ -415,27 +414,39 @@ namespace Xbim.Presentation
                     AddPropertySet(pSet);
                 }
             }
-
         }
 
         private void AddPropertySet(IIfcPropertySet pSet)
         {
             if (pSet == null)
                 return;
-            foreach (var item in pSet.HasProperties.OfType<IIfcPropertySingleValue>()) //only handle simple properties
+            foreach (var item in pSet.HasProperties.OfType<IIfcPropertySingleValue>()) //handle IfcPropertySingleValue
             {
-                var val = "";
-                var nomVal = item.NominalValue;
-                if (nomVal != null)
-                    val = nomVal.ToString();
-                _properties.Add(new PropertyItem
-                {
-                    IfcLabel = item.EntityLabel,
-                    PropertySetName = pSet.Name,
-                    Name = item.Name,
-                    Value = val
-                });
+                AddProperty(item, pSet.Name);
             }
+            foreach (var item in pSet.HasProperties.OfType<IIfcComplexProperty>()) // handle IfcComplexProperty
+            {
+                // by invoking the undrlying addproperty function with a longer path
+                foreach (var composingProperty in item.HasProperties.OfType<IIfcPropertySingleValue>())
+                {
+                    AddProperty(composingProperty, pSet.Name + " / " + item.Name);
+                }
+            }
+        }
+
+        private void AddProperty(IIfcPropertySingleValue item, string GroupName)
+        {
+            var val = "";
+            var nomVal = item.NominalValue;
+            if (nomVal != null)
+                val = nomVal.ToString();
+            _properties.Add(new PropertyItem
+            {
+                IfcLabel = item.EntityLabel,
+                PropertySetName = GroupName,
+                Name = item.Name,
+                Value = val
+            });
         }
 
         private void FillMaterialData()
