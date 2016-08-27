@@ -857,6 +857,7 @@ namespace XbimXplorer.Commands
         /// <returns>Enumerable string of full type name, with namespace</returns>
         private IEnumerable<string> MatchingTypes(string regExString)
         {
+            HashSet<string> processed = new HashSet<string>();
             var re = new Regex(regExString, RegexOptions.IgnoreCase);
             foreach (var an in Assembly.GetExecutingAssembly().GetReferencedAssemblies())
             {
@@ -868,18 +869,32 @@ namespace XbimXplorer.Commands
                             t.Namespace == "Xbim.XbimExtensions.SelectTypes"
                             ||
                             t.Namespace.StartsWith("Xbim.Ifc2x3.")
+                            ||
+                            t.Namespace.StartsWith("Xbim.Ifc4.")
                             ))
                     )
                 {
                     if (regExString == "/")
                     {
-                        if (type.BaseType == typeof (object))
-                            yield return type.FullName;
+                        if (type.BaseType == typeof(object))
+                        {
+                            if (!processed.Contains(type.FullName))
+                            {
+                                processed.Add(type.FullName);
+                                yield return type.FullName;
+                            }
+                        }
                     }
                     else
                     {
                         if (re.IsMatch(type.FullName))
-                            yield return type.FullName;
+                        {
+                            if (!processed.Contains(type.FullName))
+                            {
+                                processed.Add(type.FullName);
+                                yield return type.FullName;
+                            }
+                        }
                     }
                 }
             }
@@ -902,15 +917,20 @@ namespace XbimXplorer.Commands
             return rex;
         }
 
+        internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
+        {
+            {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
+            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)}
+        };
+
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
         {
             var tarr = type.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);
             type = tarr[tarr.Length - 1];
-
-
+            var schema = tarr[tarr.Length - 3].ToLowerInvariant();
             var sb = new TextHighliter();
-
-            var ot = Model.Metadata.ExpressType(type.ToUpper());
+           
+            var ot = SchemaMetadatas[schema].ExpressType(type.ToUpper());
             if (ot != null)
             {
                 sb.Append(
