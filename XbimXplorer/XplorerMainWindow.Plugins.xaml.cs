@@ -157,6 +157,8 @@ namespace XbimXplorer
             {
                 EvaluateXbimUiType(tp);
             }
+
+            PluginMenu.Visibility = PluginMenuVisibility;
         }
 
         private void EvaluateXbimUiType(Type type)

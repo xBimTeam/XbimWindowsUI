@@ -34,6 +34,9 @@ namespace Xbim.WindowsUI.DPoWValidation.IO
                     string msg;
                     requirementFacility = Facility.ReadCobie(fileToLoad, out msg);
                     break;
+                case ".zip":
+                    requirementFacility = Facility.ReadZip(fileToLoad);
+                    break;
             }
             return requirementFacility;
         }

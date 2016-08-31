@@ -134,7 +134,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public ValidationViewModel()
         {
             IsWorking = false;
-            SelectRequirement = new SelectFileCommand(RequirementFileInfo, this);
+            SelectRequirement = new SelectFileCommand(RequirementFileInfo, this) { IncludeZip = true };
             SelectSubmission = new SelectFileCommand(SubmissionFileInfo, this) {IncludeIfc = true};
             SelectReport = new SelectReportFileCommand(ReportFileInfo, this);
             

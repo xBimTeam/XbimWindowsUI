@@ -37,14 +37,14 @@ namespace XplorerPlugins.DPoW
         {
             var supportedFiles = new []
             {
-                "All supprted files|*.xlsx;*.xls;*.xml;*.json",
+                "All supprted files|*.xlsx;*.xls;*.xml;*.json;*.zip",
                 "Validation requirement Excel|*.xlsx;*.xls",
                 "Validation requirement XML|*.xml",
-                "Validation requirement json|*.json"
+                "Validation requirement json|*.json",
+                "Validation requirement zip|*.zip"
             };
 
             var openFile = new OpenFileDialog {Filter = string.Join("|", supportedFiles)};
-
             var res = openFile.ShowDialog();
 
             if (!res.HasValue || !res.Value) 
@@ -146,7 +146,7 @@ namespace XplorerPlugins.DPoW
             {
                 case "Model":
                     var model = e.NewValue as IfcStore;
-                    if (model != null)
+                    if (model != null && model.FileName != null)
                     {
                         try
                         {
