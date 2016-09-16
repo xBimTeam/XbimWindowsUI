@@ -58,6 +58,7 @@
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="Open"   Executed="CommandBinding_Open" CanExecute="CommandBinding_CanExecute"/>
+        <CommandBinding Command="Refresh" Executed="CommandBinding_Refresh"  CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
         
@@ -76,6 +77,7 @@
         <Menu Grid.Row="0" >
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" Command="Open" ToolTip="Load a single Ifc, Xbim, IfcZip or IfcXML file." />
+                <MenuItem Header="_Reload model" Command="Refresh"/>
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
                 <MenuItem Header="_Close" Command="Close" />
                 <MenuItem Header="_Federation">
