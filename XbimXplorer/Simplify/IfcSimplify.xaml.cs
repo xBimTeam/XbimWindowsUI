@@ -38,6 +38,13 @@ namespace XbimXplorer.Simplify
         string _header;
         string _footer;
 
+        private enum sectionMode
+        {
+            header,
+            data,
+            footer
+        }
+
         private void cmdInit_Click(object sender, RoutedEventArgs e)
         {
             _ifcLines = new Dictionary<int, string>();
@@ -47,23 +54,12 @@ namespace XbimXplorer.Simplify
             _header = "";
             _footer = "";
 
+            var mode = sectionMode.header;
 
             FileTextParser fp = new FileTextParser(TxtInputFile.Text);
             string readLine;
-            bool foundAnyLine = false;
-
             List<int> requiredLines = new List<int>();
-
-            //Regex re = new Regex(
-            //    "#(\\d+)" + // integer index
-            //    " *" + // optional spaces
-            //    "=" + // =
-            //    " *" + // optional spaces
-            //    "([^(]*)" +  // class information type (anything but an open bracket as many times)
-            //    "\\(" + // the open bracket (escaped)
-            //    "(.*)" + // anything repeated
-            //    "\\);" // the closing bracket escaped and the semicolon
-            //    );
+            string lineBuffer = "";
 
             Regex re = new Regex(
                 "#(\\d+)" + // integer index
@@ -79,28 +75,37 @@ namespace XbimXplorer.Simplify
 
             while ((readLine = fp.NextLine()) != null)
             {
-                Match m = re.Match(readLine);
-                if (m.Success)
+                if (readLine.ToLowerInvariant().Trim() == "data;")
                 {
-                    foundAnyLine = true;
-                    int iId = Convert.ToInt32(m.Groups[1].ToString());
-                    string type = m.Groups[2].ToString();
-
-                    _ifcLines.Add(iId, readLine);
-                    _ifcContents.Add(iId, m.Groups[3].ToString());
-                    _ifcType.Add(iId, type);
-
-                    if (
-                        type == "IFCPROJECT"
-                        )
+                    _header += readLine + "\r\n";
+                    mode = sectionMode.data;
+                }
+                else if (mode == sectionMode.data && readLine.ToLowerInvariant().Trim() == "endsec;")
+                {
+                    _footer += readLine + "\r\n";
+                    mode = sectionMode.footer;
+                }
+                else if (mode == sectionMode.data)
+                {
+                    lineBuffer += readLine;
+                    Match m = re.Match(lineBuffer);
+                    if (m.Success)
                     {
-                        requiredLines.Add(iId);
-                    }
+                        int iId = Convert.ToInt32(m.Groups[1].ToString());
+                        string type = m.Groups[2].ToString();
 
+                        _ifcLines.Add(iId, lineBuffer);
+                        _ifcContents.Add(iId, m.Groups[3].ToString());
+                        _ifcType.Add(iId, type);
+
+                        if (type == "IFCPROJECT")
+                            requiredLines.Add(iId);
+                        lineBuffer = "";
+                    }
                 }
                 else
                 {
-                    if (foundAnyLine == false)
+                    if (mode == sectionMode.header)
                         _header += readLine + "\r\n";
                     else
                         _footer += readLine + "\r\n";

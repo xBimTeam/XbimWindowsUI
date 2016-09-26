@@ -862,5 +862,11 @@ namespace XbimXplorer
                     break;
             }
         }
+
+        private void OpenStrippingWindow(object sender, RoutedEventArgs e)
+        {
+            Simplify.IfcSimplify s = new Simplify.IfcSimplify();
+            s.Show();
+        }
     }
 }
