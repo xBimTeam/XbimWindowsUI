@@ -321,7 +321,6 @@ namespace Xbim.Presentation
             IfcProject project = Model.IfcProject;
             if (project != null)
             {
-              
                 ChildrenPath ="Children";
                 ObservableCollection<XbimModelViewModel> svList = new ObservableCollection<XbimModelViewModel>();  
                 svList.Add(new XbimModelViewModel(project, null));
@@ -330,12 +329,10 @@ namespace Xbim.Presentation
         }
         private void LazyLoadAll(IXbimViewModel parent)
         {
-
             foreach (var child in parent.Children)
             {
                 LazyLoadAll(child);
             }
-            
         }
 
 
@@ -368,29 +365,20 @@ namespace Xbim.Presentation
 
         private void ViewGroups()
         {
-            if (Model != null)
+            System.Collections.IEnumerable list = Enumerable.Empty<IfcGroupsViewModel>();
+            if (Model != null && Model.IfcProject != null)
             {
-                ChildrenPath = "Children";
-                var modelList = new List<GroupViewModel>();
-                
-                var groups = Model.Instances.OfType<IfcGroup>();
-                var groupedObjects = new List<IfcRoot>();
-                foreach (var obj in Model.Instances.OfType<IfcRelAssignsToGroup>())
+                IfcGroupsViewModel v = new IfcGroupsViewModel(Model);
+                if (v.Children.Any())
                 {
-                    groupedObjects.AddRange(obj.RelatedObjects.ToList());
+                    ChildrenPath = "Children";
+                    var glist = new List<IfcGroupsViewModel>();
+                    glist.Add(v);
+                    HierarchySource = glist;
+                    return;
                 }
-
-                foreach (var item in groups)
-                {
-                    if(!groupedObjects.Contains(item))
-                        modelList.Add(new GroupViewModel(item, null)); //add only root groups/systems
-                }
-                HierarchySource = modelList;
-                //foreach (var child in modelList)
-                //{
-                //    LazyLoadAll(child); //why to do this?
-                //}
             }
+            HierarchySource = list;
         }
 
         public void Regenerate()
