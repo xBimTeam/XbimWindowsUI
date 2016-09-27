@@ -200,6 +200,7 @@
     <Compile Include="FederatedModel\FederatedModelsGrid.xaml.cs">
       <DependentUpon>FederatedModelsGrid.xaml</DependentUpon>
     </Compile>
+    <Compile Include="IfcGroupsViewModel.cs" />
     <Compile Include="HistoryCollection.cs" />
     <Compile Include="LayerStyling\ILayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylingExtensions.cs" />
