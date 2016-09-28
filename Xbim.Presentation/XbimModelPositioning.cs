@@ -64,11 +64,18 @@ namespace Xbim.Presentation
                 return;
             using (var reader = geomStore.BeginRead())
             {
-                foreach (var regionColl in reader.ContextRegions)
+                var regions = reader.ContextRegions.Where(cr => cr.MostPopulated()!=null).Select(c=>c.MostPopulated());
+                var rect = XbimRect3D.Empty;
+                int pop = 0;
+                foreach (var r in regions)
                 {
-                    LargestRegion = regionColl.MostPopulated(); //just take the first, need to change this to hold multiple contexts
-                    break;
+                    pop += r.Population;
+                    if (rect.IsEmpty) rect = r.ToXbimRect3D();
+                    else rect.Union(r.ToXbimRect3D());
                 }
+                if(pop>0)
+                    LargestRegion = new XbimRegion("Largest", rect, pop);
+                
             }
         }
 

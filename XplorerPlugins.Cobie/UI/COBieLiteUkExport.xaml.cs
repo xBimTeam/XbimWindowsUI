@@ -16,7 +16,7 @@ using System.Text;
 using Xbim.CobieLiteUk;
 using Xbim.CobieLiteUk.FilterHelper;
 using XbimExchanger.IfcToCOBieLiteUK;
-
+using XbimExchanger.IfcHelpers;
 
 namespace XplorerPlugins.Cobie.UI
 {
@@ -335,7 +335,7 @@ namespace XplorerPlugins.Cobie.UI
 
         OutPutFilters _assetfilters = new OutPutFilters();
 
-        private ICobieLiteConverter _cobieWorker;
+        private CobieLiteConverter _cobieWorker;
 
         private void DoExport(object sender, RoutedEventArgs e)
         {

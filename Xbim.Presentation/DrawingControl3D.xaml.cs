@@ -1246,7 +1246,7 @@ namespace Xbim.Presentation
             if ((options & ModelRefreshOptions.ViewPreserveSelection) != ModelRefreshOptions.ViewPreserveSelection)
             {
                 Selection = new EntitySelection();
-                Highlighted.Mesh = null;
+                Highlighted.Content = null;
             }
 
             if ((options & ModelRefreshOptions.ViewPreserveCuttingPlane) != ModelRefreshOptions.ViewPreserveCuttingPlane)
@@ -1618,9 +1618,9 @@ namespace Xbim.Presentation
 
         public void ZoomSelected()
         {
-            if (SelectedEntity == null || Highlighted.Mesh == null)
+            if (SelectedEntity == null || Highlighted.Content == null || Highlighted.Content.Bounds.IsEmpty)
                 return;
-            var r3D = Highlighted.Mesh.GetBounds();
+            var r3D = Highlighted.Content.Bounds;
             ZoomTo(r3D);
         }
 
@@ -1632,9 +1632,9 @@ namespace Xbim.Presentation
         /// <param name="delta">positive distance of the cutting plane above the base of the selected element.</param>
         public void ClipBaseSelected(double delta)
         {
-            if (SelectedEntity == null || Highlighted.Mesh == null)
+            if (SelectedEntity == null || Highlighted.Content == null || Highlighted.Content.Bounds.IsEmpty)
                 return;
-            var r3D = Highlighted.Mesh.GetBounds();
+            var r3D = Highlighted.Content.Bounds;
             if (r3D.IsEmpty)
                 return;
             SetCutPlane(
