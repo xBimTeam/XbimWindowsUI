@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
-      <id>Xbim.WindowsUI</id>
-      <version>4.0.0-V0027</version>
-      <title>xBIM WindowsUI</title>
+      <id>Xbim.WindowsUI.4</id>
+      <version>4.0.0</version>
+      <title>xBIM WindowsUI 4</title>
       <authors>xBIM team</authors>
       <owners>xBIM team</owners>
       <licenseUrl>http://xbim.codeplex.com/license</licenseUrl>
@@ -11,18 +11,18 @@
       <iconUrl>http://download-codeplex.sec.s-msft.com/Download?ProjectName=xbim&amp;DownloadId=373774&amp;Build=20335</iconUrl>
       <requireLicenseAcceptance>true</requireLicenseAcceptance>
       <description>xBIM is an Open Source Toolkit for developing IFC based applications (BuildingSmart Data model). 
-It provides full support for reading and writing geometry, topology and data in accordance with the Ifc2x3 schema.
+It provides full support for reading and writing geometry, topology and data in accordance with the Ifc2x3, Ifc4 schema.
 xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
 The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
 IOS and Android versions are under development.</description>
     <summary>xBIM Windows UI contains a set of MS Windows controls that can be used to build Windows Xaml or forms based applications that can display the geometry and semantic data in IFC models.</summary>
-    <releaseNotes>3.1 produces net40 signed DLLs.
-    3.0 contains the first Nuget release of the BIM Query Language aligned with revamped geometry engine.</releaseNotes>
+    <releaseNotes>Support for Ifc4 and Ifc4Xml added. All Ifc geometries supported.
+    Export to Cobie and WexBim included</releaseNotes>
     <language>en-GB</language>
-    <tags>BIM, IFC, IfcXml, IfcZip, .Net, C#, BuildingSmart</tags>
+    <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <dependency id="Xbim.Geometry" version="4.0.0-V0089" />
-      <dependency id="Xbim.Essentials" version="4.0.0-V235" />
+      <dependency id="Xbim.Geometry" version="4.0.0" />
+      <dependency id="Xbim.Essentials" version="4.0.0" />
       <dependency id="HelixToolkit.Wpf" version="2015.1.629" />
       <dependency id="PropertyTools.Wpf" version="2015.1.66" />
     </dependencies>
