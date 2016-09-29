@@ -8,8 +8,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
-using Xbim.Ifc2x3.ActorResource;
-using Xbim.IO;
+using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
+
 
 namespace Xbim.Presentation.FederatedModel
 {
@@ -18,7 +19,7 @@ namespace Xbim.Presentation.FederatedModel
     /// </summary>
     public partial class FederatedModelsGrid : UserControl
     {
-        XbimModel _model;
+        IfcStore _model;
         List<string> _roles = new List<string>();
         ObservableCollection<XbimReferencedModelViewModel> _referencedModelsWrappers = new ObservableCollection<XbimReferencedModelViewModel>();
 
@@ -36,7 +37,7 @@ namespace Xbim.Presentation.FederatedModel
         public FederatedModelsGrid()
         {
             //get available roles
-            var roles = Enum.GetValues(typeof (IfcRole));
+            var roles = Enum.GetValues(typeof (IfcRoleEnum));
             foreach (var role in roles)
             {
                 _roles.Add(role.ToString());
@@ -55,7 +56,7 @@ namespace Xbim.Presentation.FederatedModel
             try
             {
                 //if build fails, cancel add row
-                if (!modelWrapper.TryBuild(DataContext as XbimModel))
+                if (!modelWrapper.TryBuildAndAddTo(DataContext as IfcStore))
                 {
                     e.Cancel = true;
                 }
@@ -68,19 +69,19 @@ namespace Xbim.Presentation.FederatedModel
 
         void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            // TODO: resolve reference models addition and removal.
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     //Remove model
-
-                    var oldItems = new List<XbimModel>();
+                    var oldItems = new List<IfcStore>();
                     foreach (var item in e.OldItems)
                     {
                         var model = item as XbimReferencedModelViewModel;
-                        bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
-                        model.ReferencedModel.Model.Close();
+                        //bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
+                        //model.ReferencedModel.Model.Close();
                     }
 
                     break;
@@ -97,14 +98,14 @@ namespace Xbim.Presentation.FederatedModel
 
         void FederatedModelProperties_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            _model = DataContext as XbimModel;
+            _model = DataContext as IfcStore;
             if (_model != null)
             {
                 var tempRefModHolder = _model.ReferencedModels;
 
                 foreach (var refMod in tempRefModHolder)
                 {
-                    _referencedModelsWrappers.Add(new XbimReferencedModelViewModel(refMod));
+                      _referencedModelsWrappers.Add(new XbimReferencedModelViewModel(refMod));
                 }
             }
         }
@@ -131,9 +132,13 @@ namespace Xbim.Presentation.FederatedModel
 
         private void DeleteRowButton_Click(object sender, RoutedEventArgs e)
         {
-            var wrapper = (sender as Button).DataContext as XbimReferencedModelViewModel;
-            if (wrapper.ReferencedModel != null)
-                ReferencedModelWrappers.Remove(wrapper);
+            var button = sender as Button;
+            if (button != null)
+            {
+                var wrapper = button.DataContext as XbimReferencedModelViewModel;
+                if (wrapper != null && wrapper.ReferencedModel != null)
+                    ReferencedModelWrappers.Remove(wrapper);
+            }
         }
     }
 }

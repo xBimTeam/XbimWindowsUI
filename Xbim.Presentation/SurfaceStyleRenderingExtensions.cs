@@ -14,9 +14,8 @@
 
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Xbim.Ifc2x3.MeasureResource;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
-using Xbim.Ifc2x3.PresentationResource;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.MeasureResource;
 
 #endregion
 
@@ -24,7 +23,7 @@ namespace Xbim.Presentation
 {
     public static class SurfaceStyleRenderingExtensions
     {
-        public static Material ToMaterial(this IfcSurfaceStyleRendering r)
+        public static Material ToMaterial(this IIfcSurfaceStyleRendering r)
         {
 
             MaterialGroup grp = new MaterialGroup();
@@ -34,9 +33,9 @@ namespace Xbim.Presentation
                 brush.Opacity = r.Transparency.HasValue ? 1.0 - r.Transparency.Value : 1.0;
                 grp.Children.Add(new DiffuseMaterial(brush));
             }
-            else if (r.DiffuseColour is IfcColourRgb)
+            else if (r.DiffuseColour is IIfcColourRgb)
             {
-                Brush brush = new SolidColorBrush(((IfcColourRgb)r.DiffuseColour).ToColor());
+                Brush brush = new SolidColorBrush(((IIfcColourRgb)r.DiffuseColour).ToColor());
                 brush.Opacity = r.Transparency.HasValue ? 1.0 - r.Transparency.Value : 1.0;
                 grp.Children.Add(new DiffuseMaterial(brush));
             }
@@ -53,9 +52,9 @@ namespace Xbim.Presentation
                 brush.Opacity = r.Transparency.HasValue ? 1.0 - r.Transparency.Value : 1.0;
                 grp.Children.Add(new SpecularMaterial(brush, (IfcNormalisedRatioMeasure)(r.SpecularColour)));
             }
-            if (r.SpecularColour is IfcColourRgb)
+            if (r.SpecularColour is IIfcColourRgb)
             {
-                Brush brush = new SolidColorBrush(((IfcColourRgb)r.SpecularColour).ToColor());
+                Brush brush = new SolidColorBrush(((IIfcColourRgb)r.SpecularColour).ToColor());
                 brush.Opacity = r.Transparency.HasValue ? 1.0 - r.Transparency.Value : 1.0;
                 grp.Children.Add(new SpecularMaterial(brush, 100.0));
             }

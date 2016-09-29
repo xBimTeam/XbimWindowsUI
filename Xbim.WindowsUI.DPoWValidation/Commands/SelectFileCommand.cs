@@ -13,6 +13,8 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
         private readonly ValidationViewModel _vm;
         public bool IncludeIfc = false;
 
+        public bool IncludeZip = false;
+
 
         public SelectFileCommand(SourceFile tb, ValidationViewModel model)
         {
@@ -39,15 +41,22 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
         {
             const string modelExtensions = @";*.ifc;*.ifcxml;*.xbim;*.ifczip";
 
+            var cobieLiteFiles = IncludeZip
+                ? "CobieLite files|*.json;*.xml;*.zip"
+                : "CobieLite files|*.json;*.xml";
+            var cobieLiteExtensions = IncludeZip
+                ? ";*.json;*.xml;*.zip"
+                : ";*.json;*.xml";
+
             var filter = IncludeIfc
-                ? @"All model files|*.xls;*.xlsx;*.json" + modelExtensions + "|" +
+                ? @"All model files|*.xls;*.xlsx;" + modelExtensions + cobieLiteExtensions + "|" +
                     "COBie files|*.xls;*.xlsx|" +
-                    "CobieLite files|*.json;*.xml|" +
+                    cobieLiteFiles + "|" +
                     "IFC Files|*.Ifc;*.ifcxml;*.xbim;*.ifczip"
-                : @"All model files|*.xls;*.xlsx;*.json" +  "|" +
+                : @"All model files|*.xls;*.xlsx;" + cobieLiteExtensions + "|" +
                     "COBie files|*.xls;*.xlsx|" +
-                    "CobieLite files|*.json;*.xml"
-                ;
+                    cobieLiteFiles;
+                
 
             filter = @"All files|*.*|" + filter;
 

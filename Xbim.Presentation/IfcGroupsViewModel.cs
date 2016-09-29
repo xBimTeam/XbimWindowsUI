@@ -3,23 +3,22 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Xbim.Common;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
-using Xbim.IO.ViewModels;
-using Xbim.XbimExtensions.Interfaces;
+using Xbim.Ifc;
+using Xbim.Ifc.ViewModels;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Presentation
 {
     class IfcGroupsViewModel : IXbimViewModel
     {
-        private XbimModel _model;
+        private IfcStore _model;
 
         public override string ToString()
         {
             return Name;
         }
 
-        public IfcGroupsViewModel(XbimModel model)
+        public IfcGroupsViewModel(IfcStore model)
         {
             _model = model;
         }
@@ -40,7 +39,7 @@ namespace Xbim.Presentation
             set { }
         }
 
-        public IPersistIfcEntity Entity
+        public IPersistEntity Entity
         {
             get { return null; }
         }
@@ -75,7 +74,7 @@ namespace Xbim.Presentation
             get { return "First level groups"; }
         }
 
-        public XbimModel Model
+        public IModel Model
         {
             get { return _model; }
         }
@@ -85,11 +84,11 @@ namespace Xbim.Presentation
         {
             _children = new List<IXbimViewModel>();
 
-            var allGroups = _model.Instances.OfType<IfcGroup>();
-            var childGroups = new List<IfcRoot>();
-            foreach (var obj in _model.Instances.OfType<IfcRelAssignsToGroup>())
+            var allGroups = _model.FederatedInstances.OfType<IIfcGroup>();
+            var childGroups = new List<IIfcRoot>();
+            foreach (var obj in _model.FederatedInstances.OfType<IIfcRelAssignsToGroup>())
             {
-                childGroups.AddRange(obj.RelatedObjects.OfType<IfcGroup>().ToList());
+                childGroups.AddRange(obj.RelatedObjects.OfType<IIfcGroup>().ToList());
             }
 
             foreach (var item in allGroups)

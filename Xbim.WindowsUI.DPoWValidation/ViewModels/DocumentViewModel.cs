@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xbim.COBieLiteUK;
+using Xbim.CobieLiteUk;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
     class DocumentViewModel
     {
-        private COBieLiteUK.Document _document;
+        private Document _document;
 
-        public DocumentViewModel(COBieLiteUK.Document document)
+        public DocumentViewModel(Document document)
         {
             _document = document;
             DocumentName = _document.Name;

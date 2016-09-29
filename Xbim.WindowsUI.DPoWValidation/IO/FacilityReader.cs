@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xbim.COBieLiteUK;
+﻿using System.IO;
+using Xbim.CobieLiteUk;
 
 namespace Xbim.WindowsUI.DPoWValidation.IO
 {
@@ -38,6 +33,9 @@ namespace Xbim.WindowsUI.DPoWValidation.IO
                 case ".xlsx":
                     string msg;
                     requirementFacility = Facility.ReadCobie(fileToLoad, out msg);
+                    break;
+                case ".zip":
+                    requirementFacility = Facility.ReadZip(fileToLoad);
                     break;
             }
             return requirementFacility;

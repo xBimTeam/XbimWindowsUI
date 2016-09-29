@@ -3,19 +3,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.IO;
+using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions;
-using Xbim.XbimExtensions.Interfaces;
-using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -38,8 +34,7 @@ namespace Xbim.Presentation
 
         private void Init()
         {
-            var mesh = Mesh;
-            _indexOffset = (uint)mesh.Positions.Count;
+            _indexOffset = (uint)Mesh.Positions.Count;
         }
 
         private void StandardBeginPolygon(TriangleType meshType)
@@ -77,10 +72,75 @@ namespace Xbim.Presentation
             }
         }
 
+        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, WpfMaterial mat)
+        {
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            using (var geomstore = selection.Model.GeometryStore)
+            {
+                using (var geomReader = geomstore.BeginRead())
+                {
+                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                    {
+                        IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                        if(shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                                    continue;
+                        var transform = shapeInstance.Transformation * modelTransform;
+                        tgt.Add(
+                            shapegeom.ShapeData,
+                            shapeInstance.IfcTypeId,
+                            shapeInstance.IfcProductLabel,
+                            shapeInstance.InstanceLabel,
+                            transform,
+                            (short)selection.Model.UserDefinedId
+                            );
+                    }
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
+        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions, WpfMaterial mat)
+        {
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            foreach (var modelgroup in selection.GroupBy(i => i.Model))
+            {
+                var model = modelgroup.Key;
+                var modelTransform = positions[model].Transform;
+                using (var geomstore = model.GeometryStore)
+                {
+                    using (var geomReader = geomstore.BeginRead())
+                    {
+                        foreach (var item in modelgroup)
+                        {
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x=>x.RepresentationType==XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                            {
+                                IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                                    continue;
+                                var transform = shapeInstance.Transformation * modelTransform;
+                                tgt.Add(
+                                    shapegeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    transform,
+                                    (short)model.UserDefinedId
+                                    );
+                            }
+                        }                        
+                    }
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
         public WpfMeshGeometry3D()
         {
-            WpfModel = new GeometryModel3D();
-            WpfModel.Geometry = new MeshGeometry3D();
+            WpfModel = new GeometryModel3D {Geometry = new MeshGeometry3D()};
             Mesh.Positions = new WpfPoint3DCollection(0);
             Mesh.Normals = new WpfVector3DCollection();
             Mesh.TriangleIndices = new Int32Collection();
@@ -89,30 +149,24 @@ namespace Xbim.Presentation
 
         public WpfMeshGeometry3D(IXbimMeshGeometry3D mesh)
         {
-            WpfModel = new GeometryModel3D();
-            WpfModel.Geometry = new MeshGeometry3D();
+            WpfModel = new GeometryModel3D {Geometry = new MeshGeometry3D()};
             Mesh.Positions = new WpfPoint3DCollection(mesh.Positions);
             Mesh.Normals = new WpfVector3DCollection(mesh.Normals);
-            Mesh.TriangleIndices = new Int32Collection(mesh.TriangleIndices);
+            Mesh.TriangleIndices = new Int32Collection (mesh.TriangleIndices);
             _meshes = new XbimMeshFragmentCollection(mesh.Meshes);
         }
 
         public WpfMeshGeometry3D(WpfMaterial material, WpfMaterial backMaterial = null)
         {
-            var g = new MeshGeometry3D();
-            g.Positions = new WpfPoint3DCollection(0);
-            g.Normals = new WpfVector3DCollection();
-            g.TriangleIndices = new Int32Collection();
-            WpfModel = new GeometryModel3D(g, material);
-            
-            if (backMaterial != null)
+            WpfModel = new GeometryModel3D(new MeshGeometry3D(), material);
+            if (backMaterial != null) 
                 WpfModel.BackMaterial = backMaterial;
         }
 
         public static implicit operator GeometryModel3D(WpfMeshGeometry3D mesh)
         {
             if (mesh.WpfModel == null)
-                mesh.WpfModel = new GeometryModel3D() {Geometry = new MeshGeometry3D()};
+                mesh.WpfModel = new GeometryModel3D();
             return mesh.WpfModel;
         }
 
@@ -121,10 +175,26 @@ namespace Xbim.Presentation
             get
             {
                 if (WpfModel == null)
-                    WpfModel = new GeometryModel3D() {Geometry = new MeshGeometry3D()};
+                    WpfModel = new GeometryModel3D();
                 return WpfModel.Geometry as MeshGeometry3D;
             }
         }
+        //public IEnumerable<XbimPoint3D> Positions
+        //{
+        //    get { return Mesh.Positions; }
+        //}
+
+        //public IList<XbimVector3D> Normals
+        //{
+        //    get { return Mesh.Normals; }
+        //}
+
+        //public IList<int> TriangleIndices
+        //{
+        //    get { return Mesh.TriangleIndices; }
+        //}
+
+
 
         public XbimMeshFragmentCollection Meshes
         {
@@ -142,41 +212,7 @@ namespace Xbim.Presentation
         /// <param name="modelId"></param>
         public bool Add(XbimGeometryData geometryMeshData, short modelId)
         {
-            var transform = XbimMatrix3D.FromArray(geometryMeshData.DataArray2);
-            if (geometryMeshData.GeometryType == XbimGeometryType.TriangulatedMesh)
-            {
-                var strm = new XbimTriangulatedModelStream(geometryMeshData.ShapeData);
-                var fragment = strm.BuildWithNormals(this, transform, modelId);
-                if (fragment.EntityLabel == -1) //nothing was added due to size being exceeded
-                    return false;
-                fragment.EntityLabel = geometryMeshData.IfcProductLabel;
-                fragment.EntityTypeId = geometryMeshData.IfcTypeId;
-                _meshes.Add(fragment);
-            }
-            else if (geometryMeshData.GeometryType == XbimGeometryType.BoundingBox)
-            {
-                var r3D = XbimRect3D.FromArray(geometryMeshData.ShapeData);
-                Add(XbimMeshGeometry3D.MakeBoundingBox(r3D, transform), geometryMeshData.IfcProductLabel, IfcMetaData.GetType(geometryMeshData.IfcTypeId), modelId);
-            }
-            else
-                throw new Common.Exceptions.XbimException("Illegal geometry type found");
-            return true;
-        }
-
-        //adds the content of the toAdd to this, it is added as a single mesh fragment, any meshes in toAdd are lost
-        public void Add(IXbimMeshGeometry3D toAdd, int entityLabel, Type ifcType, short modelId)
-        {
-            var startPosition = _unfrozenPositions.Count;
-            var fragment = new XbimMeshFragment(startPosition, TriangleIndexCount, modelId);
-            _unfrozenPositions.AddRange(toAdd.Positions.Select(x => new Point3D(x.X, x.Y, x.Z)));
-            _unfrozenNormals.AddRange(toAdd.Normals.Select(x => new Vector3D(x.X, x.Y, x.Z)));
-            foreach (var idx in toAdd.TriangleIndices)
-                _unfrozenIndices.Add(idx + startPosition);
-            fragment.EndPosition = PositionCount - 1;
-            fragment.EndTriangleIndex = TriangleIndexCount - 1;
-            fragment.EntityLabel = entityLabel;
-            fragment.EntityTypeId = IfcMetaData.IfcTypeId(ifcType);
-            _meshes.Add(fragment);
+            throw new NotImplementedException();
         }
 
         public IEnumerable<XbimPoint3D> Positions
@@ -347,9 +383,9 @@ namespace Xbim.Presentation
             }
         }
 
-        public XbimMeshFragment Add(IXbimGeometryModel geometryModel, IfcProduct product, XbimMatrix3D transform, double? deflection = null, short modelId=0)
+        XbimMeshFragment IXbimMeshGeometry3D.Add(IXbimGeometryModel geometryModel, IIfcProduct product, XbimMatrix3D transform, double? deflection, short modelId)
         {
-            return geometryModel.MeshTo(this, product, transform, deflection ?? product.ModelOf.ModelFactors.DeflectionTolerance, modelId);
+            return geometryModel.MeshTo(this, product, transform, deflection ?? product.Model.ModelFactors.DeflectionTolerance, modelId);
         }
 
         public void BeginBuild()
@@ -467,15 +503,13 @@ namespace Xbim.Presentation
             _meshes.Add(frag);
         }
 
-        public void Add(string mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null,short modelId=0)
+        public XbimMeshFragment Add(IXbimGeometryModel geometryModel, IIfcProduct product, XbimMatrix3D transform, double? deflection, short modelId = 0)
         {
-            Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
+            throw new NotImplementedException();
         }
 
-        public void Add(byte[] mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
-        {
-            Add(mesh, IfcMetaData.IfcTypeId(productType), productLabel, geometryLabel, transform, modelId);
-        }
+
+
         public bool Read(string data, XbimMatrix3D? tr = null)
         {
             int version = 1;
@@ -752,6 +786,7 @@ namespace Xbim.Presentation
                                 }
                             }
                         }
+                       
                     }
 
                     _unfrozenPositions.AddRange(vertices);
@@ -791,155 +826,13 @@ namespace Xbim.Presentation
             WpfModel.Geometry = null;
         }
 
-        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions, WpfMaterial mat)
+
+
+
+
+        public void Add(string mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
         {
-            var tgt = new WpfMeshGeometry3D(mat, mat);
-            tgt.BeginUpdate();
-            
-            foreach (var modelgroup in selection.GroupBy(i => i.ModelOf))
-            {
-                var model = modelgroup.Key as XbimModel;
-                var modelTransform = positions[model].Transfrom;
-                if (model == null)
-                    continue;
-                switch (model.GeometrySupportLevel)
-                {
-                    case 2:
-                        var context = new Xbim3DModelContext(model);
-                        foreach (var item in modelgroup)
-                        {
-                            var productShape = context.ShapeInstancesOf((IfcProduct) item)
-                                .Where(
-                                    s =>
-                                        s.RepresentationType !=
-                                        XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
-                                .ToList();
-                            if (!productShape.Any() && item is IfcFeatureElement)
-                            {
-                                productShape = context.ShapeInstancesOf((IfcProduct) item)
-                                    .Where(
-                                        s =>
-                                            s.RepresentationType ==
-                                            XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
-                                    .ToList();
-                            }
-
-                            if (!productShape.Any())
-                                continue;
-                            foreach (var shapeInstance in productShape)
-                            {
-                                IXbimShapeGeometryData shapeGeom =
-                                    context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                                switch ((XbimGeometryType) shapeGeom.Format)
-                                {
-                                    case XbimGeometryType.PolyhedronBinary:
-                                        tgt.Read(shapeGeom.ShapeData,
-                                            XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
-                                        break;
-                                    case XbimGeometryType.Polyhedron:
-                                        tgt.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
-                                            XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform));
-                                        break;
-
-                                }
-                            }
-                        }
-                        break;
-                    case 1:
-                        foreach (var item in modelgroup)
-                        {
-                            var geomDataSet = model.GetGeometryData(item.EntityLabel,
-                                XbimGeometryType.TriangulatedMesh);
-                            var g3D = new XbimMeshGeometry3D();
-                            foreach (var shapeGeom in geomDataSet)
-                            {
-                                var gd = shapeGeom.TransformBy(modelTransform);
-                                // tgt.Add(gd, model.UserDefinedId);
-                                g3D.Add(gd, model.UserDefinedId);
-
-                            }
-                            tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
-                           
-                        }
-                        break;
-                }
-            }           
-            tgt.EndUpdate();
-            return tgt;
-        }
-
-
-        internal static WpfMeshGeometry3D GetGeometry(IPersistIfcEntity item, XbimMatrix3D modelTransform,
-            WpfMaterial mat)
-        {
-            var tgt = new WpfMeshGeometry3D(mat, mat);
-            // var tgt = new XbimMeshGeometry3D();
-            
-            
-            tgt.BeginUpdate();
-
-            var model = item.ModelOf as XbimModel;
-
-            if (model != null)
-            {
-                switch (model.GeometrySupportLevel)
-                {
-                    case 2:
-                        var context = new Xbim3DModelContext(model);
-
-                        var productShape = context.ShapeInstancesOf((IfcProduct) item)
-                            .Where(
-                                s =>
-                                    s.RepresentationType !=
-                                    XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
-                            .ToList();
-                        if (!productShape.Any() && item is IfcFeatureElement)
-                        {
-                            productShape = context.ShapeInstancesOf((IfcProduct) item)
-                                .Where(
-                                    s =>
-                                        s.RepresentationType ==
-                                        XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
-                                .ToList();
-                        }
-
-                        foreach (var shapeInstance in productShape)
-                        {
-                            IXbimShapeGeometryData shapeGeom =
-                                context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                            switch ((XbimGeometryType) shapeGeom.Format)
-                            {
-                                case XbimGeometryType.PolyhedronBinary:
-                                    tgt.Read(
-                                        shapeGeom.ShapeData,
-                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform)
-                                        );
-                                    break;
-                                case XbimGeometryType.Polyhedron:
-                                    tgt.Read(
-                                        ((XbimShapeGeometry) shapeGeom).ShapeData,
-                                        XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform)
-                                        );
-                                    break;
-                            }
-                        }
-                        break;
-                    case 1:
-                        var geomDataSet = model.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
-                        var g3D = new XbimMeshGeometry3D();
-                        foreach (var shapeGeom in geomDataSet)
-                        {
-                            var gd = shapeGeom.TransformBy(modelTransform);
-                            // tgt.Add(gd, model.UserDefinedId);
-                            g3D.Add(gd, model.UserDefinedId);
-
-                        }
-                        tgt.Add(g3D, item.EntityLabel, item.GetType(), model.UserDefinedId);
-                        break;
-                }
-            }
-            tgt.EndUpdate();
-            return tgt;
+            throw new NotImplementedException();
         }
     }
 }

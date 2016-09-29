@@ -14,7 +14,7 @@
 
 using System;
 using System.Windows.Media;
-using Xbim.Ifc2x3.PresentationResource;
+using Xbim.Ifc4.Interfaces;
 
 #endregion
 
@@ -27,7 +27,7 @@ namespace Xbim.Presentation
         /// </summary>
         /// <param name = "rgb"></param>
         /// <returns></returns>
-        public static Color ToColor(this IfcColourRgb rgb)
+        public static Color ToColor(this IIfcColourRgb rgb)
         {
             byte red = Convert.ToByte(rgb.Red*255);
             byte green = Convert.ToByte(rgb.Green*255);
@@ -41,7 +41,7 @@ namespace Xbim.Presentation
         /// <param name = "rgb"></param>
         /// <param name = "factor"></param>
         /// <returns></returns>
-        public static Color ToColor(this IfcColourRgb rgb, double factor)
+        public static Color ToColor(this IIfcColourRgb rgb, double factor)
         {
             byte red = Convert.ToByte(rgb.Red*255*factor);
             byte green = Convert.ToByte(rgb.Green*255*factor);

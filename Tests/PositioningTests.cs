@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xbim.Common.Geometry;
-using Xbim.IO;
-using Xbim.ModelGeometry.Scene;
+using Xbim.Ifc2x3.IO;
 using Xbim.Presentation;
 
 namespace Tests
@@ -16,6 +14,8 @@ namespace Tests
         [DeploymentItem(@"FederationPositioningTests\", @"Scale\")]
         public void ScaledPositioningBoxes()
         {
+            // this test is currently failing because some core functions do not work on old geometry models
+            // it has to be decided if the function needs to be implemented for v3.1 models as well.
             var m = new List<XbimModel>();
 
             var m0 = new XbimModel();

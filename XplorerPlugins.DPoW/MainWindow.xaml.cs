@@ -8,13 +8,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using log4net;
 using Microsoft.Win32;
-using Xbim.CobieLiteUK.Validation;
-using Xbim.COBieLiteUK;
-using Xbim.IO;
+using Xbim.CobieLiteUk.Validation;
+using Xbim.Common;
+using Xbim.CobieLiteUk;
+using Xbim.Ifc;
 using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.ViewModels;
-using Xbim.XbimExtensions.Interfaces;
 
 namespace XplorerPlugins.DPoW
 {
@@ -37,22 +37,21 @@ namespace XplorerPlugins.DPoW
         {
             var supportedFiles = new []
             {
-                "All supprted files|*.xlsx;*.xls;*.xml;*.json",
+                "All supprted files|*.xlsx;*.xls;*.xml;*.json;*.zip",
                 "Validation requirement Excel|*.xlsx;*.xls",
                 "Validation requirement XML|*.xml",
-                "Validation requirement json|*.json"
+                "Validation requirement json|*.json",
+                "Validation requirement zip|*.zip"
             };
 
             var openFile = new OpenFileDialog {Filter = string.Join("|", supportedFiles)};
-
             var res = openFile.ShowDialog();
 
-            if (res.HasValue && res.Value)
-            {
-                var r = new FacilityReader();
-                ReqFacility = r.LoadFacility(openFile.FileName);
-                TestValidation();
-            }
+            if (!res.HasValue || !res.Value) 
+                return;
+            var r = new FacilityReader();
+            ReqFacility = r.LoadFacility(openFile.FileName);
+            TestValidation();
         }
 
         private void SetFacility(Facility facility)
@@ -127,14 +126,14 @@ namespace XplorerPlugins.DPoW
         }
 
         // SelectedEntity
-        public IPersistIfcEntity SelectedEntity
+        public IPersistEntity SelectedEntity
         {
-            get { return (IPersistIfcEntity)GetValue(SelectedItemProperty); }
+            get { return (IPersistEntity)GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
 
         public static DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
+            DependencyProperty.Register("SelectedEntity", typeof(IPersistEntity), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                                                                       OnSelectedEntityChanged));
 
 
@@ -146,8 +145,8 @@ namespace XplorerPlugins.DPoW
             switch (e.Property.Name)
             {
                 case "Model":
-                    var model = e.NewValue as XbimModel;
-                    if (model != null)
+                    var model = e.NewValue as IfcStore;
+                    if (model != null && model.FileName != null)
                     {
                         try
                         {
@@ -155,7 +154,7 @@ namespace XplorerPlugins.DPoW
                         }
                         catch (Exception ex)
                         {
-                            Log.Error( "Error in generating Facility from model " + model.DatabaseName, ex);
+                            Log.Error( "Error in generating Facility from model " + model.FileName, ex);
                             ctrl.ModelFacility = null;
                         }
                     }

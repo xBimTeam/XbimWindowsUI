@@ -2,16 +2,17 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xbim="http://schemas.Xbim.com/Presentation"
-    xmlns:xbimView="clr-namespace:Xbim.IO.ViewModels;assembly=Xbim.IO"
         xmlns:local="clr-namespace:XbimXplorer"
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+        xmlns:etb="clr-namespace:XbimXplorer.EditableTextBlock"
     xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+    xmlns:viewModels="clr-namespace:Xbim.Ifc.ViewModels;assembly=Xbim.Ifc"
     Title="Xbim Xplorer" Height="600" Width="800" 
     x:Name="MainWindow"
         Icon="xBIM.ico" ContentRendered="RenderedEvents" >
     <Window.Resources>
         <ObjectDataProvider x:Key="ModelProvider"  IsInitialLoadEnabled="False" ></ObjectDataProvider>
-        <DataTemplate DataType="{x:Type xbimView:XbimModelViewModel}">
+        <DataTemplate DataType="{x:Type viewModels:XbimModelViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -21,7 +22,7 @@
                 <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type xbimView:SpatialViewModel}">
+        <DataTemplate DataType="{x:Type viewModels:SpatialViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -32,7 +33,7 @@
                 <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type xbimView:ContainedElementsViewModel}">
+        <DataTemplate DataType="{x:Type viewModels:ContainedElementsViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -43,7 +44,7 @@
                 <TextBlock Grid.Column="1" Text="{Binding Name}"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type xbimView:IfcProductModelView}">
+        <DataTemplate DataType="{x:Type viewModels:IfcProductModelView}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -61,8 +62,7 @@
         <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
         
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
-        <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" Executed="OpenFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
-        <CommandBinding Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" Executed="CreateFederationCmdExecuted" CanExecute="OpenFederationCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" Executed="CreateFederationCmdExecuted" CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" Executed="OpenExportWindow" CanExecute="CommandBinding_CanExecute"/>
 
     </Window.CommandBindings>
@@ -79,7 +79,6 @@
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
                 <MenuItem Header="_Close" Command="Close" />
                 <MenuItem Header="_Federation">
-                    <MenuItem Header="_Open" Command="{x:Static local:XplorerMainWindow.OpenFederationCmd}" ToolTip="Load an existing Xbimf federation file." />
                     <MenuItem Header="_Create" Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" ToolTip="Loads a set of existing Ifc, Xbim, IfcZip or IfcXML files." />
                     <MenuItem Header="_Edit" Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" ToolTip="Load or unluad federated files and changes their properties." />
                 </MenuItem>
@@ -94,21 +93,26 @@
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Style">
-                    <MenuItem Header="_Style Reset" Click="SetDefaultModeStyler" />
-                    <MenuItem Header="_Use old styler" Click="SetStylerVersion1" />
-                    <MenuItem Header="Federation style by _Role" Click="SetFederationStylerRole" />
-                    <MenuItem Header="Federation style by _Element type" Click="SetFederationStylerType" />
+                    <MenuItem Header="_Styler Reset" Click="SetDefaultModeStyler" />
+                    <MenuItem Header="Styler _Configuration" Click="ConfigureStyler" />
+                </MenuItem>
+                <MenuItem Header="Selection view _mode">
+                    <MenuItem x:Name="WholeMesh" Header="Whole mesh" Click="SelectionMode" IsChecked="True" />
+                    <MenuItem x:Name="Normals" Header="Normals" Click="SelectionMode" />
+                    <MenuItem x:Name="WireFrame" Header="WireFrame" Click="SelectionMode" />
                 </MenuItem>
 
                 <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
                 <MenuItem IsCheckable="True" Header="Show Gridlines" IsChecked="{Binding ShowGridLines, ElementName=DrawingControl}"/>
                 <MenuItem Header="_Copy image" Command="Copy"/>
                 <Separator Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
-                <MenuItem x:Name="DeveloperMenu" Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
+                <MenuItem x:Name="DeveloperMenu" Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
+                    <MenuItem Header="IFC stripping" Click="OpenStrippingWindow"/>
+                </MenuItem>
                 <Separator />
                 <MenuItem Header="_Settings" Click="DisplaySettingsPage" />
             </MenuItem>
-            <MenuItem x:Name="PluginMenu" Header="_Plugins" />
+            <MenuItem x:Name="PluginMenu" Header="_Plugins" Visibility="{Binding PluginMenuVisibility, ElementName=MainWindow}" />
             <MenuItem Header="_Camera">
                 <MenuItem IsCheckable="True" Header="RotateAroundMouseDownPoint" IsChecked="{Binding Viewport.RotateAroundMouseDownPoint, ElementName=DrawingControl}"/>
                 <MenuItem IsCheckable="True" Header="ZoomAroundMouseDownPoint" IsChecked="{Binding Viewport.ZoomAroundMouseDownPoint, ElementName=DrawingControl}"/>
@@ -204,10 +208,10 @@
             <StatusBarItem>
                 <TextBlock Name="ProjectName"></TextBlock>
             </StatusBarItem>
-            <StatusBarItem>
+            <StatusBarItem Height="23" VerticalAlignment="Top">
                 <Separator/>
             </StatusBarItem>
-            <TextBlock Name="EntityLabel"></TextBlock>
+            <etb:EditableTextBlock x:Name="EntityLabel" ValueSet="EntityLabel_KeyDown"></etb:EditableTextBlock>
             <StatusBarItem>
                 <Separator/>
             </StatusBarItem>

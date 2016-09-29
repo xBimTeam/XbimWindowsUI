@@ -9,10 +9,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.XbimExtensions.Interfaces;
 
 
 namespace Xbim.BCF
@@ -209,14 +209,14 @@ namespace Xbim.BCF
         }
 
         // SelectedEntity
-        public IPersistIfcEntity SelectedEntity
+        public IPersistEntity SelectedEntity
         {
-            get { return (IPersistIfcEntity)GetValue(SelectedItemProperty); }
+            get { return (IPersistEntity)GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
 
         public static DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register("SelectedEntity", typeof(IPersistIfcEntity), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
+            DependencyProperty.Register("SelectedEntity", typeof(IPersistEntity), typeof(MainWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                                                                       OnSelectedEntityChanged));
 
         // Model

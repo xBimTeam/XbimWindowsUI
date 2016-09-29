@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NPOI.POIFS.Storage;
+using Xbim.Common;
 using Xbim.Common.Geometry;
-using Xbim.IO;
+using Xbim.Ifc;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
-using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -15,20 +12,20 @@ namespace Xbim.Presentation
     {
         public XbimRegion LargestRegion;
         public Xbim3DModelContext Context;
-        // todo: rename this
-        public XbimMatrix3D Transfrom;
+        public XbimMatrix3D Transform;
         
-        private double _OneMeter = Double.NaN;
+        private double _oneMeter = Double.NaN;
 
         public double OneMeter
         {
             get
             {
-                if (double.IsNaN(_OneMeter))
+                if (double.IsNaN(_oneMeter))
                 {
-                    _OneMeter = _model.ModelFactors.OneMetre;
+                    
+                    _oneMeter = _model.ModelFactors.OneMetre;
                 }
-                return _OneMeter;
+                return _oneMeter;
             }
         }
 
@@ -59,64 +56,55 @@ namespace Xbim.Presentation
 
         private readonly IModel _model;
 
-        public XbimModelPositioning(XbimModel model)
+        public XbimModelPositioning(IModel model)
         {
             _model = model;
-            Context = new Xbim3DModelContext(model);
-            var supportLevel = model.GeometrySupportLevel;
-          
-            switch (supportLevel)
+            var geomStore = model.GeometryStore;
+            if (_model.GeometryStore.IsEmpty)
+                return;
+            using (var reader = geomStore.BeginRead())
             {
-                case 1:
-                    LargestRegion = GetLargestRegion(model);
-                    break;
-                case 2:
-                    LargestRegion = Context.GetLargestRegion();
-                    break;
+                var regions = reader.ContextRegions.Where(cr => cr.MostPopulated()!=null).Select(c=>c.MostPopulated());
+                var rect = XbimRect3D.Empty;
+                int pop = 0;
+                foreach (var r in regions)
+                {
+                    pop += r.Population;
+                    if (rect.IsEmpty) rect = r.ToXbimRect3D();
+                    else rect.Union(r.ToXbimRect3D());
+                }
+                if(pop>0)
+                    LargestRegion = new XbimRegion("Largest", rect, pop);
+                
             }
         }
 
-
-        
-        /// <summary>
-        /// Works only on models version 1.
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private static XbimRegion GetLargestRegion(XbimModel model)
-        {
-            //get the region data should only be one
-            var project = model.IfcProject;
-            var projectId = 0;
-            if (project != null) projectId = project.EntityLabel;
-            // in version 1.0 there should be only 1 record in the database for the project (storing multiple regions).
-            var regionData = model.GetGeometryData(projectId, XbimGeometryType.Region).FirstOrDefault();
-
-            if (regionData == null)
-                return null;
-            var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
-            return regions.MostPopulated(); // this then returns 
-        }
 
         internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
             var translation = XbimMatrix3D.CreateTranslation(modelTranslation * OneMeter);
             var scaling = XbimMatrix3D.CreateScale(1/OneMeter);
-            Transfrom =  translation * scaling;
+            Transform =  translation * scaling;
         }
     }
-
+    
     public class XbimModelPositioningCollection
     {
-        public XbimModelPositioning this[IModel i]
+        public XbimModelPositioning this[IModel modelKey]
         {
-            get { return _collection[i]; }
-            set { _collection[i] = value; }
+            get
+            {
+                XbimModelPositioning returnValue;
+                if (_collection.TryGetValue(modelKey, out returnValue))
+                    return returnValue;
+                return null;
+            }
+            set { _collection[modelKey] = value; }
         }
 
         private readonly Dictionary<IModel, XbimModelPositioning> _collection;
 
-        public void AddModel(XbimModel model)
+        public void AddModel(IModel model)
         {
             var tmp = new XbimModelPositioning(model);
             _collection.Add(model, tmp);
@@ -157,11 +145,11 @@ namespace Xbim.Presentation
             _collection = new Dictionary<IModel, XbimModelPositioning>();
         }
 
-        internal void SetCenterInMeters(XbimVector3D ModelTranslation)
+        internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
             foreach (var model in _collection.Values)
             {
-                model.SetCenterInMeters(ModelTranslation);
+                model.SetCenterInMeters(modelTranslation);
             }
         }
     }

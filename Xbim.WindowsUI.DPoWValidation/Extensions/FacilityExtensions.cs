@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
-using Xbim.COBieLiteUK;
-using Xbim.CobieLiteUK.Validation.Reporting;
+using Xbim.CobieLiteUk;
+using Xbim.CobieLiteUk.Validation.Reporting;
 
 namespace Xbim.WindowsUI.DPoWValidation.Extensions
 {

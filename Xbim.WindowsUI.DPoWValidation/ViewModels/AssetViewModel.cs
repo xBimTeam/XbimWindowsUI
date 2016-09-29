@@ -6,12 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using Xbim.CobieLiteUk;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
     public class AssetViewModel
     {
-        private readonly COBieLiteUK.Asset _asset;
+        private readonly Asset _asset;
 
         public int? EntityLabel
         {
@@ -29,7 +30,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
-        public AssetViewModel(COBieLiteUK.Asset asset)
+        public AssetViewModel(Asset asset)
         {
             this._asset = asset;
             if (_asset.Attributes == null)
