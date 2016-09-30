@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
       <id>Xbim.WindowsUI.4</id>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
       <title>xBIM WindowsUI 4</title>
       <authors>xBIM team</authors>
       <owners>xBIM team</owners>
@@ -16,7 +16,9 @@ xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
 The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
 IOS and Android versions are under development.</description>
     <summary>xBIM Windows UI contains a set of MS Windows controls that can be used to build Windows Xaml or forms based applications that can display the geometry and semantic data in IFC models.</summary>
-    <releaseNotes>Support for Ifc4 and Ifc4Xml added. All Ifc geometries supported.
+    <releaseNotes>
+      Minor change to xPlorer project to resolve problems with including geometry build targets
+      Support for Ifc4 and Ifc4Xml added. All Ifc geometries supported.
     Export to Cobie and WexBim included</releaseNotes>
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
