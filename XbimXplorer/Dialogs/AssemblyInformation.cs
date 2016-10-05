@@ -106,7 +106,7 @@ namespace XbimXplorer.Dialogs
                         _dependentAssemblyList[a.FullName.MyToName()] = a;
                         InternalGetDependentAssembliesRecursive(a);
                     }
-                    catch (Exception ex)
+                    catch 
                     {
                         _missingAssemblyList.Add(new MissingAssembly(r.FullName.Split(',')[0], assembly.FullName.MyToName()));
                     }
