@@ -1223,11 +1223,11 @@ namespace XbimXplorer.Commands
 
             if (prop.EntityAttribute.IsEnumerable)
             {
-                var propCollection = propVal as IEnumerable<object>;
-                propVal = propVal + " [not an enumerable]";
+                var propCollection = propVal as System.Collections.IEnumerable;
+                
                 if (propCollection != null)
                 {
-                    propVal = "<empty>";
+                    propVal = "<empty>"; // default that gets replaced if values are found.
                     var iCntProp = 0;
                     foreach (var item in propCollection)
                     {
@@ -1243,6 +1243,10 @@ namespace XbimXplorer.Commands
                             propVal += "\r\n" + indentationHeader + "    " + ReportPropValue(item, ref retIds, showPropType);
                         }
                     }
+                }
+                else
+                {
+                    propVal = propVal + " [not an enumerable]";
                 }
             }
             else
