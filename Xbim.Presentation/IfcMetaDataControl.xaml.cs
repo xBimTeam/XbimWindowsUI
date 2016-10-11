@@ -314,7 +314,7 @@ namespace Xbim.Presentation
         {
             if (pSet == null)
                 return;
-            if (modelUnits == null) throw new ArgumentNullException(nameof(modelUnits));
+            if (modelUnits == null) throw new ArgumentNullException("modelUnits");
             foreach (var item in pSet.Quantities.OfType<IIfcPhysicalSimpleQuantity>())
                 // currently only handles IfcPhysicalSimpleQuantity
             {
