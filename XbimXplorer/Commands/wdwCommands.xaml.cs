@@ -917,11 +917,17 @@ namespace XbimXplorer.Commands
             return rex;
         }
 
-        internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
+        internal static Dictionary<string, ExpressMetaData> SchemaMetadatas
         {
-            {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
-            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)}
-        };
+            get
+            {
+                return new Dictionary<string, ExpressMetaData>
+                {
+                    {"ifc2x3", ExpressMetaData.GetMetadata(typeof (Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
+                    {"ifc4", ExpressMetaData.GetMetadata(typeof (Xbim.Ifc4.SharedBldgElements.IfcWall).Module)}
+                };
+            }
+        }
 
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
         {
