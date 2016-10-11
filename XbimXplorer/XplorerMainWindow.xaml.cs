@@ -427,6 +427,15 @@ namespace XbimXplorer
                     MessageBoxImage.Error);
             }
         }
+
+        private void CommandBinding_Refresh(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_openedModelFileName))
+                return;
+            if (!File.Exists(_openedModelFileName))
+                return;
+            LoadAnyModel(_openedModelFileName);
+        }
         
         private void CommandBinding_SaveAs(object sender, ExecutedRoutedEventArgs e)
         {
