@@ -34,6 +34,9 @@
                         </TextBlock>
                     </StackPanel>
                 </TabItem>
+                <TabItem Header="Assemblies">
+                    <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding AssembliesInfo, Mode=OneWay}" />
+                </TabItem>
                 <TabItem Header="Model">
                     <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding ModelInfo, Mode=OneWay}" />
                 </TabItem>

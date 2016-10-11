@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:coBieLiteUk="clr-namespace:Xbim.COBieLiteUK;assembly=Xbim.COBieLiteUK"
              xmlns:viewModels="clr-namespace:Xbim.WindowsUI.DPoWValidation.ViewModels"
+             xmlns:cobieLiteUk="clr-namespace:Xbim.CobieLiteUk;assembly=Xbim.CobieLiteUk"
              x:Class="Xbim.WindowsUI.DPoWValidation.Controls.DpoWFacilityViewer" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
@@ -28,7 +28,7 @@
                         <TextBlock Text="{Binding DocumentName}" />
                     </StackPanel>
                 </HierarchicalDataTemplate>
-                <HierarchicalDataTemplate DataType="{x:Type coBieLiteUk:Space}">
+                <HierarchicalDataTemplate DataType="{x:Type cobieLiteUk:Space}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Name}" />
                         <TextBlock Text=" [" Foreground="Blue" />

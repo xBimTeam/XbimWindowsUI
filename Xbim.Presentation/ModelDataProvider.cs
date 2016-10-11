@@ -17,8 +17,10 @@ using System.Collections.Generic;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Xbim.IO;
-using Xbim.XbimExtensions.Interfaces;
+using Xbim.Common;
+using Xbim.Common.Metadata;
+using Xbim.Ifc;
+
 
 #endregion
 
@@ -85,40 +87,40 @@ namespace Xbim.Presentation
         #endregion
 
 
-        public static XbimMaterialProvider GetDefaultMaterial(string typeName)
+        public static XbimMaterialProvider GetDefaultMaterial(IModel model, string typeName)
         {
             Material mat;
-            IfcType elemType = IfcMetaData.IfcType(typeName.ToUpperInvariant());
+            var elemType = model.Metadata.ExpressType(typeName);
             while (elemType != null)
             {
                 if (_defaultMaterials.TryGetValue(elemType.Type.Name, out mat))
                     return new XbimMaterialProvider(mat);
-                elemType = elemType.IfcSuperType;
+                elemType = elemType.SuperType;
             }
             return null;
         }
 
-        public static XbimMaterialProvider GetDefaultMaterial(IPersistIfcEntity obj)
+        public static XbimMaterialProvider GetDefaultMaterial( IPersistEntity obj)
         {
             if (obj != null)
-                return GetDefaultMaterial(obj.GetType().Name);
+                return GetDefaultMaterial(obj.Model, obj.GetType().Name);
             return null;
         }
 
-        public static XbimMaterialProvider GetDefaultMaterial(Type entityType)
+        public static XbimMaterialProvider GetDefaultMaterial(IModel model, Type entityType)
         {
-            return GetDefaultMaterial(entityType.Name);  
+            return GetDefaultMaterial(model, entityType.Name);  
         }
 
-        public static XbimMaterialProvider GetDefaultMaterial(short entityTypeId)
+        public static XbimMaterialProvider GetDefaultMaterial(IModel model, short entityTypeId)
         {
-            IfcType ifcType = IfcMetaData.IfcType(entityTypeId);
-            return GetDefaultMaterial(ifcType.Type.Name);
+            var ifcType = model.Metadata.ExpressType(entityTypeId);
+            return GetDefaultMaterial(model, ifcType.Type.Name);
         }
-      
-        public static XbimMaterialProvider GetDefaultMaterial(IfcType ifcType)
+
+        public static XbimMaterialProvider GetDefaultMaterial(IModel model, ExpressType ifcType)
         {
-            return GetDefaultMaterial(ifcType.Type.Name);
+            return GetDefaultMaterial(model, ifcType.Type.Name);
         }
 
         /// <summary>
@@ -135,11 +137,11 @@ namespace Xbim.Presentation
         }
 
 
-        public XbimModel Model
+        public IfcStore Model
         {
             get 
             {
-                return (XbimModel)ObjectInstance;
+                return (IfcStore)ObjectInstance;
             }
             set
             {

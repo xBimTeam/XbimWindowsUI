@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel.Channels;
 using System.Text;
@@ -36,9 +37,18 @@ namespace XbimXplorer.LogViewer
         {
             get
             {
-                return loggingEvent.ExceptionObject != null 
-                    ? loggingEvent.ExceptionObject.Message
-                    : "";
+                if (loggingEvent.ExceptionObject == null)
+                    return "";
+                var sb = new StringBuilder();
+                var ex = loggingEvent.ExceptionObject;
+                string stackTrace = ex.StackTrace;
+                while (ex != null)
+                {
+                    sb.AppendLine(ex.Message);
+                    ex = ex.InnerException;
+                }
+                sb.AppendLine(stackTrace);
+                return sb.ToString();
             }
         }
         public string TimeStamp {

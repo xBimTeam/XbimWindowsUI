@@ -1,5 +1,6 @@
 ﻿using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Xbim.Ifc;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation

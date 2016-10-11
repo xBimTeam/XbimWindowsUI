@@ -5,12 +5,11 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using Microsoft.CSharp;
 using Microsoft.Win32;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
-using Xbim.XbimExtensions.Interfaces;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
+
 
 namespace Xbim.Presentation
 {
@@ -18,7 +17,7 @@ namespace Xbim.Presentation
     /// This class can compile the code in the runtime and can be used to select 
     /// certain products with C# code;
     /// </summary>
-    public partial class DynamicProductSelectionControl : UserControl
+    public partial class DynamicProductSelectionControl
     {
         public DynamicProductSelectionControl()
         {
@@ -35,55 +34,12 @@ using System.Linq;
 using System.Text;
 using Microsoft.CSharp;
 using System.Reflection;
-
+using Xbim.Ifc4.Interfaces;
 using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.SelectTypes;
-using Xbim.Ifc2x3.RepresentationResource;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ExternalReferenceResource;
-using Xbim.Ifc2x3.DateTimeResource;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.GeometryResource;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.XbimExtensions.Interfaces;
-using Xbim.Ifc2x3.StructuralLoadResource;
-using Xbim.Ifc2x3.StructuralElementsDomain;
-using Xbim.Ifc2x3.StructuralAnalysisDomain;
-using Xbim.Ifc2x3.SharedBldgServiceElements;
-using Xbim.Ifc2x3.HVACDomain;
-using Xbim.Ifc2x3.MeasureResource;
-using Xbim.Ifc2x3.PlumbingFireProtectionDomain;
-using Xbim.Ifc2x3.GeometricConstraintResource;
-using Xbim.Ifc2x3.ElectricalDomain;
-using Xbim.Ifc2x3.ConstructionMgmtDomain;
-using Xbim.Ifc2x3.ConstraintResource;
-using Xbim.Ifc2x3.BuildingControlsDomain;
-using Xbim.Ifc2x3.ApprovalResource;
-using Xbim.Ifc2x3.UtilityResource;
-using Xbim.Ifc2x3.ActorResource;
-using Xbim.Ifc2x3.TopologyResource;
-using Xbim.Ifc2x3.ProfileResource;
-using Xbim.Ifc2x3.PropertySetDefinitions;
-using Xbim.Ifc2x3.ProfilePropertyResource;
-using Xbim.Ifc2x3.ProcessExtensions;
-using Xbim.Ifc2x3.GeometricModelResource;
 using Xbim.XbimExtensions.Transactions;
-using Xbim.Ifc2x3.PresentationResource;
-using Xbim.Ifc2x3.PresentationDefinitionResource;
-using Xbim.Ifc2x3.CostResource;
-using Xbim.Ifc2x3.PropertyResource;
-using Xbim.Ifc2x3.MaterialResource;
-using Xbim.Ifc2x3.MaterialPropertyResource;
-using Xbim.Ifc2x3.FacilitiesMgmtDomain;
-using Xbim.Ifc2x3.ControlExtension;
-using Xbim.Ifc2x3.TimeSeriesResource;
-using Xbim.Ifc2x3.SharedFacilitiesElements;
-using Xbim.Ifc2x3.SharedComponentElements;
-using Xbim.Ifc2x3.PresentationOrganizationResource;
-using Xbim.Ifc2x3.QuantityResource;
 using Xbim.XbimExtensions.Transactions.Extensions;
-using Xbim.Ifc2x3.Extensions;
 
 
 
@@ -149,7 +105,7 @@ public void Execute(IModel model)
         public delegate void ProductSelectionChangedEventHandler(object sender, ProductSelectionChangedEventArgs a);
         public event ProductSelectionChangedEventHandler ProductSelectionChanged;
 
-        protected virtual void OnRaiseProductSelectionChangedEvent(IEnumerable<IfcProduct> products)
+        protected virtual void OnRaiseProductSelectionChangedEvent(IEnumerable<IIfcProduct> products)
         {
             // Make a temporary copy of the event to avoid possibility of 
             // a race condition if the last subscriber unsubscribes 
@@ -169,12 +125,12 @@ public void Execute(IModel model)
 
         public class ProductSelectionChangedEventArgs : EventArgs
         {
-            public ProductSelectionChangedEventArgs(IEnumerable<IfcProduct> selection)
+            public ProductSelectionChangedEventArgs(IEnumerable<IIfcProduct> selection)
             {
                 _selection = selection;
             }
-            private IEnumerable<IfcProduct> _selection;
-            public IEnumerable<IfcProduct> Selection
+            private IEnumerable<IIfcProduct> _selection;
+            public IEnumerable<IIfcProduct> Selection
             {
                 get { return _selection; }
             }
@@ -185,7 +141,7 @@ public void Execute(IModel model)
         public delegate void ProductVisibilityChangedEventHandler(object sender, ProductVisibilityChangedEventArgs a);
         public event ProductVisibilityChangedEventHandler ProductVisibilityChanged;
 
-        protected virtual void OnRaiseProductVisibilityChangedEvent(IEnumerable<IfcProduct> products)
+        protected virtual void OnRaiseProductVisibilityChangedEvent(IEnumerable<IIfcProduct> products)
         {
             // Make a temporary copy of the event to avoid possibility of 
             // a race condition if the last subscriber unsubscribes 
@@ -205,12 +161,12 @@ public void Execute(IModel model)
 
         public class ProductVisibilityChangedEventArgs : EventArgs
         {
-            public ProductVisibilityChangedEventArgs(IEnumerable<IfcProduct> selection)
+            public ProductVisibilityChangedEventArgs(IEnumerable<IIfcProduct> selection)
             {
                 _selection = selection;
             }
-            private IEnumerable<IfcProduct> _selection;
-            public IEnumerable<IfcProduct> Selection
+            private IEnumerable<IIfcProduct> _selection;
+            public IEnumerable<IIfcProduct> Selection
             {
                 get { return _selection; }
             }
@@ -288,24 +244,24 @@ public void Execute(IModel model)
             {
                 if (miSelect != null)
                 {
-                        IEnumerable<IfcProduct> prods = miSelect.Invoke(o, new object[] { Model }) as IEnumerable<IfcProduct> ?? new List<IfcProduct>();
+                        IEnumerable<IIfcProduct> prods = miSelect.Invoke(o, new object[] { Model }) as IEnumerable<IIfcProduct> ?? new List<IIfcProduct>();
 
                         //raise the event about the selection change
                         OnRaiseProductSelectionChangedEvent(prods);
                 }
                 if (miShowOnly != null)
                 {
-                        IEnumerable<IfcProduct> prods = miShowOnly.Invoke(o, new object[] { Model }) as IEnumerable<IfcProduct> ?? new List<IfcProduct>();
+                        IEnumerable<IIfcProduct> prods = miShowOnly.Invoke(o, new object[] { Model }) as IEnumerable<IIfcProduct> ?? new List<IIfcProduct>();
 
                         //raise the event about the selection change
                         OnRaiseProductVisibilityChangedEvent(prods);
                 }
                 if (miExecute != null)
                 {
-                    XbimModel m = Model as XbimModel;
-                    if (m != null)
+                   
+                    if (Model != null)
                     {
-                        using (var txn = m.BeginTransaction())
+                        using (var txn = Model.BeginTransaction("Dynamic Product Selection"))
                         {
                             miExecute.Invoke(o, new object[] { Model });
                             txn.Commit();
@@ -320,7 +276,7 @@ public void Execute(IModel model)
                 var innerException = ex.InnerException;
                 if (innerException != null)
                     MessageBox.Show("There was a runtime exception during the code execution: \n" + innerException.Message + "\n" + innerException.StackTrace, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                else throw ex;
+                else throw;
             }
            
 

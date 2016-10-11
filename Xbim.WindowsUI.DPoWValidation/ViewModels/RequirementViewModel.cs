@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Xbim.CobieLiteUk;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
     public class RequirementViewModel
     {
-        private COBieLiteUK.Attribute _attribute;
+        private Attribute _attribute;
 
-        public RequirementViewModel(COBieLiteUK.Attribute attribute)
+        public RequirementViewModel(Attribute attribute)
         {
             this._attribute = attribute;
             EvaluateType();

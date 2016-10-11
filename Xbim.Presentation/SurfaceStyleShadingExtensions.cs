@@ -15,7 +15,7 @@
 using System;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Xbim.Ifc2x3.PresentationAppearanceResource;
+using Xbim.Ifc4.Interfaces;
 
 #endregion
 
@@ -23,10 +23,10 @@ namespace Xbim.Presentation
 {
     public static class SurfaceStyleShadingExtensions
     {
-        public static Material ToMaterial(this IfcSurfaceStyleShading shading)
+        public static Material ToMaterial(this IIfcSurfaceStyleShading shading)
         {
-            if (shading is IfcSurfaceStyleRendering)
-                return ((IfcSurfaceStyleRendering) shading).ToMaterial();
+            if (shading is IIfcSurfaceStyleRendering)
+                return ((IIfcSurfaceStyleRendering) shading).ToMaterial();
             byte red = Convert.ToByte(shading.SurfaceColour.Red*255);
             byte green = Convert.ToByte(shading.SurfaceColour.Green*255);
             byte blue = Convert.ToByte(shading.SurfaceColour.Blue*255);

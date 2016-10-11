@@ -1,5 +1,6 @@
-using Xbim.IO;
-using Xbim.XbimExtensions.Interfaces;
+using Xbim.Common;
+using Xbim.Ifc;
+
 
 namespace Xbim.Presentation.XplorerPluginSystem
 {
@@ -8,9 +9,9 @@ namespace Xbim.Presentation.XplorerPluginSystem
 
         DrawingControl3D DrawingControl { get; }
 
-        IPersistIfcEntity SelectedItem { get; set; }
+        IPersistEntity SelectedItem { get; set; }
 
-        XbimModel Model { get; }
+        IfcStore Model { get; }
 
         void BroadCastMessage(object sender, string messageTypeString, object messageData);
 

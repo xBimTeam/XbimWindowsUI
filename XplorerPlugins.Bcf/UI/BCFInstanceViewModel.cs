@@ -34,7 +34,9 @@ namespace Xbim.BCF.UI
         {
             get
             {
-                return _instance.Markup.Comment; 
+                return _instance != null 
+                    ? _instance.Markup.Comment 
+                    : null;
             }
         }
 

@@ -5,14 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.IO;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
-using XbimGeometry.Interfaces;
 
 namespace Xbim.Presentation
 {
@@ -26,57 +23,40 @@ namespace Xbim.Presentation
             }
         }
 
-        public static void AddElements(this MeshGeometry3D m, IPersistIfcEntity item, XbimMatrix3D wcsTransform)
+        public static void AddElements(this MeshGeometry3D m, IPersistEntity item, XbimMatrix3D wcsTransform)
         {
+            if (item.Model == null || !(item is IIfcProduct)) return;
 
-            var fromModel = item.ModelOf as XbimModel;
-            if (fromModel == null || !(item is IfcProduct)) 
-                return;
-            switch (fromModel.GeometrySupportLevel)
+            var context = new Xbim3DModelContext(item.Model);
+
+            var productShape = context.ShapeInstancesOf((IIfcProduct) item)
+                .Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                .ToList();
+            if (!productShape.Any() && item is IIfcFeatureElement)
             {
-                case 2:
-                    var context = new Xbim3DModelContext(fromModel);
+                productShape = context.ShapeInstancesOf((IIfcProduct) item)
+                    .Where(
+                        s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
+                    .ToList();
+            }
 
-                    var productShape = context.ShapeInstancesOf((IfcProduct) item)
-                        .Where(s => s.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
-                        .ToList();
-                    if (!productShape.Any() && item is IfcFeatureElement)
-                    {
-                        productShape = context.ShapeInstancesOf((IfcProduct) item)
-                            .Where(
-                                s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded)
-                            .ToList();
-                    }
-
-                    if (!productShape.Any()) 
-                        return;
-                    foreach (var shapeInstance in productShape)
-                    {
-                        IXbimShapeGeometryData shapeGeom =
-                            context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                        switch ((XbimGeometryType) shapeGeom.Format)
-                        {
-                            case XbimGeometryType.PolyhedronBinary:
-                                m.Read(shapeGeom.ShapeData,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
-                                break;
-                            case XbimGeometryType.Polyhedron:
-                                m.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
-                                    XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
-                                break;
-                        }
-                    }
-                    break;
-                case 1:
-                    var xm3d = new XbimMeshGeometry3D();
-                    var geomDataSet = fromModel.GetGeometryData(item.EntityLabel, XbimGeometryType.TriangulatedMesh);
-                    foreach (var geomData in geomDataSet)
-                    {
-                        var gd = geomData.TransformBy(wcsTransform);
-                        xm3d.Add(gd);
-                    }
-                    m.Add(xm3d);
-                    break;
+            if (!productShape.Any())
+                return;
+            foreach (var shapeInstance in productShape)
+            {
+                IXbimShapeGeometryData shapeGeom =
+                    context.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                switch ((XbimGeometryType) shapeGeom.Format)
+                {
+                    case XbimGeometryType.PolyhedronBinary:
+                        m.Read(shapeGeom.ShapeData,
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                        break;
+                    case XbimGeometryType.Polyhedron:
+                        m.Read(((XbimShapeGeometry) shapeGeom).ShapeData,
+                            XbimMatrix3D.Multiply(shapeInstance.Transformation, wcsTransform));
+                        break;
+                }
             }
         }
 
@@ -222,9 +202,9 @@ namespace Xbim.Presentation
                 return br.ReadUInt16();
             return (int)br.ReadUInt32(); //this should never go over int32
         }
-        public static void Read(this MeshGeometry3D m3D, string shapeData, XbimMatrix3D? transform = null)
+        public static void Read(this MeshGeometry3D m3D, string shapeData, XbimMatrix3D? transform=null)
         {
-            transform = null;
+            
             RotateTransform3D qrd = new RotateTransform3D();
             Matrix3D? matrix3D = null;
             if (transform.HasValue)

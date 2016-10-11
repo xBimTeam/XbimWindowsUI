@@ -4,37 +4,32 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Xbim.Ifc2x3.GeometricModelResource;
-using Xbim.Ifc2x3.GeometryResource;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.UtilityResource;
-using Xbim.IO;
+using Xbim.Ifc;
+using Xbim.Ifc4.GeometricModelResource;
+using Xbim.Ifc4.GeometryResource;
+using Xbim.Ifc4.Kernel;
+using Xbim.Ifc4.UtilityResource;
+using Xbim.Presentation.Extensions;
+
 
 namespace XbimXplorer.Dialogs
 {
     /// <summary>
     /// Interaction logic for AboutWindow.xaml
     /// </summary>
-    public partial class AboutWindow : Window
+    public partial class AboutWindow
     {
-
-        private Assembly assembly;
+        private readonly Assembly _assembly;
 
         public AboutWindow()
         {
             InitializeComponent();
             DataContext = this;
             Logo.Source = new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute));
-            assembly = Assembly.GetEntryAssembly();
+            _assembly = Assembly.GetEntryAssembly();
         }
 
         private void AboutWindow_OnDeactivated(object sender, EventArgs e)
@@ -44,17 +39,57 @@ namespace XbimXplorer.Dialogs
 
         public string AppVersion
         {
-            get { return string.Format("Assembly Version: {0}", assembly.GetName().Version); }
+            get { return string.Format("Assembly Version: {0}", _assembly.GetName().Version); }
         }
         public string FileVersion
         {
             get
             {
-                var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+                var fvi = FileVersionInfo.GetVersionInfo(_assembly.Location);
                 return string.Format("File Version: {0}", fvi.FileVersion);
             }
         }
 
+        public string AssembliesInfo
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat("Name\tAssembly version\tFile version:\tCompile date signature:\r\n");
+                var baseAssembly = Assembly.GetEntryAssembly();
+                DocumentAssembly(baseAssembly, sb);
+                if (Assemblies != null)
+                {
+                    foreach (var assembly in Assemblies)
+                    {
+                        DocumentSingleAssembly(assembly, sb);
+                    }
+                }
+                
+                var ret = sb.ToString();
+                return ret;
+            }
+        }
+
+        private static void DocumentAssembly(Assembly assembly, StringBuilder sb)
+        {
+            var refs = assembly.MyGetReferencedAssembliesRecursive();
+            foreach (var key in refs.Keys.Where(x => x.ToLowerInvariant().Contains("xbim")).OrderBy(x => x))
+            {
+                var a = refs[key];
+                DocumentSingleAssembly(a, sb);
+            }
+        }
+
+        private static void DocumentSingleAssembly(Assembly a, StringBuilder sb)
+        {
+            if (!a.GetName().Name.ToLowerInvariant().Contains(@"xbim"))
+                return;
+            var xa = new XbimAssemblyInfo(a);
+            var assemblyDescription = string.Format("{0}\t{1}\t{2}\t{3}\r\n", a.GetName().Name, xa.AssemblyVersion,
+                xa.FileVersion, xa.CompilationTime);
+            sb.Append(assemblyDescription);
+        }
 
         public string ModelInfo
         {
@@ -64,10 +99,10 @@ namespace XbimXplorer.Dialogs
                 if (Model != null)
                 {
                     sb.AppendLine("File information:");
-                    sb.AppendFormat("- {0} (GeometrySupport: {1})\r\n", Model.DatabaseName, Model.GeometrySupportLevel);
+                    sb.AppendFormat("- {0} (Geometry Available: {1})\r\n", Model.FileName, Model.GeometryStore.IsEmpty?"No":"Yes");
                     foreach (var subModel in Model.ReferencedModels)
                     {
-                        sb.AppendFormat("- {0} (GeometrySupport: {1})\r\n", subModel.Model.DatabaseName, subModel.Model.GeometrySupportLevel);
+                        sb.AppendFormat("- {0} (Geometry Available: {1})\r\n", subModel.Identifier, Model.GeometryStore.IsEmpty ? "No" : "Yes");
                     }
                     sb.AppendLine();
                     sb.AppendLine("Model information:");
@@ -76,7 +111,6 @@ namespace XbimXplorer.Dialogs
                     sb.AppendFormat("Schema: {0}\r\n", Model.Header.FileSchema.Schemas.FirstOrDefault());
                     sb.AppendFormat("Description: {0}\r\n", Model.Header.FileDescription.Description.FirstOrDefault());
                     sb.AppendFormat("ImplementationLevel: {0}\r\n", Model.Header.FileDescription.ImplementationLevel);
-                    sb.AppendFormat("GeometryEntries count: {0}\r\n", Model.GeometriesCount);
                     sb.AppendFormat("IfcProduct count: {0}\r\n", Model.Instances.CountOf<IfcProduct>());
                     sb.AppendFormat("IfcSolidModel count: {0}\r\n", Model.Instances.CountOf<IfcSolidModel>());
                     sb.AppendFormat("IfcMappedItem count: {0}\r\n", Model.Instances.CountOf<IfcMappedItem>());
@@ -100,7 +134,8 @@ namespace XbimXplorer.Dialogs
             }
         }
 
-        public XbimModel Model { get; set; }
+        public IfcStore Model { get; set; }
+        public List<Assembly> Assemblies { get; set; }
 
         private void UserControl_MouseLeftButtonDown(object sender, MouseButtonEventArgs eventArgs)
         {

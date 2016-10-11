@@ -2,14 +2,13 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using Xbim.ModelGeometry.Scene;
 
 namespace XbimXplorer.Dialogs
 {
     /// <summary>
     /// Interaction logic for ExportWindow.xaml
     /// </summary>
-    public partial class ExportWindow : Window
+    public partial class ExportWindow
     {
         /// <summary>
         /// 
@@ -68,8 +67,12 @@ namespace XbimXplorer.Dialogs
                         {
                             try
                             {
-                                var geomContext = new Xbim3DModelContext(_mainWindow.Model);
-                                geomContext.Write(binaryWriter);
+                                // todo: restore wexbim writer
+
+                                //var geomContext = new Xbim3DModelContext(_mainWindow.Model);
+                                //geomContext. Write(binaryWriter);
+
+                                MessageBox.Show("wexbim writer temporary disabled.");
                             }
                             finally
                             {

@@ -7,15 +7,15 @@ using System.Windows;
 using System.Windows.Media;
 using NPOI.OpenXml4Net.OPC.Internal;
 using System.Collections.ObjectModel;
-using Xbim.CobieLiteUK.Validation;
+using Xbim.CobieLiteUk.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
     public class AssetTypeViewModel
     {
-        private readonly COBieLiteUK.AssetType _assetType;
+        private readonly CobieLiteUk.AssetType _assetType;
 
-        public AssetTypeViewModel(COBieLiteUK.AssetType assetType)
+        public AssetTypeViewModel(CobieLiteUk.AssetType assetType)
         {
             _assetType = assetType;
             //var v = new AssetTypeValidator(_assetType);

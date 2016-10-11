@@ -1,11 +1,11 @@
 ﻿using System.Windows.Media.Media3D;
-using Xbim.XbimExtensions.Interfaces;
+using Xbim.Common;
 
 namespace Xbim.Presentation.ModelGeomInfo
 {
     public class PointGeomInfo
     {
-        public IPersistIfcEntity Entity;
+        public IPersistEntity Entity;
         public int EntityLabel
         {
             get

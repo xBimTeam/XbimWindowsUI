@@ -7,15 +7,14 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Practices.Unity;
-using Xbim.COBieLiteUK;
-using Xbim.IO;
+using Xbim.CobieLiteUk;
+using Xbim.Ifc;
 using Xbim.WindowsUI.DPoWValidation.Commands;
 using Xbim.WindowsUI.DPoWValidation.Extensions;
 using Xbim.WindowsUI.DPoWValidation.Injection;
 using Xbim.WindowsUI.DPoWValidation.IO;
 using Xbim.WindowsUI.DPoWValidation.Models;
-using Xbim.XbimExtensions;
-using cobieUKValidation = Xbim.CobieLiteUK.Validation;
+using cobieUKValidation = Xbim.CobieLiteUk.Validation;
 
 namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 {
@@ -135,7 +134,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         public ValidationViewModel()
         {
             IsWorking = false;
-            SelectRequirement = new SelectFileCommand(RequirementFileInfo, this);
+            SelectRequirement = new SelectFileCommand(RequirementFileInfo, this) { IncludeZip = true };
             SelectSubmission = new SelectFileCommand(SubmissionFileInfo, this) {IncludeIfc = true};
             SelectReport = new SelectReportFileCommand(ReportFileInfo, this);
             
@@ -173,7 +172,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         internal void ExecuteValidation()
         {
             IsWorking = true;
-            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
+            if (PropertyChanged != null) PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"FilesCanChange"));
             SelectRequirement.ChangesHappened();
             SelectSubmission.ChangesHappened();
             SelectReport.ChangesHappened();
@@ -185,9 +184,6 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             ActivityStatus = "Loading submission file";
             LoadSubmissionFile(SubmissionFileSource);
         }
-
-        private string _openedModelFileName;
-        private string _temporaryXbimFileName;
 
         private BackgroundWorker _worker;
 
@@ -222,32 +218,21 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         {
             var worker = s as BackgroundWorker;
             var ifcFilename = args.Argument as string;
-
-            var model = new XbimModel();
             try
             {
-                _temporaryXbimFileName = Path.GetTempFileName();
-                _openedModelFileName = ifcFilename;
-
-                if (worker != null)
+                if (worker == null) throw new Exception("Could not access background thread");
+                var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress);
+                if (worker.CancellationPending) // if a cancellation has been requested then don't open the resulting file
                 {
-                    model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
-                    if (worker.CancellationPending) // if a cancellation has been requested then don't open the resulting file
+                    try
                     {
-                        try
-                        {
-                            model.Close();
-                            if (File.Exists(_temporaryXbimFileName))
-                                File.Delete(_temporaryXbimFileName); 
-                            _temporaryXbimFileName = null;
-                            _openedModelFileName = null;
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex.Message);
-                        }
-                        return;
+                        model.Close();
                     }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
+                    return;
                 }
                 args.Result = model;
             }
@@ -266,51 +251,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             }
         }
 
-        private void OpenXbimFile(object s, DoWorkEventArgs args)
-        {
-            var worker = s as BackgroundWorker;
-            var fileName = args.Argument as string;
-            var model = new XbimModel();
-            try
-            {
-                const XbimDBAccess dbAccessMode = XbimDBAccess.Read;
-                if (worker != null)
-                {
-                    model.Open(fileName, dbAccessMode, worker.ReportProgress); //load entities into the model
-
-                    if (model.IsFederation)
-                    {
-                        // needs to open the federation in rw mode
-                        model.Close();
-                        model.Open(fileName, XbimDBAccess.ReadWrite, worker.ReportProgress);
-                        // federations need to be opened in read/write for the editor to work
-
-                        // sets a convenient integer to all children for model identification
-                        // this is used by the federated model selection mechanisms.
-                        // 
-                        var i = 0;
-                        foreach (var item in model.AllModels)
-                        {
-                            item.Tag = i++;
-                        }
-                    }
-                }
-                args.Result = model;
-            }
-            catch (Exception ex)
-            {
-                var sb = new StringBuilder();
-                sb.AppendLine("Error reading " + fileName);
-                var indent = "\t";
-                while (ex != null)
-                {
-                    sb.AppendLine(indent + ex.Message);
-                    ex = ex.InnerException;
-                    indent += "\t";
-                }
-                args.Result = new Exception(sb.ToString());
-            }
-        }
+        
 
         private string _activityStatus;
         public string ActivityStatus
@@ -320,7 +261,8 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             set
             {
                 _activityStatus = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ActivityStatus"));
+                if (PropertyChanged != null)
+                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(@"ActivityStatus"));
             }
         }
 
@@ -337,7 +279,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
         }
         public string ActivityDescription { get; set; }
 
-        private XbimModel _model;
+        private IfcStore _model;
 
         private void CreateWorker()
         {
@@ -355,9 +297,9 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
             _worker.RunWorkerCompleted += delegate(object s, RunWorkerCompletedEventArgs args)
             {
-                if (args.Result is XbimModel) //all ok
+                if (args.Result is IfcStore) //all ok
                 {
-                    _model = args.Result as XbimModel;
+                    _model = args.Result as IfcStore;
                     ActivityProgress = 0;
                     // prepare the facility
                     SubmissionFacility = FacilityFromIfcConverter.FacilityFromModel(_model);
@@ -443,26 +385,15 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         private void CloseAndDeleteTemporaryFiles()
         {
-            try
-            {
-                if (_worker != null && _worker.IsBusy)
-                    _worker.CancelAsync(); //tell it to stop
-                
-                _openedModelFileName = null;
-                if (_model == null) 
-                    return;
-                _model.Dispose();
-                _model = null;
-            }
-            finally
-            {
-                if (!(_worker != null && _worker.IsBusy && _worker.CancellationPending)) //it is still busy but has been cancelled 
-                {
-                    if (!string.IsNullOrWhiteSpace(_temporaryXbimFileName) && File.Exists(_temporaryXbimFileName))
-                        File.Delete(_temporaryXbimFileName);
-                    _temporaryXbimFileName = null;
-                } //else do nothing it will be cleared up in the worker thread
-            }
+
+            if (_worker != null && _worker.IsBusy)
+                _worker.CancelAsync(); //tell it to stop
+
+            if (_model == null)
+                return;
+            _model.Dispose();
+            _model = null;
+
         }
 
         public void LoadSubmissionFile(string modelFileName)
@@ -473,8 +404,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
             
             // there's no going back; if it fails after this point the current file should be closed anyway
             CloseAndDeleteTemporaryFiles();
-            _openedModelFileName = modelFileName.ToLower();
-            
+
             CreateWorker();
 
             var ext = fInfo.Extension.ToLower();
@@ -490,13 +420,10 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
                 case ".ifc": //it is an Ifc File
                 case ".ifcxml": //it is an IfcXml File
                 case ".ifczip": //it is a xip file containing xbim or ifc File
-                case ".zip": //it is a xip file containing xbim or ifc File
-                    _worker.DoWork += OpenIfcFile;
-                    _worker.RunWorkerAsync(modelFileName);
-                    break;
+                case ".zip": //it is a xip file containing xbim or ifc File                   
                 case ".xbimf":
-                case ".xbim": //it is an xbim File, just open it in the main thread
-                    _worker.DoWork += OpenXbimFile;
+                case ".xbim": 
+                    _worker.DoWork += OpenIfcFile;
                     _worker.RunWorkerAsync(modelFileName);
                     break;
             }
