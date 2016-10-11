@@ -331,10 +331,11 @@ namespace Xbim.Presentation
         {
             if (quantity == null)
                 return "";
-
             string value = null;
-            var unit = quantity.Unit?.FullName;
-
+            var u = quantity.Unit;
+            if (u == null)
+                return "";
+            var unit = u.FullName;
             var length = quantity as IIfcQuantityLength;
             if (length != null)
             {
