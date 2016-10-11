@@ -380,12 +380,14 @@ namespace Xbim.Presentation
 
             return string.IsNullOrWhiteSpace(unit) ? 
                 value : 
-                $"{value} {unit}";
+                string.Format("{0} {1}", value, unit);
         }
 
         private static string GetUnit(IIfcUnitAssignment units, IfcUnitEnum type)
         {
-            return units?.Units.OfType<IIfcNamedUnit>().FirstOrDefault(u => u.UnitType == type)?.FullName;
+            if (units == null) return null;
+            var unit = units.Units.OfType<IIfcNamedUnit>().FirstOrDefault(u => u.UnitType == type);
+            return unit != null ? unit.FullName : null;
         }
 
         private void FillPropertyData()
