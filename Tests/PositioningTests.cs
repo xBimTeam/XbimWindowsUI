@@ -6,16 +6,17 @@ using Xbim.Presentation;
 
 namespace Tests
 {
-    
     [TestClass]
     public class PositioningTests
     {
+        // todo: Must review scaling of models.
         [TestMethod]
         [DeploymentItem(@"FederationPositioningTests\", @"Scale\")]
         public void ScaledPositioningBoxes()
         {
             // this test is currently failing because some core functions do not work on old geometry models
             // it has to be decided if the function needs to be implemented for v3.1 models as well.
+            // 
             var m = new List<XbimModel>();
 
             var m0 = new XbimModel();
@@ -34,24 +35,23 @@ namespace Tests
             m3.Open(@"Scale\GeomV1\P2_mm.xBIM");
             m.Add(m3);
 
-            //var p = new List<XbimModelPositioning>();
+            // var p = new List<XbimModelPositioning>();
             var r = new List<XbimRect3D>();
             foreach (var xbimModel in m)
             {
                 var tmp = new XbimModelPositioning(xbimModel);
-                // p.Add(tmp);
                 r.Add(tmp.GetLargestRegionRectInMeters());
             }
 
             HaveSameSize(r[1], r[2]);
             HaveSameSize(r[1], r[3]);
-            //HaveSameSize(r[0], r[2]);
+            // HaveSameSize(r[0], r[2]);
             // HaveSameSize(r[0], r[3]);
             
             HaveSameLocation(r[1], r[2]);
             HaveSameLocation(r[1], r[3]);
             // NeedToBeSame(r[1], r[0]);
-            //NeedToBeSame(r[0], r[3]);
+            // NeedToBeSame(r[0], r[3]);
 
             foreach (var xbimModel in m)
             {

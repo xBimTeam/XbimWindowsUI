@@ -255,18 +255,13 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
+                var origError = ex;
                 var sb = new StringBuilder();
-                sb.AppendLine("Error reading " + ifcFilename);
-                var indent = "\t";
-                while (ex != null)
-                {
-                    sb.AppendLine(indent + ex.Message);
-                    ex = ex.InnerException;
-                    indent += "\t";
-                }
-                var excp = new Exception(sb.ToString());
-                Log.Error("Error in file opening operation", excp);
-                args.Result = excp;
+                sb.AppendLine($"Error opening '{ifcFilename}' {ex.StackTrace}.");
+
+                var newexception = new Exception(sb.ToString(), ex);
+                Log.Error(sb.ToString(), ex);
+                args.Result = newexception;
             }
         }
         
@@ -427,6 +422,15 @@ namespace XbimXplorer
                     MessageBoxImage.Error);
             }
         }
+
+        private void CommandBinding_Refresh(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_openedModelFileName))
+                return;
+            if (!File.Exists(_openedModelFileName))
+                return;
+            LoadAnyModel(_openedModelFileName);
+        }
         
         private void CommandBinding_SaveAs(object sender, ExecutedRoutedEventArgs e)
         {
@@ -498,6 +502,11 @@ namespace XbimXplorer
                     _temporaryXbimFileName = null;
                 } //else do nothing it will be cleared up in the worker thread
             }
+        }
+
+        private void CanExecuteIfFileOpen(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = (Model != null) && (!string.IsNullOrEmpty(GetOpenedModelFileName()));
         }
 
         private void CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e)

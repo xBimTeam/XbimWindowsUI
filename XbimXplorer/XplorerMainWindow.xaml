@@ -56,16 +56,18 @@
             </Grid>
         </DataTemplate>
     </Window.Resources>
+    
     <Window.CommandBindings>
         <CommandBinding Command="Open"   Executed="CommandBinding_Open" CanExecute="CommandBinding_CanExecute"/>
-        <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CommandBinding_CanExecute"/>
-        <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CommandBinding_CanExecute"/>
+        <CommandBinding Command="Refresh" Executed="CommandBinding_Refresh"  CanExecute="CanExecuteIfFileOpen"/>
+        <CommandBinding Command="SaveAs" Executed="CommandBinding_SaveAs"  CanExecute="CanExecuteIfFileOpen"/>
+        <CommandBinding Command="Close"  Executed="CommandBinding_Close" CanExecute="CanExecuteIfFileOpen"/>
         
         <CommandBinding Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" Executed="EditFederationCmdExecuted" CanExecute="EditFederationCmdCanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" Executed="CreateFederationCmdExecuted" CanExecute="CommandBinding_CanExecute"/>
         <CommandBinding Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" Executed="OpenExportWindow" CanExecute="CommandBinding_CanExecute"/>
-
     </Window.CommandBindings>
+    
     <Grid Name="MainFrame" DataContext="{StaticResource ModelProvider}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" MinHeight="24" />
@@ -76,6 +78,7 @@
         <Menu Grid.Row="0" >
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" Command="Open" ToolTip="Load a single Ifc, Xbim, IfcZip or IfcXML file." />
+                <MenuItem Header="_Reload model" Command="Refresh"/>
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
                 <MenuItem Header="_Close" Command="Close" />
                 <MenuItem Header="_Federation">
@@ -204,6 +207,7 @@
                 </avalonDock:LayoutPanel>
             </avalonDock:LayoutRoot>
         </avalonDock:DockingManager>
+        
         <StatusBar Grid.Row="2" Height="23"  Name="StatusBar" VerticalAlignment="Top" >
             <StatusBarItem>
                 <TextBlock Name="ProjectName"></TextBlock>

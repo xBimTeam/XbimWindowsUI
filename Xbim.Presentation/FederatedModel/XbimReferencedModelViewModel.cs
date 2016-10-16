@@ -112,7 +112,6 @@ namespace Xbim.Presentation.FederatedModel
 
         /// <summary>
         /// Validates all data and creates model. 
-        
         /// </summary>
         /// <returns>Returns XbimReferencedModel == null </returns>
         public bool TryBuildAndAddTo(IfcStore destinationFederatedModel)
