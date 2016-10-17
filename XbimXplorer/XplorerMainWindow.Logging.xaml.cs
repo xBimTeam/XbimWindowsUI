@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using log4net;
-using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.LogViewer;
-using XbimXplorer.PluginSystem;
-using Xceed.Wpf.AvalonDock.Layout;
 
 namespace XbimXplorer
 {

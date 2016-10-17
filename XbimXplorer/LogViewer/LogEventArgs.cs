@@ -10,7 +10,7 @@ namespace XbimXplorer.LogViewer
         {
             // Validate parameters.
             if (loggingEvents == null)
-                throw new ArgumentNullException("loggingEvents");
+                throw new ArgumentNullException(nameof(loggingEvents));
 
             // Assign values.
             LoggingEvents = loggingEvents;

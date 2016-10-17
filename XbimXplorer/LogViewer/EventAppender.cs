@@ -26,8 +26,11 @@ namespace XbimXplorer.LogViewer
             }
             remove
             {
-                lock (_eventLock) 
+                lock (_eventLock)
+                {
+                    // ReSharper disable once DelegateSubtraction // warning does not apply to this case
                     _loggedEventHandlers -= value;
+                }
             }
         }
     
@@ -37,7 +40,7 @@ namespace XbimXplorer.LogViewer
         {
             // Validate parameters.
             if (loggingEvent == null)
-                throw new ArgumentNullException("loggingEvent");
+                throw new ArgumentNullException(nameof(loggingEvent));
 
             // Call the override that processes these in bulk.
             Append(new[] {loggingEvent});
@@ -48,7 +51,7 @@ namespace XbimXplorer.LogViewer
         {
             // Validate parameters.
             if (loggingEvents == null)
-                throw new ArgumentNullException("loggingEvents");
+                throw new ArgumentNullException(nameof(loggingEvents));
 
             // The event handlers.
             EventHandler<LogEventArgs> handlers;
@@ -57,10 +60,7 @@ namespace XbimXplorer.LogViewer
             lock (_eventLock) handlers = _loggedEventHandlers;
 
             // Fire if not null.
-            if (handlers != null)
-            {
-                handlers(this, new LogEventArgs(loggingEvents));
-            }
+            handlers?.Invoke(this, new LogEventArgs(loggingEvents));
         }
     }
 }

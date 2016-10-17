@@ -24,6 +24,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using log4net;
+using log4net.Config;
 using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
 using Xbim.Common;
@@ -111,7 +112,6 @@ namespace XbimXplorer
             RefreshRecentFiles();
 
             // initialise the logging repository
-            // todo: should this be anticipated?
             LoggedEvents = new ObservableCollection<EventViewModel>();
         }
 
@@ -179,11 +179,8 @@ namespace XbimXplorer
 
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            // todo: inspect unexpected behaviour in Logging system
-            // Claudio Benghi's Note:
-            // For reasons I am failing to understand if I remove the following line whole Logging system does not work.
-            Xbim.Ifc2x3.IO.XbimModel.CreateTemporaryModel();
-            // somehow the line avove is needed for the Logging system to funcion
+            // this enables a basic configuration for the logger.
+            BasicConfigurator.Configure();
 
             var model = IfcStore.Create(null,IfcSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
             ModelProvider.ObjectInstance = model;
@@ -194,9 +191,7 @@ namespace XbimXplorer
             _appender.Logged += appender_Logged;
 
             var hier = LogManager.GetRepository() as Hierarchy;
-            if (hier != null)
-                hier.Root.AddAppender(_appender);
-
+            hier?.Root.AddAppender(_appender);
         }
 
         void XplorerMainWindow_Closed(object sender, EventArgs e)

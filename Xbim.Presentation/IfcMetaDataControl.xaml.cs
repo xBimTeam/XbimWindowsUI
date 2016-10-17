@@ -228,16 +228,14 @@ namespace Xbim.Presentation
 
         private void FillTypeData()
         {
-            if (_typeProperties.Count > 0) return; //don't fill unless empty
+            if (_typeProperties.Count > 0)
+                return; // only fill once
             var ifcObj = _entity as IIfcObject;
-            if (ifcObj == null)
+            var typeEntity = ifcObj?.IsTypedBy.FirstOrDefault()?.RelatingType;
+            if (typeEntity == null)
                 return;
-            var reldefines = ifcObj.IsTypedBy.FirstOrDefault();
+            var ifcType = typeEntity?.ExpressType;
             
-            if (reldefines == null)        
-                return;
-            var typeEntity = reldefines.RelatingType ;
-            var ifcType = typeEntity.ExpressType;
             _typeProperties.Add(new PropertyItem {Name = "Type", Value = ifcType.Type.Name});
             _typeProperties.Add(new PropertyItem {Name = "Ifc Label", Value = "#" + typeEntity.EntityLabel});
 
@@ -615,16 +613,18 @@ namespace Xbim.Presentation
             _objectProperties.Add(new PropertyItem { Name = "Type", Value = ifcType.Type.Name, PropertySetName = "General" });
 
             var ifcObj = _entity as IIfcObject;
-            if (ifcObj != null)
+            var typeEntity = ifcObj?.IsTypedBy.FirstOrDefault()?.RelatingType;
+            if (typeEntity != null)
             {
-                var reldefines = ifcObj.IsTypedBy.FirstOrDefault();
-
-                if (reldefines != null)
-                {
-                    var typeEntity = reldefines.RelatingType;
-
-                    _objectProperties.Add(new PropertyItem { Name = "Defining Type", Value = typeEntity.Name, PropertySetName = "General", IfcLabel = typeEntity.EntityLabel });
-                }
+                _objectProperties.Add(
+                    new PropertyItem
+                    {
+                        Name = "Defining Type",
+                        Value = typeEntity.Name,
+                        PropertySetName = "General",
+                        IfcLabel = typeEntity.EntityLabel
+                    }
+                );
             }
 
             var props = ifcType.Properties.Values;
