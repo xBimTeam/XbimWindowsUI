@@ -171,6 +171,21 @@ namespace XbimXplorer.Querying
                     continue;
                 }
 
+                mdbclosed = Regex.Match(cmd, @"^convert (?<resource>.+)", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var resource = mdbclosed.Groups["resource"].Value;
+                    if (Directory.Exists(resource))
+                    {
+                        ConvertDirectory(resource);
+                    }
+                    else if (File.Exists(resource))
+                    {
+                         ConvertFile(new FileInfo(resource));
+                    }
+                    continue;
+                }
+                
                 mdbclosed = Regex.Match(cmd, @"^versions$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -782,6 +797,39 @@ namespace XbimXplorer.Querying
             }
         }
 
+        private void ConvertDirectory(string resource)
+        {
+            ReportAdd($"Attempting to convert directory {resource}", Brushes.Black);
+            var di = new DirectoryInfo(resource);
+            foreach (var ifcfile in di.GetFiles("*.ifc"))
+            {
+                ConvertFile(ifcfile);
+            }
+        }
+
+        private void ConvertFile(FileInfo ifcfile)
+        {
+            var ximfilename = new FileInfo(Path.ChangeExtension(ifcfile.FullName, "xbim"));
+            if (!ximfilename.Exists)
+                ConvertIt(ifcfile.FullName, ximfilename.FullName);
+
+        }
+
+        private void ConvertIt(string origFileName, string xbimFileName)
+        {
+            ReportAdd($"Attempting to convert file.\r\n\torigin: {origFileName}\r\n\tdestination: {xbimFileName}", Brushes.Black);
+            using (var model = new XbimModel())
+            {
+                ReportAdd("\t\tParsing");
+                model.CreateFrom(origFileName, xbimFileName, null, true);
+                ReportAdd("\t\tMeshing");
+                var geomContext = new Xbim3DModelContext(model);
+                geomContext.CreateContext(XbimGeometryType.PolyhedronBinary, adjustWCS: false);
+                model.Close();
+                ReportAdd("\t\tFinished");
+            }
+        }
+
         private void ReportAdd(TextHighliter th)
         {
             th.DropInto(TxtOut.Document);
@@ -883,6 +931,10 @@ namespace XbimXplorer.Querying
 
             t.AppendFormat("- SimplifyGUI");
             t.Append("    opens a GUI for simplifying IFC files (useful for debugging purposes).", Brushes.Gray);
+
+            t.AppendFormat("- Convert <FileName|FolderName>");
+            t.Append("    converts ifc files to xbim", Brushes.Gray);
+
 
             t.AppendFormat("");
             t.Append("Commands are executed on <ctrl>+<Enter>.", Brushes.Blue);
