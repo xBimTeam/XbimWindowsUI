@@ -1054,13 +1054,14 @@ namespace XbimXplorer.Commands
             else
             {
                 // test to see if it's a select type...
-
+                // todo: this made sense before version 4... it needs to be reviewed.
                 var ifcModule2 = typeof (IfcMaterialSelect).Module;
                 var selectType = ifcModule2.GetTypes().FirstOrDefault(t => t.Name.Contains(type));
 
                 if (selectType == null)
                     return sb;
                 sb.AppendFormat("=== {0} is a Select type", type);
+                // todo: this made sense before version 4... it needs to be reviewed.
                 var ifcModule = typeof (IfcActor).Module;
                 var selectSubTypes = ifcModule.GetTypes().Where(
                     t => t.GetInterfaces().Contains(selectType)

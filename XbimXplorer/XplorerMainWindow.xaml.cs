@@ -210,7 +210,6 @@ namespace XbimXplorer
                 if (worker == null) throw new Exception("Background thread could not be accessed");
                 _temporaryXbimFileName = Path.GetTempFileName();
                 SetOpenedModelFileName(ifcFilename);
-
                 var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress);
                 if (model.GeometryStore.IsEmpty)
                 {
@@ -250,7 +249,6 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
-                var origError = ex;
                 var sb = new StringBuilder();
                 sb.AppendLine($"Error opening '{ifcFilename}' {ex.StackTrace}.");
 
