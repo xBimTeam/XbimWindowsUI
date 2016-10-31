@@ -18,7 +18,7 @@ namespace XbimXplorer.PluginSystem
         
         public  string PluginId => _model.PluginId;
 
-        public string AvailableVersion => _model?.OnLineVersion?.Version?.ToString();
+        public string AvailableVersion => _model?.OnLineVersion.ToString();
 
         public string InstalledVersion => "<not implemented>";
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using log4net;
 using NuGet;
+using NuGet.Packaging;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -71,7 +72,7 @@ namespace XbimXplorer.PluginSystem
             }
 
             // now extract files
-
+            // 
             foreach (var file in _onlinePackage.GetLibFiles())
             {
                 var destname = Path.Combine(subdir.FullName, file.EffectivePath);
@@ -100,6 +101,28 @@ namespace XbimXplorer.PluginSystem
                     Log.Error($"Error trying to delete: {destname}", ex);
                     return;
                 }
+            }
+
+            var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Id}.manifest");
+            // store disk manifest information
+            // 
+            try
+            {
+                
+                using (var pkgStream = _onlinePackage.GetStream())
+                {
+                    var pkgReader = new PackageReader(pkgStream);
+                    var manifest = Manifest.ReadFrom(pkgReader.GetNuspec(), true);
+                    using (var fileStream = File.Create(packageName))
+                    {
+                        manifest.Save(fileStream);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error trying to create manifest file: {packageName}", ex);
+                return;
             }
         }
     }

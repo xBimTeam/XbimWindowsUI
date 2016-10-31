@@ -27,8 +27,8 @@ namespace XbimXplorer.PluginSystem
             var fnd = repo.Search("XplorerPlugin", true);
             foreach (var package in fnd)
             {
-                if (!package.IsAbsoluteLatestVersion)
-                    return;
+                //if (!package.IsAbsoluteLatestVersion)
+                //    return;
                 var pv = new PluginConfiguration
                 {
                     PluginId = package.Id,
