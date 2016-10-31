@@ -296,6 +296,7 @@
       <DependentUpon>LogViewer.xaml</DependentUpon>
     </Compile>
     <Compile Include="PluginSystem\PluginConfiguration.cs" />
+    <Compile Include="PluginSystem\PluginConfigurationVm.cs" />
     <Compile Include="PluginSystem\PluginsConfig.xaml.cs">
       <DependentUpon>PluginsConfig.xaml</DependentUpon>
     </Compile>

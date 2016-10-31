@@ -14,7 +14,7 @@ namespace XbimXplorer
 {
     public partial class XplorerMainWindow
     {
-        private readonly bool _preventPluginLoad;
+        internal readonly bool PreventPluginLoad = false;
 
         /// <summary>
         /// 
@@ -27,34 +27,21 @@ namespace XbimXplorer
             foreach (var window in _pluginWindows)
             {
                 var msging = window as IXbimXplorerPluginMessageReceiver;
-                if (msging != null)
-                {
-                    msging.ProcessMessage(sender, messageTypeString, messageData);
-                } 
+                msging?.ProcessMessage(sender, messageTypeString, messageData);
             }
         }
 
-        public Visibility PluginMenuVisibility
-        {
-            get
-            {   return PluginMenu.Items.Count == 0
-                    ? Visibility.Collapsed
-                    : Visibility.Visible;
-            }
-        }
+        public Visibility PluginMenuVisibility => 
+            PluginMenu.Items.Count == 0
+                ? Visibility.Collapsed
+                : Visibility.Visible;
 
         public void RefreshPlugins()
         {
-            var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            if (!string.IsNullOrWhiteSpace(path))
-                path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (path == null) 
-                return;
-            path = Path.Combine(path, "Plugins");
-
-            var di = new DirectoryInfo(path);
+            var di = GetPluginDirectory();
             if (!di.Exists)
                 return;
+            
             var dirs = di.GetDirectories();
             foreach (var dir in dirs)
             {
@@ -62,6 +49,18 @@ namespace XbimXplorer
                 LoadPlugin(fullAssemblyName);
             }
             PluginMenu.Visibility = PluginMenuVisibility;
+        }
+
+        internal static DirectoryInfo GetPluginDirectory()
+        {
+            var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            if (!string.IsNullOrWhiteSpace(path))
+                path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (path == null)
+                return null;
+            path = Path.Combine(path, "Plugins");
+            var di = new DirectoryInfo(path);
+            return di;
         }
 
         string _assemblyLoadFolder = "";
@@ -77,7 +76,10 @@ namespace XbimXplorer
             var contPath = Path.GetDirectoryName(fullAssemblyName);
             _assemblyLoadFolder = contPath;
 
-            var assembly = Assembly.LoadFile(fullAssemblyName);
+            // note: the use of Assembly.Load(File.ReadAllBytes(assemblypath)) is introduced to allow plugin files to be deleted.
+            // this is required for the plugin update feature (currently under development)
+            //
+            var assembly = Assembly.Load(File.ReadAllBytes(fullAssemblyName));
             _pluginAssemblies.Add(assembly);
 
             var loadQueue = new Queue<AssemblyName>(assembly.GetReferencedAssemblies());

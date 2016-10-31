@@ -1,6 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using Xbim.IO.Esent;
 using XbimXplorer.Properties;
 
 namespace XbimXplorer.Dialogs
@@ -10,29 +13,53 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     public partial class SettingsWindow
     {
-        /// <summary>
-        /// 
-        /// </summary>
         public class SettingWindowVm: INotifyPropertyChanged
         {
-            /// <summary>
-            /// 
-            /// </summary>
             public SettingWindowVm()
-            {               
+            {
+
+                SelFileAccessMode = Settings.Default.FileAccessMode;
+
                 NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
                 PluginStartupLoad = Settings.Default.PluginStartupLoad;
                 DeveloperMode = Settings.Default.DeveloperMode;
+                PluginMessage = "Enabled";
+
+                var mainApp = Application.Current.MainWindow as XplorerMainWindow;
+                if (mainApp == null)
+                    return;
+                if (mainApp.PreventPluginLoad)
+                {
+                    PluginMessage = "Enabled by default (currently disabled via command line)";
+                }
             }
 
-            
-            /// <summary>
-            /// 
-            /// </summary>
+            public XbimDBAccess SelFileAccessMode { get; set; }
+
+            List<XbimDBAccess> _fileAccessModes;
+
+            public IEnumerable<XbimDBAccess> FileAccessModes
+            {
+                get
+                {
+                    if (_fileAccessModes != null)
+                        return _fileAccessModes;
+
+                    _fileAccessModes = new List<XbimDBAccess>();
+                    var values = Enum.GetValues(typeof(XbimDBAccess));
+                    foreach (var item in values)
+                    {
+                        _fileAccessModes.Add((XbimDBAccess)item);
+                    }
+                    return _fileAccessModes;
+                }
+            }
+
             public string NumberRecentFiles { get; set; }
 
             internal void SaveSettings()
-            {              
+            {
+                Settings.Default.FileAccessMode = SelFileAccessMode;
                 int iNumber;
                 if (!int.TryParse(NumberRecentFiles, out iNumber))
                     iNumber = 4;
@@ -48,21 +75,18 @@ namespace XbimXplorer.Dialogs
             /// </summary>
             public bool PluginStartupLoad { get; set; }
 
+            public string PluginMessage { get; set; }
+
             /// <summary>
             /// Defines whether to enable extra UI elements aimed at developers.
             /// </summary>
             public bool DeveloperMode { get; set; }
 
-            /// <summary>
-            /// </summary>
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
         readonly SettingWindowVm _vm;
 
-        /// <summary>
-        /// 
-        /// </summary>
         public SettingsWindow()
         {
             InitializeComponent();
@@ -83,9 +107,7 @@ namespace XbimXplorer.Dialogs
         }
 
         private bool _settingsChanged;
-        /// <summary>
-        /// 
-        /// </summary>
+
         public bool SettingsChanged
         {
             get

@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using NuGet;
+using System.Collections.ObjectModel;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -25,20 +15,18 @@ namespace XbimXplorer.PluginSystem
         {
             InitializeComponent();
         }
+        
+        internal ObservableCollection<PluginConfigurationVm> Plugins { get; } = new ObservableCollection<PluginConfigurationVm>();
 
-        private void Test(object sender, RoutedEventArgs e)
+        private void Refresh(object sender, RoutedEventArgs e)
         {
-            lst.Items.Clear();
+            Plugins.Clear();
             var repo = PackageRepositoryFactory.Default.CreateRepository("https://www.myget.org/F/xbim-develop/api/v2");
             // var verFnd = repo.FindPackage("ToSpec", new SemanticVersion(3, 1, 1, 1));
-
-            var ps = new List<PluginConfiguration>();
-
+            
             var fnd = repo.Search("XplorerPlugin", true);
             foreach (var package in fnd)
             {
-
-
                 if (!package.IsAbsoluteLatestVersion)
                     return;
                 var pv = new PluginConfiguration
@@ -48,12 +36,15 @@ namespace XbimXplorer.PluginSystem
                 };
                 pv.setOnlinePackage(package);
                 Debug.Print("{0}: {1}", pv.PluginId, pv.OnLineVersion);
+                Plugins.Add(new PluginConfigurationVm(pv));
             }
+            PluginList.ItemsSource = Plugins;
         }
 
         private void Download(object sender, RoutedEventArgs e)
         {
-
+            var current = PluginList.SelectedItem as PluginConfigurationVm;
+            current?.ExtractLibs(XplorerMainWindow.GetPluginDirectory());
         }
     }
 }
