@@ -16,12 +16,6 @@ namespace XbimXplorer
     {
         internal readonly bool PreventPluginLoad = false;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="messageTypeString"></param>
-        /// <param name="messageData"></param>
         public void BroadCastMessage(object sender, string messageTypeString, object messageData)
         {
             foreach (var window in _pluginWindows)
@@ -38,29 +32,13 @@ namespace XbimXplorer
 
         public void RefreshPlugins()
         {
-            var di = GetPluginDirectory();
-            if (!di.Exists)
-                return;
-            
-            var dirs = di.GetDirectories();
+            var dirs = PluginManagement.GetPluginDirectories();
             foreach (var dir in dirs)
             {
                 var fullAssemblyName = Path.Combine(dir.FullName, dir.Name + ".exe");
                 LoadPlugin(fullAssemblyName);
             }
             PluginMenu.Visibility = PluginMenuVisibility;
-        }
-
-        internal static DirectoryInfo GetPluginDirectory()
-        {
-            var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            if (!string.IsNullOrWhiteSpace(path))
-                path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (path == null)
-                return null;
-            path = Path.Combine(path, "Plugins");
-            var di = new DirectoryInfo(path);
-            return di;
         }
 
         string _assemblyLoadFolder = "";
@@ -108,7 +86,7 @@ namespace XbimXplorer
                 if (reqFound) 
                     continue;
                 
-                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+                AppDomain.CurrentDomain.AssemblyResolve += PluginAssemblyResolvingFunction;
                 try
                 {
                     var reqAss = Assembly.Load(refReq);
@@ -126,7 +104,7 @@ namespace XbimXplorer
                     Log.ErrorFormat(msg, ex);
                     MessageBox.Show(msg + ", " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+                AppDomain.CurrentDomain.AssemblyResolve -= PluginAssemblyResolvingFunction;
             }
             var types = new List<Type>();
             try
@@ -220,7 +198,7 @@ namespace XbimXplorer
             OpenOrFocusPluginWindow(mi.Tag as Type);
         }
 
-        Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        private Assembly PluginAssemblyResolvingFunction(object sender, ResolveEventArgs args)
         {
             var parts = args.Name.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
             var fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".exe");
@@ -380,18 +358,11 @@ namespace XbimXplorer
             }
             var v = _retainedControls[tp];
             var anchorable = v.UiObject as LayoutAnchorable;
-            if (anchorable != null)
-            {
-                if (anchorable.IsHidden)
-                    anchorable.Show();
-                anchorable.IsActive = true;
+            if (anchorable == null)
                 return;
-            }
-            //if (v.UiObject is Window)
-            //{
-            //    // ShowPluginWindow(v, true);
-            //}
-            return;
+            if (anchorable.IsHidden)
+                anchorable.Show();
+            anchorable.IsActive = true;
         }
 
         private void PluginWindowClosed(object sender, EventArgs eventArgs)

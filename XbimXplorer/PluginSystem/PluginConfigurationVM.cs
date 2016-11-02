@@ -18,13 +18,13 @@ namespace XbimXplorer.PluginSystem
         
         public  string PluginId => _model.PluginId;
 
-        public string AvailableVersion => _model?.OnLineVersion.ToString();
+        public string AvailableVersion => _model.AvailableVersion;
 
-        public string InstalledVersion => "<not implemented>";
+        public string InstalledVersion => _model.InstalledVersion;
 
-        public void ExtractLibs(DirectoryInfo getPluginDirectory)
+        public void ExtractPlugin(DirectoryInfo getPluginDirectory)
         {
-            _model.ExtractLibs(getPluginDirectory);
+            _model.ExtractPlugin(getPluginDirectory);
         }
     }
 }

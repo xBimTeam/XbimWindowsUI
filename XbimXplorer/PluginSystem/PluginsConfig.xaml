@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="PluginsConfig" Height="323" Width="524">
     <Grid>
-        <Button Margin="10,0,0,10" Click="Refresh" HorizontalAlignment="Left" Width="84" Height="22" VerticalAlignment="Bottom" >Refresh</Button>
-        <ListView x:Name="PluginList" Margin="10,10,10,37" ItemsSource="{Binding Plugins}" >
+        <ListView x:Name="PluginList" Margin="10,110,10,40" ItemsSource="{Binding Plugins}" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Name" Width="220" DisplayMemberBinding="{Binding PluginId}" />
@@ -14,5 +13,16 @@
             </ListView.View>
         </ListView>
         <Button Margin="0,0,10,10" Click="Download" Content="Download" HorizontalAlignment="Right" Width="80" Height="22" VerticalAlignment="Bottom" />
+        <GroupBox Header="Repository" HorizontalAlignment="Left" Height="90" Margin="10,10,0,0" VerticalAlignment="Top" Width="498">
+            <Grid>
+                <ComboBox x:Name="RepoSource" Margin="10,10,10,0" VerticalAlignment="Top">
+                    <ComboBoxItem Content="&lt;Installed&gt;" IsSelected="True" />
+                    <ComboBoxItem Content="https://www.myget.org/F/xbim-master/api/v2" />
+                    <ComboBoxItem Content="https://www.myget.org/F/xbim-develop/api/v2" />
+                </ComboBox>
+                <Button Margin="0,37,9.857,0" Click="RefreshPluginList" Height="22" VerticalAlignment="top" HorizontalAlignment="Right" Width="84" >Refresh</Button>
+                <CheckBox x:Name="LatestOnly" Content="Latest Versions Only" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top"/>
+            </Grid>
+        </GroupBox>
     </Grid>
 </Window>

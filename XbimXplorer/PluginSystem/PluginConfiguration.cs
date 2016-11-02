@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using log4net;
 using NuGet;
-using NuGet.Packaging;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -13,11 +10,17 @@ namespace XbimXplorer.PluginSystem
     {
         private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.PluginConfiguration");
 
-        internal enum AssemblyAvailability
+        internal static ManifestMetadata GetManifestMetadata(DirectoryInfo path)
         {
-            OnLine,
-            OnDisk,
-            InMemory
+            var file = path.GetFiles("*.manifest").FirstOrDefault();
+            if (file == null)
+                return null;
+            
+            using (var stream = file.OpenRead())
+            {
+                var rd = Manifest.ReadFrom(stream, false);
+                return rd.Metadata;
+            }
         }
 
         internal enum StartupBehaviour
@@ -28,22 +31,25 @@ namespace XbimXplorer.PluginSystem
 
         public string PluginId { get; set; }
 
-        internal AssemblyAvailability RuntimeAvailability { get; set; }
-
         internal StartupBehaviour StartupStatus { get; set; }
-
-        internal SemanticVersion OnDiskVersion;
-
-        internal SemanticVersion OnLineVersion;
+        
+        public string AvailableVersion => _onlinePackage?.Version.ToString() ?? "";
+        public string InstalledVersion => _diskManifest?.Version ?? "";
 
         private IPackage _onlinePackage;
+        private ManifestMetadata _diskManifest;
 
-        public void setOnlinePackage(IPackage package)
+        public void SetOnlinePackage(IPackage package)
         {
             _onlinePackage = package;
         }
 
-        public void ExtractLibs(DirectoryInfo pluginDirectory)
+        public void SetDiskManifest(ManifestMetadata manifest)
+        {
+            _diskManifest = manifest;
+        }
+
+        public void ExtractPlugin(DirectoryInfo pluginDirectory)
         {
             // ensure top leved plugin directory exists
             try
@@ -98,31 +104,23 @@ namespace XbimXplorer.PluginSystem
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error trying to delete: {destname}", ex);
+                    Log.Error($"Error trying to extract: {destname}", ex);
                     return;
                 }
             }
 
-            var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Id}.manifest");
-            // store disk manifest information
+            // store manifest information to disk
             // 
+            var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Id}.manifest");
             try
             {
-                
-                using (var pkgStream = _onlinePackage.GetStream())
-                {
-                    var pkgReader = new PackageReader(pkgStream);
-                    var manifest = Manifest.ReadFrom(pkgReader.GetNuspec(), true);
-                    using (var fileStream = File.Create(packageName))
-                    {
-                        manifest.Save(fileStream);
-                    }
-                }
+                if (_onlinePackage.ExtractManifestFile(packageName))
+                    return;
+                Log.Error($"Error trying to create manifest file for {packageName}");                
             }
             catch (Exception ex)
             {
-                Log.Error($"Error trying to create manifest file: {packageName}", ex);
-                return;
+                Log.Error($"Error trying to create manifest file for: {packageName}", ex);
             }
         }
     }

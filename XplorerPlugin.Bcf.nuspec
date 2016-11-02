@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+  <metadata>
+    <id>XplorerPlugin.Bcf</id>
+    <version>4.0.10-V0003</version>
+    <title>XplorerPlugin.Bcf</title>
+    <title>xBIM WindowsUI</title>
+    <authors>xBIM team</authors>
+    <owners>xBIM team</owners>
+    <licenseUrl>https://raw.githubusercontent.com/xBimTeam/XbimEssentials/master/LICENCE.md</licenseUrl>
+    <projectUrl>https://github.com/xBimTeam/</projectUrl>
+    <iconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;s=240</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Integration with Xplorer UI for BuildingSmart's BCF (Building Collaboration Format) files.</description>
+    <summary>.</summary>
+    <language>en-GB</language>
+    <!-- the XplorerPlugin tag is used to identify plugins available for donwload from XbimXplorer-->
+    <tags>BCF, Building Collaboration Format, BuildingSmart, XplorerPlugin</tags>
+    <!-- dependencies need to be worked out, at this stage they will be ignored during install -->
+    <dependencies>
+      <dependency id="Xbim.WindowsUI" version="4.0.10-V0003" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="XplorerPlugins.Bcf\bin\Release\Ionic.Zip.dll" target="lib\Ionic.Zip.dll" />
+    <file src="XplorerPlugins.Bcf\bin\Release\XplorerPlugins.Bcf.exe" target="lib\XplorerPlugins.Bcf.exe" />
+  </files>
+</package>

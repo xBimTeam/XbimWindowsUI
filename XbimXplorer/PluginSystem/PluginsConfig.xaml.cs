@@ -1,50 +1,98 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows;
 using NuGet;
-using System.Collections.ObjectModel;
 
 namespace XbimXplorer.PluginSystem
 {
     /// <summary>
     /// Interaction logic for PluginsConfig.xaml
     /// </summary>
-    public partial class PluginsConfig : Window
+    public partial class PluginsConfig
     {
         public PluginsConfig()
         {
             InitializeComponent();
+            RefreshPluginList();
         }
-        
-        internal ObservableCollection<PluginConfigurationVm> Plugins { get; } = new ObservableCollection<PluginConfigurationVm>();
 
-        private void Refresh(object sender, RoutedEventArgs e)
+        internal string SelectedRepoUrl => RepoSource.Text;
+        
+        private void ShowRepository()
         {
-            Plugins.Clear();
-            var repo = PackageRepositoryFactory.Default.CreateRepository("https://www.myget.org/F/xbim-develop/api/v2");
-            // var verFnd = repo.FindPackage("ToSpec", new SemanticVersion(3, 1, 1, 1));
-            
+            RefreshLocalPlugins();
+
+            var plugins = new List<PluginConfigurationVm>();
+            var repo = PackageRepositoryFactory.Default.CreateRepository(SelectedRepoUrl);
+           
             var fnd = repo.Search("XplorerPlugin", true);
             foreach (var package in fnd)
             {
-                //if (!package.IsAbsoluteLatestVersion)
-                //    return;
+                if (LatestOnly.IsChecked.HasValue && LatestOnly.IsChecked.Value && !package.IsAbsoluteLatestVersion)
+                    continue;
                 var pv = new PluginConfiguration
                 {
                     PluginId = package.Id,
-                    OnLineVersion = package.Version
                 };
-                pv.setOnlinePackage(package);
-                Debug.Print("{0}: {1}", pv.PluginId, pv.OnLineVersion);
-                Plugins.Add(new PluginConfigurationVm(pv));
+                pv.SetOnlinePackage(package);
+                if (_diskPlugins.ContainsKey(package.Id))
+                {
+                    pv.SetDiskManifest(_diskPlugins[package.Id]);
+                }
+
+                plugins.Add(new PluginConfigurationVm(pv));
             }
-            PluginList.ItemsSource = Plugins;
+            PluginList.ItemsSource = plugins;
+        }
+
+        private readonly Dictionary<string, ManifestMetadata> _diskPlugins = new Dictionary<string, ManifestMetadata>();
+
+        private void RefreshLocalPlugins()
+        {
+            _diskPlugins.Clear();
+            var dirs = PluginManagement.GetPluginDirectories();
+            foreach (var directoryInfo in dirs)
+            {
+                var md = PluginConfiguration.GetManifestMetadata(directoryInfo);
+                _diskPlugins.Add(md.Id, md);
+            }
         }
 
         private void Download(object sender, RoutedEventArgs e)
         {
             var current = PluginList.SelectedItem as PluginConfigurationVm;
-            current?.ExtractLibs(XplorerMainWindow.GetPluginDirectory());
+            current?.ExtractPlugin(PluginManagement.GetPluginDirectory());
+        }
+
+        private void RefreshPluginList(object sender, RoutedEventArgs e)
+        {
+            RefreshPluginList();
+        }
+
+        private void RefreshPluginList()
+        {
+            if (SelectedRepoUrl.StartsWith("http"))
+                ShowRepository();
+            else
+            {
+                ShowDiskPlugins();
+            }
+        }
+
+        private void ShowDiskPlugins()
+        {
+            RefreshLocalPlugins();
+            var plugins = new List<PluginConfigurationVm>();
+
+            foreach (var package in _diskPlugins.Values)
+            {
+                var pv = new PluginConfiguration
+                {
+                    PluginId = package.Id,
+                };
+                pv.SetDiskManifest(package);
+                plugins.Add(new PluginConfigurationVm(pv));
+            }
+            PluginList.ItemsSource = plugins;
         }
     }
 }
