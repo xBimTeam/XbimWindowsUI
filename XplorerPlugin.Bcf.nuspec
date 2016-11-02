@@ -21,7 +21,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="XplorerPlugins.Bcf\bin\Release\Ionic.Zip.dll" target="lib\Ionic.Zip.dll" />
-    <file src="XplorerPlugins.Bcf\bin\Release\XplorerPlugins.Bcf.exe" target="lib\XplorerPlugins.Bcf.exe" />
+    <file src="XplorerPlugins.Bcf\bin\Release\DotNetZip.dll" target="lib\net45\DotNetZip.dll" />
+    <file src="XplorerPlugins.Bcf\bin\Release\XplorerPlugins.Bcf.exe" target="lib\net45\XplorerPlugins.Bcf.exe" />
   </files>
 </package>

@@ -32,8 +32,8 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="Output\Release\Xbim.Presentation.dll" target="lib\net40\Xbim.Presentation.dll" />
-    <file src="Output\Release\Xbim.Presentation.xml" target="lib\net40\Xbim.Presentation.xml" />
-    <file src="Output\Release\Xbim.Presentation.pdb" target="lib\net40\Xbim.Presentation.pdb" />
+    <file src="Output\Release\Xbim.Presentation.dll" target="lib\net45\Xbim.Presentation.dll" />
+    <file src="Output\Release\Xbim.Presentation.xml" target="lib\net45\Xbim.Presentation.xml" />
+    <file src="Output\Release\Xbim.Presentation.pdb" target="lib\net45\Xbim.Presentation.pdb" />
   </files>
 </package>
