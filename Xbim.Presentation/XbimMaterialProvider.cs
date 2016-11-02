@@ -25,29 +25,14 @@ namespace Xbim.Presentation
     {
         private Material _faceMaterial;
         private Material _backgroundMaterial;
-        private bool _isTransparent;
 
-        public bool IsTransparent
-        {
-            get { return _isTransparent; }
-            set { _isTransparent = value; }
-        }
-        Binding _faceMaterialBinding;
-        Binding _backgroundMaterialBinding;
+        public bool IsTransparent { get; set; }
 
 
-        public Binding FaceMaterialBinding
-        {
-            get { return _faceMaterialBinding; }
-           
-        }
-        
+        public Binding FaceMaterialBinding { get; private set; }
 
-        public Binding BackgroundMaterialBinding
-        {
-            get { return _backgroundMaterialBinding; }
-            
-        }
+
+        public Binding BackgroundMaterialBinding { get; private set; }
 
         /// <summary>
         ///   Sets face and background Material to material
@@ -58,14 +43,14 @@ namespace Xbim.Presentation
         {
             FaceMaterial = material;
             BackgroundMaterial = material;
-            _isTransparent = transparent;
+            IsTransparent = transparent;
         }
 
         public XbimMaterialProvider(Material faceMaterial, Material backgroundMaterial, bool transparent = false)
         {
             FaceMaterial = faceMaterial;
             BackgroundMaterial = backgroundMaterial;
-            _isTransparent = transparent;
+            IsTransparent = transparent;
         }
 
        
@@ -76,17 +61,14 @@ namespace Xbim.Presentation
             set
             {
                 _faceMaterial = value;
-                if (_faceMaterialBinding == null)
+                if (FaceMaterialBinding == null)
                 {
-                    _faceMaterialBinding = new Binding("FaceMaterial");
-                    _faceMaterialBinding.Source = this;
+                    FaceMaterialBinding = new Binding("FaceMaterial");
+                    FaceMaterialBinding.Source = this;
                 }
                 
-                PropertyChangedEventHandler handler = PropertyChanged;
-                if (handler != null)
-                {
-                    handler(this, new PropertyChangedEventArgs("FaceMaterial"));
-                }
+                var handler = PropertyChanged;
+                handler?.Invoke(this, new PropertyChangedEventArgs("FaceMaterial"));
             }
         }
 
@@ -96,17 +78,14 @@ namespace Xbim.Presentation
             get { return _backgroundMaterial; }
             set
             {
-                if (_backgroundMaterialBinding == null)
+                if (BackgroundMaterialBinding == null)
                 {
-                    _backgroundMaterialBinding = new Binding("BackgroundMaterial");
-                    _backgroundMaterialBinding.Source = this;
+                    BackgroundMaterialBinding = new Binding("BackgroundMaterial");
+                    BackgroundMaterialBinding.Source = this;
                 }
                 _backgroundMaterial = value;
-                PropertyChangedEventHandler handler = PropertyChanged;
-                if (handler != null)
-                {
-                    handler(this, new PropertyChangedEventArgs("BackgroundMaterial"));
-                }
+                var handler = PropertyChanged;
+                handler?.Invoke(this, new PropertyChangedEventArgs("BackgroundMaterial"));
             }
         }
 

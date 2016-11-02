@@ -24,7 +24,7 @@ namespace Xbim.WindowsUI.DPoWValidation.Commands
 
         public ValidateAndSaveCommand(ValidationViewModel validationViewModel)
         {
-            this._vm = validationViewModel;
+            _vm = validationViewModel;
         }
 
         public void ChangesHappened()

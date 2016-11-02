@@ -10,7 +10,7 @@ namespace Xbim.BCF
     {
         public Topic()
         {
-            this.Guid = System.Guid.NewGuid().ToString();
+            Guid = System.Guid.NewGuid().ToString();
         }
     }
 }

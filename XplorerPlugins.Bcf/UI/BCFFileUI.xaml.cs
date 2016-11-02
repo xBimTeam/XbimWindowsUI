@@ -27,7 +27,7 @@ namespace Xbim.BCF.UI
         {
             InitializeComponent();
             _vm = new BcffIleViewModel();
-            this.DataContext = _vm;
+            DataContext = _vm;
         }
 
         public void Load(string fileName)
@@ -61,7 +61,7 @@ namespace Xbim.BCF.UI
             SelInstance.Visibility = System.Windows.Visibility.Visible;
 
             BcfInstanceViewModel vm = new BcfInstanceViewModel((BcfInstance)T.SelectedItem);
-            this.SelInstance.DataContext = vm;
+            SelInstance.DataContext = vm;
         }
 
         private void CameraEvent(object sender, MouseButtonEventArgs e)

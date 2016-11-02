@@ -8,12 +8,8 @@ namespace Xbim.Presentation
 
         protected void RaisePropertyChanged(string property)
         {
-            //    Debug.WriteLine(property + " was changed.");
             var handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(property));
-            }
+            handler?.Invoke(this, new PropertyChangedEventArgs(property));
         }
     }
 }

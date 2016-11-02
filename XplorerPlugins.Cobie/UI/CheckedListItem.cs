@@ -29,8 +29,8 @@ namespace XplorerPlugins.Cobie.UI
         /// <param name="isChecked"></param>
         public CheckedListItem(T item, bool isChecked = false)
         {
-            this._item = item;
-            this._isChecked = isChecked;
+            _item = item;
+            _isChecked = isChecked;
         }
 
         /// <summary>

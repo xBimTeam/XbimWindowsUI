@@ -187,11 +187,8 @@ namespace Xbim.Presentation.LayerStyling
                 }
             }
             Log.DebugFormat("Time to load visual components: {0} seconds", timer.Elapsed.TotalSeconds.ToString("F3"));
-            
-            if (ProgressChanged != null)
-            {
-                ProgressChanged(this, new ProgressChangedEventArgs(0, "Ready"));
-            }
+
+            ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(0, "Ready"));
             return scene;
         }
 

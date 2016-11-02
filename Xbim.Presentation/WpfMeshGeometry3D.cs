@@ -9,7 +9,6 @@ using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
-using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
@@ -49,15 +48,16 @@ namespace Xbim.Presentation
 
         public void ReportGeometryTo(StringBuilder sb)
         {
-            int i = 0;
-            var pEn = Positions.GetEnumerator();
-            var nEn = Normals.GetEnumerator();
-            while (pEn.MoveNext() && nEn.MoveNext())
-            {
-                var p = pEn.Current;
-                var n = nEn.Current;
-                sb.AppendFormat("{0} pos: {1} nrm:{2}\r\n", i++, p, n);
-            }
+            var i = 0;
+            using (var pEn = Positions.GetEnumerator())
+            using (var nEn = Normals.GetEnumerator())
+            { 
+                while (pEn.MoveNext() && nEn.MoveNext())
+                {
+                    var p = pEn.Current;
+                    var n = nEn.Current;
+                    sb.AppendFormat("{0} pos: {1} nrm:{2}\r\n", i++, p, n);
+                }
 
             i = 0;
             sb.AppendLine("Triangles:");
@@ -69,7 +69,7 @@ namespace Xbim.Presentation
                 {
                     sb.AppendLine();
                 }
-            }
+            }}
         }
 
         public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, WpfMaterial mat)
@@ -165,9 +165,8 @@ namespace Xbim.Presentation
 
         public static implicit operator GeometryModel3D(WpfMeshGeometry3D mesh)
         {
-            if (mesh.WpfModel == null)
-                mesh.WpfModel = new GeometryModel3D();
-            return mesh.WpfModel;
+            return mesh.WpfModel ?? 
+                (mesh.WpfModel = new GeometryModel3D());
         }
 
         public MeshGeometry3D Mesh
@@ -179,23 +178,7 @@ namespace Xbim.Presentation
                 return WpfModel.Geometry as MeshGeometry3D;
             }
         }
-        //public IEnumerable<XbimPoint3D> Positions
-        //{
-        //    get { return Mesh.Positions; }
-        //}
-
-        //public IList<XbimVector3D> Normals
-        //{
-        //    get { return Mesh.Normals; }
-        //}
-
-        //public IList<int> TriangleIndices
-        //{
-        //    get { return Mesh.TriangleIndices; }
-        //}
-
-
-
+        
         public XbimMeshFragmentCollection Meshes
         {
             get { return _meshes; }
@@ -220,7 +203,7 @@ namespace Xbim.Presentation
             get { return new WpfPoint3DCollection(Mesh.Positions); }
             set
             {
-                if (WpfModel == null || WpfModel.Geometry == null)
+                if (WpfModel?.Geometry == null)
                 {
                     _unfrozenPositions = new List<Point3D>(value.Count());
                     foreach (var xbimPoint3D in value)
@@ -238,7 +221,7 @@ namespace Xbim.Presentation
             get { return new WpfVector3DCollection(Mesh.Normals); }
             set
             {
-                if (WpfModel == null || WpfModel.Geometry == null)
+                if (WpfModel?.Geometry == null)
                 {
                     _unfrozenNormals = new List<Vector3D>(value.Count());
                     foreach (var xbimV3D in value)
@@ -256,7 +239,7 @@ namespace Xbim.Presentation
             get { return Mesh.TriangleIndices; }
             set
             {
-                if (WpfModel == null || WpfModel.Geometry == null)
+                if (WpfModel?.Geometry == null)
                 {
                     _unfrozenIndices = value.ToList();
                 }

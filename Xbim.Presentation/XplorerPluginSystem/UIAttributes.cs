@@ -34,7 +34,7 @@ namespace Xbim.Presentation.XplorerPluginSystem
 
         public string MenuText { get; private set; }
         public PluginWindowUiContainerEnum InitialContainer { get; private set; }
-        public PluginWindowActivation Activation { get; private set; }
+        public PluginWindowActivation Activation { get; }
 
         
     }

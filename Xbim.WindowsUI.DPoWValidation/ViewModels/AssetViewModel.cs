@@ -32,7 +32,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         public AssetViewModel(Asset asset)
         {
-            this._asset = asset;
+            _asset = asset;
             if (_asset.Attributes == null)
             {
                 RequirementResults = new ObservableCollection<RequirementViewModel>();

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using Xbim.Common.Geometry;
@@ -9,25 +8,15 @@ namespace Xbim.Presentation.ModelGeomInfo
 {
     public class PolylineGeomInfo
     {
-        Point3DCollection _visualPoints;
-        public Point3DCollection VisualPoints
-        {
-            get
-            {
-                if (_visualPoints == null)
-                {
-                    _visualPoints = GeneratePoints();
-                }
-                return _visualPoints;
-            }
-        }
+        private Point3DCollection _visualPoints;
+        public Point3DCollection VisualPoints => _visualPoints ?? (_visualPoints = GeneratePoints());
 
         private Point3DCollection GeneratePoints()
         {
-            int n = _geomPoints.Count;
+            var n = _geomPoints.Count;
             var result = new Point3DCollection(_geomPoints.Count);
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 var pt = _geomPoints[i].Point;
                 result.Add(pt);
@@ -37,13 +26,13 @@ namespace Xbim.Presentation.ModelGeomInfo
             return result;
         }
 
-        private List<PointGeomInfo> _geomPoints;
+        private readonly List<PointGeomInfo> _geomPoints;
 
         public EntitySelection ParticipatingEntities
         {
             get
             {
-                EntitySelection ret = new EntitySelection(false);
+                var ret = new EntitySelection();
                 foreach (var item in _geomPoints)
                 {
                     if (!ret.Contains(item.Entity))
@@ -56,12 +45,12 @@ namespace Xbim.Presentation.ModelGeomInfo
         public override string ToString()
         {
             if (_geomPoints.Count == 1)
-                return string.Format("Selected point coords: {0:0.##}, {1:0.##}, {2:0.##})",
-                    _geomPoints[0].Point.X, _geomPoints[0].Point.Y, _geomPoints[0].Point.Z);
+                return
+                    $"Selected point coords: {_geomPoints[0].Point.X:0.##}, {_geomPoints[0].Point.Y:0.##}, {_geomPoints[0].Point.Z:0.##})";
             var d = GetArea();
             return !double.IsNaN(d) 
-                ? string.Format("Lenght: {0:0.##}m Area: {1:0.##}sqm", GetLenght(), d) 
-                : string.Format("Lenght: {0:0.##}m", GetLenght());
+                ? $"Lenght: {GetLenght():0.##}m Area: {d:0.##}sqm"
+                : $"Lenght: {GetLenght():0.##}m";
         }
 
         public PolylineGeomInfo()
@@ -75,7 +64,7 @@ namespace Xbim.Presentation.ModelGeomInfo
                 return 0;
 
             double ret = 0;
-            for (int i = 1; i < _geomPoints.Count(); i++)
+            for (var i = 1; i < _geomPoints.Count; i++)
             {
                 ret += _geomPoints[i - 1].Point.DistanceTo(_geomPoints[i].Point);
             }
@@ -88,28 +77,28 @@ namespace Xbim.Presentation.ModelGeomInfo
             if (Count() < 3)
                 return double.NaN;
 
-            XbimVector3D normal = Normal() * -1;
-            XbimVector3D firstSegment = this.FirstSegment();
-            XbimVector3D up = XbimVector3D.CrossProduct(normal, firstSegment);
+            var normal = Normal() * -1;
+            var firstSegment = FirstSegment();
+            var up = XbimVector3D.CrossProduct(normal, firstSegment);
             
-            XbimVector3D campos = new XbimVector3D(
+            var campos = new XbimVector3D(
                 _geomPoints[0].Point.X,
                 _geomPoints[0].Point.Y,
                 _geomPoints[0].Point.Z
                 ); 
-            XbimVector3D target = campos + normal;
-            XbimMatrix3D m = XbimMatrix3D.CreateLookAt(campos, target, up);
+            var target = campos + normal;
+            var m = XbimMatrix3D.CreateLookAt(campos, target, up);
 
 
-            XbimPoint3D[] point = new XbimPoint3D[Count()];
-            for (int i = 0; i < point.Length; i++)
+            var point = new XbimPoint3D[Count()];
+            for (var i = 0; i < point.Length; i++)
             {
-                XbimPoint3D pBefore = new XbimPoint3D(
+                var pBefore = new XbimPoint3D(
                     _geomPoints[i].Point.X,
                     _geomPoints[i].Point.Y,
                     _geomPoints[i].Point.Z
                     );
-                XbimPoint3D pAft = m.Transform(pBefore);
+                var pAft = m.Transform(pBefore);
                 point[i] = pAft;
             }
 
@@ -117,8 +106,8 @@ namespace Xbim.Presentation.ModelGeomInfo
             // it assumes that the last point is NOT the same of the first one, but it tolerates the case.
             double area = 0.0f;
             
-            int numVertices = Count();
-            for (int i = 0; i < numVertices - 1; ++i)
+            var numVertices = Count();
+            for (var i = 0; i < numVertices - 1; ++i)
             {
                 area += point[i].X * point[i + 1].Y - point[i + 1].X * point[i].Y;
             }
@@ -129,14 +118,14 @@ namespace Xbim.Presentation.ModelGeomInfo
 
         private XbimVector3D FirstSegment()
         {
-            Vector3D ret = _geomPoints[1].Point - _geomPoints[0].Point;
+            var ret = _geomPoints[1].Point - _geomPoints[0].Point;
             return new XbimVector3D(ret.X, ret.Y, ret.Z);
         }
 
         private XbimVector3D Normal()
         {
-            Vector3D seg1 = _geomPoints[1].Point - _geomPoints[0].Point;
-            Vector3D seg2 = _geomPoints[2].Point - _geomPoints[1].Point;
+            var seg1 = _geomPoints[1].Point - _geomPoints[0].Point;
+            var seg2 = _geomPoints[2].Point - _geomPoints[1].Point;
             var ret = Vector3D.CrossProduct(seg1, seg2);
             ret.Normalize();
             return new XbimVector3D(ret.X, ret.Y, ret.Z);
@@ -151,11 +140,10 @@ namespace Xbim.Presentation.ModelGeomInfo
         {
             if (_geomPoints == null)
                 return;
-
-            var lines = new LinesVisual3D { Color = Colors.Yellow };
+            
             var axesMeshBuilder = new MeshBuilder();
 
-            List<Point3D> path = new List<Point3D>();
+            var path = new List<Point3D>();
             foreach (var item in _geomPoints)
             {
                 axesMeshBuilder.AddSphere(item.Point, 0.1);
@@ -163,7 +151,7 @@ namespace Xbim.Presentation.ModelGeomInfo
             }
             if (_geomPoints.Count > 1)
             {
-                double lineThickness = 0.05;
+                const double lineThickness = 0.05;
                 axesMeshBuilder.AddTube(path, lineThickness, 9, false);
             }
             highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), Materials.Yellow);
@@ -186,8 +174,7 @@ namespace Xbim.Presentation.ModelGeomInfo
         internal void Clear()
         {
             _visualPoints = null;
-            if (_geomPoints != null)
-                _geomPoints.Clear();
+            _geomPoints?.Clear();
         }
 
         internal void Add(PointGeomInfo p)
@@ -196,13 +183,7 @@ namespace Xbim.Presentation.ModelGeomInfo
             _geomPoints.Add(p);
         }
 
-        public bool IsEmpty
-        {
-            get
-            {
-                return (_geomPoints.Count == 0);
-            }
-        }
+        public bool IsEmpty => (_geomPoints.Count == 0);
 
         public Point3D? Last3DPoint {
             get

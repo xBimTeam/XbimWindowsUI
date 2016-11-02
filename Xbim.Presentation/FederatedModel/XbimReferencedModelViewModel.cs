@@ -15,7 +15,7 @@ namespace Xbim.Presentation.FederatedModel
     {
         #region fields
         IReferencedModel _xbimReferencedModel;
-        string _identifier = "";
+        readonly string _identifier = "";
         string _name = "";
         string _organisationName = "";
         string _organisationRole = "";
@@ -152,10 +152,7 @@ namespace Xbim.Presentation.FederatedModel
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string prop)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(prop));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
     }
 }

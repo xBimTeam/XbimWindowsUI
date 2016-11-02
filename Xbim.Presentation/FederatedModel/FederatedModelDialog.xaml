@@ -31,8 +31,9 @@
                  Text="{Binding Path=FederatedModel.Organization, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ElementName=Window}" VerticalAlignment="Top" Grid.Column="1"/>
 
 
-        <xbim:FederatedModelsGrid x:Name="FederatedList" Grid.Row="0" Margin="5,100,5,5" Grid.ColumnSpan="2" ToolTip="Add: fill in the data and press &lt;Enter&gt;&#x0a;Remove: select row(s) and press &lt;Delete&gt;"></xbim:FederatedModelsGrid>
+        <xbim:FederatedModelsGrid x:Name="FederatedList" Grid.Row="0" Margin="5,100,5,5" Grid.ColumnSpan="2" ToolTip="Add: fill in the data and press &lt;Enter&gt;&#x0a;Remove: select row(s) and press &lt;Delete&gt;" />
         <!--Button x:Name="Modifiy" Margin="10,0,5,5" Height="25" Click="Modify_Click" IsEnabled="False" VerticalAlignment="Bottom" Visibility="Collapsed">Modify Model</>
         <Button x:Name="Add" Margin="5,0,10,5" Height="25" Click="Add_Click" Grid.Column="1" VerticalAlignment="Bottom" Visibility="Collapsed">Add Model</Button-->
     </Grid>
 </Window>
+

@@ -11,7 +11,7 @@ namespace Xbim.WindowsUI.DPoWValidation.ViewModels
 
         public RequirementViewModel(Attribute attribute)
         {
-            this._attribute = attribute;
+            _attribute = attribute;
             EvaluateType();
         }
 

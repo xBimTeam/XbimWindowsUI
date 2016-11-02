@@ -6,28 +6,14 @@ namespace Xbim.Presentation
 {
     public class LayerViewModel
     {
-        string _layerName;
-
         public LayerViewModel(string layerName)
         {
-            _layerName = layerName;
+            NameOnMenu = layerName;
         }
 
-        public string NameOnMenu
-        {
-            get 
-            {
-                return _layerName;
-            }
-        }
+        public string NameOnMenu { get; }
 
-        public ICommand Open
-        {
-            get
-            {
-                return new LayerToggleCommand();
-            }
-        }
+        public ICommand Open => new LayerToggleCommand();
     }
 
     public class LayerToggleCommand : ICommand

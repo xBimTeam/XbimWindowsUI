@@ -13,8 +13,8 @@ namespace Xbim.BCF
     {
         public ClippingPlane(Plane3D plane)
         {
-            this.Location = new Point(plane.Position);
-            this.Direction = new Direction(plane.Normal);
+            Location = new Point(plane.Position);
+            Direction = new Direction(plane.Normal);
         }
     }
 
@@ -30,16 +30,16 @@ namespace Xbim.BCF
             {
                 if (control.Viewport.Orthographic)
                 {
-                    this.orthogonalCameraField = new OrthogonalCamera((System.Windows.Media.Media3D.OrthographicCamera)control.Viewport.Camera);
+                    orthogonalCameraField = new OrthogonalCamera((System.Windows.Media.Media3D.OrthographicCamera)control.Viewport.Camera);
                 }
                 else
                 {
-                    this.perspectiveCameraField = new PerspectiveCamera((System.Windows.Media.Media3D.PerspectiveCamera)control.Viewport.Camera);
+                    perspectiveCameraField = new PerspectiveCamera((System.Windows.Media.Media3D.PerspectiveCamera)control.Viewport.Camera);
                 }
                 var cg = control.GetCutPlane();
                 if (cg != null)
                 {
-                    this.ClippingPlanes.Add(new ClippingPlane(cg));
+                    ClippingPlanes.Add(new ClippingPlane(cg));
                 }
             }
         }
@@ -49,10 +49,10 @@ namespace Xbim.BCF
     {
         public OrthogonalCamera(System.Windows.Media.Media3D.OrthographicCamera cam)
         {
-            this.CameraViewPoint = new Point(cam.Position);
-            this.CameraDirection = new Direction(cam.LookDirection);
-            this.CameraUpVector  = new Direction(cam.UpDirection);
-            this.ViewToWorldScale = cam.Width;
+            CameraViewPoint = new Point(cam.Position);
+            CameraDirection = new Direction(cam.LookDirection);
+            CameraUpVector = new Direction(cam.UpDirection);
+            ViewToWorldScale = cam.Width;
         }
     }
 
@@ -60,10 +60,10 @@ namespace Xbim.BCF
     {
         public PerspectiveCamera(System.Windows.Media.Media3D.PerspectiveCamera cam )
         {
-            this.CameraViewPoint = new Point(cam.Position);
-            this.CameraDirection = new Direction(cam.LookDirection);
-            this.CameraUpVector = new Direction(cam.UpDirection);
-            this.fieldOfViewField = cam.FieldOfView;
+            CameraViewPoint = new Point(cam.Position);
+            CameraDirection = new Direction(cam.LookDirection);
+            CameraUpVector = new Direction(cam.UpDirection);
+            fieldOfViewField = cam.FieldOfView;
         }
     }
 
@@ -72,9 +72,9 @@ namespace Xbim.BCF
         public Point() { }
         public Point(Point3D pnt)
         {
-            this.xField = pnt.X;
-            this.yField = pnt.Y;
-            this.zField = pnt.Z;
+            xField = pnt.X;
+            yField = pnt.Y;
+            zField = pnt.Z;
         }
     }
 
@@ -84,9 +84,9 @@ namespace Xbim.BCF
 
         public Direction(Vector3D dir)
         {
-            this.xField = dir.X;
-            this.yField = dir.Y;
-            this.zField = dir.Z;
+            xField = dir.X;
+            yField = dir.Y;
+            zField = dir.Z;
         }
     }
 }
