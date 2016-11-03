@@ -61,6 +61,7 @@ namespace XbimXplorer.PluginSystem
         {
             var current = PluginList.SelectedItem as PluginConfigurationVm;
             current?.ExtractPlugin(PluginManagement.GetPluginDirectory());
+            RefreshPluginList();
         }
 
         private void RefreshPluginList(object sender, RoutedEventArgs e)

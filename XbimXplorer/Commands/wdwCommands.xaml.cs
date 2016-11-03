@@ -127,19 +127,10 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^Plugin Refresh$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    if (_parentWindow != null)
-                        _parentWindow.RefreshPlugins();
+                    _parentWindow?.RefreshPlugins();
                     continue;
                 }
-
-                mdbclosed = Regex.Match(cmd, @"^Plugin Config$", RegexOptions.IgnoreCase);
-                if (mdbclosed.Success)
-                {
-                    var pc = new PluginsConfig();
-                    pc.Show();
-                    continue;
-                }
-
+               
                 mdbclosed = Regex.Match(cmd, @"^Plugin Load (?<assemblyName>.+)$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {

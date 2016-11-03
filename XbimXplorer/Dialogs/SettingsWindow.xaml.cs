@@ -129,10 +129,10 @@ namespace XbimXplorer.Dialogs
             e.Handled = !IsTextAllowed(e.Text);
         }
 
-        private void ManualPluginLoad(object sender, RoutedEventArgs e)
-        {
-            var window = Application.Current.MainWindow as XplorerMainWindow;
-            window?.RefreshPlugins();
-        }
+        //private void ManualPluginLoad(object sender, RoutedEventArgs e)
+        //{
+        //    var window = Application.Current.MainWindow as XplorerMainWindow;
+        //    window?.RefreshPlugins();
+        //}
     }
 }
