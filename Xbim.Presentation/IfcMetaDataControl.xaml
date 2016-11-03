@@ -4,17 +4,12 @@
              xmlns:local="clr-namespace:Xbim.Presentation"           
              >
     <UserControl.Resources>
-        <Style TargetType="{x:Type Hyperlink}"
-		       x:Key="HyperlinkStyle">
-            <EventSetter Event="RequestNavigate"
-			             Handler="Hyperlink_RequestNavigate"/>
+        <Style TargetType="{x:Type Hyperlink}" x:Key="HyperlinkStyle">
+            <EventSetter Event="RequestNavigate" Handler="Hyperlink_RequestNavigate"/>
         </Style>
     </UserControl.Resources>
-    <TabControl Background="#114682d4"
-	            x:Name="TheTabs"
-	            FontSize="10">
-        <TabItem Header="Object"
-		         x:Name="ObjectTab">
+    <TabControl Background="#114682d4" x:Name="TheTabs" FontSize="10">
+        <TabItem Header="Object" x:Name="ObjectTab">
             <Grid>
                 <CheckBox Margin="3"
 				          Height="15"

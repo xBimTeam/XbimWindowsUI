@@ -426,12 +426,6 @@
     <Resource Include="xBimQueryLogo.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj">
-      <Project>{89f98e53-de4e-4427-8244-d5934ad08849}</Project>
-      <Name>Xbim.Presentation</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client,KB2468871">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4 Client Profile %28x86 and x64%29 and Update for .NET Framework 4 %28KB2468871%29</ProductName>
@@ -470,6 +464,12 @@
       <Progid>xBIM.Xplorer</Progid>
       <DefaultIcon>xBIM.ico</DefaultIcon>
     </FileAssociation>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj">
+      <Project>{89F98E53-DE4E-4427-8244-D5934AD08849}</Project>
+      <Name>Xbim.Presentation</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

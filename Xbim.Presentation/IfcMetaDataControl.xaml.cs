@@ -1,16 +1,4 @@
-﻿#region XbimHeader
-
-// The eXtensible Building Information Modelling (xBIM) Toolkit
-// Solution:    XbimComplete
-// Project:     Xbim.Presentation
-// Filename:    IfcMetaDataControl.xaml.cs
-// Published:   01, 2012
-// Last Edited: 9:05 AM on 20 12 2011
-// (See accompanying copyright.rtf)
-
-#endregion
-
-#region Directives
+﻿#region Directives
 
 using System;
 using System.Collections.Generic;
@@ -32,7 +20,7 @@ using Xbim.Ifc4.Interfaces;
 namespace Xbim.Presentation
 {
     /// <summary>
-    ///   Interaction logic for IfcMetaDataControl.xaml
+    /// Interaction logic for IfcMetaDataControl.xaml
     /// </summary>
     public partial class IfcMetaDataControl : INotifyPropertyChanged
     {
