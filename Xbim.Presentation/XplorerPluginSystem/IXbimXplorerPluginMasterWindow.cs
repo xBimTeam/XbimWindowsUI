@@ -1,3 +1,4 @@
+using System.Reflection;
 using Xbim.Common;
 using Xbim.Ifc;
 
@@ -6,7 +7,6 @@ namespace Xbim.Presentation.XplorerPluginSystem
 {
     public interface IXbimXplorerPluginMasterWindow
     {
-
         DrawingControl3D DrawingControl { get; }
 
         IPersistEntity SelectedItem { get; set; }
@@ -21,5 +21,7 @@ namespace Xbim.Presentation.XplorerPluginSystem
         bool Focus();
 
         string GetOpenedModelFileName();
+
+        string GetAssemblyLocation(Assembly requestingAssembly);
     }
 }

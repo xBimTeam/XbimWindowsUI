@@ -867,5 +867,7 @@ namespace XbimXplorer
             Simplify.IfcSimplify s = new Simplify.IfcSimplify();
             s.Show();
         }
+
+        
     }
 }

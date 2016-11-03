@@ -41,7 +41,7 @@ namespace XbimXplorer
             PluginMenu.Visibility = PluginMenuVisibility;
         }
 
-        string _assemblyLoadFolder = "";
+        private string _assemblyLoadFolder = "";
 
         internal void LoadPlugin(string fullAssemblyName)
         {
@@ -57,7 +57,7 @@ namespace XbimXplorer
             // note: the use of Assembly.Load(File.ReadAllBytes(assemblypath)) is introduced to allow plugin files to be deleted.
             // this is required for the plugin update feature (currently under development)
             //
-            var assembly = Assembly.Load(File.ReadAllBytes(fullAssemblyName));
+            var assembly = LoadPluginAssembly(fullAssemblyName);
             _pluginAssemblies.Add(assembly);
 
             var loadQueue = new Queue<AssemblyName>(assembly.GetReferencedAssemblies());
@@ -141,6 +141,28 @@ namespace XbimXplorer
             PluginMenu.Visibility = PluginMenuVisibility;
         }
 
+        private Dictionary<string, string> _assemblyLocations = new Dictionary<string, string>();
+
+        /// <summary>
+        /// loads an assembly from a memory stream while retaining the information of its location.
+        /// </summary>
+        /// <param name="fullAssemblyPath">Full path of the assembly to load.</param>
+        /// <returns>the assembly or null in case of failure</returns>
+        private Assembly LoadPluginAssembly(string fullAssemblyPath)
+        {
+            // note: the use of Assembly.Load(File.ReadAllBytes(assemblypath)) is introduced to allow plugin files to be deleted.
+            // this is required for the plugin update feature (currently under development)
+            //
+            var loaded = Assembly.Load(File.ReadAllBytes(fullAssemblyPath));
+
+            if (!_assemblyLocations.ContainsKey(loaded.FullName))
+            {
+                _assemblyLocations.Add(loaded.FullName, fullAssemblyPath);
+            }
+            
+            return loaded;
+        }
+
         private void EvaluateXbimUiType(Type type)
         {
             if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
@@ -164,9 +186,7 @@ namespace XbimXplorer
         private void EvaluateXbimUiMenu(Type type)
         {
             var att = type.GetUiAttribute();
-            if (att == null) 
-                return;
-            if (string.IsNullOrEmpty(att.MenuText)) 
+            if (string.IsNullOrEmpty(att?.MenuText)) 
                 return;
             var destMenu = PluginMenu;
             var menuHeader = type.Name;
@@ -197,21 +217,24 @@ namespace XbimXplorer
                 return;
             OpenOrFocusPluginWindow(mi.Tag as Type);
         }
-
+        
         private Assembly PluginAssemblyResolvingFunction(object sender, ResolveEventArgs args)
         {
             var parts = args.Name.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
             var fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".exe");
             if (File.Exists(fName))
-                return Assembly.LoadFile(fName);
+            {
+                return LoadPluginAssembly(fName);
+            }
             fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".dll");
             return File.Exists(fName) 
-                ? Assembly.LoadFile(fName) 
+                ? LoadPluginAssembly(fName)
                 : null;
         }
         
         private object ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
         {
+            // ReSharper disable once SuspiciousTypeConversion.Global
             var aswindow = pluginWindow as Window;
             if (aswindow != null)
             {
@@ -339,7 +362,7 @@ namespace XbimXplorer
                     }
                     catch (Exception ex)
                     {
-                        var msg = string.Format("Error creating instance of type '{0}'", tp);
+                        var msg = $"Error creating instance of type '{tp}'";
                         Log.Error(msg, ex);
                         return;
                     }
@@ -382,6 +405,7 @@ namespace XbimXplorer
             else if (sender is Window)
             {
                 var cnt = (Window)sender;
+                // ReSharper disable once SuspiciousTypeConversion.Global
                 vPlug = cnt as IXbimXplorerPluginWindow;
             }
             if (vPlug == null)
@@ -393,6 +417,13 @@ namespace XbimXplorer
             {
                 _retainedControls.Remove(tp);
             }
+        }
+
+        public string GetAssemblyLocation(Assembly requestingAssembly)
+        {
+            return _assemblyLocations.ContainsKey(requestingAssembly.FullName) 
+                ? _assemblyLocations[requestingAssembly.FullName] 
+                : null;
         }
     }
 }

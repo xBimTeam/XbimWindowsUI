@@ -85,7 +85,7 @@ namespace XbimXplorer.Dialogs
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
-        readonly SettingWindowVm _vm;
+        private readonly SettingWindowVm _vm;
 
         public SettingsWindow()
         {
@@ -97,7 +97,7 @@ namespace XbimXplorer.Dialogs
         private void ButtonOK_Click(object sender, RoutedEventArgs e)
         {
             _vm.SaveSettings();
-            _settingsChanged = true;
+            SettingsChanged = true;
             Close();            
         }
 
@@ -106,15 +106,7 @@ namespace XbimXplorer.Dialogs
             Close();            
         }
 
-        private bool _settingsChanged;
-
-        public bool SettingsChanged
-        {
-            get
-            {
-                return _settingsChanged;
-            }
-        }
+        public bool SettingsChanged { get; private set; }
 
         private void ButtonReset_Click(object sender, RoutedEventArgs e)
         {
@@ -122,7 +114,7 @@ namespace XbimXplorer.Dialogs
             if (retVal != MessageBoxResult.Yes) 
                 return;
             Settings.Default.Reset();
-            _settingsChanged = true;
+            SettingsChanged = true;
             Close();
         }
 
@@ -139,10 +131,8 @@ namespace XbimXplorer.Dialogs
 
         private void ManualPluginLoad(object sender, RoutedEventArgs e)
         {
-            if (Application.Current.MainWindow is XplorerMainWindow)
-            {
-                ((XplorerMainWindow)Application.Current.MainWindow).RefreshPlugins();
-            }
+            var window = Application.Current.MainWindow as XplorerMainWindow;
+            window?.RefreshPlugins();
         }
     }
 }
