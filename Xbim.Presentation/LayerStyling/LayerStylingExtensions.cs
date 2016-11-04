@@ -16,8 +16,8 @@ namespace Xbim.Presentation.LayerStyling
             if (exclude == null)
                 exclude = new List<Type>()
                 {
-                    typeof(IIfcSpace)
-                    // , typeof(IfcFeatureElement)
+                    typeof(IIfcSpace),
+                    typeof(IIfcFeatureElement)
                 };
             foreach (var excludedT in exclude)
             {
