@@ -398,15 +398,20 @@ namespace Xbim.Presentation
         {
             var pos = e.GetPosition(Canvas);
             var hit = FindHit(pos);
-            
-            if (hit?.ModelHit == null)
+
+            var hitObject = hit?.ModelHit?.GetValue(TagProperty);           
+            if (hitObject == null)
             {
                 Selection.Clear();
                 SelectedEntity = null;
+                if (UserModeledDimension.IsEmpty)
+                    return;
+                // drop the geometry that holds the visualization of the measure
+                UserModeledDimension.Clear();
+                FirePrevPointsChanged();
                 return;
             }
-
-            var hitObject = hit.ModelHit.GetValue(TagProperty);
+            
             IPersistEntity thisSelectedEntity = null;
             if (hitObject is XbimInstanceHandle)
             {
@@ -459,7 +464,7 @@ namespace Xbim.Presentation
                 var mc = XbimMouseClickActions.Single;
                 if (MouseModifierKeyBehaviour.ContainsKey(Keyboard.Modifiers))
                     mc = MouseModifierKeyBehaviour[Keyboard.Modifiers];
-                if (mc != XbimMouseClickActions.Measure)
+                if (mc != XbimMouseClickActions.Measure && !UserModeledDimension.IsEmpty)
                 {
                     // drop the geometry that holds the visualization of the measure
                     // FurtherGeometries.Content = null;
@@ -512,6 +517,7 @@ namespace Xbim.Presentation
             }
             else
             {
+                // this triggers the highlighting in case of single selection mode.
                 SelectedEntity = thisSelectedEntity;
             }
         }
@@ -1028,6 +1034,10 @@ namespace Xbim.Presentation
                 var rayHit = hit as RayMeshGeometry3DHitTestResult;
                 if (rayHit?.MeshHit == null)
                     return HitTestResultBehavior.Continue;
+                var tagObject = rayHit.ModelHit.GetValue(TagProperty);
+                if (tagObject == null)
+                    return HitTestResultBehavior.Continue;
+
                 result = rayHit;
                 return HitTestResultBehavior.Stop;
             };
