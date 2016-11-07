@@ -10,8 +10,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E199F75-F5E2-4B21-9DDA-85AF017F9445}"
 	ProjectSection(SolutionItems) = preProject
 		LICENCE.md = LICENCE.md
-		Xbim.WindowsUI.nuspec = Xbim.WindowsUI.nuspec
-		XplorerPlugin.Bcf.nuspec = XplorerPlugin.Bcf.nuspec
+		Xbim.WindowsUI.package.nuspec = Xbim.WindowsUI.package.nuspec
+		XplorerPlugin.Bcf.plugin.nuspec = XplorerPlugin.Bcf.plugin.nuspec
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XplorerPlugins", "XplorerPlugins", "{0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}"

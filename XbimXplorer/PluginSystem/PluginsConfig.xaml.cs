@@ -53,6 +53,8 @@ namespace XbimXplorer.PluginSystem
             foreach (var directoryInfo in dirs)
             {
                 var md = PluginConfiguration.GetManifestMetadata(directoryInfo);
+                if (md == null)
+                    continue;
                 _diskPlugins.Add(md.Id, md);
             }
         }
