@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using NuGet;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -25,7 +26,7 @@ namespace XbimXplorer
             }
         }
 
-        public Visibility PluginMenuVisibility => 
+        public Visibility PluginMenuVisibility =>
             PluginMenu.Items.Count == 0
                 ? Visibility.Collapsed
                 : Visibility.Visible;
@@ -35,29 +36,55 @@ namespace XbimXplorer
             var dirs = PluginManagement.GetPluginDirectories();
             foreach (var dir in dirs)
             {
-                var fullAssemblyName = Path.Combine(dir.FullName, dir.Name + ".exe");
-                LoadPlugin(fullAssemblyName);
+                // evaluate the loading of the plugin from a folder
+                LoadPlugin(dir, false);
             }
             PluginMenu.Visibility = PluginMenuVisibility;
         }
 
         private string _assemblyLoadFolder = "";
 
-        internal void LoadPlugin(string fullAssemblyName)
-        {
-            if (!File.Exists(fullAssemblyName))
-            {
-                Log.ErrorFormat("Plugin loading error: Assembly not found {0}", fullAssemblyName);
-                return;
-            }
-            Log.InfoFormat("Attempting to load plugin: {0}", fullAssemblyName);
-            var contPath = Path.GetDirectoryName(fullAssemblyName);
-            _assemblyLoadFolder = contPath;
+        /// <summary>
+        /// key is ManifestMetadata.Id, data is ManifestMetadata
+        /// </summary>
+        private readonly Dictionary<string, ManifestMetadata> _loadedPlugins = new Dictionary<string, ManifestMetadata>();
 
-            // note: the use of Assembly.Load(File.ReadAllBytes(assemblypath)) is introduced to allow plugin files to be deleted.
-            // this is required for the plugin update feature (currently under development)
-            //
-            var assembly = LoadPluginAssembly(fullAssemblyName);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <param name="forceLoad"></param>
+        /// <param name="fileName"></param>
+        /// <returns>True if plugin is completely loaded. False if not, for any reason.</returns>
+        internal bool LoadPlugin(DirectoryInfo dir, bool forceLoad, string fileName = null)
+        {
+            var mfst = PluginManagement.GetManifestMetadata(dir);
+            if (_loadedPlugins.ContainsKey(mfst.Id))
+            {
+                Log.Warn($"Re-load of previousely loaded plugin {mfst.Id} cancelled.");
+                return false;
+            }
+            if (!forceLoad) // if don't have to load forcedly
+            {
+                // check startup setting
+                //
+                var conf = PluginManagement.GetConfiguration(dir);
+                if (conf?.OnStartup != PluginConfiguration.StartupBehaviour.Enabled)
+                    return false;
+            }
+            var fullAssemblyFileName = PluginManagement.GetEntryFile(dir, fileName);
+            if (!File.Exists(fullAssemblyFileName))
+            {
+                Log.Error($"Plugin loading error: Assembly file not found [{fullAssemblyFileName}].");
+                return false;
+            }
+            Log.InfoFormat("Attempting to load plugin: {0}", fullAssemblyFileName);
+            _assemblyLoadFolder = dir.FullName;
+
+            var assembly = LoadAssembly(fullAssemblyFileName);
+            if (assembly == null)
+                return false;
+            _loadedPlugins.Add(mfst.Id, mfst);
             _pluginAssemblies.Add(assembly);
 
             var loadQueue = new Queue<AssemblyName>(assembly.GetReferencedAssemblies());
@@ -65,7 +92,7 @@ namespace XbimXplorer
             while (loadQueue.Any())
             {
                 var refReq = loadQueue.Dequeue();
-            
+
                 //check if the assembly is loaded
                 var asms = AppDomain.CurrentDomain.GetAssemblies();
                 var reqFound = false;
@@ -79,13 +106,13 @@ namespace XbimXplorer
                     if (asmName.Name.Equals(refReq.Name))
                     {
                         Log.DebugFormat("Versioning issues:\r\n" +
-                                       "Required -> {0}\r\n" +
-                                       "Loaded   -> {1}", refReq.FullName, asmName.FullName);
+                                        "Required -> {0}\r\n" +
+                                        "Loaded   -> {1}", refReq.FullName, asmName.FullName);
                     }
                 }
-                if (reqFound) 
+                if (reqFound)
                     continue;
-                
+
                 AppDomain.CurrentDomain.AssemblyResolve += PluginAssemblyResolvingFunction;
                 try
                 {
@@ -100,7 +127,7 @@ namespace XbimXplorer
                 }
                 catch (Exception ex)
                 {
-                    var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyName;
+                    var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyFileName;
                     Log.ErrorFormat(msg, ex);
                     MessageBox.Show(msg + ", " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
@@ -110,11 +137,11 @@ namespace XbimXplorer
             try
             {
                 types.AddRange(assembly.GetTypes()
-                        .Where(i => i != null && typeof (UserControl).IsAssignableFrom(i) && i.Assembly == assembly)
-                        );
+                        .Where(i => i != null && typeof(UserControl).IsAssignableFrom(i) && i.Assembly == assembly)
+                );
                 types.AddRange(assembly.GetTypes()
                         .Where(i => i != null && typeof(Window).IsAssignableFrom(i) && i.Assembly == assembly)
-                        );
+                );
             }
             catch (ReflectionTypeLoadException ex)
             {
@@ -122,7 +149,8 @@ namespace XbimXplorer
                 {
                     try
                     {
-                        if (theType != null && typeof(UserControl).IsAssignableFrom(theType) && theType.Assembly == assembly)
+                        if (theType != null && typeof(UserControl).IsAssignableFrom(theType) &&
+                            theType.Assembly == assembly)
                             types.Add(theType);
                     }
                     // This exception list is not exhaustive, modify to suit any reasons
@@ -133,33 +161,45 @@ namespace XbimXplorer
                     }
                 }
             }
-            foreach (var tp in types)
+            // set UI visibility
+            try
             {
-                EvaluateXbimUiType(tp);
+                foreach (var tp in types)
+                {
+                    EvaluateXbimUiType(tp);
+                }
             }
-
+            catch (Exception ex)
+            {
+                Log.Error($"Error activating plugin {mfst.Id}; startup mode set to 'Ignore'.", ex);
+                PluginManagement.SetStartup(dir, PluginConfiguration.StartupBehaviour.Disabled);
+                return false;
+            }
             PluginMenu.Visibility = PluginMenuVisibility;
+            return true;
         }
 
-        private Dictionary<string, string> _assemblyLocations = new Dictionary<string, string>();
+        /// <summary>
+        /// key is assembly full name, value is path to file
+        /// </summary>
+        private readonly Dictionary<string, string> _assemblyLocations = new Dictionary<string, string>();
 
         /// <summary>
-        /// loads an assembly from a memory stream while retaining the information of its location.
+        /// loads an assembly from a file.
+        /// Loading happens through a memory stream to allow file deletion, while retaining the information of its location for the plugin API.
         /// </summary>
         /// <param name="fullAssemblyPath">Full path of the assembly to load.</param>
         /// <returns>the assembly or null in case of failure</returns>
-        private Assembly LoadPluginAssembly(string fullAssemblyPath)
+        private Assembly LoadAssembly(string fullAssemblyPath)
         {
-            // note: the use of Assembly.Load(File.ReadAllBytes(assemblypath)) is introduced to allow plugin files to be deleted.
-            // this is required for the plugin update feature (currently under development)
+            // the use of Assembly.Load(File.ReadAllBytes(assemblypath)) is introduced to allow plugin files to be deleted.
+            // this is required for the plugin update feature 
             //
             var loaded = Assembly.Load(File.ReadAllBytes(fullAssemblyPath));
-
             if (!_assemblyLocations.ContainsKey(loaded.FullName))
             {
                 _assemblyLocations.Add(loaded.FullName, fullAssemblyPath);
             }
-            
             return loaded;
         }
 
@@ -224,11 +264,11 @@ namespace XbimXplorer
             var fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".exe");
             if (File.Exists(fName))
             {
-                return LoadPluginAssembly(fName);
+                return LoadAssembly(fName);
             }
             fName = Path.Combine(_assemblyLoadFolder, parts[0] + ".dll");
             return File.Exists(fName) 
-                ? LoadPluginAssembly(fName)
+                ? LoadAssembly(fName)
                 : null;
         }
         
@@ -423,6 +463,13 @@ namespace XbimXplorer
         {
             return _assemblyLocations.ContainsKey(requestingAssembly.FullName) 
                 ? _assemblyLocations[requestingAssembly.FullName] 
+                : null;
+        }
+
+        public string GetLoadedVersion(string pluginId)
+        {
+            return _loadedPlugins.ContainsKey(pluginId) 
+                ? _loadedPlugins[pluginId].Version 
                 : null;
         }
     }

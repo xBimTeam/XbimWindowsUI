@@ -17,7 +17,6 @@ namespace XbimXplorer.Dialogs
         {
             public SettingWindowVm()
             {
-
                 SelFileAccessMode = Settings.Default.FileAccessMode;
 
                 NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();

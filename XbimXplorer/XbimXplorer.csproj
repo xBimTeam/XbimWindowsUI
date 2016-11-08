@@ -303,7 +303,8 @@
     </Compile>
     <Compile Include="PluginSystem\IPackageExtensions.cs" />
     <Compile Include="PluginSystem\PluginConfiguration.cs" />
-    <Compile Include="PluginSystem\PluginConfigurationVm.cs" />
+    <Compile Include="PluginSystem\PluginInformation.cs" />
+    <Compile Include="PluginSystem\PluginInformationVm.cs" />
     <Compile Include="PluginSystem\PluginManagement.cs" />
     <Compile Include="PluginSystem\PluginsConfig.xaml.cs">
       <DependentUpon>PluginsConfig.xaml</DependentUpon>
@@ -319,6 +320,7 @@
     <Compile Include="Commands\wdwCommands.xaml.cs">
       <DependentUpon>wdwCommands.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="XplorerMainWindow.Logging.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

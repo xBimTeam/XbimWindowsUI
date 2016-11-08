@@ -135,9 +135,11 @@ namespace XbimXplorer.Commands
                 if (mdbclosed.Success)
                 {
                     var assemblyName = mdbclosed.Groups["assemblyName"].Value;
-                    if (File.Exists(assemblyName))
-                        if (_parentWindow != null && _parentWindow is XplorerMainWindow)
-                            ((XplorerMainWindow)_parentWindow).LoadPlugin(assemblyName);
+                    if (Directory.Exists(assemblyName))
+                    {
+                        var pluginDir = new DirectoryInfo(assemblyName);
+                        (_parentWindow as XplorerMainWindow)?.LoadPlugin(pluginDir, true);
+                    }
                     continue;
                 }
 

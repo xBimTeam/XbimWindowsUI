@@ -536,9 +536,7 @@ namespace Xbim.Presentation
         {
             
         }
-
-       
-
+        
         private PointGeomInfo GetClosestPoint(RayMeshGeometry3DHitTestResult hit)
         {
             var pts = new[]
