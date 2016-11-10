@@ -40,7 +40,7 @@ namespace XbimXplorer.PluginSystem
 
         internal void SetDirectoryInfo(PluginInformation otherConfiguration)
         {
-            SetDiskManifest(PluginManagement.GetManifestMetadata(otherConfiguration._directory));
+            SetDirectoryInfo(otherConfiguration._directory);
         }
 
         internal void SetDirectoryInfo(DirectoryInfo directoryInfo)
@@ -154,6 +154,8 @@ namespace XbimXplorer.PluginSystem
 
         public void ToggleEnabled()
         {
+            if (Startup == null)
+                return;
             Startup.ToggleEnabled();
             if (_directory != null)
                 Startup.WriteXml(PluginManagement.GetStartupFileConfig(_directory));

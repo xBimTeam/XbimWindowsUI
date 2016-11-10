@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using log4net;
 using NuGet;
+using Xbim.Presentation;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -45,7 +46,6 @@ namespace XbimXplorer.PluginSystem
                     {
                         pv.SetDirectoryInfo(_diskPlugins[package.Id]);
                     }
-
                     plugins.Add(new PluginInformationVm(pv));
                 }
             }
@@ -86,11 +86,14 @@ namespace XbimXplorer.PluginSystem
 
         private void RefreshPluginList()
         {
-            if (SelectedRepoUrl.StartsWith("http://") || SelectedRepoUrl.StartsWith("https://"))
-                ShowRepository();
-            else
+            using (new WaitCursor())
             {
-                ShowDiskPlugins();
+                if (SelectedRepoUrl.StartsWith("http://") || SelectedRepoUrl.StartsWith("https://"))
+                    ShowRepository();
+                else
+                {
+                    ShowDiskPlugins();
+                }
             }
         }
 

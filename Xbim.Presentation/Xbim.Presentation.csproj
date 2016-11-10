@@ -245,6 +245,7 @@
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginMasterWindow.cs" />
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginWindow.cs" />
     <Compile Include="XplorerPluginSystem\UIAttributes.cs" />
+    <Compile Include="WaitCursor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DynamicProductSelectionControl.xaml">
