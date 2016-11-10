@@ -72,7 +72,7 @@ namespace Xbim.Presentation
             }
         }
 
-        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, WpfMaterial mat)
+        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, Material mat)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
@@ -101,7 +101,7 @@ namespace Xbim.Presentation
             return tgt;
         }
 
-        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions, WpfMaterial mat)
+        public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, XbimModelPositioningCollection positions, Material mat)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
@@ -156,7 +156,7 @@ namespace Xbim.Presentation
             _meshes = new XbimMeshFragmentCollection(mesh.Meshes);
         }
 
-        public WpfMeshGeometry3D(WpfMaterial material, WpfMaterial backMaterial = null)
+        public WpfMeshGeometry3D(Material material, Material backMaterial = null)
         {
             WpfModel = new GeometryModel3D(new MeshGeometry3D(), material);
             if (backMaterial != null) 
