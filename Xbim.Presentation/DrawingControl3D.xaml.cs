@@ -1021,7 +1021,7 @@ namespace Xbim.Presentation
             axesMeshBuilder.AddTube(path, lineThickness, 9, false);
         }
 
-        protected RayMeshGeometry3DHitTestResult FindHit(Point position)
+        protected virtual RayMeshGeometry3DHitTestResult FindHit(Point position)
         {
             RayMeshGeometry3DHitTestResult result = null;
             HitTestFilterCallback hitFilterCallback = oFilter =>
