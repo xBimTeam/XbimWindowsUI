@@ -16,7 +16,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -30,6 +29,7 @@ using Microsoft.Win32;
 using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.Ifc;
+using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
 using Xbim.Presentation.FederatedModel;
@@ -93,7 +93,7 @@ namespace XbimXplorer
         public XplorerMainWindow(bool preventPluginLoad = false)
         {
             InitializeComponent();
-            _preventPluginLoad = preventPluginLoad;
+            PreventPluginLoad = preventPluginLoad;
 
             // initialise the internal elements of the UI that behave like plugins
             EvaluateXbimUiType(typeof(LogViewer.LogViewer));
@@ -116,17 +116,13 @@ namespace XbimXplorer
         }
 
 
-        public Visibility DeveloperVisible
-        {
-            get {
-                return Settings.Default.DeveloperMode 
-                    ? Visibility.Visible 
-                    : Visibility.Collapsed;
-            }
-        }
+        public Visibility DeveloperVisible => Settings.Default.DeveloperMode 
+            ? Visibility.Visible 
+            : Visibility.Collapsed;
 
         private void InitFromSettings()
-        {          
+        {
+            FileAccessMode = Settings.Default.FileAccessMode;
             OnPropertyChanged("DeveloperVisible");           
         }
 
@@ -194,12 +190,13 @@ namespace XbimXplorer
             hier?.Root.AddAppender(_appender);
         }
 
-        void XplorerMainWindow_Closed(object sender, EventArgs e)
+        private void XplorerMainWindow_Closed(object sender, EventArgs e)
         {
             CloseAndDeleteTemporaryFiles();
         }
-
-
+        
+        public XbimDBAccess FileAccessMode { get; set; } = XbimDBAccess.Read;
+        
         private void OpenAcceptableExtension(object s, DoWorkEventArgs args)
         {
             var worker = s as BackgroundWorker;
@@ -210,7 +207,7 @@ namespace XbimXplorer
                 if (worker == null) throw new Exception("Background thread could not be accessed");
                 _temporaryXbimFileName = Path.GetTempFileName();
                 SetOpenedModelFileName(ifcFilename);
-                var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress);
+                var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress, FileAccessMode);
                 if (model.GeometryStore.IsEmpty)
                 {
                     var context = new Xbim3DModelContext(model);
@@ -812,7 +809,7 @@ namespace XbimXplorer
         private void RenderedEvents(object sender, EventArgs e)
         {
             // command line arg can prevent plugin loading
-            if (Settings.Default.PluginStartupLoad && !_preventPluginLoad)
+            if (Settings.Default.PluginStartupLoad && !PreventPluginLoad)
                 RefreshPlugins();
             ConnectStylerFeedBack();
         }
@@ -870,5 +867,7 @@ namespace XbimXplorer
             Simplify.IfcSimplify s = new Simplify.IfcSimplify();
             s.Show();
         }
+
+        
     }
 }

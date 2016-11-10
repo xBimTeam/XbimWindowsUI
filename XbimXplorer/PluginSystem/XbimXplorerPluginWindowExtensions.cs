@@ -45,9 +45,7 @@ namespace XbimXplorer.PluginSystem
             var attribute = pluginWindow.GetUiAttribute();
             return DefaultUiCloseAction(attribute);
         }
-
         
-
         internal static XplorerUiElement GetUiAttribute(this IXbimXplorerPluginWindow pluginWindow)
         {
             return GetUiAttribute(pluginWindow.GetType());

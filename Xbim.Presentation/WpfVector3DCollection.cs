@@ -9,8 +9,8 @@ namespace Xbim.Presentation
 
     public class WpfVector3DCollectionEnumerator : IEnumerator<XbimVector3D>
     {
-        Vector3DCollection _wpfVectors;
-        int _currentPos = -1;
+        private readonly Vector3DCollection _wpfVectors;
+        private int _currentPos = -1;
 
         public WpfVector3DCollectionEnumerator(Vector3DCollection wpfVectors)
         {
@@ -42,14 +42,10 @@ namespace Xbim.Presentation
 
         public bool MoveNext()
         {
-            if (_wpfVectors == null)
+            if (!(_currentPos < _wpfVectors?.Count - 1))
                 return false;
-            if (_currentPos < _wpfVectors.Count - 1)
-            {
-                _currentPos++;
-                return true;
-            }
-            return false;
+            _currentPos++;
+            return true;
         }
 
         public void Reset()
@@ -61,7 +57,7 @@ namespace Xbim.Presentation
     public class WpfVector3DCollection
          : IEnumerable<XbimVector3D>
     {
-        Vector3DCollection _wpfVectors;
+        private readonly Vector3DCollection _wpfVectors;
 
         public WpfVector3DCollection()
         {
@@ -70,13 +66,13 @@ namespace Xbim.Presentation
 
         public WpfVector3DCollection(Vector3DCollection wpfVectors)
         {
-            this._wpfVectors = wpfVectors;
+            _wpfVectors = wpfVectors;
         }
 
         public WpfVector3DCollection(IEnumerable<XbimVector3D> xbimVectors)
         {
-            IList<XbimVector3D> realVectors = xbimVectors as IList<XbimVector3D>;
-            if (realVectors == null) realVectors = xbimVectors.ToList();
+            var realVectors = xbimVectors as IList<XbimVector3D> 
+                ?? xbimVectors.ToList();
             _wpfVectors = new Vector3DCollection(realVectors.Count);
             foreach (var vec in realVectors)
                 _wpfVectors.Add(new Vector3D(vec.X, vec.Y, vec.Z));
@@ -85,8 +81,7 @@ namespace Xbim.Presentation
         {
             return vectors._wpfVectors;
         }
-
-
+        
         public IEnumerator<XbimVector3D> GetEnumerator()
         {
             return new WpfVector3DCollectionEnumerator(_wpfVectors);
@@ -97,6 +92,4 @@ namespace Xbim.Presentation
             return new WpfVector3DCollectionEnumerator(_wpfVectors);
         }
     }
-
-
 }

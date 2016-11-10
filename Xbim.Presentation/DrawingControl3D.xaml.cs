@@ -1,22 +1,9 @@
-﻿#region XbimHeader
-
-// The eXtensible Building Information Modelling (xBIM) Toolkit
-// Solution:    XbimComplete
-// Project:     Xbim.Presentation
-// Filename:    DrawingControl3D.xaml.cs
-// Published:   01, 2012
-// Last Edited: 9:05 AM on 20 12 2011
-// (See accompanying copyright.rtf)
-
-#endregion
-
-//#define DOPARALLEL
+﻿//#define DOPARALLEL
 
 #region Directives
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -44,8 +31,6 @@ using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
 
 #endregion
-
-
 
 namespace Xbim.Presentation
 {
@@ -85,27 +70,15 @@ namespace Xbim.Presentation
         protected ModelVisual3D Extras;
         protected GridLinesVisual3D GridLines;
 
-        public ModelVisual3D OpaquesVisual3D
-        {
-            get { return Opaques; }
-        }
+        public ModelVisual3D OpaquesVisual3D => Opaques;
 
-        public ModelVisual3D TransparentsVisual3D
-        {
-            get { return Transparents; }
-        }
+        public ModelVisual3D TransparentsVisual3D => Transparents;
 
         #endregion
 
-        protected HashSet<Material> Materials
-        {
-            get { return _materials; }
-        }
+        protected HashSet<Material> Materials { get; } = new HashSet<Material>();
 
-        protected Dictionary<Material, double> Opacities
-        {
-            get { return _opacities; }
-        }
+        protected Dictionary<Material, double> Opacities { get; } = new Dictionary<Material, double>();
 
         protected CombinedManipulator ClipHandler;
 
@@ -224,7 +197,13 @@ namespace Xbim.Presentation
         /// The list of types that the engine will not consider in the generation of the scene, the exclusion code needs to be correctly implemented in the 
         /// configued ILayerStyler for the exclusion to work.
         /// </summary>
-        public List<Type> ExcludedTypes;
+        public List<Type> ExcludedTypes = new List<Type>()
+        {
+            typeof(Ifc2x3.ProductExtension.IfcSpace),
+            typeof(Ifc4.ProductExtension.IfcSpace),
+            typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
+            typeof(Ifc4.ProductExtension.IfcFeatureElement)
+        };
 
         private LinesVisual3D _userModeledDimLines;
         private PointsVisual3D _userModeledDimPoints;
@@ -237,9 +216,7 @@ namespace Xbim.Presentation
                 // enable the loop that updates the drawing geometry
                 CompositionTarget.Rendering += OnCompositionTargetRendering;
             }
-            if (UserModeledDimensionChangedEvent != null)
-                UserModeledDimensionChangedEvent(this, UserModeledDimension);
-
+            UserModeledDimensionChangedEvent?.Invoke(this, UserModeledDimension);
         }
 
         private void OnCompositionTargetRendering(object sender, EventArgs e)
@@ -341,9 +318,6 @@ namespace Xbim.Presentation
         public XbimRect3D ModelBounds;
         private XbimRect3D _viewBounds;
 
-        private readonly HashSet<Material> _materials = new HashSet<Material>();
-        private readonly Dictionary<Material, double> _opacities = new Dictionary<Material, double>();
-
         /// <summary>
         /// Gets or sets the model.
         /// </summary>
@@ -386,7 +360,7 @@ namespace Xbim.Presentation
             ClearNamedCutPlane(CuttingGroupT);
         }
 
-        private void ClearNamedCutPlane(CuttingPlaneGroup cpg)
+        private static void ClearNamedCutPlane(CuttingPlaneGroup cpg)
         {
             if (cpg != null)
             {
@@ -430,15 +404,20 @@ namespace Xbim.Presentation
         {
             var pos = e.GetPosition(Canvas);
             var hit = FindHit(pos);
-            
-            if (hit == null || hit.ModelHit == null)
+
+            var hitObject = hit?.ModelHit?.GetValue(TagProperty);           
+            if (hitObject == null)
             {
                 Selection.Clear();
                 SelectedEntity = null;
+                if (UserModeledDimension.IsEmpty)
+                    return;
+                // drop the geometry that holds the visualization of the measure
+                UserModeledDimension.Clear();
+                FirePrevPointsChanged();
                 return;
             }
-
-            var hitObject = hit.ModelHit.GetValue(TagProperty);
+            
             IPersistEntity thisSelectedEntity = null;
             if (hitObject is XbimInstanceHandle)
             {
@@ -491,7 +470,7 @@ namespace Xbim.Presentation
                 var mc = XbimMouseClickActions.Single;
                 if (MouseModifierKeyBehaviour.ContainsKey(Keyboard.Modifiers))
                     mc = MouseModifierKeyBehaviour[Keyboard.Modifiers];
-                if (mc != XbimMouseClickActions.Measure)
+                if (mc != XbimMouseClickActions.Measure && !UserModeledDimension.IsEmpty)
                 {
                     // drop the geometry that holds the visualization of the measure
                     // FurtherGeometries.Content = null;
@@ -544,6 +523,7 @@ namespace Xbim.Presentation
             }
             else
             {
+                // this triggers the highlighting in case of single selection mode.
                 SelectedEntity = thisSelectedEntity;
             }
         }
@@ -556,9 +536,7 @@ namespace Xbim.Presentation
         {
             
         }
-
-       
-
+        
         private PointGeomInfo GetClosestPoint(RayMeshGeometry3DHitTestResult hit)
         {
             var pts = new[]
@@ -598,11 +576,7 @@ namespace Xbim.Presentation
 
         private IPersistEntity GetClickedEntity(RayMeshGeometry3DHitTestResult hit)
         {
-            if (hit == null)
-                return null;
-
-            var layer = hit.ModelHit.GetValue(TagProperty) as XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>;
-                //get the fragments
+            var layer = hit?.ModelHit.GetValue(TagProperty) as XbimMeshLayer<WpfMeshGeometry3D, WpfMaterial>;
             if (layer == null)
                 return null;
 
@@ -660,7 +634,7 @@ namespace Xbim.Presentation
             var opacity = Math.Min(1, opacityPercent);
             opacity = Math.Max(0, opacity); //bound opacity factor
 
-            foreach (var material in _materials)
+            foreach (var material in Materials)
             {
                 SetOpacityPercent(material, opacity);
             }
@@ -682,10 +656,10 @@ namespace Xbim.Presentation
             if (dm != null)
             {
                 double oldValue;
-                if (!_opacities.TryGetValue(dm, out oldValue))
+                if (!Opacities.TryGetValue(dm, out oldValue))
                 {
                     oldValue = dm.Brush.Opacity;
-                    _opacities.Add(dm, oldValue);
+                    Opacities.Add(dm, oldValue);
                 }
                 dm.Brush.Opacity = oldValue*opacity;
             }
@@ -694,10 +668,10 @@ namespace Xbim.Presentation
             if (sm != null)
             {
                 double oldValue;
-                if (!_opacities.TryGetValue(sm, out oldValue))
+                if (!Opacities.TryGetValue(sm, out oldValue))
                 {
                     oldValue = sm.Brush.Opacity;
-                    _opacities.Add(sm, oldValue);
+                    Opacities.Add(sm, oldValue);
                 }
                 sm.Brush.Opacity = oldValue*opacity;
             }
@@ -718,10 +692,7 @@ namespace Xbim.Presentation
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var d3D = d as DrawingControl3D;
-            if (d3D != null)
-            {           
-                d3D.ReloadModel();
-            }
+            d3D?.ReloadModel();
         }
 
         public void ReloadModel(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -840,13 +811,7 @@ namespace Xbim.Presentation
             All = 1
         }
 
-        private Color _selectionColor = Colors.Blue;
-
-        public Color SelectionColor
-        {
-            get { return _selectionColor; }
-            set { _selectionColor = value; }
-        }
+        public Color SelectionColor { get; set; } = Colors.Blue;
 
         /// <summary>
         /// Executed when a new entity is selected
@@ -861,7 +826,7 @@ namespace Xbim.Presentation
                 );
 
             // 1. get the geometry first
-            WpfMeshGeometry3D m = null;
+            WpfMeshGeometry3D m;
             if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
             {
                 m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);               
@@ -956,7 +921,10 @@ namespace Xbim.Presentation
         }
 
         public ComponentSelectionMode ComponentSelectionDisplay = ComponentSelectionMode.All;
-        
+
+        // todo: remove after having restored the ComponentSelectionDisplay function
+
+/*
         private void AddElement(MeshGeometry3D m, IPersistEntity item)
         {
             var mod = ModelPositions[item.Model];
@@ -976,140 +944,7 @@ namespace Xbim.Presentation
                 }
             }
         }
-
-        #endregion
-
-        #region TypesShowHide
-
-        /// <summary>
-        /// This mechanism for showing/hiding layers is not reliable any more.
-        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
-        /// </summary>
-        [Obsolete]
-        public bool ShowSpaces
-        {
-            get { return (bool) GetValue(ShowSpacesProperty); }
-            set { SetValue(ShowSpacesProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for ShowWalls.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowSpacesProperty =
-            DependencyProperty.Register("ShowSpaces", typeof (bool), typeof (DrawingControl3D),
-                new UIPropertyMetadata(true, OnShowSpacesChanged));
-
-        private static void OnShowSpacesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // function has been emptied, as Show<T> is now obsolete.
-        }
-
-        /// <summary>
-        /// This mechanism for showing/hiding layers is not reliable any more.
-        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
-        /// </summary>
-        [Obsolete]
-        public bool ShowWalls
-        {
-            get { return (bool) GetValue(ShowWallsProperty); }
-            set { SetValue(ShowWallsProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for ShowWalls.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowWallsProperty =
-            DependencyProperty.Register("ShowWalls", typeof (bool), typeof (DrawingControl3D),
-                new UIPropertyMetadata(true, OnShowWallsChanged));
-
-        private static void OnShowWallsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var d3D = d as DrawingControl3D;
-            if (d3D == null)
-                return;
-            if (!(e.NewValue is bool))
-                return;
-            var on = (bool) e.NewValue;
-            if (@on)
-                d3D.ShowAll();
-            else
-                d3D.HideAll();
-        }
-
-        /// <summary>
-        /// This mechanism for showing/hiding layers is not reliable any more.
-        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
-        /// </summary>
-        [Obsolete]
-        public bool ShowDoors
-        {
-            get { return (bool) GetValue(ShowDoorsProperty); }
-            set { SetValue(ShowDoorsProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for ShowWalls.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowDoorsProperty =
-            DependencyProperty.Register("ShowDoors", typeof (bool), typeof (DrawingControl3D),
-                new UIPropertyMetadata(true, OnShowDoorsChanged));
-
-        private static void OnShowDoorsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // function has been emptied, as Show<T> is now obsolete.
-        }
-
-        /// <summary>
-        /// This mechanism for showing/hiding layers is not reliable any more.
-        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
-        /// </summary>
-        [Obsolete]
-        public bool ShowWindows
-        {
-            get { return (bool) GetValue(ShowWindowsProperty); }
-            set { SetValue(ShowWindowsProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for ShowWalls.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowWindowsProperty =
-            DependencyProperty.Register("ShowWindows", typeof (bool), typeof (DrawingControl3D),
-                new UIPropertyMetadata(true, OnShowWindowsChanged));
-
-        private static void OnShowWindowsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // function has been emptied, as Show<T> is now obsolete.
-        }
-
-        public bool ShowSlabs
-        {
-            get { return (bool) GetValue(ShowSlabsProperty); }
-            set { SetValue(ShowSlabsProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for ShowWalls.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowSlabsProperty =
-            DependencyProperty.Register("ShowSlabs", typeof (bool), typeof (DrawingControl3D),
-                new UIPropertyMetadata(true, OnShowSlabsChanged));
-
-        private static void OnShowSlabsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // function has been emptied, as Show<T> is now obsolete.
-        }
-
-        /// <summary>
-        /// This mechanism for showing/hiding layers is not reliable any more.
-        /// It might produce odd behaviours, as it relies on conventions that are not enforced in layerstylers.
-        /// </summary>
-        [Obsolete]
-        public bool ShowFurniture
-        {
-            get { return (bool) GetValue(ShowFurnitureProperty); }
-            set { SetValue(ShowFurnitureProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for ShowWalls.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowFurnitureProperty =
-            DependencyProperty.Register("ShowFurniture", typeof (bool), typeof (DrawingControl3D),
-                new UIPropertyMetadata(true, OnShowFurnitureChanged));
-
-        private static void OnShowFurnitureChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // function has been emptied, as Show<T> is now obsolete.
-        }
+*/
 
         #endregion
 
@@ -1201,10 +1036,12 @@ namespace Xbim.Presentation
             HitTestResultCallback hitTestCallback = hit =>
             {
                 var rayHit = hit as RayMeshGeometry3DHitTestResult;
-                if (rayHit == null)
+                if (rayHit?.MeshHit == null)
                     return HitTestResultBehavior.Continue;
-                if (rayHit.MeshHit == null)
+                var tagObject = rayHit.ModelHit.GetValue(TagProperty);
+                if (tagObject == null)
                     return HitTestResultBehavior.Continue;
+
                 result = rayHit;
                 return HitTestResultBehavior.Stop;
             };
@@ -1236,8 +1073,8 @@ namespace Xbim.Presentation
             PercentageLoaded = 0;
             UserModeledDimension.Clear();
 
-            _materials.Clear();
-            _opacities.Clear();
+            Materials.Clear();
+            Opacities.Clear();
 
             Opaques.Children.Clear();
             Transparents.Children.Clear();
@@ -1272,42 +1109,36 @@ namespace Xbim.Presentation
 
         public XbimModelPositioningCollection ModelPositions;
 
-        private ILayerStyler _defaultLayerStyler;
+        public ILayerStyler DefaultLayerStyler { get; set; }
 
-        public ILayerStyler DefaultLayerStyler
-        {
-            get { return _defaultLayerStyler; }
-            set
-            {
-                _defaultLayerStyler = value;
-            }
-        }
-
+        //TODO resolve issues with reference models
+/*
         private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            //TODO resolve issues with reference models
-            //if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
-            //    return;
-            //var refModel = e.NewItems[0] as XbimReferencedModel;
-            //if (refModel != null)
-            //{
-            //    // adding and updating the model to positioning database
-            //    ModelPositions.AddModel(refModel.Model);
-            //    // _modelTranslation is not recalculated unless there are no models in the scene 
-            //    // becayse it's burnt into the other models already
-            //    if (Scenes.Count == 0)
-            //    {
-            //        //can recalculate extents and _modelTranslation
-            //        DefineModelTranslation();
-            //    }
-            //    ModelPositions.SetCenterInMeters(_modelTranslation);
-            //    ModelBounds = ModelPositions.GetEnvelopeInMeters();
 
-            //    // actually load the model geometry
-            //    LoadReferencedModel(refModel);
-            //}
+            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
+                return;
+            var refModel = e.NewItems[0] as XbimReferencedModel;
+            if (refModel != null)
+            {
+                // adding and updating the model to positioning database
+                ModelPositions.AddModel(refModel.Model);
+                // _modelTranslation is not recalculated unless there are no models in the scene 
+                // becayse it's burnt into the other models already
+                if (Scenes.Count == 0)
+                {
+                    //can recalculate extents and _modelTranslation
+                    DefineModelTranslation();
+                }
+                ModelPositions.SetCenterInMeters(_modelTranslation);
+                ModelBounds = ModelPositions.GetEnvelopeInMeters();
+
+                // actually load the model geometry
+                LoadReferencedModel(refModel);
+            }
             RecalculateView();
         }
+*/
 
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
@@ -1357,11 +1188,10 @@ namespace Xbim.Presentation
             if (DefaultLayerStyler == null)
                 DefaultLayerStyler = new SurfaceLayerStyler();
 
-            //build the geometric scene and render as we go
-            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene;
+            // build the geometric scene and render as we go
             // loading the main model
             DefaultLayerStyler.SetFederationEnvironment(null);
-            scene = DefaultLayerStyler.BuildScene(model.ReferencingModel,ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
+            var scene = DefaultLayerStyler.BuildScene(model.ReferencingModel,ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
             
             if (scene != null)
             {
@@ -1485,7 +1315,7 @@ namespace Xbim.Presentation
             else
                 m3D.Material = (WpfMaterial) layer.Material;
             if (ForceRenderBothSides) m3D.BackMaterial = m3D.Material;
-            _materials.Add(m3D.Material);
+            Materials.Add(m3D.Material);
             SetOpacityPercent(m3D.Material, ModelOpacity);
             var mv = new ModelVisual3D {Content = m3D};
             if (layer.Style.IsTransparent)
@@ -1529,25 +1359,14 @@ namespace Xbim.Presentation
                     layer.HideAll();
             }
         }
-
-
-        private List<string> _hideAfterLoad = new List<string>() {"IfcSpace", "IfcOpeningElement"};
-
-        public List<string> HideAfterLoad
-        {
-            get { return _hideAfterLoad; }
-            set { _hideAfterLoad = value; }
-        }
-
-
+        
+        // todo: verify that hideafterload is still in use, otherwise remove 
+        public List<string> HideAfterLoad { get; set; } = new List<string>() {"IfcSpace", "IfcOpeningElement"};
+        
         public static readonly DependencyProperty LayerSetProperty =
             DependencyProperty.Register("LayerSet", typeof (List<LayerViewModel>), typeof (DrawingControl3D));
 
-        public List<LayerViewModel> LayerSet
-        {
-            get { return (List<LayerViewModel>) GetValue(LayerSetProperty); }
-            // set { SetValue(ShowSpacesProperty, value); }
-        }
+        public List<LayerViewModel> LayerSet => (List<LayerViewModel>) GetValue(LayerSetProperty);
 
         private List<LayerViewModel> LayerSetRefresh()
         {
@@ -1609,10 +1428,11 @@ namespace Xbim.Presentation
         /// </summary>
         public virtual void ViewHome()
         {
-            if (Viewport.CameraController != null)
-                Viewport.CameraController.ResetCamera();
-            var r3D = new Rect3D(_viewBounds.X, _viewBounds.Y, _viewBounds.Z, _viewBounds.SizeX, _viewBounds.SizeY,
-                _viewBounds.SizeZ);
+            Viewport.CameraController?.ResetCamera();
+            var r3D = new Rect3D(
+                _viewBounds.X, _viewBounds.Y, _viewBounds.Z, 
+                _viewBounds.SizeX, _viewBounds.SizeY, _viewBounds.SizeZ
+                );
             Viewport.ZoomExtents(r3D);
         }
 

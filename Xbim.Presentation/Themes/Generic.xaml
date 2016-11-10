@@ -32,27 +32,25 @@
                         an uncut opaque selection mesh).
                         Meshes of the TransHighlighted and Highlighted are kept in sync through the Highlighted_PropertyChanged method attached in the constructor.
                         -->
-                        <helixToolkit:MeshVisual3D x:Name="TransHighlighted" EdgeDiameter="0"  VertexRadius="0"></helixToolkit:MeshVisual3D>
+                        <helixToolkit:MeshVisual3D x:Name="TransHighlighted" EdgeDiameter="0"  VertexRadius="0" />
 
                         <helixToolkit:CuttingPlaneGroup x:Name="CuttingGroup" IsEnabled="False">
                             <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                                 <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
                             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
-                            <ModelVisual3D x:Name="Opaques">
-                            </ModelVisual3D>
+                            <ModelVisual3D x:Name="Opaques" />
                         </helixToolkit:CuttingPlaneGroup>
 
-                        <extensions:ObservableMeshVisual3D x:Name="Highlighted" EdgeDiameter="0"  VertexRadius="0"></extensions:ObservableMeshVisual3D>
+                        <extensions:ObservableMeshVisual3D x:Name="Highlighted" EdgeDiameter="0"  VertexRadius="0" />
 
                         <helixToolkit:CuttingPlaneGroup x:Name="CuttingGroupT" IsEnabled="False">
                             <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                                 <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
                             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
-                            <ModelVisual3D x:Name="Transparents">
-                            </ModelVisual3D>
+                            <ModelVisual3D x:Name="Transparents" />
                         </helixToolkit:CuttingPlaneGroup>
 
-                        <ModelVisual3D x:Name="Extras"></ModelVisual3D>
+                        <ModelVisual3D x:Name="Extras" />
 
                         <helixToolkit:DefaultLights ShowLights="False" />
                         <!-- You can also add elements here in the xaml -->

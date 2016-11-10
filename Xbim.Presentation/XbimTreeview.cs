@@ -23,19 +23,16 @@ namespace Xbim.Presentation
         protected override void OnSelectionChanged(SelectionChangedEventArgs e)
         {
             base.OnSelectionChanged(e);
-            if (e.AddedItems.Count > 0)
-            {
-                IPersistEntity p = ((IXbimViewModel)(e.AddedItems[0])).Entity;
-                IPersistEntity p2 = SelectedEntity;
-                if (p2 == null)
-                    SelectedEntity = p;
-                else if (!(p.Model == p2.Model && p.EntityLabel==p2.EntityLabel)) 
-                    SelectedEntity = p;
-            }
+            if (e.AddedItems.Count <= 0)
+                return;
+            var p = ((IXbimViewModel)(e.AddedItems[0])).Entity;
+            var p2 = SelectedEntity;
+            if (p2 == null)
+                SelectedEntity = p;
+            else if (!(Equals(p.Model, p2.Model) && p.EntityLabel==p2.EntityLabel)) 
+                SelectedEntity = p;
         }
-
-
-
+        
         public IPersistEntity SelectedEntity
         {
             get { return (IPersistEntity)GetValue(SelectedEntityProperty); }
@@ -89,7 +86,7 @@ namespace Xbim.Presentation
                         // search for composed object
                         var decomp = p.Decomposes.FirstOrDefault();
                         
-                        if (decomp!=null && decomp.RelatingObject is IIfcProduct) // 
+                        if (decomp?.RelatingObject is IIfcProduct) // 
                         {
                             found = FindUnderContainingSpace(newVal, (IIfcProduct)(decomp.RelatingObject));  // direct search of parent through containing space
                             if (found != null)
@@ -204,7 +201,7 @@ namespace Xbim.Presentation
         // it should be possible in the redesign to build an IXbimViewModel from an IPersistEntity.
         private static bool IsMatch(IXbimViewModel node, IPersistEntity entity)
         {
-            return node.Model == entity.Model && node.EntityLabel == entity.EntityLabel;
+            return Equals(node.Model, entity.Model) && node.EntityLabel == entity.EntityLabel;
         }
 
         public XbimViewType ViewDefinition
@@ -273,12 +270,9 @@ namespace Xbim.Presentation
         {
             if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems.Count > 0)
             {  
-                XbimReferencedModel refModel = e.NewItems[0] as XbimReferencedModel;
-                XbimModelViewModel vm = HierarchySource.Cast<XbimModelViewModel>().FirstOrDefault();
-                if(vm!=null)
-                {
-                    vm.AddRefModel(new XbimRefModelViewModel(refModel, null));
-                }
+                var refModel = e.NewItems[0] as XbimReferencedModel;
+                var vm = HierarchySource.Cast<XbimModelViewModel>().FirstOrDefault();
+                vm?.AddRefModel(new XbimRefModelViewModel(refModel, null));
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {

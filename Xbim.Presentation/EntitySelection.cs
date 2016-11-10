@@ -11,8 +11,8 @@ namespace Xbim.Presentation
     /// </summary>
     public class EntitySelection : INotifyCollectionChanged, IEnumerable<IPersistEntity>
     {
-        private List<SelectionEvent> _selectionLog;
-        private XbimIPersistEntityCollection<IPersistEntity> _selection = new XbimIPersistEntityCollection<IPersistEntity>();
+        private readonly List<SelectionEvent> _selectionLog;
+        private readonly XbimIPersistEntityCollection<IPersistEntity> _selection = new XbimIPersistEntityCollection<IPersistEntity>();
         private int _position = -1;
 
         /// <summary>
@@ -38,13 +38,10 @@ namespace Xbim.Presentation
 
         public void Redo()
         {
-            if (_selectionLog == null)
+            if (!(_position < _selectionLog?.Count - 1))
                 return;
-            if (_position < _selectionLog.Count - 1)
-            { 
-                _position++;
-                RollForward(_selectionLog[_position]);
-            }
+            _position++;
+            RollForward(_selectionLog[_position]);
         }
 
         private void RollBack(SelectionEvent e) 
@@ -169,10 +166,7 @@ namespace Xbim.Presentation
         {
             if (action != NotifyCollectionChangedAction.Add && action != NotifyCollectionChangedAction.Remove)
                 throw new ArgumentException("Only Add and Remove operations are supported");
-            if (CollectionChanged != null)
-            {
-                CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, entities));
-            }
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(action, entities));
         }
 
         public IEnumerator<IPersistEntity> GetEnumerator()

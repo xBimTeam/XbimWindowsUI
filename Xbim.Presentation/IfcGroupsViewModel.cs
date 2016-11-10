@@ -9,9 +9,9 @@ using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Presentation
 {
-    class IfcGroupsViewModel : IXbimViewModel
+    internal class IfcGroupsViewModel : IXbimViewModel
     {
-        private IfcStore _model;
+        private readonly IfcStore _model;
 
         public override string ToString()
         {
@@ -28,7 +28,7 @@ namespace Xbim.Presentation
             get
             {
                 if (_children == null)
-                    load();
+                    Load();
                 return _children;
             }
         }
@@ -39,15 +39,9 @@ namespace Xbim.Presentation
             set { }
         }
 
-        public IPersistEntity Entity
-        {
-            get { return null; }
-        }
+        public IPersistEntity Entity => null;
 
-        public int EntityLabel
-        {
-            get { return -1; }
-        }
+        public int EntityLabel => -1;
 
         private bool _isSelected;
         private bool _isExpanded;
@@ -69,18 +63,11 @@ namespace Xbim.Presentation
             set { _isSelected = value; NotifyPropertyChanged("IsSelected"); }
         }
         
-        public string Name
-        {
-            get { return "First level groups"; }
-        }
+        public string Name => "First level groups";
 
-        public IModel Model
-        {
-            get { return _model; }
-        }
-
-
-        private void load()
+        public IModel Model => _model;
+        
+        private void Load()
         {
             _children = new List<IXbimViewModel>();
 
@@ -109,11 +96,8 @@ namespace Xbim.Presentation
         }
         void NotifyPropertyChanged(string propertyName)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
+            var handler = PropertyChanged;
+            handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion

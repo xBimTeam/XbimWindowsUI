@@ -127,26 +127,19 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^Plugin Refresh$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    if (_parentWindow != null)
-                        _parentWindow.RefreshPlugins();
+                    _parentWindow?.RefreshPlugins();
                     continue;
                 }
-
-                mdbclosed = Regex.Match(cmd, @"^Plugin Config$", RegexOptions.IgnoreCase);
-                if (mdbclosed.Success)
-                {
-                    var pc = new PluginsConfig();
-                    pc.Show();
-                    continue;
-                }
-
+               
                 mdbclosed = Regex.Match(cmd, @"^Plugin Load (?<assemblyName>.+)$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     var assemblyName = mdbclosed.Groups["assemblyName"].Value;
-                    if (File.Exists(assemblyName))
-                        if (_parentWindow != null && _parentWindow is XplorerMainWindow)
-                            ((XplorerMainWindow)_parentWindow).LoadPlugin(assemblyName);
+                    if (Directory.Exists(assemblyName))
+                    {
+                        var pluginDir = new DirectoryInfo(assemblyName);
+                        (_parentWindow as XplorerMainWindow)?.LoadPlugin(pluginDir, true);
+                    }
                     continue;
                 }
 

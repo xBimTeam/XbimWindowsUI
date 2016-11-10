@@ -9,7 +9,7 @@ namespace Xbim.Presentation.Extensions
 {
     public class XbimAssemblyInfo
     {
-        private Assembly _assembly;
+        private readonly Assembly _assembly;
 
         public XbimAssemblyInfo(Assembly assembly)
         {
@@ -24,10 +24,7 @@ namespace Xbim.Presentation.Extensions
             // PluginVersion.Text += string.Format("\r\nFile Version: {0}", fvi.FileVersion);
         }
 
-        public Version AssemblyVersion
-        {
-            get { return _assembly.GetName().Version; }
-        }
+        public Version AssemblyVersion => _assembly.GetName().Version;
 
         public string FileVersion
         {

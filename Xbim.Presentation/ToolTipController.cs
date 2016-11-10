@@ -75,9 +75,9 @@ namespace Xbim.Presentation
 
         private static ToolTipContentProviderDelegate _currentProvider;
         private static Point _currentLocation;
-        private static ToolTip _tip = new ToolTip();
+        private static readonly ToolTip _tip = new ToolTip();
         private static Point _initialPosition;
-        private static DispatcherTimer _timer = new DispatcherTimer();
+        private static readonly DispatcherTimer _timer = new DispatcherTimer();
     }
 
     /// <summary>

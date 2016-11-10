@@ -1,41 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using NuGet;
+using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace XbimXplorer.PluginSystem
 {
-    internal class PluginConfiguration
+    public class PluginConfiguration
     {
-        internal enum AssemblyAvailability
+        public StartupBehaviour OnStartup = StartupBehaviour.Disabled;
+
+        public enum StartupBehaviour
         {
-            OnLine,
-            OnDisk,
-            InMemory
+            Enabled,
+            Disabled            
         }
 
-        internal enum StartupBehaviour
+        private static XmlSerializer GetXmlSerializer()
         {
-            Ignore,
-            Load
+            return new XmlSerializer(typeof(PluginConfiguration));
         }
-        
-        internal string PluginId { get; set; }
 
-        internal AssemblyAvailability RuntimeAvailability { get; set; }
-
-        internal StartupBehaviour StartupStatus { get; set; }
-
-        internal SemanticVersion OnDiskVersion;
-
-        internal SemanticVersion OnLineVersion;
-
-        private IPackage _onlinePackage;
-
-        public void setOnlinePackage(IPackage package)
+        public void WriteXml(string path, bool indented = true)
         {
-            _onlinePackage = package;
+            using (var stream = File.Create(path))
+            {
+                var serializer = GetXmlSerializer();
+                using (var w = new StreamWriter(stream))
+                using (var xmlWriter = new XmlTextWriter(w)
+                {
+                    Formatting = indented ? Formatting.Indented : Formatting.None
+                })
+                {
+                    serializer.Serialize(xmlWriter, this);
+                }
+                stream.Close();
+            }
+        }
+
+        public static PluginConfiguration ReadXml(string path)
+        {
+            if (!File.Exists(path))
+                return null;
+            using (var stream = File.OpenRead(path))
+            {
+                var serializer = GetXmlSerializer();
+                var deserialised = (PluginConfiguration)serializer.Deserialize(stream);
+                stream.Close();
+                return deserialised;
+            }
+        }
+
+        public void ToggleEnabled()
+        {
+            OnStartup = (OnStartup == StartupBehaviour.Enabled)
+                ? StartupBehaviour.Disabled 
+                : StartupBehaviour.Enabled;
         }
     }
 }

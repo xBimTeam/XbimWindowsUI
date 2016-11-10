@@ -146,11 +146,11 @@ namespace Xbim.Presentation
         public IXbimMeshGeometry3D GetMeshGeometry3D(IPersistEntity entity, short modelId)
         {
             var geometry = new XbimMeshGeometry3D();
-            IModel m = entity.Model;
+            var m = entity.Model;
             foreach (var layer in Layers)
             {
                 // an entity model could be spread across many layers (e.g. in case of different materials)
-                if(layer.Model == m)
+                if(Equals(layer.Model, m))
                     geometry.Add(layer.GetVisibleMeshGeometry3D(entity.EntityLabel, modelId));
             }
             return geometry;

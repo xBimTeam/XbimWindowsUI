@@ -202,6 +202,9 @@
     </Compile>
     <Compile Include="IfcGroupsViewModel.cs" />
     <Compile Include="HistoryCollection.cs" />
+    <Compile Include="IfcMetaDataControl.xaml.cs">
+      <DependentUpon>IfcMetaDataControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LayerStyling\ILayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylingExtensions.cs" />
     <Compile Include="LayerStyling\SurfaceLayerStyler.cs" />
@@ -217,9 +220,6 @@
     <Compile Include="FederatedModel\FederatedModelViewModel.cs" />
     <Compile Include="WpfXbimRectangle3D.cs" />
     <Compile Include="DrawingControl3D.xaml.cs" />
-    <Compile Include="IfcMetaDataControl.xaml.cs">
-      <DependentUpon>IfcMetaDataControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ModelDataProvider.cs" />
     <Compile Include="ModelVisual3DExtensions.cs" />
     <Compile Include="Observable.cs" />
@@ -245,6 +245,7 @@
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginMasterWindow.cs" />
     <Compile Include="XplorerPluginSystem\IXbimXplorerPluginWindow.cs" />
     <Compile Include="XplorerPluginSystem\UIAttributes.cs" />
+    <Compile Include="WaitCursor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DynamicProductSelectionControl.xaml">
@@ -260,10 +261,8 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="IfcMetaDataControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Themes\Generic.xaml">
       <SubType>Designer</SubType>

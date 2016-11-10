@@ -9,7 +9,6 @@ using log4net;
 using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
-using Xbim.Common.Metadata;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 
@@ -17,7 +16,7 @@ namespace Xbim.Presentation.LayerStyling
 {
     public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
     {
-        private static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
+        protected static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
 
         public event ProgressChangedEventHandler ProgressChanged;
 
@@ -63,19 +62,17 @@ namespace Xbim.Presentation.LayerStyling
                         var mg = GetNewStyleMesh(wpfMaterial, tmpTransparentsGroup, tmpOpaquesGroup);
                         meshesByStyleId.Add(styleId, mg);
                     }
-
-                   
-                    var shapeInstances = geomReader.ShapeInstances
-                        .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded
-                                    &&
-                                    !excludedTypes.Contains(s.IfcTypeId));
-
-                    var tot = shapeInstances.Count();
+                    
+                    var shapeInstances = GetShapeInstancesToRender(geomReader, excludedTypes);
+                    var tot = 1;
+                    if (ProgressChanged != null)
+                    {
+                        // only enumerate if there's a need for progress update
+                        tot = shapeInstances.Count();
+                    }
                     var prog = 0;
                     var lastProgress = 0;
-
                     
-
                     // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
                     foreach (var shapeInstance in shapeInstances)
@@ -186,18 +183,23 @@ namespace Xbim.Presentation.LayerStyling
                     }
                 }
             }
-            Log.DebugFormat("Time to load visual components: {0} seconds", timer.Elapsed.TotalSeconds.ToString("F3"));
-            
-            if (ProgressChanged != null)
-            {
-                ProgressChanged(this, new ProgressChangedEventArgs(0, "Ready"));
-            }
+            Log.DebugFormat("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
+
+            ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(0, "Ready"));
             return scene;
         }
 
-        
+        protected IEnumerable<XbimShapeInstance> GetShapeInstancesToRender(IGeometryStoreReader geomReader, HashSet<short> excludedTypes)
+        {
+            var shapeInstances = geomReader.ShapeInstances
+                .Where(s => s.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded
+                            &&
+                            !excludedTypes.Contains(s.IfcTypeId));
+            return shapeInstances;
+        }
 
-        private static WpfMeshGeometry3D GetNewStyleMesh(WpfMaterial wpfMaterial, Model3DGroup tmpTransparentsGroup,
+
+        protected static WpfMeshGeometry3D GetNewStyleMesh(WpfMaterial wpfMaterial, Model3DGroup tmpTransparentsGroup,
             Model3DGroup tmpOpaquesGroup)
         {
             var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
@@ -210,7 +212,7 @@ namespace Xbim.Presentation.LayerStyling
             return mg;
         }
 
-        private static WpfMaterial GetWpfMaterial(IModel model, int styleId)
+        protected static WpfMaterial GetWpfMaterial(IModel model, int styleId)
         {
             var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
             var texture = XbimTexture.Create(sStyle);
@@ -220,7 +222,7 @@ namespace Xbim.Presentation.LayerStyling
             return wpfMaterial;
         }
 
-        private WpfMaterial GetWpfMaterialByType(IModel model, short typeid)
+        protected WpfMaterial GetWpfMaterialByType(IModel model, short typeid)
         {
             var prodType = model.Metadata.ExpressType(typeid);
             var v = _colourMap[prodType.Name];

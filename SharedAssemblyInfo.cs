@@ -10,11 +10,11 @@
 
 [assembly: AssemblyCompany("Xbim Team")]
 [assembly: AssemblyProduct("Xbim Library")]
-[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2015")]
+[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2016")]
 [assembly: AssemblyTrademark("Xbim Team")]
 [assembly: AssemblyCulture("")]
  
 // AssemblyVersion is the CLR version. Change this only when making breaking changes
 // Whenever breaking changes happen update this.
-[assembly: AssemblyVersion("4.0.0.1")]
-
+[assembly: AssemblyVersion("4.0")]
+[assembly: AssemblyInformationalVersion("4.0.master")]

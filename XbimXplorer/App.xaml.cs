@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Xbim.IO.Esent;
 
 #endregion
 
@@ -51,19 +52,31 @@ namespace XbimXplorer
                 var thisArg = e.Args[i];
                 if (string.Compare("/AccessMode", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    var stringMode = e.Args[++i];                 
+                    var stringMode = e.Args[++i];
+                    XbimDBAccess acce;
+                    if (Enum.TryParse(stringMode, out acce))
+                    {
+                        mainView.FileAccessMode = acce;
+                    }
                 }
                 else if (string.Compare("/plugin", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     var pluginName = e.Args[++i];
-                    if (!File.Exists(pluginName))
+                    if (File.Exists(pluginName))
                     {
-                        Clipboard.SetText(pluginName);
-                        MessageBox.Show(pluginName + " not found. The full file name has been copied to clipboard.", "Plugin not found", MessageBoxButton.OK, MessageBoxImage.Error);
+                        var fi = new FileInfo(pluginName);
+                        var di = fi.Directory;
+                        mainView.LoadPlugin(di, true, fi.Name);
                         continue;
                     }
-                    Debug.Write("Xplorer trying to load plugin from CommandLine");
-                    mainView.LoadPlugin(pluginName);
+                    if (Directory.Exists(pluginName) )
+                    {
+                        var di = new DirectoryInfo(pluginName);
+                        mainView.LoadPlugin(di, true);
+                        continue;
+                    }
+                    Clipboard.SetText(pluginName);
+                    MessageBox.Show(pluginName + " not found. The full file name has been copied to clipboard.", "Plugin not found", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 else if (string.Compare("/select", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {

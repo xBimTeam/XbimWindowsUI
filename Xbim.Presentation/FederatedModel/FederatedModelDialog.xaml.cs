@@ -8,7 +8,7 @@ namespace Xbim.Presentation.FederatedModel
     /// <summary>
     /// Interaction logic for fed1.xaml
     /// </summary>
-    public partial class FederatedModelDialog : Window
+    public partial class FederatedModelDialog
     {
 		public FederatedModelViewModel FederatedModel { get; set; }
 

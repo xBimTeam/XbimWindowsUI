@@ -1,16 +1,4 @@
-﻿#region XbimHeader
-
-// The eXtensible Building Information Modelling (xBIM) Toolkit
-// Solution:    XbimComplete
-// Project:     Xbim.Presentation
-// Filename:    IfcMetaDataControl.xaml.cs
-// Published:   01, 2012
-// Last Edited: 9:05 AM on 20 12 2011
-// (See accompanying copyright.rtf)
-
-#endregion
-
-#region Directives
+﻿#region Directives
 
 using System;
 using System.Collections.Generic;
@@ -32,7 +20,7 @@ using Xbim.Ifc4.Interfaces;
 namespace Xbim.Presentation
 {
     /// <summary>
-    ///   Interaction logic for IfcMetaDataControl.xaml
+    /// Interaction logic for IfcMetaDataControl.xaml
     /// </summary>
     public partial class IfcMetaDataControl : INotifyPropertyChanged
     {
@@ -93,8 +81,7 @@ namespace Xbim.Presentation
                 _propertyGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
             }
             _materialGroups = new ListCollectionView(_materials);
-            if (_materialGroups.GroupDescriptions != null)
-                _materialGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+            _materialGroups.GroupDescriptions?.Add(new PropertyGroupDescription("PropertySetName"));
         }
 
         private void TheTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -378,15 +365,14 @@ namespace Xbim.Presentation
                 return "";
 
             return string.IsNullOrWhiteSpace(unit) ? 
-                value : 
-                string.Format("{0} {1}", value, unit);
+                value :
+                $"{value} {unit}";
         }
 
         private static string GetUnit(IIfcUnitAssignment units, IfcUnitEnum type)
         {
-            if (units == null) return null;
-            var unit = units.Units.OfType<IIfcNamedUnit>().FirstOrDefault(u => u.UnitType == type);
-            return unit != null ? unit.FullName : null;
+            var unit = units?.Units.OfType<IIfcNamedUnit>().FirstOrDefault(u => u.UnitType == type);
+            return unit?.FullName;
         }
 
         private void FillPropertyData()
@@ -435,7 +421,7 @@ namespace Xbim.Presentation
             }
         }
 
-        private void AddProperty(IIfcPropertySingleValue item, string GroupName)
+        private void AddProperty(IIfcPropertySingleValue item, string groupName)
         {
             var val = "";
             var nomVal = item.NominalValue;
@@ -444,7 +430,7 @@ namespace Xbim.Presentation
             _properties.Add(new PropertyItem
             {
                 IfcLabel = item.EntityLabel,
-                PropertySetName = GroupName,
+                PropertySetName = groupName,
                 Name = item.Name,
                 Value = val
             });
@@ -480,14 +466,14 @@ namespace Xbim.Presentation
             if (matSel is IIfcMaterial) //simplest just add it
                 _materials.Add(new PropertyItem
                 {
-                    Name = string.Format("{0} [#{1}]", ((IIfcMaterial) matSel).Name, matSel.EntityLabel),
+                    Name = $"{((IIfcMaterial) matSel).Name} [#{matSel.EntityLabel}]",
                     PropertySetName = setName,
                     Value = ""
                 });
             else if (matSel is IIfcMaterialLayer)
                 _materials.Add(new PropertyItem
                 {
-                    Name = string.Format("{0} [#{1}]", ((IIfcMaterialLayer) matSel).Material.Name, matSel.EntityLabel),
+                    Name = $"{((IIfcMaterialLayer) matSel).Material.Name} [#{matSel.EntityLabel}]",
                     Value = ((IIfcMaterialLayer) matSel).LayerThickness.Value.ToString(),
                     PropertySetName = setName
                 });
@@ -497,7 +483,7 @@ namespace Xbim.Presentation
                 {
                     _materials.Add(new PropertyItem
                     {
-                        Name = string.Format("{0} [#{1}]", mat.Name, mat.EntityLabel),
+                        Name = $"{mat.Name} [#{mat.EntityLabel}]",
                         PropertySetName = setName,
                         Value = ""
                     });
@@ -512,8 +498,8 @@ namespace Xbim.Presentation
             }
             else if (matSel is IIfcMaterialLayerSetUsage)
             {
+                //recursive call to add materials
                 foreach (var item in ((IIfcMaterialLayerSetUsage) matSel).ForLayerSet.MaterialLayers)
-                    //recursive call to add materials
                 {
                     AddMaterialData(item, ((IIfcMaterialLayerSetUsage) matSel).ForLayerSet.LayerSetName);
                 }
@@ -720,10 +706,7 @@ namespace Xbim.Presentation
 
         private void NotifyPropertyChanged(string info)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(info));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(info));
         }
 
         #endregion

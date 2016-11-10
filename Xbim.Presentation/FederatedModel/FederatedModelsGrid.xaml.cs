@@ -11,28 +11,16 @@ using Microsoft.Win32;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 
-
 namespace Xbim.Presentation.FederatedModel
 {
-    /// <summary>
-    /// Interaction logic for UserControl1.xaml
-    /// </summary>
-    public partial class FederatedModelsGrid : UserControl
+    // todo: the whole class needs to be reviewed
+    public partial class FederatedModelsGrid
     {
-        IfcStore _model;
-        List<string> _roles = new List<string>();
-        ObservableCollection<XbimReferencedModelViewModel> _referencedModelsWrappers = new ObservableCollection<XbimReferencedModelViewModel>();
+        private IfcStore _model;
 
-        public ObservableCollection<XbimReferencedModelViewModel> ReferencedModelWrappers
-        {
-            get { return _referencedModelsWrappers; }
-            set { _referencedModelsWrappers = value; }
-        }
+        public ObservableCollection<XbimReferencedModelViewModel> ReferencedModelWrappers { get; set; } = new ObservableCollection<XbimReferencedModelViewModel>();
 
-        public List<string> Roles
-        {
-            get { return _roles; }
-        }
+        public List<string> Roles { get; } = new List<string>();
 
         public FederatedModelsGrid()
         {
@@ -40,9 +28,9 @@ namespace Xbim.Presentation.FederatedModel
             var roles = Enum.GetValues(typeof (IfcRoleEnum));
             foreach (var role in roles)
             {
-                _roles.Add(role.ToString());
+                Roles.Add(role.ToString());
             }
-            _roles = _roles.OrderBy(x => x.ToString()).ToList();
+            Roles = Roles.OrderBy(x => x.ToString()).ToList();
 
             InitializeComponent();
             DataContextChanged += FederatedModelProperties_DataContextChanged;
@@ -50,9 +38,9 @@ namespace Xbim.Presentation.FederatedModel
             PropertyGrid.RowEditEnding += propertyGrid_RowEditEnding;
         }
 
-        void propertyGrid_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
+        private void propertyGrid_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
         {
-            XbimReferencedModelViewModel modelWrapper = (XbimReferencedModelViewModel)e.Row.Item;
+            var modelWrapper = (XbimReferencedModelViewModel)e.Row.Item;
             try
             {
                 //if build fails, cancel add row
@@ -67,7 +55,7 @@ namespace Xbim.Presentation.FederatedModel
             }
         }
 
-        void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private static void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             // TODO: resolve reference models addition and removal.
             switch (e.Action)
@@ -83,62 +71,48 @@ namespace Xbim.Presentation.FederatedModel
                         //bool res = _model.ReferencedModels.Remove(model.ReferencedModel);
                         //model.ReferencedModel.Model.Close();
                     }
-
                     break;
             }
         }
 
-        public IEnumerable SelectedItems
-        {
-            get
-            {
-                return PropertyGrid.SelectedItems;
-            }
-        }
+        public IEnumerable SelectedItems => PropertyGrid.SelectedItems;
 
-        void FederatedModelProperties_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void FederatedModelProperties_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             _model = DataContext as IfcStore;
-            if (_model != null)
-            {
-                var tempRefModHolder = _model.ReferencedModels;
+            if (_model == null)
+                return;
+            var tempRefModHolder = _model.ReferencedModels;
 
-                foreach (var refMod in tempRefModHolder)
-                {
-                      _referencedModelsWrappers.Add(new XbimReferencedModelViewModel(refMod));
-                }
+            foreach (var refMod in tempRefModHolder)
+            {
+                ReferencedModelWrappers.Add(new XbimReferencedModelViewModel(refMod));
             }
         }
 
         private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            TextBlock txt = sender as TextBlock;
-            XbimReferencedModelViewModel wrapper;
-            if (txt.DataContext.GetType() == typeof(XbimReferencedModelViewModel))
+            // todo: review this code
+            var txt = sender as TextBlock;
+            if (txt != null && txt.DataContext.GetType() != typeof(XbimReferencedModelViewModel))
+                return;
+            var wrapper = txt?.DataContext as XbimReferencedModelViewModel;
+            if (wrapper?.ReferencedModel != null)
+                return;
+            var fbDlg = new OpenFileDialog {Filter = "xBIM Files (.txt)|*.xbim|All Files (*.*)|*.*"};
+            var result = fbDlg.ShowDialog();
+            if (result == true)
             {
-                wrapper = txt.DataContext as XbimReferencedModelViewModel;
-                if (wrapper.ReferencedModel == null)
-                {
-                    OpenFileDialog fbDlg = new OpenFileDialog();
-                    fbDlg.Filter = "xBIM Files (.txt)|*.xbim|All Files (*.*)|*.*"; ;
-                    bool? result = fbDlg.ShowDialog();
-                    if (result == true)
-                    {
-                        txt.Text = fbDlg.FileName;
-                    }
-                }
+                txt.Text = fbDlg.FileName;
             }
         }
 
         private void DeleteRowButton_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            if (button != null)
-            {
-                var wrapper = button.DataContext as XbimReferencedModelViewModel;
-                if (wrapper != null && wrapper.ReferencedModel != null)
-                    ReferencedModelWrappers.Remove(wrapper);
-            }
+            var wrapper = button?.DataContext as XbimReferencedModelViewModel;
+            if (wrapper?.ReferencedModel != null)
+                ReferencedModelWrappers.Remove(wrapper);
         }
     }
 }

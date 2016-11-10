@@ -1,9 +1,0 @@
-﻿<Window x:Class="XplorerPlugins.Cobie.UI.Window1"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="clr-namespace:XplorerPlugins.Cobie.UI"
-        Title="Window1" Height="451.2" Width="1006.4">
-    <Grid>
-        <ui:FiltersControl DataContext="{Binding Filters}" />
-    </Grid>
-</Window>

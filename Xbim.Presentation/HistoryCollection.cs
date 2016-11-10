@@ -10,7 +10,7 @@ namespace Xbim.Presentation
     {
         private readonly List<T> _items = new List<T>();
 
-        public int Size { get; private set; }
+        public int Size { get; }
 
         public HistoryCollection(int size)
         {

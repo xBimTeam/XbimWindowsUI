@@ -1,16 +1,32 @@
-﻿<Window x:Class="XbimXplorer.PluginSystem.PluginsConfig"
+﻿<UserControl x:Class="XbimXplorer.PluginSystem.PluginsConfig"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PluginsConfig" Height="300" Width="300">
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
     <Grid>
-        <Button VerticalAlignment="Top" Margin="10" Click="Test" >Tets</Button>
-        <ListView x:Name="lst" Margin="10,37,10,53">
+        <ListView x:Name="PluginList" Margin="0,100,0,30" AllowDrop="True" Drop="PluginList_OnDrop">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn/>
+                    <GridViewColumn Header="Name" Width="180" DisplayMemberBinding="{Binding PluginId}" />
+                    <GridViewColumn Header="On Startup" Width="120" DisplayMemberBinding="{Binding Startup}" />
+                    <GridViewColumn Header="Installed" Width="120" DisplayMemberBinding="{Binding InstalledVersion}" />
+                    <GridViewColumn Header="Available" Width="120" DisplayMemberBinding="{Binding AvailableVersion}" />
+                    <GridViewColumn Header="Loaded" Width="120" DisplayMemberBinding="{Binding LoadedVersion}" />
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button Margin="0,238,10,10" Click="Download" Content="Tets" HorizontalAlignment="Right" Width="80" />
+        <Button Margin="0,0,0,0" Click="Download" Content="Download" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Bottom" />
+        <Button Margin="0,0,100,0" Click="Load" Content="Load" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Bottom" />
+        <Button Margin="0,0,200,0" Click="ToggleEnabled" Content="Enable toggle" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Bottom" />
+        <GroupBox Header="Repository" Height="90" Margin="0,0,0,0" VerticalAlignment="Top" >
+            <Grid>
+                <ComboBox x:Name="RepoSource" Margin="10,10,10,0" VerticalAlignment="Top">
+                    <ComboBoxItem Content="&lt;Installed&gt;" IsSelected="True" />
+                    <ComboBoxItem Content="https://www.myget.org/F/xbim-plugins/api/v2" />
+                </ComboBox>
+                <Button Margin="0,37,9.857,0" Click="RefreshPluginList" Height="22" VerticalAlignment="top" HorizontalAlignment="Right" Width="84" >Refresh</Button>
+                <CheckBox x:Name="LatestOnly" Content="Latest Versions Only" HorizontalAlignment="Left" Margin="10,37,0,0" IsChecked="True" VerticalAlignment="Top"/>
+            </Grid>
+        </GroupBox>
     </Grid>
-</Window>
+</UserControl>

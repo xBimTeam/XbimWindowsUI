@@ -26,7 +26,7 @@ namespace Xbim.Presentation
         }
 
         #region Code skeleton
-        private string _codeSkeleton1 = @"
+        private readonly string _codeSkeleton1 = @"
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -55,7 +55,7 @@ namespace DynamicQuery
         }
             ";
 
-        string _codeTemplate =
+        readonly string _codeTemplate =
 @"//This will perform selection of the objects. 
 //Selected objects with the geometry will be highlighted
 public IEnumerable<IfcProduct> Select(IModel model)
@@ -82,7 +82,7 @@ public void Execute(IModel model)
 }
 ";
 
-        string _codeSkeleton2 =
+        readonly string _codeSkeleton2 =
 @"
     }
 }
@@ -127,13 +127,10 @@ public void Execute(IModel model)
         {
             public ProductSelectionChangedEventArgs(IEnumerable<IIfcProduct> selection)
             {
-                _selection = selection;
+                Selection = selection;
             }
-            private IEnumerable<IIfcProduct> _selection;
-            public IEnumerable<IIfcProduct> Selection
-            {
-                get { return _selection; }
-            }
+
+            public IEnumerable<IIfcProduct> Selection { get; }
         }
         #endregion
 
@@ -163,13 +160,10 @@ public void Execute(IModel model)
         {
             public ProductVisibilityChangedEventArgs(IEnumerable<IIfcProduct> selection)
             {
-                _selection = selection;
+                Selection = selection;
             }
-            private IEnumerable<IIfcProduct> _selection;
-            public IEnumerable<IIfcProduct> Selection
-            {
-                get { return _selection; }
-            }
+
+            public IEnumerable<IIfcProduct> Selection { get; }
         }
         #endregion
 
@@ -297,12 +291,14 @@ public void Execute(IModel model)
 
         private void btnLoad_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.DefaultExt = ".cs";
-            dlg.CheckFileExists = true;
-            dlg.Multiselect = false;
-            dlg.Title = "Choose existing code file...";
-            dlg.ValidateNames = true;
+            var dlg = new OpenFileDialog
+            {
+                DefaultExt = ".cs",
+                CheckFileExists = true,
+                Multiselect = false,
+                Title = "Choose existing code file...",
+                ValidateNames = true
+            };
             if (dlg.ShowDialog() == true)
             {
                 TxtCode.Text = File.ReadAllText(dlg.FileName);
