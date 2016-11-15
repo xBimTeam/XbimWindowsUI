@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.IO;
 
 namespace XbimXplorer.Commands
 {
-    static class QueryEngine
+    internal static class QueryEngine
     {
-        static public List<int> EntititesForType(string type, IfcStore model)
+        public static List<int> EntititesForType(string type, IfcStore model)
         {
-            List<int> values = new List<int>();
+            var values = new List<int>();
             var items = model.Instances.OfType(type, false);
+            if (items == null)
+                return  new List<int>();
             foreach (var item in items)
             {
-                int thisV = item.EntityLabel;
+                var thisV = item.EntityLabel;
                 if (!values.Contains(thisV))
                     values.Add(thisV);
             }
@@ -22,16 +22,16 @@ namespace XbimXplorer.Commands
             return values;
         }
 
-        static public IEnumerable<int> RecursiveQuery(IfcStore model, string query, IEnumerable<int> startList, bool returnTransverse)
+        public static IEnumerable<int> RecursiveQuery(IfcStore model, string query, IEnumerable<int> startList, bool returnTransverse)
         {
-            var proparray = query.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            IEnumerable<int> runningList =  startList;
+            var proparray = query.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var runningList =  startList;
             foreach (var stringQuery in proparray)
             {
-                TreeQueryItem qi = new TreeQueryItem(runningList, stringQuery, returnTransverse);
+                var qi = new TreeQueryItem(runningList, stringQuery, returnTransverse);
                 runningList = qi.Run(model);   
             }
-            TreeQueryItem qi2 = new TreeQueryItem(runningList, "", returnTransverse);
+            var qi2 = new TreeQueryItem(runningList, "", returnTransverse);
             runningList = qi2.Run(model);
             foreach (var item in runningList)
             {
