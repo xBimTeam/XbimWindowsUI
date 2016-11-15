@@ -39,11 +39,13 @@ namespace Xbim.Presentation
                 _description = "Texture " + colour;
                 IsTransparent = colour.IsTransparent;
             }
+            _material.Freeze();
         }
 
         public void CreateMaterial(XbimColour colour)
         {
             _material = MaterialFromColour(colour);
+            _material.Freeze();
         }
 
         private Material MaterialFromColour(XbimColour colour)
