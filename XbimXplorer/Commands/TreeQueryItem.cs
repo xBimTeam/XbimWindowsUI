@@ -50,9 +50,7 @@ namespace XbimXplorer.Commands
 
                 var prop = ifcType.Properties.FirstOrDefault(x => x.Value.PropertyInfo.Name == sbi.Property).Value ??
                            ifcType.Inverses.FirstOrDefault(x => x.PropertyInfo.Name == sbi.Property);
-                if (prop == null) 
-                    continue;
-                var propVal = prop.PropertyInfo.GetValue(entity, null);
+                var propVal = prop?.PropertyInfo.GetValue(entity, null);
                 if (propVal == null) 
                     continue;
                 if (prop.EntityAttribute.IsEnumerable)

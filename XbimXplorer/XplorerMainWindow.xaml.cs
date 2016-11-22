@@ -577,7 +577,7 @@ namespace XbimXplorer
                             MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                         if (res == MessageBoxResult.Cancel)
                             return;
-                        fedModel = IfcStore.Open(dlg.FileNames[0], null, true);
+                        fedModel = IfcStore.Open(dlg.FileNames[0]);
                     }
                     break;
                 case ".ifc":
