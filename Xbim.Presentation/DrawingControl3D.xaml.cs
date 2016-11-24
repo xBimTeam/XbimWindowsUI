@@ -757,7 +757,7 @@ namespace Xbim.Presentation
             {
                 SelectionDrivenSelectedEntityChange(newVal.FirstOrDefault());
             }
-            HighlighSelected(null);
+            // HighlighSelected(null);
         }
 
         public static readonly RoutedEvent SelectedEntityChangedEvent =
@@ -827,6 +827,11 @@ namespace Xbim.Presentation
 
             // 1. get the geometry first
             WpfMeshGeometry3D m;
+            if (newVal is IIfcShapeRepresentation)
+            {
+                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)newVal, ModelPositions, mat);
+            }
+            else
             if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
             {
                 m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);               
@@ -1443,8 +1448,7 @@ namespace Xbim.Presentation
             var r3D = Highlighted.Content.Bounds;
             ZoomTo(r3D);
         }
-
-
+        
         /// <summary>
         /// This functions sets a cutting plane at a distance of delta over the base of the selected element.
         /// It is useful when the selected element is obscured by elements surrounding it.

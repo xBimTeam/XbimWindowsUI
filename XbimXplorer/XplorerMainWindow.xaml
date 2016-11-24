@@ -104,8 +104,10 @@
                     <MenuItem x:Name="Normals" Header="Normals" Click="SelectionMode" />
                     <MenuItem x:Name="WireFrame" Header="WireFrame" Click="SelectionMode" />
                 </MenuItem>
-
-                <MenuItem Header="_Zoom Extents" Click="MenuItem_ZoomExtents"/>
+                <MenuItem Header="_Zoom">
+                    <MenuItem Header="Zoom _Extents" Click="MenuItem_ZoomExtents"/>
+                    <MenuItem Header="Zoom _Selected" Click="MenuItem_ZoomSelected"/>
+                </MenuItem>
                 <MenuItem IsCheckable="True" Header="Show Gridlines" IsChecked="{Binding ShowGridLines, ElementName=DrawingControl}"/>
                 <MenuItem Header="_Copy image" Command="Copy"/>
                 <Separator Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />

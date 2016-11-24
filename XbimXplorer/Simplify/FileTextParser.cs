@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace Bonghi.FileIO
+namespace XbimXplorer.Simplify
 {
-    class FileTextParser : IDisposable
+    internal class FileTextParser : IDisposable
     {
         private StreamReader _srReader = null;
         private int _iLineNumber = 0;

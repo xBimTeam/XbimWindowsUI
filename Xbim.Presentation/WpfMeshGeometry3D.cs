@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
+using Xbim.Geometry.Engine.Interop;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
@@ -72,15 +74,15 @@ namespace Xbim.Presentation
             }}
         }
 
-        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, Material mat)
+        public static WpfMeshGeometry3D GetGeometry(IPersistEntity entity, XbimMatrix3D modelTransform, Material mat)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
-            using (var geomstore = selection.Model.GeometryStore)
+            using (var geomstore = entity.Model.GeometryStore)
             {
                 using (var geomReader = geomstore.BeginRead())
                 {
-                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(entity).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                     {
                         IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                         if(shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
@@ -92,8 +94,54 @@ namespace Xbim.Presentation
                             shapeInstance.IfcProductLabel,
                             shapeInstance.InstanceLabel,
                             transform,
-                            (short)selection.Model.UserDefinedId
+                            (short)entity.Model.UserDefinedId
                             );
+                    }
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
+        // attempting to load the shapeGeometry from the database; 
+        // 
+        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat)
+        {
+            var placementTree = new XbimPlacementTree(rep.Model);
+
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            var prodShapes = rep.OfProductRepresentation.OfType<IIfcProductDefinitionShape>();
+
+            foreach (var prodShape in prodShapes)
+            {
+                if (prodShape?.ShapeOfProduct == null)
+                    continue;
+                foreach (var contextualProduct in prodShape?.ShapeOfProduct)
+                {
+                    var trsf = placementTree[contextualProduct.ObjectPlacement.EntityLabel];
+                    var modelTransform = positions[rep.Model].Transform;
+                    using (var geomstore = rep.Model.GeometryStore)
+                    using (var geomReader = geomstore.BeginRead())
+                    {
+                        var dispitems = rep.Items.Select(x => x.EntityLabel);
+                        var r2 = geomReader.ShapeGeometries.Where(x => dispitems.Contains(x.IfcShapeLabel));
+
+                        foreach (IXbimShapeGeometryData shapegeom in r2)
+                        {
+                            if (shapegeom.Format != (byte) XbimGeometryType.PolyhedronBinary)
+                                continue;
+                            // Debug.WriteLine($"adding {shapegeom.ShapeLabel} at {DateTime.Now.ToLongTimeString()}");
+                            var transform = trsf*modelTransform;
+                            tgt.Add(
+                                shapegeom.ShapeData,
+                                453, // shapeInstance.IfcTypeId,
+                                contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
+                                -1, // shapeInstance.InstanceLabel,
+                                transform,
+                                (short) rep.Model.UserDefinedId
+                            );
+                        }
                     }
                 }
             }

@@ -1,24 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using log4net;
 using Xbim.Ifc;
 
 namespace XbimXplorer.Commands
 {
     internal static class QueryEngine
     {
+        private static readonly ILog Log = LogManager.GetLogger(nameof(QueryEngine));
+
         public static List<int> EntititesForType(string type, IfcStore model)
         {
             var values = new List<int>();
-            var items = model.Instances.OfType(type, false);
-            if (items == null)
-                return  new List<int>();
-            foreach (var item in items)
+            try
             {
-                var thisV = item.EntityLabel;
-                if (!values.Contains(thisV))
-                    values.Add(thisV);
+                var items = model.Instances.OfType(type, false);
+                if (items == null)
+                    return new List<int>();
+                foreach (var item in items)
+                {
+                    var thisV = item.EntityLabel;
+                    if (!values.Contains(thisV))
+                        values.Add(thisV);
+                }
+                values.Sort();
             }
-            values.Sort();
+            catch (Exception ex)
+            {
+                   Log.Error($"Error getting entities for type:{type}.", ex);
+            }
+            
             return values;
         }
 

@@ -868,6 +868,9 @@ namespace XbimXplorer
             s.Show();
         }
 
-        
+        private void MenuItem_ZoomSelected(object sender, RoutedEventArgs e)
+        {
+            DrawingControl.ZoomSelected();
+        }
     }
 }
