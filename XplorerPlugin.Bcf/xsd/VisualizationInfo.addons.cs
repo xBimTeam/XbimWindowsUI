@@ -26,21 +26,20 @@ namespace Xbim.BCF
         /// <param name="control">Initialisation object; reference not retained</param>
         public VisualizationInfo(DrawingControl3D control) : this()
         {
-            if (control != null)
+            if (control == null)
+                return;
+            if (control.Viewport.Orthographic)
             {
-                if (control.Viewport.Orthographic)
-                {
-                    orthogonalCameraField = new OrthogonalCamera((System.Windows.Media.Media3D.OrthographicCamera)control.Viewport.Camera);
-                }
-                else
-                {
-                    perspectiveCameraField = new PerspectiveCamera((System.Windows.Media.Media3D.PerspectiveCamera)control.Viewport.Camera);
-                }
-                var cg = control.GetCutPlane();
-                if (cg != null)
-                {
-                    ClippingPlanes.Add(new ClippingPlane(cg));
-                }
+                orthogonalCameraField = new OrthogonalCamera((System.Windows.Media.Media3D.OrthographicCamera)control.Viewport.Camera);
+            }
+            else
+            {
+                perspectiveCameraField = new PerspectiveCamera((System.Windows.Media.Media3D.PerspectiveCamera)control.Viewport.Camera);
+            }
+            var cg = control.GetCutPlane();
+            if (cg != null)
+            {
+                ClippingPlanes.Add(new ClippingPlane(cg));
             }
         }
     }

@@ -419,6 +419,28 @@ namespace Xbim.Presentation
                     AddProperty(composingProperty, pSet.Name + " / " + item.Name);
                 }
             }
+            foreach (var item in pSet.HasProperties.OfType<IIfcPropertyEnumeratedValue>()) // handle IfcComplexProperty
+            {
+                AddProperty(item, pSet.Name);
+            }
+        }
+
+        private void AddProperty(IIfcPropertyEnumeratedValue item, string groupName)
+        {
+            var val = "";
+            var nomVals = item.EnumerationValues;
+            foreach (var nomVal in nomVals)
+            {
+                if (nomVal != null)
+                    val = nomVal.ToString();
+                _properties.Add(new PropertyItem
+                {
+                    IfcLabel = item.EntityLabel,
+                    PropertySetName = groupName,
+                    Name = item.Name,
+                    Value = val
+                });
+            }
         }
 
         private void AddProperty(IIfcPropertySingleValue item, string groupName)
