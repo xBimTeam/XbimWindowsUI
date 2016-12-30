@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Navigation;
 
 namespace XbimXplorer.Commands
 {
@@ -49,7 +51,36 @@ namespace XbimXplorer.Commands
 
             internal override Block ToBlock()
             {
-                Paragraph p = new Paragraph(new Run(_textContent));
+                Regex re = new Regex(@"\[#\d+\]");
+                Paragraph p = new Paragraph();
+
+                var tmp = _textContent;
+
+                while (!string.IsNullOrEmpty(tmp))
+                {
+                    var m = re.Match(tmp);
+                    if (m.Success)
+                    {
+                        var pre = tmp.Substring(0, m.Index);
+                        var link = m.Value;
+                        tmp = tmp.Substring(m.Index + m.Length);
+                        p.Inlines.Add(new Run(pre));
+                        var h = new Hyperlink();
+                        h.Inlines.Add(link);
+                        h.IsEnabled = true;
+                        // h.RequestNavigate += HOnRequestNavigate;
+                        h.NavigateUri = new Uri("xbim://EntityLabel/" + link.Substring(2,link.Length-3));
+                        p.Inlines.Add(h);
+                    }
+                    else
+                    {
+                        var run = new Run(tmp);
+                        p.Inlines.Add(run);
+                        tmp = "";
+                    }
+                }
+
+                
                 if (_textBrush != null)
                     p.Foreground = _textBrush;
                 return p;
@@ -90,9 +121,9 @@ namespace XbimXplorer.Commands
 
         private IEnumerable<Block> ToBlocks()
         {
-            foreach (var item in _bits)
+            foreach (var reportComponent in _bits)
             {
-                yield return item.ToBlock();
+                yield return reportComponent.ToBlock();
             }
         }
 

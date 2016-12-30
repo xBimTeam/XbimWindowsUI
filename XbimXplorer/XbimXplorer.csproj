@@ -172,6 +172,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Globalization" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.IO.Compression" />
@@ -472,6 +473,9 @@
       <Project>{89F98E53-DE4E-4427-8244-D5934AD08849}</Project>
       <Name>Xbim.Presentation</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Commands\console.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

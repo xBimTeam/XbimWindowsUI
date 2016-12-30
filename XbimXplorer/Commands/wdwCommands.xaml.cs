@@ -11,6 +11,8 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using log4net;
 using Xbim.Common;
 using Xbim.Common.Geometry;
@@ -34,8 +36,8 @@ namespace XbimXplorer.Commands
     /// <summary>
     /// Interaction logic for wdwQuery.xaml
     /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu,
-         "View/Developer/Commands")]
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable, PluginWindowActivation.OnMenu, 
+         "View/Developer/Commands", "Commands/console.bmp")]
     public partial class wdwCommands : IXbimXplorerPluginWindow
     {
         private static readonly ILog Log = LogManager.GetLogger(nameof(wdwCommands));
@@ -773,11 +775,10 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    if (SelectedEntity != null)
-                        Debug.Write(SelectedEntity.EntityLabel);
-                    else
-                        Debug.Write(null);
-
+                    var aname = Assembly.GetExecutingAssembly().GetName().Name;
+                    var str = $"pack://application:,,,/{aname};component/Commands/console.bmp";
+                    var bi = new BitmapImage(new Uri(str, UriKind.Absolute));
+                    
 
                     continue;
                 }
@@ -999,7 +1000,10 @@ namespace XbimXplorer.Commands
                 else
                 {
                     int j;
-                    if (int.TryParse(sa[i], out j))
+                    var thisText = sa[i];
+                    if (thisText.StartsWith("#"))
+                        thisText = thisText.Substring(1);
+                    if (int.TryParse(thisText, out j))
                     {
                         ia.Add(j);
                     }
@@ -1330,7 +1334,7 @@ namespace XbimXplorer.Commands
                 {
                     foreach (var item in selectSubTypes)
                     {
-                        sb.Append(ReportType(item.Name, beVerbose, indentationHeader + "  "));
+                        sb.Append(ReportType(item.FullName, beVerbose, indentationHeader + "  "));
                     }
                 }
                 sb.AppendFormat("");
@@ -1356,7 +1360,7 @@ namespace XbimXplorer.Commands
         {
             // Debug.WriteLine("EL: " + EntityLabel.ToString());
             var sb = new TextHighliter();
-            var indentationHeader = new String('\t', indentationLevel);
+            var indentationHeader = new string('\t', indentationLevel);
             try
             {
                 var entity = Model.Instances[entityLabel];
@@ -1610,6 +1614,23 @@ namespace XbimXplorer.Commands
         {
             Execute();
             e.Handled = true;
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            var hyperlink = sender as Hyperlink;
+            if (hyperlink == null)
+                throw new ArgumentNullException();
+
+            if (e.Uri.Host == "entitylabel")
+            {
+                var lab = e.Uri.AbsolutePath.Substring(1);
+                int iLabel;
+                if (int.TryParse(lab, out iLabel))
+                {
+                    _parentWindow.SelectedItem = Model.Instances[iLabel];
+                }
+            }
         }
     }
 }

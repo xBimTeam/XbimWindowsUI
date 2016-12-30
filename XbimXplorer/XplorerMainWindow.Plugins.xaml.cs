@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 using NuGet;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
+using Image = System.Windows.Controls.Image;
 
 namespace XbimXplorer
 {
@@ -47,7 +50,8 @@ namespace XbimXplorer
         /// <summary>
         /// key is ManifestMetadata.Id, data is ManifestMetadata
         /// </summary>
-        private readonly Dictionary<string, ManifestMetadata> _loadedPlugins = new Dictionary<string, ManifestMetadata>();
+        private readonly Dictionary<string, ManifestMetadata> _loadedPlugins =
+            new Dictionary<string, ManifestMetadata>();
 
         /// <summary>
         /// 
@@ -212,7 +216,7 @@ namespace XbimXplorer
             EvaluateXbimUiMenu(type);
 
             var act = type.GetUiActivation();
-            if (act != PluginWindowActivation.OnLoad) 
+            if (act != PluginWindowActivation.OnLoad)
                 return;
             var instance = Activator.CreateInstance(type);
             var asPWin = instance as IXbimXplorerPluginWindow;
@@ -226,13 +230,13 @@ namespace XbimXplorer
         private void EvaluateXbimUiMenu(Type type)
         {
             var att = type.GetUiAttribute();
-            if (string.IsNullOrEmpty(att?.MenuText)) 
+            if (string.IsNullOrEmpty(att?.MenuText))
                 return;
             var destMenu = PluginMenu;
             var menuHeader = type.Name;
             if (!string.IsNullOrEmpty(att.MenuText))
             {
-                menuHeader = att.MenuText;    
+                menuHeader = att.MenuText;
             }
             if (att.MenuText.StartsWith(@"View/Developer/"))
             {
@@ -245,7 +249,23 @@ namespace XbimXplorer
                 destMenu = ExportMenu;
             }
 
-            var v = new MenuItem { Header = menuHeader, Tag = type };
+            var v = new MenuItem {Header = menuHeader, Tag = type};
+            if (att.IconPath != "")
+            {
+                try
+                {
+                    var aname = type.Assembly.GetName().Name;
+                    var str = $"pack://application:,,,/{aname};component/{att.IconPath}";
+                    var bi = new BitmapImage(new Uri(str, UriKind.Absolute));
+                    var i = new Image() { Source = bi };
+                    v.Icon = i;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Path {att.IconPath} not found when loading icon.", ex);
+                }                
+            }
+
             destMenu.Items.Add(v);
             v.Click += OpenPluginWindow;
         }
