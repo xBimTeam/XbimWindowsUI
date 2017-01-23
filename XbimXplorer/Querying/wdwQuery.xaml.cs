@@ -13,6 +13,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using Xbim.Common.Geometry;
+using Xbim.Geometry.Engine.Interop;
+using Xbim.Ifc2x3.GeometryResource;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.IO;
@@ -424,6 +426,83 @@ namespace XbimXplorer.Querying
                 }
 
                 m = Regex.Match(cmd,
+                    @"^(GeometryEngine|ge) " +
+                    @"(top (?<top>\d+) )*" +
+                    // @"(?<mode>(count|list|typelist|short|full) )*" +
+                    @"(?<tt>(transverse|tt) )*" +
+                    @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
+                    @"(?<start>([\d,-]+|[^ ]+)) *" +
+                    @"(?<props>.*)" +
+                    "",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var labels = GetSelection(m);
+                    if (labels.Any())
+                    {
+                        var engine = new XbimGeometryEngine();
+                        foreach (var label in labels)
+                        {
+                            var entity = Model.Instances[label];
+                            if (entity == null)
+                            {
+                                ReportAdd($"=== Entity {label} not found in model.", Brushes.Red);
+                                continue;
+                            }
+                            ReportAdd($"=== Geometry functions for {entity.GetType().Name} #{label}", Brushes.Blue);
+                            // todo: cache methods by type
+                            var methods =
+                                typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                            foreach (var methodInfo in methods)
+                            {
+                                var pars = methodInfo.GetParameters().ToArray();
+                                if (pars.Length != 1) // only consider functinons with a single parameter
+                                    continue;
+                                if (methodInfo.ReturnParameter.ParameterType == typeof(bool))
+                                    continue; // excludes the equal function
+                                
+                                var firstParam = pars.FirstOrDefault();
+                                if (firstParam == null)
+                                    continue;
+                                if (!firstParam.ParameterType.IsInstanceOfType(entity))
+                                    continue;
+                                var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name})";
+                                ReportAdd($"- {functionShort}");
+                                try
+                                {
+                                    var ret = methodInfo.Invoke(engine, new object[] { entity });
+                                    if (ret != null)
+                                    {
+                                        var sol = ret as IXbimSolid;
+                                        if (sol != null)
+                                        {
+                                            if (sol.IsValid)
+                                                ReportAdd($"  ok, returned {ret.GetType().Name}", Brushes.Green);
+                                            else
+                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)", Brushes.Red);
+                                        }
+                                        else
+                                        {
+                                            ReportAdd($"  ok, returned {ret.GetType().Name} ({ret})", Brushes.Green);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ReportAdd($"  returned value is null (function return type is ${methodInfo.ReturnType.Name})", Brushes.Orange);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    var msg = $"  Failed on {functionShort} for #{label}. {ex.Message}";
+                                    ReportAdd(msg, Brushes.Red);
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+                
+                m = Regex.Match(cmd,
                     @"^(select|se) " +
                     @"(top (?<top>\d+) )*" +
                     @"(?<mode>(count|list|typelist|short|full) )*" +
@@ -785,16 +864,192 @@ namespace XbimXplorer.Querying
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    if (SelectedEntity != null)
-                        Debug.Write(SelectedEntity.EntityLabel);
-                    else
-                        Debug.Write(null);
+                    var recursiveElement = Model.Instances[582800] as IfcBuildingStorey;
+                    foreach (
+                        var prod in recursiveElement.ContainsElements.SelectMany(container => container.RelatedElements)
+                    )
+                    {
+                        Debug.WriteLine(prod.EntityLabel);
+                    }
 
 
                     continue;
                 }
                 ReportAdd(string.Format("Command not understood: {0}.", cmd));
             }
+        }
+
+        private IEnumerable<int> GetSelection(Match m)
+        {
+            var labels = GetEntityLabels(m);
+            if (!string.IsNullOrEmpty(m.Groups["ri"].Value))
+                labels = GetRepresentationItems(labels, m.Groups["ri"].Value);
+            labels = labels.Distinct();
+            return labels;
+        }
+
+        enum RepresentationItemSelectionMode
+        {
+            all,
+            surfaceOrSolid,
+            wires
+        }
+
+        private IEnumerable<int> GetRepresentationItems(IEnumerable<int> labels, string selectionMode)
+        {
+            selectionMode = selectionMode.Trim();
+            var inQueue = new Queue<int>(labels);
+            var outList = new List<int>();
+            var mode = RepresentationItemSelectionMode.all;
+            // representationitems|ri|surfacesolid|ss|wire|wi
+            if (selectionMode == "surfacesolid" || selectionMode == "ss")
+            {
+                mode = RepresentationItemSelectionMode.surfaceOrSolid;
+            }
+            else if (selectionMode == "wire" || selectionMode == "wi")
+            {
+                mode = RepresentationItemSelectionMode.wires;
+            }
+
+            while (inQueue.Any())
+            {
+                var entityLabel = inQueue.Dequeue();
+                var entity = Model.Instances[entityLabel];
+                if (entity == null)
+                    continue;
+                EvaluateInclusion(entity, mode, outList);
+                var ifcType = IfcMetaData.IfcType(entity);
+                var props = ifcType.IfcProperties.Values;
+                foreach (var expressMetaProperty in props)
+                {
+                    var t = expressMetaProperty.PropertyInfo.PropertyType;
+                    var propVal = expressMetaProperty.PropertyInfo.GetValue(entity, null);
+
+                    var v = EvaluateInclusion(propVal, mode, outList);
+                    if (v != -1)
+                        inQueue.Enqueue(v);
+                    else if (expressMetaProperty.IfcAttribute.IsEnumerable)
+                    {
+                        var propCollection = propVal as System.Collections.IEnumerable;
+                        if (propCollection == null)
+                            continue;
+                        foreach (var item in propCollection)
+                        {
+                            var vEnum = EvaluateInclusion(item, mode, outList);
+                            if (vEnum != -1)
+                                inQueue.Enqueue(v);
+                        }
+                    }
+                }
+            }
+            return outList;
+        }
+
+        private List<Type> _surfaceOrSolidTypes;
+        private List<Type> _wireTypes;
+
+        private void PopulateFilterTypes()
+        {
+            // todo: these lists needs to be revised
+
+            _surfaceOrSolidTypes = new List<Type>();
+            //_surfaceOrSolidTypes.AddRange(ExpressType(typeof(Xbim.Ifc2x3.GeometryResource.IfcSurface)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometryResource.IfcSurface)).NonAbstractSubTypes.Select(x => x.Type));
+
+
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometryResource.IfcSurface)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometryResource.IfcSurface)).NonAbstractSubTypes.Select(x => x.Type));
+
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometricModelResource.IfcCsgPrimitive3D)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometricModelResource.IfcCsgPrimitive3D)).NonAbstractSubTypes.Select(x => x.Type));
+
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometricModelResource.IfcBooleanResult)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometricModelResource.IfcBooleanResult)).NonAbstractSubTypes.Select(x => x.Type));
+
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometricModelResource.IfcHalfSpaceSolid)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometricModelResource.IfcHalfSpaceSolid)).NonAbstractSubTypes.Select(x => x.Type));
+
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometricModelResource.IfcSolidModel)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometricModelResource.IfcSolidModel)).NonAbstractSubTypes.Select(x => x.Type));
+
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometricModelResource.IfcFaceBasedSurfaceModel)).NonAbstractSubTypes.Select(x => x.Type));
+            //_surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometricModelResource.IfcFaceBasedSurfaceModel)).NonAbstractSubTypes.Select(x => x.Type));
+
+            _wireTypes = new List<Type>();
+            //_wireTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometryResource.IfcCurve)).NonAbstractSubTypes.Select(x => x.Type));
+            //_wireTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometryResource.IfcCurve)).NonAbstractSubTypes.Select(x => x.Type));
+
+            //_wireTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometryResource.IfcCompositeCurveSegment)).NonAbstractSubTypes.Select(x => x.Type));
+            //_wireTypes.AddRange(SchemaMetadatas["ifc4"].ExpressType(typeof(Xbim.Ifc4.GeometryResource.IfcCompositeCurveSegment)).NonAbstractSubTypes.Select(x => x.Type));
+        }
+
+
+        private int EvaluateInclusion(object entityO, RepresentationItemSelectionMode mode, List<int> outList)
+        {
+            var entity = entityO as IPersistIfcEntity;
+            if (entity == null)
+                return -1;
+            var t = entity.GetType();
+
+            if (mode == RepresentationItemSelectionMode.all && (typeof(IfcRepresentationItem)).IsAssignableFrom(t))
+            {
+                outList.Add(entity.EntityLabel);
+                return entity.EntityLabel;
+            }
+            if (_surfaceOrSolidTypes == null || _wireTypes == null)
+                PopulateFilterTypes();
+
+            if (mode == RepresentationItemSelectionMode.surfaceOrSolid && _surfaceOrSolidTypes.Contains(t))
+            {
+                outList.Add(entity.EntityLabel);
+                return entity.EntityLabel;
+            }
+            if (mode == RepresentationItemSelectionMode.wires && _wireTypes.Contains(t))
+            {
+                outList.Add(entity.EntityLabel);
+                return entity.EntityLabel;
+            }
+            return entity.EntityLabel;
+        }
+
+        private IEnumerable<int> GetEntityLabels(Match m)
+        {
+            var top = m.Groups["top"].Value;
+            var start = m.Groups["start"].Value;
+            // top limit of returns
+            var iTop = -1;
+            if (top != string.Empty)
+                iTop = Convert.ToInt32(top);
+            var props = m.Groups["props"].Value;
+
+            // transverse tree mode
+            var transverseT = false;
+            var transverse = m.Groups["tt"].Value;
+            if (transverse != "")
+                transverseT = true;
+
+            IEnumerable<int> labels = ToIntarray(start, ',');
+            if (!labels.Any())
+            {
+                // see if it's a type string instead;
+                var subRe = new Regex(@"[\+\-]*([A-Za-z0-9\[\]]+)");
+                var res = subRe.Matches(start);
+                foreach (Match submatch in res)
+                {
+                    var modeAdd = !submatch.Value.Contains("-");
+                    // the syntax could be IfcWall[10]
+                    var sbi = new SquareBracketIndexer(submatch.Groups[1].Value);
+                    IEnumerable<int> thisLabels = QueryEngine.EntititesForType(sbi.Property, Model);
+                    thisLabels = sbi.GetItem(thisLabels);
+                    labels = modeAdd
+                        ? labels.Concat(thisLabels)
+                        : labels.Where(t => !thisLabels.Contains(t));
+                }
+            }
+            var ret = QueryEngine.RecursiveQuery(Model, props, labels, transverseT);
+            if (iTop != -1)
+                ret = ret.Take(iTop);
+            return ret;
         }
 
         private void ConvertDirectory(string resource)
