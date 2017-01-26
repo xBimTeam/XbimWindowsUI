@@ -26,6 +26,7 @@ using XbimXplorer.PluginSystem;
 using XbimXplorer.Simplify;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.GeometryResource;
+using Xbim.Ifc4.Interfaces;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -775,11 +776,11 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    var aname = Assembly.GetExecutingAssembly().GetName().Name;
-                    var str = $"pack://application:,,,/{aname};component/Commands/console.bmp";
-                    var bi = new BitmapImage(new Uri(str, UriKind.Absolute));
-                    
-
+                    var v = Model.Instances[814861] as IIfcRelContainedInSpatialStructure;
+                    foreach (var vRelatedElement in  v.RelatedElements)
+                    {
+                        Debug.WriteLine(vRelatedElement.EntityLabel);
+                    }
                     continue;
                 }
                 ReportAdd($"Command not understood: {cmd}.");
@@ -1467,6 +1468,9 @@ namespace XbimXplorer.Commands
                             propVal += "\r\n" + indentationHeader + "    " + ReportPropValue(item, ref retIds, showPropType);
                         }
                     }
+                    if (iCntProp > 2)
+                        propVal += "\r\n" + indentationHeader + "    " + "Count: " + iCntProp;
+
                 }
                 else
                 {

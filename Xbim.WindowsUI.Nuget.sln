@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XplorerPlugin.Bcf", "Xplore
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{645DE1B1-90B9-4B04-8F65-F6C81B046B23}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XplorerPlugin.ExpressValidation", "XplorerPlugin.ExpressValidation\XplorerPlugin.ExpressValidation.csproj", "{32A4EEEB-DB2B-4DDB-A496-3E0604E49320}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,11 +45,16 @@ Global
 		{645DE1B1-90B9-4B04-8F65-F6C81B046B23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{645DE1B1-90B9-4B04-8F65-F6C81B046B23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{645DE1B1-90B9-4B04-8F65-F6C81B046B23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32A4EEEB-DB2B-4DDB-A496-3E0604E49320}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32A4EEEB-DB2B-4DDB-A496-3E0604E49320}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32A4EEEB-DB2B-4DDB-A496-3E0604E49320}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32A4EEEB-DB2B-4DDB-A496-3E0604E49320}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{935963BB-7EE9-4C8F-BC60-DE43961F2E98} = {0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}
+		{32A4EEEB-DB2B-4DDB-A496-3E0604E49320} = {0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}
 	EndGlobalSection
 EndGlobal

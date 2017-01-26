@@ -210,9 +210,19 @@ namespace XbimXplorer
                 var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress, FileAccessMode);
                 if (model.GeometryStore.IsEmpty)
                 {
-                    var context = new Xbim3DModelContext(model);
+                    try
+                    {
+                        var context = new Xbim3DModelContext(model);
                         //upgrade to new geometry representation, uses the default 3D model
-                    context.CreateContext(progDelegate: worker.ReportProgress);
+                        context.CreateContext(progDelegate: worker.ReportProgress);
+                    }
+                    catch (Exception geomEx)
+                    {
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"Error creating geometry context of '{ifcFilename}' {geomEx.StackTrace}.");
+                        var newexception = new Exception(sb.ToString(), geomEx);
+                        Log.Error(sb.ToString(), newexception);
+                    }
                 }
                 foreach (var modelReference in model.ReferencedModels)
                 {
@@ -359,6 +369,7 @@ namespace XbimXplorer
                 }
                 ProgressBar.Value = 0;
                 StatusMsg.Text = "Error/Ready";
+                SetOpenedModelFileName("");
             }
             FireLoadingComplete(s, args);
         }

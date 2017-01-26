@@ -540,12 +540,11 @@ namespace Xbim.Presentation
             
             if (prop.EntityAttribute.IsEnumerable)
             {
-                var propCollection = propVal as IEnumerable<object>;
-                
+                var propCollection = propVal as System.Collections.IEnumerable;
+
                 if (propCollection != null)
                 {
-                    var propVals = propCollection.ToArray();
-
+                    var propVals = propCollection.Cast<object>().ToArray();
                     switch (propVals.Length)
                     {
                         case 0:
@@ -646,8 +645,6 @@ namespace Xbim.Presentation
             {
                 ReportProp(_entity, inverse, false);
             }
-
-            
 
             var root = _entity as IIfcRoot;
             if (root == null)
