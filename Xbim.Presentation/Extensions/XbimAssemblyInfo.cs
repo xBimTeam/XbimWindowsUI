@@ -10,10 +10,22 @@ namespace Xbim.Presentation.Extensions
     public class XbimAssemblyInfo
     {
         private readonly Assembly _assembly;
-
+        public string OverrideLocation;
+        
         public XbimAssemblyInfo(Assembly assembly)
         {
             _assembly = assembly;
+        }
+
+
+        public string AssemblyLocation
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(OverrideLocation))
+                    return OverrideLocation;               
+                return _assembly.Location;
+            }
         }
 
         public XbimAssemblyInfo(Type type)
@@ -30,7 +42,9 @@ namespace Xbim.Presentation.Extensions
         {
             get
             {
-                var fvi = FileVersionInfo.GetVersionInfo(_assembly.Location);
+                if (string.IsNullOrEmpty(AssemblyLocation))
+                    return "";
+                var fvi = FileVersionInfo.GetVersionInfo(AssemblyLocation);
                 return fvi.FileVersion;
             }
         }
@@ -40,6 +54,8 @@ namespace Xbim.Presentation.Extensions
             get
             {
                 var ret = DateTime.MinValue;
+                if (FileVersion == null)
+                    return ret;
                 var versArray = FileVersion.Split(new[] {"."}, StringSplitOptions.None);
 
                 if (versArray.Length != 4)

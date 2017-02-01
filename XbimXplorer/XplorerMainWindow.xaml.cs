@@ -739,7 +739,8 @@ namespace XbimXplorer
             var w = new AboutWindow
             {
                 Model = Model,
-                Assemblies = _pluginAssemblies
+                Assemblies = _pluginAssemblies,
+                MainWindow = this
             };
             w.Show();
         }
