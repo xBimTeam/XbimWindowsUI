@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Geometry;
@@ -10,11 +9,9 @@ namespace Xbim.Presentation
 {
     public class XbimModelPositioning
     {
-        public XbimRegion LargestRegion;
-        public Xbim3DModelContext Context;
+        public XbimRegion SelectedRegion;
         public XbimMatrix3D Transform;
-        
-        private double _oneMeter = Double.NaN;
+        private double _oneMeter = double.NaN;
 
         public double OneMeter
         {
@@ -22,18 +19,17 @@ namespace Xbim.Presentation
             {
                 if (double.IsNaN(_oneMeter))
                 {
-                    
                     _oneMeter = _model.ModelFactors.OneMetre;
                 }
                 return _oneMeter;
             }
         }
 
-        public XbimRect3D GetLargestRegionRectInMeters()
+        public XbimRect3D GetSelectedRegionRectInMeters()
         {
-            if (LargestRegion == null)
+            if (SelectedRegion == null)
                 return XbimRect3D.Empty;
-            var pts = MinMaxPoints(LargestRegion, OneMeter);
+            var pts = MinMaxPoints(SelectedRegion, OneMeter);
             return new XbimRect3D(pts[0], pts[1]);
         }
 
@@ -56,6 +52,32 @@ namespace Xbim.Presentation
 
         private readonly IModel _model;
 
+        /// <summary>
+        /// Sets the region specified by name as selected.
+        /// </summary>
+        /// <param name="name">the region name to match</param>
+        /// <returns>true if the region has ben found and set, false otherwise</returns>
+        public bool SetSelectedRegionByName(string name)
+        {
+            var geomStore = _model.GeometryStore;
+            if (_model.GeometryStore.IsEmpty)
+                return false;
+            using (var reader = geomStore.BeginRead())
+            {
+                foreach (var readerContextRegion in reader.ContextRegions)
+                {
+                    if (!readerContextRegion.Any())
+                        continue;
+                    var reg = readerContextRegion.FirstOrDefault(x => x.Name == name);
+                    if (reg == null)
+                        continue;
+                    SelectedRegion = reg;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public XbimModelPositioning(IModel model)
         {
             _model = model;
@@ -74,7 +96,7 @@ namespace Xbim.Presentation
                     else rect.Union(r.ToXbimRect3D());
                 }
                 if(pop>0)
-                    LargestRegion = new XbimRegion("Largest", rect, pop);
+                    SelectedRegion = new XbimRegion("Largest", rect, pop);
                 
             }
         }
@@ -85,72 +107,6 @@ namespace Xbim.Presentation
             var translation = XbimMatrix3D.CreateTranslation(modelTranslation * OneMeter);
             var scaling = XbimMatrix3D.CreateScale(1/OneMeter);
             Transform =  translation * scaling;
-        }
-    }
-    
-    public class XbimModelPositioningCollection
-    {
-        public XbimModelPositioning this[IModel modelKey]
-        {
-            get
-            {
-                XbimModelPositioning returnValue;
-                if (_collection.TryGetValue(modelKey, out returnValue))
-                    return returnValue;
-                return null;
-            }
-            set { _collection[modelKey] = value; }
-        }
-
-        private readonly Dictionary<IModel, XbimModelPositioning> _collection;
-
-        public void AddModel(IModel model)
-        {
-            var tmp = new XbimModelPositioning(model);
-            _collection.Add(model, tmp);
-        }
-
-        public XbimRect3D GetEnvelopeInMeters()
-        {
-            var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.GetLargestRegionRectInMeters()))
-            {
-                if (r.IsEmpty)
-                    continue;
-                if (bb.IsEmpty)
-                    bb = r;
-                else
-                {
-                    bb.Union(r);
-                }
-            }
-            return bb;
-        }
-
-        public XbimRect3D GetEnvelopOfCentes()
-        {
-            var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.LargestRegion).Where(r => r != null))
-            {
-                if (bb.IsEmpty)
-                    bb = new XbimRect3D(r.Centre, r.Centre);
-                else
-                    bb.Union(r.Centre);
-            }
-            return bb;
-        }
-
-        public XbimModelPositioningCollection()
-        {
-            _collection = new Dictionary<IModel, XbimModelPositioning>();
-        }
-
-        internal void SetCenterInMeters(XbimVector3D modelTranslation)
-        {
-            foreach (var model in _collection.Values)
-            {
-                model.SetCenterInMeters(modelTranslation);
-            }
         }
     }
 }

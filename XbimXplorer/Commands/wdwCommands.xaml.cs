@@ -535,45 +535,24 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
-                // todo: not sure if the function is still relevant
 
-                //m = Regex.Match(cmd, @"^zoom (" +
-                //                     @"(?<RegionName>.+$)" +
-                //                     ")", RegexOptions.IgnoreCase);
-                //if (m.Success)
-                //{
-                //    var rName = m.Groups["RegionName"].Value;
-                //    var regionData = Model.GetGeometryData(XbimGeometryType.Region).FirstOrDefault();
-                //    if (regionData == null)
-                //    {
-                //        ReportAdd("data not found");
-                //    }
-                //    var regions = XbimRegionCollection.FromArray(regionData.ShapeData);
-                //    var reg = regions.FirstOrDefault(x => x.Name == rName);
-                //    if (reg != null)
-                //    {
-                //        var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transfrom);
-                //        var tC = mcp.Transform(reg.Centre);
-                //        var tS = mcp.Transform(reg.Size);
-                //        var r3D = new XbimRect3D(
-                //            tC.X - tS.X/2, tC.Y - tS.Y/2, tC.Z - tS.Z/2,
-                //            tS.X, tS.X, tS.Z
-                //            );
-                //        _parentWindow.DrawingControl.ZoomTo(r3D);
-                //        _parentWindow.Activate();
-                //        continue;
-                //    }
-                //    else
-                //    {
-                //        ReportAdd(string.Format("Something wrong with region name: '{0}'", rName));
-                //        ReportAdd("Names that should work are: ");
-                //        foreach (var str in regions)
-                //        {
-                //            ReportAdd(string.Format(" - '{0}'", str.Name));
-                //        }
-                //        continue;
-                //    }
-                //}
+
+                m = Regex.Match(cmd, @"^zoom (" +
+                                     @"(?<RegionName>.+$)" +
+                                     ")", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var rName = m.Groups["RegionName"].Value;
+                    var ret = _parentWindow.DrawingControl.ModelPositions.SetSelectedRegionByName(rName);                    
+                    if (!ret)
+                    {
+                        ReportAdd("data not found");
+                        continue;
+                    }
+                    // todo: restore
+                    // _parentWindow.DrawingControl.RecalculateView();
+                    continue;
+                }
 
                 m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
                 if (m.Success)
@@ -776,6 +755,19 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    using (var reader = Model.GeometryStore.BeginRead())
+                    {
+                        foreach (var readerContextRegion in reader.ContextRegions)
+                        {
+                            
+                            Debug.WriteLine(readerContextRegion);
+                            foreach (var r in readerContextRegion)
+                            {
+                                Debug.WriteLine($"{r.Name}\t{r.Population}\t{r.Size}\t{r.Centre}");
+                            }
+                        }
+                    }
+                    continue;
                     var v = Model.Instances[814861] as IIfcRelContainedInSpatialStructure;
                     foreach (var vRelatedElement in  v.RelatedElements)
                     {

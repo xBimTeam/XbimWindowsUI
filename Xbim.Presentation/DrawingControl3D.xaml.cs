@@ -314,9 +314,17 @@ namespace Xbim.Presentation
 
         public List<XbimScene<WpfMeshGeometry3D, WpfMaterial>> Scenes =
             new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
-
-        public XbimRect3D ModelBounds;
-        private XbimRect3D _viewBounds;
+        
+        /// <summary>
+        /// _viewBounds is transformed depending on ModelBounds and _modelTranslation. 
+        /// </summary>
+        private XbimRect3D _viewBounds
+        {
+            get
+            {
+                return ModelPositions.ViewSpaceBounds;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the model.
@@ -1071,7 +1079,7 @@ namespace Xbim.Presentation
 
         // public XbimVector3D ModelTranslation;
         // public XbimMatrix3D WcsTransform;
-        private XbimVector3D _modelTranslation;
+        // private XbimVector3D _modelTranslation;
 
         private void ClearGraphics(ModelRefreshOptions options = ModelRefreshOptions.None)
         {
@@ -1094,9 +1102,7 @@ namespace Xbim.Presentation
             if ((options & ModelRefreshOptions.ViewPreserveCuttingPlane) != ModelRefreshOptions.ViewPreserveCuttingPlane)
                 ClearCutPlane();
             ModelPositions = new XbimModelPositioningCollection();
-            ModelBounds = XbimRect3D.Empty;
-            _modelTranslation = new XbimVector3D(0, 0, 0);
-
+           
             Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
             //if ((options & ModelRefreshOptions.ViewPreserveCameraPosition) != ModelRefreshOptions.ViewPreserveCameraPosition)
             //    Viewport.ResetCamera();
@@ -1112,7 +1118,7 @@ namespace Xbim.Presentation
             ViewPreserveAll = 7
         }
 
-        public XbimModelPositioningCollection ModelPositions;
+        public XbimModelPositioningCollection ModelPositions = new XbimModelPositioningCollection();
 
         public ILayerStyler DefaultLayerStyler { get; set; }
 
@@ -1151,14 +1157,14 @@ namespace Xbim.Presentation
         /// <param name="model"></param>
         /// <param name="entityLabels">If null loads the whole model, otherwise only elements listed in the enumerable</param>
         /// <param name="options"></param>
-        public void LoadGeometry(IfcStore model, IEnumerable<int> entityLabels = null,
-            ModelRefreshOptions options = ModelRefreshOptions.None)
+        public void LoadGeometry(IfcStore model, IEnumerable<int> entityLabels = null, ModelRefreshOptions options = ModelRefreshOptions.None)
         {
             // AddLayerToDrawingControl is the function that actually populates the geometry in the viewer.
             // AddLayerToDrawingControl is triggered by BuildRefModelScene and BuildScene below here when layers get ready.
 
-            //reset all the visuals
-            ClearGraphics(options);
+            // reset all the visuals
+            // - ModelPositions is emptied in here
+            ClearGraphics(options); 
 
             if (model == null)
             {
@@ -1182,14 +1188,12 @@ namespace Xbim.Presentation
                     refModel.Model.UserDefinedId = ++userDefinedId;
                     var v = refModel.Model as IfcStore;
                     if (v!= null)
-                        ModelPositions.AddModel(v.ReferencingModel);
+                        ModelPositions.AddModel(v.ReferencingModel); //add in the referenced models
                 }
                // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
             }
-            ModelBounds = ModelPositions.GetEnvelopeInMeters();
-            DefineModelTranslation();
-            ModelPositions.SetCenterInMeters(_modelTranslation);
 
+            ModelPositions.RecalcModelTranslation();
             if (DefaultLayerStyler == null)
                 DefaultLayerStyler = new SurfaceLayerStyler();
 
@@ -1213,13 +1217,7 @@ namespace Xbim.Presentation
             }
             RecalculateView(options);
         }
-
-        private void DefineModelTranslation()
-        {
-            var p = ModelBounds.Centroid();
-            _modelTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
-        }
-
+        
         private void LoadReferencedModel(IReferencedModel refModel)
         {
             if (refModel.Model == null)
@@ -1242,19 +1240,14 @@ namespace Xbim.Presentation
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
-        {
-            _viewBounds = ModelBounds.IsEmpty
-                ? new XbimRect3D(0, 0, 0, 10, 10, 5)
-                : ModelBounds.Transform(XbimMatrix3D.CreateTranslation(_modelTranslation));
-            
+        {            
             // Assumes a NearPlaneDistance of 1/8 of meter.
-            //all models are now in metres
+            // all models are now in metres
             UpdatefrustumPlanes(Canvas, null);
             UpdateGrid();
 
-            //make sure whole scene is visible
-            if ((options & ModelRefreshOptions.ViewPreserveCameraPosition) !=
-                ModelRefreshOptions.ViewPreserveCameraPosition)
+            // make sure whole scene is visible, if ViewPreserveCameraPosition is not specified
+            if (!options.HasFlag(ModelRefreshOptions.ViewPreserveCameraPosition))
                 ViewHome();
         }
 
