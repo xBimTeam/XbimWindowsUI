@@ -11,9 +11,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using log4net;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
@@ -22,11 +20,11 @@ using Xbim.Ifc4.Kernel;
 using Xbim.Ifc4.MaterialResource;
 using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
-using XbimXplorer.PluginSystem;
 using XbimXplorer.Simplify;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.GeometryResource;
 using Xbim.Ifc4.Interfaces;
+using Xbim.ModelGeometry.Scene;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -41,7 +39,6 @@ namespace XbimXplorer.Commands
          "View/Developer/Commands", "Commands/console.bmp")]
     public partial class wdwCommands : IXbimXplorerPluginWindow
     {
-        private static readonly ILog Log = LogManager.GetLogger(nameof(wdwCommands));
         /// <summary>
         /// WindowsUI
         /// </summary>
@@ -402,7 +399,7 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    var labels = GetSelection(m);
+                    var labels = GetSelection(m).ToArray();
                     if (labels.Any())
                     {
                         var engine = new XbimGeometryEngine();
@@ -486,7 +483,7 @@ namespace XbimXplorer.Commands
                     var mode = m.Groups["mode"].Value;
                     var svt = m.Groups["svt"].Value;
 
-                    var ret = GetSelection(m);
+                    var ret = GetSelection(m).ToArray();
 
                     // textual report
                     switch (mode.ToLower())
@@ -535,8 +532,49 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
+                m = Regex.Match(cmd, @"^(ObjectPlacement|OP) " +
+                                     @"(?<EntityId>\d+)"
+                                     , RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var entityId = Convert.ToInt32(m.Groups["EntityId"].Value);
+                    var ent = Model.Instances[entityId];
+                    if (ent == null)
+                    {
+                        ReportAdd($"Entity not found #{entityId}");
+                        continue;
+                    }
+                    var sb = new TextHighliter();
+                    ReportObjectPlacement(sb, ent, 0);
+                    ReportAdd(sb);
+                    continue;
+                }
 
+                m = Regex.Match(cmd, @"^(TransformGraph|TG) " +
+                                   @"(?<EntityIds>[\d ,]+)"
+                                   , RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var entityIds = m.Groups["EntityIds"].Value;
+                    var v = entityIds.Split(new[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
 
+                    var sb = new TextHighliter();
+                    
+                    foreach (var entityIdString in v)
+                    {
+                        var entityId = Convert.ToInt32(entityIdString);
+                        var ent = Model.Instances[entityId];
+                        if (!(ent is IIfcProduct))
+                        {
+                            ReportAdd($"Entity not found #{entityId}");
+                            continue;
+                        }
+                        ReportTransformGraph(sb, ent as IIfcProduct, 0);
+                    }  
+                    ReportAdd(sb);
+                    continue;
+                }
+                
                 m = Regex.Match(cmd, @"^zoom (" +
                                      @"(?<RegionName>.+$)" +
                                      ")", RegexOptions.IgnoreCase);
@@ -579,86 +617,64 @@ namespace XbimXplorer.Commands
                                      ")", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    ReportAdd("Clip is disabled in code... needs work");
-                    //todo: restore clipping
+                    double px = 0, py = 0, pz = 0;
+                    double nx = 0, ny = 0, nz = -1;
 
-                    //double px = 0, py = 0, pz = 0;
-                    //double nx = 0, ny = 0, nz = -1;
+                    if (m.Groups["elev"].Value != string.Empty)
+                    {
+                        pz = Convert.ToDouble(m.Groups["elev"].Value);
+                    }
+                    else if (m.Groups["StoreyName"].Value != string.Empty)
+                    {
+                        var msg = "";
+                        var storName = m.Groups["StoreyName"].Value;
+                        var storey =
+                            Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
+                        if (storey != null)
+                        {
+                            var v = new TransformGraph(storey.Model);
+                            v.AddProduct(storey);
+                            var v2 = v[storey].LocalMatrix;
+                            var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
 
-                    //if (m.Groups["elev"].Value != string.Empty)
-                    //{
-                    //    pz = Convert.ToDouble(m.Groups["elev"].Value);
-                    //}
-                    //else if (m.Groups["StoreyName"].Value != string.Empty)
-                    //{
-                    //    var msg = "";
-                    //    var storName = m.Groups["StoreyName"].Value;
-                    //    var storey =
-                    //        Model.Instances.OfType<IfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
-                    //    if (storey != null)
-                    //    {
-
-                    //        //get the object position data (should only be one)
-                    //        if (Model.GeometrySupportLevel == 1)
-                    //        {
-                    //            var geomdata =
-                    //                Model.GetGeometryData(storey.EntityLabel, XbimGeometryType.TransformOnly)
-                    //                    .FirstOrDefault();
-                    //            if (geomdata != null)
-                    //            {
-                    //                var pt = new XbimPoint3D(0, 0,
-                    //                    XbimMatrix3D.FromArray(geomdata.DataArray2).OffsetZ);
-                    //                var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transform);
-                    //                var transformed = mcp.Transform(pt);
-                    //                msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z, transformed.Z + 1);
-                    //                pz = transformed.Z + 1;
-                    //            }
-                    //        }
-                    //        else if (Model.GeometrySupportLevel == 2)
-                    //        {
-                    //            var v = new TransformGraph(Model);
-                    //            v.AddProduct(storey);
-                    //            var v2 = v[storey].LocalMatrix;
-                    //            var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
-
-                    //            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[Model].Transform);
-                    //            var transformed = mcp.Transform(pt);
-                    //            msg = string.Format("Clip 1m above storey elevation {0} (height: {1})", pt.Z, transformed.Z + 1);
-                    //            pz = transformed.Z + 1;
-                    //        }
-                    //    }
-                    //    if (msg == "")
-                    //    {
-                    //        ReportAdd(string.Format("Something wrong with storey name: '{0}'", storName));
-                    //        ReportAdd("Names that should work are: ");
-                    //        var strs = Model.Instances.OfType<IfcBuildingStorey>();
-                    //        foreach (var str in strs)
-                    //        {
-                    //            ReportAdd(string.Format(" - '{0}'", str.Name));
-                    //        }
-                    //        continue;
-                    //    }
-                    //    ReportAdd(msg);
-                    //}
-                    //else
-                    //{
-                    //    px = Convert.ToDouble(m.Groups["px"].Value);
-                    //    py = Convert.ToDouble(m.Groups["py"].Value);
-                    //    pz = Convert.ToDouble(m.Groups["pz"].Value);
-                    //    nx = Convert.ToDouble(m.Groups["nx"].Value);
-                    //    ny = Convert.ToDouble(m.Groups["ny"].Value);
-                    //    nz = Convert.ToDouble(m.Groups["nz"].Value);
-                    //}
+                            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
+                            var transformed = mcp.Transform(pt);
+                            msg = string.Format("Clip 1m above storey elevation {0} (View space height: {1})", pt.Z, transformed.Z + 1);
+                            pz = transformed.Z + 1;
+                            
+                        }
+                        if (msg == "")
+                        {
+                            ReportAdd(string.Format("Something wrong with storey name: '{0}'", storName));
+                            ReportAdd("Names that should work are: ");
+                            var strs = Model.Instances.OfType<IIfcBuildingStorey>();
+                            foreach (var str in strs)
+                            {
+                                ReportAdd(string.Format(" - '{0}'", str.Name));
+                            }
+                            continue;
+                        }
+                        ReportAdd(msg);
+                    }
+                    else
+                    {
+                        px = Convert.ToDouble(m.Groups["px"].Value);
+                        py = Convert.ToDouble(m.Groups["py"].Value);
+                        pz = Convert.ToDouble(m.Groups["pz"].Value);
+                        nx = Convert.ToDouble(m.Groups["nx"].Value);
+                        ny = Convert.ToDouble(m.Groups["ny"].Value);
+                        nz = Convert.ToDouble(m.Groups["nz"].Value);
+                    }
 
 
-                    //_parentWindow.DrawingControl.ClearCutPlane();
-                    //_parentWindow.DrawingControl.SetCutPlane(
-                    //    px, py, pz,
-                    //    nx, ny, nz
-                    //    );
+                    _parentWindow.DrawingControl.ClearCutPlane();
+                    _parentWindow.DrawingControl.SetCutPlane(
+                        px, py, pz,
+                        nx, ny, nz
+                        );
 
-                    //ReportAdd("Clip command sent");
-                    //_parentWindow.Activate();
+                    ReportAdd("Clip command sent");
+                    _parentWindow.Activate();
                     continue;
                 }
                 
@@ -768,14 +784,132 @@ namespace XbimXplorer.Commands
                         }
                     }
                     continue;
-                    var v = Model.Instances[814861] as IIfcRelContainedInSpatialStructure;
-                    foreach (var vRelatedElement in  v.RelatedElements)
-                    {
-                        Debug.WriteLine(vRelatedElement.EntityLabel);
-                    }
-                    continue;
                 }
                 ReportAdd($"Command not understood: {cmd}.");
+            }
+        }
+
+        private void ReportTransformGraph(TextHighliter sb, IIfcProduct ent, int i)
+        {
+            var v = new TransformGraph(ent.Model);
+            v.AddProduct(ent);
+            
+            // var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
+
+            sb.Append(
+                string.Format("=== #{0} ({1}) ", ent.EntityLabel, ent.GetType().Name),
+                Brushes.Blue
+                );
+            sb.Append(
+                    string.Format("   Local matrix:"),
+                    Brushes.Black
+                );
+            ReportMatrix(sb, v[ent].LocalMatrix);
+
+            sb.Append(
+                    string.Format("   World matrix:"),
+                    Brushes.Black
+                );
+            ReportMatrix(sb, v[ent].WorldMatrix());
+        }
+
+        private void ReportMatrix(TextHighliter sb, XbimMatrix3D matrix)
+        {
+            var frmt = "G7";
+            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M11.ToString(frmt), matrix.M21.ToString(frmt), matrix.M31.ToString(frmt), matrix.OffsetX.ToString(frmt)), Brushes.Black);
+            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M12.ToString(frmt), matrix.M22.ToString(frmt), matrix.M32.ToString(frmt), matrix.OffsetY.ToString(frmt)), Brushes.Black);
+            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M13.ToString(frmt), matrix.M23.ToString(frmt), matrix.M33.ToString(frmt), matrix.OffsetZ.ToString(frmt)), Brushes.Black);
+            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M14.ToString(frmt), matrix.M24.ToString(frmt), matrix.M34.ToString(frmt), matrix.M44.ToString(frmt)), Brushes.Black);
+            sb.Append("", Brushes.Black);
+        }
+
+        private void ReportObjectPlacement(TextHighliter sb, IPersistEntity ent, int indentation)
+        {
+            
+            var indentationHeader = new string('\t', indentation);
+
+            if (ent is IIfcProduct)
+            {
+                var asprod = ent as IIfcProduct;
+                sb.Append(
+                    string.Format(indentationHeader + "=== #{0} ({1}) ", asprod.EntityLabel, asprod.GetType().Name),
+                    Brushes.Blue
+                );
+                sb.Append(
+                    string.Format(indentationHeader + "   ObjectPlacement:"),
+                    Brushes.Black
+                );
+                ReportObjectPlacement(sb, asprod.ObjectPlacement, indentation + 1);
+            }
+            else if (ent is IIfcLocalPlacement)
+            {
+                var asLocalPlacement = ent as IIfcLocalPlacement;
+                sb.Append(
+                    string.Format(indentationHeader + "#{0} ({1}) ", asLocalPlacement.EntityLabel, asLocalPlacement.GetType().Name),
+                    Brushes.Blue
+                );
+                sb.Append(
+                    string.Format(indentationHeader + "   Placement:"),
+                    Brushes.Black
+                );
+                ReportObjectPlacement(sb, asLocalPlacement.RelativePlacement, indentation + 1);
+                if (asLocalPlacement.PlacementRelTo != null)
+                {
+                    sb.Append(
+                        string.Format(indentationHeader + "   RelativeTo:"),
+                        Brushes.Black
+                    );
+                    ReportObjectPlacement(sb, asLocalPlacement.PlacementRelTo, indentation + 1);
+                }
+            }
+            else if (ent is IIfcAxis2Placement3D)
+            {
+                var asLocalPlacement = ent as IIfcAxis2Placement3D;
+                sb.Append(
+                    string.Format(indentationHeader + "#{0} ({1}) ", asLocalPlacement.EntityLabel, asLocalPlacement.GetType().Name),
+                    Brushes.Blue
+                );
+                // props
+
+                sb.Append(
+                    string.Format(indentationHeader + "   Location: {0}, {1}, {2}",
+                        asLocalPlacement.Location.X,
+                        asLocalPlacement.Location.Y,
+                        asLocalPlacement.Location.Z
+                    ),
+                    Brushes.Black
+                );
+                // ReportObjectPlacement(sb, asLocalPlacement.Location, indentation + 1);
+                if (asLocalPlacement.Axis != null)
+                    sb.Append(
+                        string.Format(indentationHeader + "   Axis: {0}, {1}, {2}",
+                            asLocalPlacement.Axis.X,
+                            asLocalPlacement.Axis.Y,
+                            asLocalPlacement.Axis.Z
+                        ),
+                        Brushes.Black
+                    );
+                // ReportObjectPlacement(sb, asLocalPlacement.Axis, indentation + 1);
+
+                if (asLocalPlacement.RefDirection != null)
+                    sb.Append(
+                        string.Format(indentationHeader + "   RefDirection: {0}, {1}, {2}",
+                            asLocalPlacement.RefDirection.X,
+                            asLocalPlacement.RefDirection.Y,
+                            asLocalPlacement.RefDirection.Z
+                        ),
+                        Brushes.Black
+                    );
+                //ReportObjectPlacement(sb, asLocalPlacement.RefDirection, indentation + 1);
+            }
+            else
+            {
+                if (ent == null)
+                    return;
+                sb.Append(
+                    string.Format(indentationHeader + "Add management of {0} in code", ent.GetType().Name),
+                    Brushes.Red
+                );
             }
         }
 
@@ -1037,6 +1171,12 @@ namespace XbimXplorer.Commands
             t.AppendFormat("- clip [off|<Elevation>|<px>, <py>, <pz>, <nx>, <ny>, <nz>|<Storey name>]");
             t.Append("    Clipping the 3D model is still and unstable feature. Use with caution.", Brushes.Gray);
 
+            t.AppendFormat("- ObjectPlacement <EntityLabel>");
+            t.Append("    Reports the place tree of an element.", Brushes.Gray);
+
+            t.AppendFormat("- TransformGraph <EntityLabel,<EntityLabel>>");
+            t.Append("    Reports the transofrm graph for a set of elements.", Brushes.Gray);
+
             //t.AppendFormat("- zoom <Region name>");
             //t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
 
@@ -1054,9 +1194,7 @@ namespace XbimXplorer.Commands
 
             t.AppendFormat("- SimplifyGUI");
             t.Append("    opens a GUI for simplifying IFC files (useful for debugging purposes).", Brushes.Gray);
-
-
-
+            
             t.AppendFormat("");
             t.Append("Commands are executed on <ctrl>+<Enter>.", Brushes.Blue);
             t.AppendFormat("double slash (//) are the comments token and the remainder of lines is ignored.");

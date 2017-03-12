@@ -131,7 +131,6 @@ namespace XbimXplorer.Commands
         {
             MultiPartBit b = new MultiPartBit(strings, brushes);
             _bits.Add(b);
-            
         }
     }
 }

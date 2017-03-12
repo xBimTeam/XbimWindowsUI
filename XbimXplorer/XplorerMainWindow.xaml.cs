@@ -96,9 +96,10 @@ namespace XbimXplorer
             PreventPluginLoad = preventPluginLoad;
 
             // initialise the internal elements of the UI that behave like plugins
-            EvaluateXbimUiType(typeof(LogViewer.LogViewer));
-            EvaluateXbimUiType(typeof(Commands.wdwCommands));
-            EvaluateXbimUiType(typeof(IfcValidation.ValidationWindow));
+            EvaluateXbimUiType(typeof(IfcValidation.ValidationWindow), true);
+            EvaluateXbimUiType(typeof(LogViewer.LogViewer), true);
+            EvaluateXbimUiType(typeof(Commands.wdwCommands), true);
+            
             
             // attach window managment functions
             Closed += XplorerMainWindow_Closed;

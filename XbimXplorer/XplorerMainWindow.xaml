@@ -112,7 +112,11 @@
                 <MenuItem Header="_Copy image" Command="Copy"/>
                 <Separator Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
                 <MenuItem x:Name="DeveloperMenu" Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
-                    <MenuItem Header="IFC stripping" Click="OpenStrippingWindow"/>
+                    <MenuItem Header="IFC stripping" Click="OpenStrippingWindow">
+                        <MenuItem.Icon>
+                            <Image Source="Simplify\Funnel.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuItem>
                 <Separator />
                 <MenuItem Header="_Settings" Click="DisplaySettingsPage" />

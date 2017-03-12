@@ -170,7 +170,7 @@ namespace XbimXplorer
             {
                 foreach (var tp in types)
                 {
-                    EvaluateXbimUiType(tp);
+                    EvaluateXbimUiType(tp, false);
                 }
             }
             catch (Exception ex)
@@ -207,13 +207,13 @@ namespace XbimXplorer
             return loaded;
         }
 
-        private void EvaluateXbimUiType(Type type)
+        private void EvaluateXbimUiType(Type type, bool InsertAtTopOfMenu)
         {
             if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
             {
                 return;
             }
-            EvaluateXbimUiMenu(type);
+            EvaluateXbimUiMenu(type, InsertAtTopOfMenu);
 
             var act = type.GetUiActivation();
             if (act != PluginWindowActivation.OnLoad)
@@ -227,7 +227,7 @@ namespace XbimXplorer
             ShowPluginWindow(asPWin);
         }
 
-        private void EvaluateXbimUiMenu(Type type)
+        private void EvaluateXbimUiMenu(Type type, bool InsertAtTopOfMenu)
         {
             var att = type.GetUiAttribute();
             if (string.IsNullOrEmpty(att?.MenuText))
@@ -265,8 +265,15 @@ namespace XbimXplorer
                     Log.Error($"Path {att.IconPath} not found when loading icon.", ex);
                 }                
             }
-
-            destMenu.Items.Add(v);
+            if (InsertAtTopOfMenu)
+            {
+                destMenu.Items.Insert(0, v);
+            }
+                else
+            {
+                destMenu.Items.Add(v);
+            }
+            
             v.Click += OpenPluginWindow;
         }
 

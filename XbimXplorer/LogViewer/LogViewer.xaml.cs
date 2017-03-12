@@ -11,7 +11,8 @@ namespace XbimXplorer.LogViewer
     /// <summary>
     /// Interaction logic for LogViewer.xaml
     /// </summary>
-    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable , PluginWindowActivation.OnMenu, "View/Developer/Information Log")]
+    [XplorerUiElement(PluginWindowUiContainerEnum.LayoutAnchorable , PluginWindowActivation.OnMenu, 
+        "View/Developer/Information Log", "LogViewer/LogViewer.png")]
     public partial class LogViewer : IXbimXplorerPluginWindow
     {
         private XplorerMainWindow _mw;

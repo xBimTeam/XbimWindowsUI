@@ -6,7 +6,7 @@
              mc:Ignorable="d"
         >
     <Grid Margin="0" KeyDown="txtCommand_KeyDown">
-        <TextBox Margin="0,0,0,22" Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" />
-        <TextBox Margin="0,22,0,0" Name="Commands" FontFamily="Lucida Console" AcceptsReturn="True" />
+        <TextBox Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" Margin="0,0,0,22.429" />
+        <TextBox Name="Commands" FontFamily="Lucida Console" AcceptsReturn="True" Height="14" VerticalAlignment="Bottom" />
     </Grid>
 </UserControl>
