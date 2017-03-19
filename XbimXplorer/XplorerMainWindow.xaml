@@ -98,6 +98,8 @@
                 <MenuItem Header="_Style">
                     <MenuItem Header="_Styler Reset" Click="SetDefaultModeStyler" />
                     <MenuItem Header="Styler _Configuration" Click="ConfigureStyler" />
+                    <MenuItem Header="IfcSpaces only" Click="StylerIfcSpacesOnly" />
+                    
                 </MenuItem>
                 <MenuItem Header="Selection view _mode">
                     <MenuItem x:Name="WholeMesh" Header="Whole mesh" Click="SelectionMode" IsChecked="True" />

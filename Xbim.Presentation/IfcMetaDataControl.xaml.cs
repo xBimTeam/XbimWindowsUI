@@ -152,7 +152,6 @@ namespace Xbim.Presentation
         public ObservableCollection<PropertyItem> Properties
         {
             get { return _properties; }
-
         }
 
         private readonly ObservableCollection<PropertyItem> _materials = new ObservableCollection<PropertyItem>();
@@ -317,44 +316,45 @@ namespace Xbim.Presentation
             if (quantity == null)
                 return "";
             string value = null;
+            var unitName = "";
             var u = quantity.Unit;
-            if (u == null)
-                return "";
-            var unit = u.FullName;
+            if (quantity.Unit != null)
+                unitName = quantity.Unit.FullName;
+            
             var length = quantity as IIfcQuantityLength;
             if (length != null)
             {
                 value = length.LengthValue.ToString();
                 if (quantity.Unit == null)
-                    unit = GetUnit(modelUnits, IfcUnitEnum.LENGTHUNIT);
+                    unitName = GetUnit(modelUnits, IfcUnitEnum.LENGTHUNIT);
             }
             var area = quantity as IIfcQuantityArea;
             if (area != null)
             {
                 value = area.AreaValue.ToString();
                 if (quantity.Unit == null)
-                    unit = GetUnit(modelUnits, IfcUnitEnum.AREAUNIT);
+                    unitName = GetUnit(modelUnits, IfcUnitEnum.AREAUNIT);
             }
             var weight = quantity as IIfcQuantityWeight;
             if (weight != null)
             {
                 value = weight.WeightValue.ToString();
                 if (quantity.Unit == null)
-                    unit = GetUnit(modelUnits, IfcUnitEnum.MASSUNIT);
+                    unitName = GetUnit(modelUnits, IfcUnitEnum.MASSUNIT);
             }
             var time = quantity as IIfcQuantityTime;
             if (time != null)
             {
                 value = time.TimeValue.ToString();
                 if (quantity.Unit == null)
-                    unit = GetUnit(modelUnits, IfcUnitEnum.TIMEUNIT);
+                    unitName = GetUnit(modelUnits, IfcUnitEnum.TIMEUNIT);
             }
             var volume = quantity as IIfcQuantityVolume;
             if (volume != null)
             {
                 value = volume.VolumeValue.ToString();
                 if (quantity.Unit == null)
-                    unit = GetUnit(modelUnits, IfcUnitEnum.VOLUMEUNIT);
+                    unitName = GetUnit(modelUnits, IfcUnitEnum.VOLUMEUNIT);
             }
             var count = quantity as IIfcQuantityCount;
             if (count != null)
@@ -364,9 +364,9 @@ namespace Xbim.Presentation
             if (string.IsNullOrWhiteSpace(value))
                 return "";
 
-            return string.IsNullOrWhiteSpace(unit) ? 
+            return string.IsNullOrWhiteSpace(unitName) ? 
                 value :
-                $"{value} {unit}";
+                $"{value} {unitName}";
         }
 
         private static string GetUnit(IIfcUnitAssignment units, IfcUnitEnum type)

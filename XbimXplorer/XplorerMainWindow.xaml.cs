@@ -27,6 +27,7 @@ using log4net.Config;
 using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
 using Xbim.Common;
+using Xbim.Common.Metadata;
 using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xbim.IO.Esent;
@@ -885,6 +886,26 @@ namespace XbimXplorer
         private void MenuItem_ZoomSelected(object sender, RoutedEventArgs e)
         {
             DrawingControl.ZoomSelected();
+        }
+
+        private void StylerIfcSpacesOnly(object sender, RoutedEventArgs e)
+        {
+            var module2X3 = (typeof(Xbim.Ifc2x3.Kernel.IfcProduct)).Module;
+            var meta2X3 = ExpressMetaData.GetMetadata(module2X3);
+            var product2X3 = meta2X3.ExpressType("IFCPRODUCT");
+
+            var module4 = (typeof(Xbim.Ifc4.Kernel.IfcProduct)).Module;
+            var meta4 = ExpressMetaData.GetMetadata(module4);
+            var product4 = meta4.ExpressType("IFCPRODUCT");
+            
+
+
+            var tpcoll = product2X3.NonAbstractSubTypes.Select(x => x.Type).ToList();
+            tpcoll.AddRange(product4.NonAbstractSubTypes.Select(x => x.Type).ToList());
+            tpcoll.RemoveAll(x => x.Name == "IfcSpace");
+
+            DrawingControl.ExcludedTypes = tpcoll;
+            DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
         }
     }
 }

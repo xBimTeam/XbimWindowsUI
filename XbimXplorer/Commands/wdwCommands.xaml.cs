@@ -1279,6 +1279,7 @@ namespace XbimXplorer.Commands
 
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
         {
+            Debug.WriteLine(type);
             var tarr = type.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);
             type = tarr[tarr.Length - 1];
             var schema = tarr[tarr.Length - 3].ToLowerInvariant();
@@ -1408,16 +1409,17 @@ namespace XbimXplorer.Commands
             else
             {
                 // test to see if it's a select type...
-                // todo: this made sense before version 4... it needs to be reviewed.
-                var ifcModule2 = typeof (IfcMaterialSelect).Module;
+                var ifcModule2 = SchemaMetadatas[schema].Module;
+
+
                 var selectType = ifcModule2.GetTypes().FirstOrDefault(t => t.Name.Contains(type));
 
                 if (selectType == null)
                     return sb;
                 sb.AppendFormat("=== {0} is a Select type", type);
-                // todo: this made sense before version 4... it needs to be reviewed.
-                var ifcModule = typeof (IfcActor).Module;
-                var selectSubTypes = ifcModule.GetTypes().Where(
+                
+                
+                var selectSubTypes = ifcModule2.GetTypes().Where(
                     t => t.GetInterfaces().Contains(selectType)
                     ).ToArray();
 
@@ -1465,7 +1467,8 @@ namespace XbimXplorer.Commands
                 {
                     foreach (var item in selectSubTypes)
                     {
-                        sb.Append(ReportType(item.FullName, beVerbose, indentationHeader + "  "));
+                        // reduced versobity for sub calls
+                        sb.Append(ReportType(item.FullName, 0, indentationHeader + "  "));
                     }
                 }
                 sb.AppendFormat("");
