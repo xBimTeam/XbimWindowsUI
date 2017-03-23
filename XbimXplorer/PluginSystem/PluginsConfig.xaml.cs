@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using log4net;
 using NuGet;
 using Xbim.Presentation;
@@ -25,7 +26,7 @@ namespace XbimXplorer.PluginSystem
             _mainWindow = Application.Current.MainWindow as XplorerMainWindow;
         }
 
-        internal string SelectedRepoUrl => RepoSource.Text;
+        internal string SelectedRepoUrl => "https://www.myget.org/F/xbim-plugins/api/v2";
 
         private void ShowRepository()
         {
@@ -36,11 +37,19 @@ namespace XbimXplorer.PluginSystem
 
             try
             {
-                var fnd = repo.Search("XplorerPlugin", true);
+                var option = DisplayOptionText;
+                var allowDevelop = option != "Stable";
+                
+                var fnd = repo.Search("XplorerPlugin", allowDevelop);
                 foreach (var package in fnd)
                 {
-                    if (LatestOnly.IsChecked.HasValue && LatestOnly.IsChecked.Value && !package.IsAbsoluteLatestVersion)
-                        continue;
+                    if (option != "All versions")
+                    {
+                        if (allowDevelop && !package.IsAbsoluteLatestVersion)
+                            continue;
+                        if (!allowDevelop && !package.IsLatestVersion)
+                            continue;
+                    }
                     var pv = new PluginInformation(package);
                     if (_diskPlugins.ContainsKey(package.Id))
                     {
@@ -84,15 +93,26 @@ namespace XbimXplorer.PluginSystem
             RefreshPluginList();
         }
 
+        private string DisplayOptionText
+        {
+            get
+            {
+                var ci = DisplayOption.SelectedItem as ComboBoxItem;
+                return ci.Content as string;
+            }
+        }
+        
+    
+
         private void RefreshPluginList()
         {
             using (new WaitCursor())
             {
-                if (SelectedRepoUrl.StartsWith("http://") || SelectedRepoUrl.StartsWith("https://"))
-                    ShowRepository();
+                if (DisplayOptionText == "Installed")
+                    ShowDiskPlugins();
                 else
                 {
-                    ShowDiskPlugins();
+                    ShowRepository();
                 }
             }
         }
@@ -146,6 +166,11 @@ namespace XbimXplorer.PluginSystem
                     Log.Error($"Error processing package file [{fname}].", ex);
                 }
             }
+            RefreshPluginList();
+        }
+
+        private void DisplayOption_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
             RefreshPluginList();
         }
     }

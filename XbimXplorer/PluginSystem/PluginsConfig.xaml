@@ -4,7 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
     <Grid>
-        <ListView x:Name="PluginList" Margin="0,100,0,30" AllowDrop="True" Drop="PluginList_OnDrop">
+        <ListView x:Name="PluginList" Margin="0,70,0,30" AllowDrop="True" Drop="PluginList_OnDrop">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Name" Width="180" DisplayMemberBinding="{Binding PluginId}" />
@@ -17,15 +17,15 @@
         </ListView>
         <Button Margin="0,0,0,0" Click="Download" Content="Download" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Bottom" />
         <Button Margin="0,0,100,0" Click="Load" Content="Load" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Bottom" />
-        <Button Margin="0,0,200,0" Click="ToggleEnabled" Content="Enable toggle" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Bottom" />
-        <GroupBox Header="Repository" Height="90" Margin="0,0,0,0" VerticalAlignment="Top" >
+        <Button Margin="0,0,200,0" Click="ToggleEnabled" Content="Enable/Disable" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Bottom" />
+        <GroupBox Header="Plugin display filter" Height="60" Margin="0,0,0,0" VerticalAlignment="Top" >
             <Grid>
-                <ComboBox x:Name="RepoSource" Margin="10,10,10,0" VerticalAlignment="Top">
-                    <ComboBoxItem Content="&lt;Installed&gt;" IsSelected="True" />
-                    <ComboBoxItem Content="https://www.myget.org/F/xbim-plugins/api/v2" />
+                <ComboBox x:Name="DisplayOption" Margin="10,10,10,0" VerticalAlignment="Top" SelectionChanged="DisplayOption_SelectionChanged">
+                    <ComboBoxItem Content="Installed" IsSelected="True" />
+                    <ComboBoxItem Content="Stable" />
+                    <ComboBoxItem Content="Development" />
+                    <ComboBoxItem Content="All versions" />
                 </ComboBox>
-                <Button Margin="0,37,9.857,0" Click="RefreshPluginList" Height="22" VerticalAlignment="top" HorizontalAlignment="Right" Width="84" >Refresh</Button>
-                <CheckBox x:Name="LatestOnly" Content="Latest Versions Only" HorizontalAlignment="Left" Margin="10,37,0,0" IsChecked="True" VerticalAlignment="Top"/>
             </Grid>
         </GroupBox>
     </Grid>
