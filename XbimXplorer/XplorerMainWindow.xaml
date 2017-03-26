@@ -116,7 +116,7 @@
                 <MenuItem x:Name="DeveloperMenu" Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
                     <MenuItem Header="IFC stripping" Click="OpenStrippingWindow">
                         <MenuItem.Icon>
-                            <Image Source="Simplify\Funnel.png"/>
+                            <Image Width="20" Source="Simplify\Funnel.png"/>
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuItem>

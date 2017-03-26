@@ -3,39 +3,56 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="IfcSimplify" Height="411.658" Width="593.869">
     <Grid>
-        <TextBox x:Name="TxtInputFile" Height="23" Margin="83,12,59.6,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" ToolTip="Only IFC files are valid."/>
         <Label Content="Input file:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="CmdInit" Content="Initialise" HorizontalAlignment="Right" Margin="0,40,10.6,0" VerticalAlignment="Top" Width="121" Height="24" Click="cmdInit_Click"/>
-        <GroupBox x:Name="GCommands" Margin="10,69,9.6,10" IsEnabled="False">
-            <GroupBox.Header>
-                Entity labels:
-            </GroupBox.Header>
+        <TextBox x:Name="TxtInputFile" Height="23" Margin="80,12,59,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" ToolTip="Only IFC files are valid." Grid.ColumnSpan="2"/>
+        <Button Content="..." HorizontalAlignment="Right" Margin="0,12,11,0" VerticalAlignment="Top" Width="35" Height="24" Click="Button_Click" />
+        
+        <Button x:Name="CmdInit" Content="Initialise" HorizontalAlignment="Left" Margin="80,40,188.175,0" VerticalAlignment="Top" Width="120" Height="24" Click="cmdInit_Click"/>
+        <TextBlock x:Name="ElementCount" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="209,41,11,0" Height="23" />
+
+        <GroupBox x:Name="GCommands" Margin="10,69,10,41" IsEnabled="False" Grid.ColumnSpan="2">
+            <GroupBox.Header>Entities</GroupBox.Header>
             <Grid Margin="5,5,5,5">
+                <TabControl x:Name="TabControl">
+                    <TabItem Header="Search">
+                        <Grid Background="#FFE5E5E5" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                <TextBox x:Name="TxtEntityLabelAdd" HorizontalAlignment="Left" Margin="10,29,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="117" RenderTransformOrigin="0.207,1.785" Height="22" TextChanged="txtEntityLabelAdd_TextChanged"/>
-                <Label Content="Search:" HorizontalAlignment="Left" Height="29" Margin="10,0,0,0" VerticalAlignment="Top" Width="117"/>
-                <Button x:Name="CmdAdd" Content="Add" HorizontalAlignment="Left" Height="24" Margin="10,81,0,0" VerticalAlignment="Top" Width="117" Click="CmdAdd_Click"/>
-                <Button x:Name="CmdSave" Content="Save simplified" Margin="10,0,0,0.143" Click="cmdSave_Click" HorizontalAlignment="Left" Width="117" Height="24" VerticalAlignment="Bottom"/>
-                <TextBlock x:Name="InfoBlock" Margin="132,29,3.143,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" />
-                <TabControl x:Name="tabControl" Margin="132,56,0.143,0.143">
-                    <TabItem Header="Handpicked">
-                        <Grid Background="#FFE5E5E5">
-                            <TextBox x:Name="TxtHandPicked" TextWrapping="Wrap" Text="" Margin="0,0,-0.286,-0.429" VerticalScrollBarVisibility="Auto"/>
+                            <Label Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left">Search Entity</Label>
+                            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,5"  VerticalAlignment="Center" x:Name="TxtEntityLabelAdd" TextChanged="txtEntityLabelAdd_TextChanged" ></TextBox>
+
+                            <CheckBox Grid.Row="1" Grid.Column="1" Margin="0,5" x:Name="ChkGuid" Content="search by GUID" HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+                            <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">Entity information</Label>
+                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InfoBlock" TextWrapping="Wrap" Text="" VerticalAlignment="Center" />
+
+                            <Button Grid.Row="3" Grid.Column="1" Margin="0,5" x:Name="CmdAdd" Content="Add" HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="120" Click="CmdAdd_Click" />
+
                         </Grid>
                     </TabItem>
-                    <TabItem Header="Minumum selection">
+                    <TabItem Header="Selection">
                         <Grid Background="#FFE5E5E5">
-                            <TextBox x:Name="TxtOutput" TextWrapping="Wrap" Text="" Margin="0,0,-0.286,-0.429" VerticalScrollBarVisibility="Auto"/>
+                            <TextBox x:Name="TxtOutput" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
                         </Grid>
                     </TabItem>
+                    <TabItem Header="Manual selection" KeyDown="txtCommand_KeyDown">
+                        <Grid Background="#FFE5E5E5">
+                            <TextBox x:Name="TxtHandPicked" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
+                        </Grid>
+                    </TabItem>
+
                 </TabControl>
-                <CheckBox x:Name="chkGuid" Content="search GUID" HorizontalAlignment="Left" Margin="10,56,0,0" VerticalAlignment="Top"/>
             </Grid>
-
-
-
         </GroupBox>
-        <Button Content="..." HorizontalAlignment="Right" Margin="0,12,10.6,0" VerticalAlignment="Top" Width="35" Height="24" Click="Button_Click"/>
-
+        <Button IsEnabled="False" x:Name="CmdSave" Content="Save simplified" Margin="0,0,11,10" Click="cmdSave_Click" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="117" />
     </Grid>
 </Window>

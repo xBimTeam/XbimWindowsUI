@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Microsoft.Win32;
 
 namespace XbimXplorer.Simplify
@@ -41,6 +42,11 @@ namespace XbimXplorer.Simplify
         
         private void cmdInit_Click(object sender, RoutedEventArgs e)
         {
+            InitialiseFile();
+        }
+
+        private void InitialiseFile()
+        {
             _guids = new Dictionary<string, int>();
             _ifcLines = new Dictionary<int, string>();
             _ifcContents = new Dictionary<int, string>();
@@ -65,7 +71,7 @@ namespace XbimXplorer.Simplify
                 " *" + // optional spaces
                 "\\(" + // the open bracket (escaped)
                 "(.*)" + // anything repeated
-                "\\);" // the closing bracket escaped and the semicolon
+                "\\) *;" // the closing bracket escaped and the semicolon
                 );
 
             var reGuid = new Regex(@"^ *'([^']*)' *,");
@@ -119,15 +125,15 @@ namespace XbimXplorer.Simplify
             fp.Close();
             fp.Dispose();
             GCommands.IsEnabled = true;
+            CmdSave.IsEnabled = true;
 
-            if (true)
+            
+            foreach (var i in requiredLines)
             {
-                foreach (var i in requiredLines)
-                {
-                    RecursiveAdd(i);
-                }
+                RecursiveAdd(i);
             }
-            UpdateStatusCount();
+            
+            UpdateExportList();
         }
 
         private int SelectedIfcIndex
@@ -141,7 +147,7 @@ namespace XbimXplorer.Simplify
                 }
                 catch
                 {
-                    if (!chkGuid.IsChecked.Value)
+                    if (!ChkGuid.IsChecked.Value)
                         return iConv;
                     var k = _guids.Keys.FirstOrDefault(x => x.Contains(TxtEntityLabelAdd.Text));
                     if (k != null)
@@ -155,7 +161,7 @@ namespace XbimXplorer.Simplify
         {
             if (TxtEntityLabelAdd.Text == "")
             {
-                UpdateStatusCount();
+                UpdateExportList();
                 return;
             }
 
@@ -201,22 +207,24 @@ namespace XbimXplorer.Simplify
             var v = SelectedIfcIndex;
             TxtHandPicked.Text += SelectedIfcIndex + Environment.NewLine;
             RecursiveAdd(SelectedIfcIndex);
-            UpdateStatusCount();
+
+            ConsiderManualSelection();
         }
 
-        private void UpdateStatusCount()
+        private void UpdateExportList()
         {
             _elementsToExport.Sort();
             var sb = new StringBuilder();
-            sb.AppendLine("Elements: " + _elementsToExport.Count.ToString());
+            ElementCount.Text = "Element selected: " + _elementsToExport.Count;
             foreach (var i in _elementsToExport)
             {
                 try
                 {
-                    sb.AppendLine(i.ToString() + ":" + _ifcType[i]);
+                    sb.AppendLine($"{i}:{_ifcType[i]}");
                 }
                 catch
                 {
+                    // ignored
                 }
             }
             TxtOutput.Text = sb.ToString();
@@ -249,12 +257,53 @@ namespace XbimXplorer.Simplify
             var result = dlg.ShowDialog();
 
             // Process open file dialog box results 
-            if (result == true)
-            {
-                // Open document 
-                TxtInputFile.Text = dlg.FileName;
-            }
+            if (result != true)
+                return;
+            // set document 
+            TxtInputFile.Text = dlg.FileName;
+            if (!string.IsNullOrEmpty(TxtInputFile.Text))
+                return;
+            // open document 
+            InitialiseFile();
         }
 
+        private void txtCommand_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl)))
+                return;
+
+            ConsiderManualSelection();
+
+        }
+
+        private void ConsiderManualSelection()
+        {
+            var re = new Regex(" *(\\d+)");
+            var sb = new StringBuilder();
+
+            var lines = TxtHandPicked.Text.Split(new [] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
+            {
+                
+                var m = re.Match(line);
+                if (!m.Success)
+                {
+                    sb.AppendLine(line);
+                    continue;
+                }
+
+                var iLab = Convert.ToInt32(m.Groups[1].Value);
+
+                if (!_elementsToExport.Contains(iLab))
+                {
+                    RecursiveAdd(iLab);
+                }
+                sb.AppendLine($"{iLab}: {_ifcType[iLab]}");
+            }
+            TxtHandPicked.Text = sb.ToString();
+            TxtHandPicked.CaretIndex = TxtHandPicked.Text.Length;
+            UpdateExportList();
+        }
     }
 }

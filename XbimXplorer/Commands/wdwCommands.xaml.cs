@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
@@ -24,7 +25,10 @@ using XbimXplorer.Simplify;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.GeometryResource;
 using Xbim.Ifc4.Interfaces;
+using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using Binding = System.Windows.Data.Binding;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -135,6 +139,23 @@ namespace XbimXplorer.Commands
                 if (mdbclosed.Success)
                 {
                     _parentWindow?.RefreshPlugins();
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^IfcZip (?<source>[^/]+) *(?<subFolders>/s)?$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var source = mdbclosed.Groups["source"].Value.Trim();
+                    var subfolders = !string.IsNullOrEmpty(mdbclosed.Groups["subFolders"].Value);
+
+                    if (File.Exists(source))
+                    {
+                        IfcZipAndDelete(source);
+                    }
+                    if (Directory.Exists(source))
+                    {
+                        IfcZipAndDelete(source, subfolders);
+                    }
                     continue;
                 }
 
@@ -789,6 +810,66 @@ namespace XbimXplorer.Commands
             }
         }
 
+        private void IfcZipAndDelete(string directoryName, bool subfolders)
+        {
+            var files = Directory.GetFiles(directoryName, "*.ifc", subfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            long l = 0;
+            foreach (var file in files)
+            {
+                var ext = Path.GetExtension(file);
+                if (ext != ".ifc")
+                    continue;
+                l += IfcZipAndDelete(file);
+            }
+
+            ReportAdd($"Total file delta: {l:N}");
+        }
+
+        private long IfcZipAndDelete(string fileName)
+        {
+            ReportAdd($"Processing file: {fileName}.");
+            var newFile = Path.ChangeExtension(fileName, ".ifczip");
+            if (fileName == newFile)
+            {
+                ReportAdd($"Nothing to do.");
+                return 0;
+            }
+            ReportAdd($"Opening.");
+            IfcStore model = null;
+            try
+            {
+                model = IfcStore.Open(fileName, null, -1);
+            }
+            catch (Exception e)
+            {
+                ReportAdd($"Error opening source file. Ignored.", Brushes.Red);;
+            }
+            if (model == null)
+            {
+                return 0;
+            }
+
+            ReportAdd($"Saving.");
+            model.SaveAs(newFile, IfcStorageType.IfcZip);
+            model.Close();
+
+            var fBefore = new FileInfo(fileName);
+            var fAfter = new FileInfo(newFile);
+
+            var diff = fAfter.Length - fBefore.Length;
+            try
+            {
+                File.Delete(fileName);
+            }
+            catch (Exception e)
+            {
+                ReportAdd($"Error deleting source file.", Brushes.Red);
+            }
+            ReportAdd($"Completed. Delta is {diff:N}");
+            return diff;
+
+        }
+
         private void ReportTransformGraph(TextHighliter sb, IIfcProduct ent, int i)
         {
             var v = new TransformGraph(ent.Model);
@@ -1177,6 +1258,11 @@ namespace XbimXplorer.Commands
             t.AppendFormat("- TransformGraph <EntityLabel,<EntityLabel>>");
             t.Append("    Reports the transofrm graph for a set of elements.", Brushes.Gray);
 
+            t.AppendFormat("- IfcZip <file|folder [/s]>");
+            t.Append("    Compresses ifc files to ifczip, the function is slow. ", Brushes.Gray);
+            t.Append("    It goes through ifcstore.open rather than simple compression, ", Brushes.Gray);
+            t.Append("    so it can be used totest for model correctness.", Brushes.Gray);
+            
             //t.AppendFormat("- zoom <Region name>");
             //t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
 
