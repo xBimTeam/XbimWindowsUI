@@ -74,6 +74,11 @@
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0" >
+            <Menu.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <DockPanel HorizontalAlignment="Stretch"/>
+                </ItemsPanelTemplate>
+            </Menu.ItemsPanel>
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" Command="Open" ToolTip="Load a single Ifc, Xbim, IfcZip or IfcXML file." />
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
@@ -142,6 +147,7 @@
                 -->
             </MenuItem>
             <MenuItem Header="_About" Click="About_Click"/>
+            <MenuItem Header="_Legacy" Foreground="Red" HorizontalAlignment="Right" Click="About_Click"/>
         </Menu>
 
         <avalonDock:DockingManager Grid.Row="1" x:Name="DockingManager">

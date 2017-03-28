@@ -32,6 +32,7 @@
 					            <TextBlock Text="https://github.com/xbimteam"/>
 				            </Hyperlink>
                         </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Foreground="Red">This version of XbimXplorer is superseeded; consider upgrading.</TextBlock>
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="Model">
