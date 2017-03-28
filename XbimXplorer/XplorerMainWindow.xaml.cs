@@ -513,6 +513,11 @@ namespace XbimXplorer
             e.CanExecute = (Model != null) && (!string.IsNullOrEmpty(GetOpenedModelFileName()));
         }
 
+        private void CanExecuteIfModelNotNull(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = (Model != null);
+        }
+
         private void CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             if (_worker != null && _worker.IsBusy)
