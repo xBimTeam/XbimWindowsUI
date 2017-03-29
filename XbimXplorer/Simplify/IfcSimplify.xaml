@@ -41,12 +41,12 @@
                     </TabItem>
                     <TabItem Header="Selection">
                         <Grid Background="#FFE5E5E5">
-                            <TextBox x:Name="TxtOutput" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
+                            <TextBox x:Name="TxtOutput" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
                         </Grid>
                     </TabItem>
                     <TabItem Header="Manual selection" KeyDown="txtCommand_KeyDown">
                         <Grid Background="#FFE5E5E5">
-                            <TextBox x:Name="TxtHandPicked" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
+                            <TextBox x:Name="TxtHandPicked" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
                         </Grid>
                     </TabItem>
 

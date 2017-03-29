@@ -439,14 +439,17 @@ namespace XbimXplorer.Commands
                             foreach (var methodInfo in methods)
                             {
                                 var pars = methodInfo.GetParameters().ToArray();
-                                if (pars.Length!=1)
+                                if (pars.Length!=1) // only consider functinons with a single parameter
                                     continue;
+                                if (methodInfo.ReturnParameter.ParameterType == typeof(bool))
+                                    continue; // excludes the equal function
+
                                 var firstParam = pars.FirstOrDefault();
                                 if (firstParam == null)
                                     continue;
                                 if (!firstParam.ParameterType.IsInstanceOfType(entity))
                                     continue;
-                                var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name})";
+                                var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name.Replace("IIfc", "Ifc")})";
                                 ReportAdd($"- {functionShort}");
                                 try
                                 {
@@ -454,12 +457,31 @@ namespace XbimXplorer.Commands
                                     if (ret != null)
                                     {
                                         var sol = ret as IXbimSolid;
+                                        var solset = ret as IXbimSolidSet;
                                         if (sol != null)
                                         {
                                             if (sol.IsValid)
-                                                ReportAdd($"  ok, returned {ret.GetType().Name}", Brushes.Green);
+                                            {
+                                                ReportAdd($"  ok, returned {ret.GetType().Name} - Volume: {sol.Volume}", Brushes.Green);
+                                            }
                                             else
-                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)", Brushes.Red);
+                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)",
+                                                    Brushes.Red);
+                                        }
+                                        else if (solset != null)
+                                        {
+                                            if (solset.IsValid)
+                                            {
+                                                ReportAdd($"  ok, returned {ret.GetType().Name}", Brushes.Green);
+                                                int iCnt = 0;
+                                                foreach (var subSol in solset)
+                                                {
+                                                    ReportAdd($"    [{iCnt++}]: {subSol.GetType().Name} - Volume: {subSol.Volume}", Brushes.Green);
+                                                }
+                                            }
+                                            else
+                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)",
+                                                    Brushes.Red);
                                         }
                                         else
                                         {
@@ -1238,7 +1260,11 @@ namespace XbimXplorer.Commands
 
             t.Append("    [Property] is a Property or Inverse name", Brushes.Gray);
             t.Append("    [highlight] puts the returned set in the viewer selection", Brushes.Gray);
-
+            t.Append("    ", Brushes.Gray);
+            t.Append("    Replacing the select command with geometryengine returns the geometry calls on the item", Brushes.Gray);
+            t.Append("      Examples:", Brushes.Gray);
+            t.Append("        ge 12,14", Brushes.Gray);
+            
             t.AppendFormat("- EntityLabel label [recursion]");
             t.Append("    [recursion] is an int representing the depth of children to report", Brushes.Gray);
 
