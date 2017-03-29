@@ -808,7 +808,11 @@ namespace Xbim.Presentation
                         var context = new Xbim3DModelContext(model);
                         foreach (var item in modelgroup)
                         {
-                            var productShape = context.ShapeInstancesOf((IfcProduct) item)
+                            var itemAsProd = item as IfcProduct;
+                            if (itemAsProd == null)
+                                continue;
+
+                            var productShape = context.ShapeInstancesOf(itemAsProd)
                                 .Where(
                                     s =>
                                         s.RepresentationType !=
@@ -816,7 +820,7 @@ namespace Xbim.Presentation
                                 .ToList();
                             if (!productShape.Any() && item is IfcFeatureElement)
                             {
-                                productShape = context.ShapeInstancesOf((IfcProduct) item)
+                                productShape = context.ShapeInstancesOf(itemAsProd)
                                     .Where(
                                         s =>
                                             s.RepresentationType ==

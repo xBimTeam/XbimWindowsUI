@@ -475,12 +475,31 @@ namespace XbimXplorer.Querying
                                     if (ret != null)
                                     {
                                         var sol = ret as IXbimSolid;
+                                        var solset = ret as IXbimSolidSet;
                                         if (sol != null)
                                         {
                                             if (sol.IsValid)
-                                                ReportAdd($"  ok, returned {ret.GetType().Name}", Brushes.Green);
+                                            {
+                                                ReportAdd($"  ok, returned {ret.GetType().Name} - Volume: {sol.Volume}", Brushes.Green);
+                                            }
                                             else
-                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)", Brushes.Red);
+                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)",
+                                                    Brushes.Red);
+                                        }
+                                        else if (solset != null)
+                                        {
+                                            if (solset.IsValid)
+                                            {
+                                                ReportAdd($"  ok, returned {ret.GetType().Name}", Brushes.Green);
+                                                int iCnt = 0;
+                                                foreach (var subSol in solset)
+                                                {
+                                                    ReportAdd($"    [{iCnt++}]: {subSol.GetType().Name} - Volume: {subSol.Volume}", Brushes.Green);
+                                                }
+                                            }
+                                            else
+                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)",
+                                                    Brushes.Red);
                                         }
                                         else
                                         {
