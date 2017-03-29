@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
         >
-    <Grid Margin="0" KeyDown="txtCommand_KeyDown">
-        <TextBox Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" Margin="0,0,0,22.429" />
-        <TextBox Name="Commands" FontFamily="Lucida Console" AcceptsReturn="True" Height="14" VerticalAlignment="Bottom" />
+    <Grid Margin="0">
+        <TextBox Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" Margin="0,0,0,26" />
+        <Button  Name="Commands" Height="22" VerticalAlignment="Bottom" Click="ValidateModel">Validate model</Button>
     </Grid>
 </UserControl>

@@ -7,8 +7,8 @@ using System.Windows.Input;
 using Xbim.Common;
 using Xbim.Common.Enumerations;
 using Xbim.Common.ExpressValidation;
-using Xbim.Essentials.Tests;
 using Xbim.Ifc.Validation;
+using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 
 
@@ -58,27 +58,7 @@ namespace XbimXplorer.IfcValidation
         public static DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof(IModel), typeof(ValidationWindow), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits,
                                                                       OnSelectedEntityChanged));
-
-        private void txtCommand_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl)))
-                return;
-            ExecuteCommand();
-            e.Handled = true;
-        }
-
-        private void ExecuteCommand()
-        {
-            var validator = new IfcValidator()
-            {
-                CreateEntityHierarchy = true,
-                ValidateLevel = ValidationFlags.All
-            };
-
-            var ret = validator.Validate(Model.Instances);
-            Report(ret);
-        }
-
+        
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // if any UI event should happen it needs to be specified here
@@ -104,7 +84,7 @@ namespace XbimXplorer.IfcValidation
         {
             var sb = new StringBuilder();
             var issues = 0;
-            foreach (var validationResult in new ValidationReporter(ret))
+            foreach (var validationResult in new IfcValidationReporter(ret))
             {
                 sb.AppendLine(validationResult);
                 issues++;
@@ -112,6 +92,21 @@ namespace XbimXplorer.IfcValidation
             Results.Text = issues == 0 
                 ? $"No issues found.\r\n{DateTime.Now.ToLongTimeString()}." 
                 : sb.ToString();
+        }
+
+        private void ValidateModel(object sender, RoutedEventArgs e)
+        {
+            using (var cursor = new WaitCursor())
+            {
+                var validator = new IfcValidator()
+                {
+                    CreateEntityHierarchy = true,
+                    ValidateLevel = ValidationFlags.All
+                };
+
+                var ret = validator.Validate(Model.Instances);
+                Report(ret);
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using Xbim.Common;
+using Xbim.Common.Enumerations;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
 using Xbim.Geometry.Engine.Interop;
@@ -23,6 +24,7 @@ using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.Simplify;
 using Xbim.Ifc;
+using Xbim.Ifc.Validation;
 using Xbim.Ifc2x3.GeometryResource;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO;
@@ -483,7 +485,7 @@ namespace XbimXplorer.Commands
                 }
 
                 m = Regex.Match(cmd,
-                    @"^(select|se) " +
+                    @"^(?<command>select|se|validate|va) " +
                     @"(top (?<top>\d+) )*" +
                     @"(?<mode>(count|list|typelist|short|full) )*" +
                     @"(?<tt>(transverse|tt) )*" +
@@ -496,46 +498,74 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    var command = m.Groups["command"].Value.ToLowerInvariant();
                     var highlight = false;
                     var highlightT = m.Groups["hi"].Value;
                     if (highlightT != "")
                         highlight = true;
-                    
+
                     var mode = m.Groups["mode"].Value;
                     var svt = m.Groups["svt"].Value;
 
                     var ret = GetSelection(m).ToArray();
 
-                    // textual report
-                    switch (mode.ToLower())
+                    if (command == "va" || command == "validate")
                     {
-                        case "count ":
-                            ReportAdd($"Count: {ret.Count()}");
-                            break;
-                        case "list ":
-                            foreach (var item in ret)
-                            {
-                                ReportAdd(item.ToString(CultureInfo.InvariantCulture));
-                            }
-                            break;
-                        case "typelist ":
-                            foreach (var item in ret)
-                            {
-                                ReportAdd(item + "\t" + Model.Instances[item].ExpressType.Name);
-                            }
-                            break;
-                        default:
-                            var beVerbose = false;
-                            if (mode.ToLower() == "short ")
-                                beVerbose = false;
-                            if (mode.ToLower() == "full ")
-                                beVerbose = true;
-                            var svtB = (svt != "");
-                            foreach (var item in ret)
-                            {
-                                ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
-                            }
-                            break;
+                        // validation report
+
+                        var validator = new IfcValidator()
+                        {
+                            CreateEntityHierarchy = true,
+                            ValidateLevel = ValidationFlags.All
+                        };
+                        var insts = ret.Select(el => Model.Instances[el]);
+                        var validInstances = insts.Where(x => x != null).ToList();
+
+                        ReportAdd($"Validating {validInstances.Count()} model instances.");
+                        var valresults = validator.Validate(validInstances);
+
+                        var issues = 0;
+                        foreach (var validationResult in new IfcValidationReporter(valresults))
+                        {
+                            ReportAdd(validationResult);
+                            issues++;
+                        }
+                        if (issues == 0)
+                            ReportAdd($"No issues found.\r\n{DateTime.Now.ToLongTimeString()}.");
+                    }
+                    else
+                    {
+                        // property repor
+                        switch (mode.ToLower())
+                        {
+                            case "count ":
+                                ReportAdd($"Count: {ret.Count()}");
+                                break;
+                            case "list ":
+                                foreach (var item in ret)
+                                {
+                                    ReportAdd(item.ToString(CultureInfo.InvariantCulture));
+                                }
+                                break;
+                            case "typelist ":
+                                foreach (var item in ret)
+                                {
+                                    ReportAdd(item + "\t" + Model.Instances[item].ExpressType.Name);
+                                }
+                                break;
+                            default:
+                                var beVerbose = false;
+                                if (mode.ToLower() == "short ")
+                                    beVerbose = false;
+                                if (mode.ToLower() == "full ")
+                                    beVerbose = true;
+                                var svtB = (svt != "");
+                                foreach (var item in ret)
+                                {
+                                    ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
+                                }
+                                break;
+                        }
                     }
                     // visual selection
                     if (highlight)
@@ -1226,7 +1256,7 @@ namespace XbimXplorer.Commands
 
             t.AppendFormat("Commands:");
             t.AppendFormat(
-                "- select [count|list|typelist|full|short] [tt|transverse] [hi|highlight] [svt|showvaluetype] <startingElement> [Property [Property...]]");
+                "- select [count|list|typelist|full|short] [tt|transverse] [representationitems|ri|surfacesolid|ss|wire|wi] [hi|highlight] [svt|showvaluetype] <startingElement> [Property [Property...]]");
             t.Append(
                 "    <startingElement>: <EntityLabel, <EntityLabel>> or <TypeIdentificator>[<+|-><TypeIdentificator>]",
                 Brushes.Gray);
