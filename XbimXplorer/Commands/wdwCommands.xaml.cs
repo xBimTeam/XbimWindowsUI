@@ -654,14 +654,37 @@ namespace XbimXplorer.Commands
                 if (m.Success)
                 {
                     var rName = m.Groups["RegionName"].Value;
-                    var ret = _parentWindow.DrawingControl.ModelPositions.SetSelectedRegionByName(rName);                    
-                    if (!ret)
+                    if (rName == "?")
                     {
-                        ReportAdd("data not found");
-                        continue;
+                        using (var reader = Model.GeometryStore.BeginRead())
+                        {
+                            var iRegTally = 0;
+                            var allRegCollections = reader.ContextRegions;
+                            ReportAdd($"Region Collections count: {allRegCollections.Count}");
+                            foreach (var regionCollection in allRegCollections)
+                            {
+                                ReportAdd($"Region Collection #{iRegTally++} count: {regionCollection.Count}");
+                                foreach (var r in regionCollection)
+                                {
+                                    ReportAdd($"{r.Name}\t{r.Population}\t{r.Size}\t{r.Centre}");
+                                }
+                            }
+                        }
                     }
-                    // todo: restore
-                    // _parentWindow.DrawingControl.RecalculateView();
+                    else
+                    {
+                        var setOk = _parentWindow.DrawingControl.SetRegion(rName);
+                        if (setOk)
+                        {
+                            ReportAdd("Region set.");
+                            ReportAdd(_parentWindow.DrawingControl.ModelPositions.Report());
+                        }
+                        else
+                        {
+                            ReportAdd($"Region \"{rName}\"not found.");
+                        }
+                         
+                    }
                     continue;
                 }
 
@@ -844,18 +867,7 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    using (var reader = Model.GeometryStore.BeginRead())
-                    {
-                        foreach (var readerContextRegion in reader.ContextRegions)
-                        {
-                            
-                            Debug.WriteLine(readerContextRegion);
-                            foreach (var r in readerContextRegion)
-                            {
-                                Debug.WriteLine($"{r.Name}\t{r.Population}\t{r.Size}\t{r.Centre}");
-                            }
-                        }
-                    }
+                   
                     continue;
                 }
                 ReportAdd($"Command not understood: {cmd}.");

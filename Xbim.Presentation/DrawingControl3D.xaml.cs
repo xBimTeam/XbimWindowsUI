@@ -316,6 +316,7 @@ namespace Xbim.Presentation
             new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
         
         /// <summary>
+        /// Represent the extents of what is considered model. This depends on the selected region.
         /// _viewBounds is transformed depending on ModelBounds and _modelTranslation. 
         /// </summary>
         private XbimRect3D _viewBounds
@@ -325,6 +326,8 @@ namespace Xbim.Presentation
                 return ModelPositions.ViewSpaceBounds;
             }
         }
+
+       
 
         /// <summary>
         /// Gets or sets the model.
@@ -1093,15 +1096,17 @@ namespace Xbim.Presentation
             Transparents.Children.Clear();
             Extras.Children.Clear();
 
-            if ((options & ModelRefreshOptions.ViewPreserveSelection) != ModelRefreshOptions.ViewPreserveSelection)
+            if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelection))
             {
                 Selection = new EntitySelection();
                 Highlighted.Content = null;
             }
 
-            if ((options & ModelRefreshOptions.ViewPreserveCuttingPlane) != ModelRefreshOptions.ViewPreserveCuttingPlane)
+            if (!options.HasFlag(ModelRefreshOptions.ViewPreserveCuttingPlane))
                 ClearCutPlane();
-            ModelPositions = new XbimModelPositioningCollection();
+
+            if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelectedRegion))
+                ModelPositions = new XbimModelPositioningCollection();
            
             Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
             //if ((options & ModelRefreshOptions.ViewPreserveCameraPosition) != ModelRefreshOptions.ViewPreserveCameraPosition)
@@ -1115,7 +1120,8 @@ namespace Xbim.Presentation
             ViewPreserveCameraPosition = 1,
             ViewPreserveSelection = 2,
             ViewPreserveCuttingPlane = 4,
-            ViewPreserveAll = 7
+            ViewPreserveSelectedRegion = 4,
+            ViewPreserveAll = ~None
         }
 
         public XbimModelPositioningCollection ModelPositions = new XbimModelPositioningCollection();
@@ -1172,28 +1178,39 @@ namespace Xbim.Presentation
                 return; //nothing to show
             }
             _hasModelGrid = model.Instances.OfType<IIfcGrid>().Any();
-            // set a progressive userDefinedId
+            
+            // ensure a unique userDefinedId
             short userDefinedId = 0;
             model.UserDefinedId = userDefinedId;
-
-            // model scaling is determined on all federated models
-            ModelPositions.AddModel(model.ReferencingModel); //add in the model that holds the main entities
-
-            //now add in any referenced models
-            
             if (model.IsFederation)
             {
                 foreach (var refModel in model.ReferencedModels)
                 {
-                    refModel.Model.UserDefinedId = ++userDefinedId;
-                    var v = refModel.Model as IfcStore;
-                    if (v!= null)
-                        ModelPositions.AddModel(v.ReferencingModel); //add in the referenced models
+                    refModel.Model.UserDefinedId = ++userDefinedId;   
                 }
-               // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
+                // todo: model federation needs to be enabled back
+                // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
             }
+            
+            // model positioning routine
+            if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelectedRegion))
+            {
+                // model scaling is determined on all federated models
+                ModelPositions.AddModel(model.ReferencingModel); //add in the model that holds the main entities
+                //now add in any referenced models
+                if (model.IsFederation)
+                {
+                    foreach (var refModel in model.ReferencedModels)
+                    {
 
-            ModelPositions.RecalcModelTranslation();
+                        var v = refModel.Model as IfcStore;
+                        if (v != null)
+                            ModelPositions.AddModel(v.ReferencingModel); //add in the referenced models
+                    }
+                }
+            }
+            ModelPositions.ComputeViewBoundsTransform();
+            
             if (DefaultLayerStyler == null)
                 DefaultLayerStyler = new SurfaceLayerStyler();
 
@@ -1201,12 +1218,11 @@ namespace Xbim.Presentation
             // loading the main model
             DefaultLayerStyler.SetFederationEnvironment(null);
             var scene = DefaultLayerStyler.BuildScene(model.ReferencingModel,ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
-            
-            if (scene != null)
+            if (scene != null && scene.Layers.Any())
             {
-                if (scene.Layers.Any())
-                    Scenes.Add(scene);
+                Scenes.Add(scene);
             }
+            
             if (model.IsFederation)
             {
                 // loading all referenced models.
@@ -1230,13 +1246,12 @@ namespace Xbim.Presentation
             var pos = ModelPositions[mod.ReferencingModel].Transform;
             Scenes.Add(
                 DefaultLayerStyler.BuildScene(
-                    refModel.Model, 
-                    pos, 
+                    refModel.Model,
+                    pos,
                     Opaques,
-                    Transparents, 
+                    Transparents,
                     ExcludedTypes)
-                );
-
+            );
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1420,7 +1435,8 @@ namespace Xbim.Presentation
         }
 
         /// <summary>
-        /// This fuction is fired when the reset of the camer is invoked.
+        /// Zooms to the full scale of the model.
+        /// This fuction is fired when the reset of the camera is invoked.
         /// It is called from RecalculateView if the parameters of RecalculateView don't exclude it.
         /// It is also called from the WindowsUI Xplorer menu.
         /// </summary>
@@ -1473,8 +1489,10 @@ namespace Xbim.Presentation
                 _viewBounds.X, _viewBounds.Y, _viewBounds.Z,
                 _viewBounds.SizeX, _viewBounds.SizeY, _viewBounds.SizeZ
                 );
+
             if (doubleRectSize)
             {
+                // move the corner and double the size.
                 r3D.Offset(-r3D.SizeX/2, -r3D.SizeY/2, -r3D.SizeZ/2);
                 r3D.SizeX *= 2;
                 r3D.SizeY *= 2;
@@ -1482,8 +1500,10 @@ namespace Xbim.Presentation
             }
             if (r3D.IsEmpty)
                 return;
-            // if bigger than bounds zoom bounds
-            Viewport.ZoomExtents(r3D.Contains(bounds) ? bounds : r3D, 200);
+            // if the zoom area is bigger than bounds, zoom to bounds instead
+            var actualZoomBounds = r3D.Contains(bounds) ? bounds : r3D;
+            // Viewport is helix component
+            Viewport.ZoomExtents(actualZoomBounds, 200);
         }
 
         public void ZoomTo(XbimRect3D r3D)
@@ -1575,7 +1595,7 @@ namespace Xbim.Presentation
             container.Arrange(new Rect(container.DesiredSize));
 
             // Temporarily add a PresentationSource if none exists
-// ReSharper disable once UnusedVariable
+            // ReSharper disable once UnusedVariable
             using (
                 var temporaryPresentationSource = new HwndSource(new HwndSourceParameters())
                 {
@@ -1607,6 +1627,17 @@ namespace Xbim.Presentation
                     aEncoder.Save(stm);
                 }
             }
+        }
+        /// <summary>
+        /// Sets the reguion to be displayed to the relevant area.
+        /// </summary>
+        /// <param name="rName"></param>
+        /// <returns>true if the region has ben found and set, false otherwise</returns>
+        public bool SetRegion(string rName)
+        {
+            var ret = ModelPositions.SetSelectedRegionByName(rName);
+            ReloadModel(ModelRefreshOptions.ViewPreserveSelectedRegion);
+            return ret;
         }
     }
 }

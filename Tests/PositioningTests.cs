@@ -40,7 +40,7 @@ namespace Tests
             foreach (var xbimModel in m)
             {
                 var tmp = new XbimModelPositioning(xbimModel);
-                r.Add(tmp.GetSelectedRegionRectInMeters());
+                r.Add(tmp.SelectedRegionInMeters);
             }
 
             HaveSameSize(r[1], r[2]);

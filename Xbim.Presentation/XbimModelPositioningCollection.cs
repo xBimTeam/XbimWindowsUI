@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 
@@ -27,10 +28,15 @@ namespace Xbim.Presentation
             _collection.Add(model, tmp);
         }
 
-        public XbimRect3D GetSelectedRegionsEnvelopeInMeters()
+        /// <summary>
+        /// The union of selected regions from all models
+        /// </summary>
+        /// <returns></returns>
+        private XbimRect3D GetSelectedRegionsEnvelopeInMeters()
         {
             var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.GetSelectedRegionRectInMeters()))
+            var modelBoundaries = _collection.Values.Select(positioning => positioning.SelectedRegionInMeters);
+            foreach (var r in modelBoundaries)
             {
                 if (r.IsEmpty)
                     continue;
@@ -44,7 +50,7 @@ namespace Xbim.Presentation
             return bb;
         }
 
-        public XbimRect3D GetEnvelopOfCentes()
+        public XbimRect3D GetEnvelopOfCentres()
         {
             var bb = XbimRect3D.Empty;
             foreach (var r in _collection.Values.Select(positioning => positioning.SelectedRegion).Where(r => r != null)
@@ -80,9 +86,8 @@ namespace Xbim.Presentation
             }
         }
 
-        internal void RecalcModelTranslation()
+        internal void ComputeViewBoundsTransform()
         {
-            _viewSpaceTranslation = new XbimVector3D(0, 0, 0);
             var p = ModelSpaceBounds.Centroid();
             _viewSpaceTranslation = new XbimVector3D(-p.X, -p.Y, -p.Z);
             SetCenterInMeters(_viewSpaceTranslation);
@@ -99,7 +104,9 @@ namespace Xbim.Presentation
             _viewSpaceTranslation = modelTranslation;
             foreach (var model in _collection.Values)
             {
-                model.SetCenterInMeters(modelTranslation);
+                // each item in the collection stores a matrix that depends on the units of measure of the model.
+                //
+                model.PrepareTransform(modelTranslation);
             }
         }
 
@@ -116,6 +123,15 @@ namespace Xbim.Presentation
                     return true;
             }
             return false;
+        }
+
+        public string Report()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Model space bounds: {ModelSpaceBounds}");
+            sb.AppendLine($"View space bounds: {ViewSpaceBounds}");
+            sb.AppendLine($"{_viewSpaceTranslation}");
+            return sb.ToString();
         }
     }
 }
