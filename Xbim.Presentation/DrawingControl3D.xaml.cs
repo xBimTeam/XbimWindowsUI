@@ -1633,9 +1633,9 @@ namespace Xbim.Presentation
         /// </summary>
         /// <param name="rName"></param>
         /// <returns>true if the region has ben found and set, false otherwise</returns>
-        public bool SetRegion(string rName)
+        public bool SetRegion(string rName, bool add)
         {
-            var ret = ModelPositions.SetSelectedRegionByName(rName);
+            var ret = ModelPositions.SetSelectedRegionByName(rName, add);
             ReloadModel(ModelRefreshOptions.ViewPreserveSelectedRegion);
             return ret;
         }

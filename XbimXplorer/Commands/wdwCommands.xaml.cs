@@ -393,7 +393,7 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
-                m = Regex.Match(cmd, @"^(reload|re) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^(reload|re\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     // todo: restore function
@@ -648,22 +648,20 @@ namespace XbimXplorer.Commands
                     continue;
                 }
                 
-                m = Regex.Match(cmd, @"^zoom (" +
-                                     @"(?<RegionName>.+$)" +
-                                     ")", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^region (?<mode>list|set|add|\?) *(?<RegionName>.+)*$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    var mode = m.Groups["mode"].Value;
                     var rName = m.Groups["RegionName"].Value;
-                    if (rName == "?")
+                    if (mode == "?" || mode == "list")
                     {
                         using (var reader = Model.GeometryStore.BeginRead())
                         {
-                            var iRegTally = 0;
                             var allRegCollections = reader.ContextRegions;
                             ReportAdd($"Region Collections count: {allRegCollections.Count}");
                             foreach (var regionCollection in allRegCollections)
                             {
-                                ReportAdd($"Region Collection #{iRegTally++} count: {regionCollection.Count}");
+                                ReportAdd($"Region Collection (#{regionCollection.ContextLabel}) count: {regionCollection.Count}");
                                 foreach (var r in regionCollection)
                                 {
                                     ReportAdd($"{r.Name}\t{r.Population}\t{r.Size}\t{r.Centre}");
@@ -673,7 +671,8 @@ namespace XbimXplorer.Commands
                     }
                     else
                     {
-                        var setOk = _parentWindow.DrawingControl.SetRegion(rName);
+                        var add = (mode == "add");
+                        var setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
                         if (setOk)
                         {
                             ReportAdd("Region set.");
@@ -1330,9 +1329,9 @@ namespace XbimXplorer.Commands
             t.Append("    Compresses ifc files to ifczip, the function is slow. ", Brushes.Gray);
             t.Append("    It goes through ifcstore.open rather than simple compression, ", Brushes.Gray);
             t.Append("    so it can be used totest for model correctness.", Brushes.Gray);
-            
-            //t.AppendFormat("- zoom <Region name>");
-            //t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
+
+            t.AppendFormat("- zoom <Region name>");
+            t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
 
             //t.AppendFormat("- Visual [list|tree|[on|off <name>]|mode <ModeCommand>]");
             //t.Append("    'Visual list' provides a list of valid layer names", Brushes.Gray);

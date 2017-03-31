@@ -63,7 +63,7 @@ namespace Xbim.Presentation
         /// </summary>
         /// <param name="name">the region name to match</param>
         /// <returns>true if the region has ben found and set, false otherwise</returns>
-        public bool SetSelectedRegionByName(string name)
+        public bool SetSelectedRegionByName(string name, bool add)
         {
             var geomStore = _model.GeometryStore;
             if (_model.GeometryStore.IsEmpty)
@@ -77,11 +77,28 @@ namespace Xbim.Presentation
                     var reg = readerContextRegion.FirstOrDefault(x => x.Name == name);
                     if (reg == null)
                         continue;
-                    SelectedRegion = reg;
+
+                    if (!add)
+                        SelectedRegion = reg;
+                    else
+                    {
+                        SelectedRegion = Merge(SelectedRegion, reg);
+                    }
                     return true;
                 }
             }
             return false;
+        }
+
+        private XbimRegion Merge(XbimRegion selectedRegion, XbimRegion reg)
+        {
+            var s1 = MinMaxPoints(selectedRegion);
+            var s2 = MinMaxPoints(reg);
+            var r1 = new XbimRect3D(s1[0], s1[1]);
+            var r2 = new XbimRect3D(s2[0], s2[1]);
+            r1.Union(r2);
+            var merged = new XbimRegion("Merged", r1, selectedRegion.Population + reg.Population);
+            return merged;
         }
 
         /// <summary>

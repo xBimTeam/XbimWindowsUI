@@ -115,11 +115,11 @@ namespace Xbim.Presentation
         /// </summary>
         /// <param name="name">the region name to match</param>
         /// <returns>true if the region has ben found and set, false otherwise</returns>
-        public bool SetSelectedRegionByName(string name)
+        public bool SetSelectedRegionByName(string name, bool add)
         {
             foreach (var xbimModelPositioning in _collection.Values)
             {
-                if (xbimModelPositioning.SetSelectedRegionByName(name))
+                if (xbimModelPositioning.SetSelectedRegionByName(name, add))
                     return true;
             }
             return false;
