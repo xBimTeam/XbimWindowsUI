@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Squirrel;
 using Xbim.IO.Esent;
 
 #endregion
@@ -27,12 +28,26 @@ namespace XbimXplorer
     /// </summary>
     public partial class App
     {
+        private static async void update()
+        {
+            if (!File.Exists("..\\update.exe"))
+                return;
+            var mgr = new UpdateManager("C:\\Data\\dev\\XbimTeam\\Squirrel.Windows\\XplorerReleases");
+            await mgr.UpdateApp();
+            mgr.Dispose();
+            mgr = null;
+        }
+
         /// <summary>
         /// Raises the <see cref="E:System.Windows.Application.Startup"/> event.
         /// </summary>
         /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
+
+            update();
+            
+
             // evaluate special parameters before loading MainWindow
             var blockPlugin = false;
             foreach (var thisArg in e.Args)

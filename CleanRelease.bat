@@ -3,10 +3,11 @@
 @del Output\Release\*.pdb /s
 @del Output\Release\*.xml
 @del Output\Release\*.vshost.*
-@del Output\Release\Plugins\*
+@rmdir Output\Release\Plugins /s /q
+@echo Press a key to copy to dropbox or ctrl-c to prevent
+@pause 
 @del %USERPROFILE%\Dropbox\Public\ReleaseV4.exe
 @cd Output\
 @"C:\Program Files\7-Zip\7z.exe" a -sfx7z.sfx %USERPROFILE%\Dropbox\Public\ReleaseV4.exe Release\ 
-@"C:\Program Files\7-Zip\7z.exe" a -sfx7z.sfx %USERPROFILE%\Dropbox\Public\ReleaseV4.exe Launch.bat 
 @cd ..\
 @pause

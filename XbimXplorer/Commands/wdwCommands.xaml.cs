@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -13,6 +14,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using Squirrel;
 using Xbim.Common;
 using Xbim.Common.Enumerations;
 using Xbim.Common.Geometry;
@@ -96,7 +98,7 @@ namespace XbimXplorer.Commands
             e.Handled = true;
         }
 
-        private void Execute()
+        private async Task Execute()
         {
 #if DEBUG
             // stores the commands being launched
@@ -134,6 +136,19 @@ namespace XbimXplorer.Commands
                 if (mdbclosed.Success)
                 {
                     DisplayHelp();
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^Update$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ReportAdd("Attempting update. ", Brushes.Black);
+                    using (var mgr = new UpdateManager("C:\\Data\\dev\\XbimTeam\\Squirrel.Windows\\XplorerReleases"))
+                    {
+                        ReportAdd("Application update triggered. ", Brushes.Black);
+                        await mgr.UpdateApp();
+                        ReportAdd("Done.", Brushes.Black);
+                    }
                     continue;
                 }
 
@@ -695,6 +710,7 @@ namespace XbimXplorer.Commands
                     _parentWindow.Activate();
                     continue;
                 }
+
 
                 
 
