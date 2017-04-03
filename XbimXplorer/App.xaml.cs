@@ -15,11 +15,15 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Windows;
 using log4net;
+using NuGet;
 using Squirrel;
 using Xbim.IO.Esent;
+using System.Collections.Generic;
 
 #endregion
 
@@ -30,13 +34,12 @@ namespace XbimXplorer
     /// </summary>
     public partial class App
     {
-
         private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
 
         private static async void update()
         {
-            var assembly = Assembly.GetEntryAssembly();
-            var updateDotExe = Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "Update.exe");
+
+            var updateDotExe = Path.Combine(SquirrelFolder(), "Update.exe");
 
             if (!File.Exists(updateDotExe))
                 return;
@@ -54,12 +57,57 @@ namespace XbimXplorer
             }
         }
 
+        private static string SquirrelFolder()
+        {
+            return "C:\\Users\\Claudio\\AppData\\Local\\Xbim";
+
+            var assembly = Assembly.GetEntryAssembly();
+            return Path.Combine(Path.GetDirectoryName(assembly.Location), "..");
+        }
+
+        internal static void PortPlugins()
+        {
+            var sf = SquirrelFolder();
+            var dsf = new DirectoryInfo(sf);
+            var stringVersions = dsf.GetDirectories("app-*").Select(x => x.Name.Substring(4)).ToArray();
+
+            var vrs = new List<SemanticVersion>();
+            foreach (var version in stringVersions)
+            {
+                try
+                {
+                    var t = new SemanticVersion(version);
+                    vrs.Add(t);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+
+            vrs.Sort();
+            foreach (var semanticVersion in vrs)
+            {
+                Debug.WriteLine(semanticVersion);
+            }
+        }
+
+        private static DirectoryInfo pluginFolder(SemanticVersion version)
+        {
+            var versionAppFolder = "app-" + version.ToString();
+            var cmb = Path.Combine(SquirrelFolder(), versionAppFolder);
+            cmb = Path.Combine(cmb, "Plugins");
+            return new DirectoryInfo(cmb);
+        }
+        
         /// <summary>
         /// Raises the <see cref="E:System.Windows.Application.Startup"/> event.
         /// </summary>
         /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
+            // PortPlugins();
+
             // evaluate special parameters before loading MainWindow
             var blockUpdate = false;
             foreach (var thisArg in e.Args)
