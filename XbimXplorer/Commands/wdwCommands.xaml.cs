@@ -248,7 +248,7 @@ namespace XbimXplorer.Commands
 
                 if (Model == null)
                 {
-                    ReportAdd("Plaese open a database.", Brushes.Red);
+                    ReportAdd("Please open a database.", Brushes.Red);
                     continue;
                 }
 
@@ -264,15 +264,30 @@ namespace XbimXplorer.Commands
                     {
                         recursion = Convert.ToInt32(m.Groups["recursion"].Value);
                     }
-// ReSharper disable once EmptyGeneralCatchClause
                     catch
                     {
+                        // ignored
                     }
 
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
 
+                m = Regex.Match(cmd, @"^(geometryView|gv) (?<el>\d+)",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var recursion = 0;
+                    int iEl;
+                    if (int.TryParse(m.Groups["el"].Value, out iEl))
+                    {
+                        var ra = GeometryView.ReportAcadScript(Model.Instances[iEl]);
+                        ReportAdd(ra);
+                    }
+                    else
+                        ReportAdd("Not found.", Brushes.Red);
+                    continue;
+                }
 
 
                 m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
@@ -699,7 +714,15 @@ namespace XbimXplorer.Commands
                 }
 
 
-                
+                m = Regex.Match(cmd, @"^ModelFix$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    ReportAdd("Attempting model fix.");
+                    var f = new Fixer();
+                    var cnt = f.Fix(Model);
+                    ReportAdd($"{cnt} interventions.");
+                    continue;
+                }
 
                 m = Regex.Match(cmd, @"^clip (" +
                                      @"(?<elev>[-+]?([0-9]*\.)?[0-9]+) *$" +
@@ -1309,7 +1332,7 @@ namespace XbimXplorer.Commands
             t.Append("      Examples:", Brushes.Gray);
             t.Append("        ge 12,14", Brushes.Gray);
             
-            t.AppendFormat("- EntityLabel label [recursion]");
+            t.AppendFormat("- EntityLabel <label> [recursion]");
             t.Append("    [recursion] is an int representing the depth of children to report", Brushes.Gray);
 
             t.AppendFormat("- IfcSchema [list|count|short|full] <TypeName>");
@@ -1322,6 +1345,9 @@ namespace XbimXplorer.Commands
             t.AppendFormat("- clip [off|<Elevation>|<px>, <py>, <pz>, <nx>, <ny>, <nz>|<Storey name>]");
             t.Append("    Clipping the 3D model is still and unstable feature. Use with caution.", Brushes.Gray);
 
+            t.AppendFormat("- GeometryView <EntityLabel>");
+            t.Append("    Reports text to be used as Autocad Script to debug geometry. Very crude, developed when debugging.", Brushes.Gray);
+            
             t.AppendFormat("- ObjectPlacement <EntityLabel>");
             t.Append("    Reports the place tree of an element.", Brushes.Gray);
 

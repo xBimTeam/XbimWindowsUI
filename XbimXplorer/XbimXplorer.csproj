@@ -328,6 +328,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Commands\Fix.cs" />
+    <Compile Include="Commands\FixExtensions.cs" />
+    <Compile Include="Commands\GeometryView.cs" />
     <Compile Include="Dialogs\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
