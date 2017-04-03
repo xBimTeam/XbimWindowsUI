@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using log4net;
 using Squirrel;
 using Xbim.IO.Esent;
 
@@ -28,14 +29,25 @@ namespace XbimXplorer
     /// </summary>
     public partial class App
     {
+
+        private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
+
         private static async void update()
         {
             if (!File.Exists("..\\update.exe"))
                 return;
-            var mgr = new UpdateManager("C:\\Data\\dev\\XbimTeam\\Squirrel.Windows\\XplorerReleases");
-            await mgr.UpdateApp();
-            mgr.Dispose();
-            mgr = null;
+            try
+            {
+                using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
+                {
+                    await mgr.UpdateApp();
+                    mgr.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error in UpdateManager", ex);
+            }
         }
 
         /// <summary>
@@ -45,7 +57,17 @@ namespace XbimXplorer
         protected override void OnStartup(StartupEventArgs e)
         {
 
-            update();
+            // evaluate special parameters before loading MainWindow
+            var blockUpdate = false;
+            foreach (var thisArg in e.Args)
+            {
+                if (string.Compare("/noupdate", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    blockUpdate = true;
+                }
+            }
+            if (!blockUpdate)
+                update();
             
 
             // evaluate special parameters before loading MainWindow

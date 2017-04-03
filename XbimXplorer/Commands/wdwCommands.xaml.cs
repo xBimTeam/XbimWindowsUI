@@ -138,20 +138,7 @@ namespace XbimXplorer.Commands
                     DisplayHelp();
                     continue;
                 }
-
-                mdbclosed = Regex.Match(cmd, @"^Update$", RegexOptions.IgnoreCase);
-                if (mdbclosed.Success)
-                {
-                    ReportAdd("Attempting update. ", Brushes.Black);
-                    using (var mgr = new UpdateManager("C:\\Data\\dev\\XbimTeam\\Squirrel.Windows\\XplorerReleases"))
-                    {
-                        ReportAdd("Application update triggered. ", Brushes.Black);
-                        await mgr.UpdateApp();
-                        ReportAdd("Done.", Brushes.Black);
-                    }
-                    continue;
-                }
-
+                
                 mdbclosed = Regex.Match(cmd, @"^Plugin Refresh$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
