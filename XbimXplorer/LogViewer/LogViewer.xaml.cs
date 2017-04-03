@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 using log4net;
 using NuGet;
 using Xbim.Presentation.XplorerPluginSystem;
@@ -74,13 +75,24 @@ namespace XbimXplorer.LogViewer
 
         private void DumpEvent(EventViewModel eventViewModel, StringBuilder sb)
         {
-            sb.AppendFormat("==== {0}\t{1}\t{2}\r\n{3}\r\n{4}\r\n\r\n",
-                eventViewModel.TimeStamp,
-                eventViewModel.Level,
-                eventViewModel.Logger,
-                eventViewModel.Message,
-                eventViewModel.ErrorMessage
-                );
+            if (Verbose.IsChecked != null && Verbose.IsChecked.Value)
+            {
+                sb.AppendFormat("==== {0}\t{1}\t{2}\r\n{3}\r\n{4}\r\n\r\n",
+                    eventViewModel.TimeStamp,
+                    eventViewModel.Level,
+                    eventViewModel.Logger,
+                    eventViewModel.Message,
+                    eventViewModel.ErrorMessage
+                    );
+            }
+            else
+            {
+                sb.AppendFormat("{0}\t{1}\t{2}\r\n",
+                    eventViewModel.Level,
+                    eventViewModel.Logger,
+                    eventViewModel.Message
+                    );
+            }
         }
 
         private void ClearDebug(object sender, RoutedEventArgs e)
@@ -105,6 +117,15 @@ namespace XbimXplorer.LogViewer
             if (_mw == null)
                 return;
             _mw.UpdateLoggerCounts();
+        }
+
+        private void WindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                Copy();
+                e.Handled = true;
+            }
         }
     }
 }
