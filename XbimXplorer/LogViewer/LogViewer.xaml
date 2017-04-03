@@ -4,10 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
+             PreviewKeyDown="WindowKeyDown"
              >
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" ></RowDefinition>
+            <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
@@ -46,9 +48,9 @@
                 </GridView>
             </ListView.View>
         </ListView>
-
         <TextBox Grid.Row="1" x:Name="Report" TextWrapping="Wrap" Visibility="Collapsed" Text=""/>
-        <Button Grid.Row="2" Click="Test" Visibility="Collapsed" Margin="5" >Test</Button>
-        <Button Grid.Row="3" Click="Clear" Margin="5" >Clear All</Button>
+        <CheckBox HorizontalAlignment="Right" Grid.Row="2" Name="Verbose"  IsChecked="True">Verbose</CheckBox>
+        <Button Grid.Row="3" Click="Test" Visibility="Collapsed" Margin="5" >Test</Button>
+        <Button Grid.Row="4" Click="Clear" Margin="5" >Clear All</Button>
     </Grid>
 </UserControl>
