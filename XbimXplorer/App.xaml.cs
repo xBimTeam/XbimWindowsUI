@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using log4net;
 using Squirrel;
@@ -34,7 +35,10 @@ namespace XbimXplorer
 
         private static async void update()
         {
-            if (!File.Exists("..\\update.exe"))
+            var assembly = Assembly.GetEntryAssembly();
+            var updateDotExe = Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "Update.exe");
+
+            if (!File.Exists(updateDotExe))
                 return;
             try
             {
@@ -56,7 +60,6 @@ namespace XbimXplorer
         /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
-
             // evaluate special parameters before loading MainWindow
             var blockUpdate = false;
             foreach (var thisArg in e.Args)
