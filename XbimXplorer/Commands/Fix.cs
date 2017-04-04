@@ -60,26 +60,13 @@ namespace XbimXplorer.Commands
                 var iNext = iEval + 1;
                 if (iNext >= bound.Polygon.Count)
                     iNext = 0;
-
-                // liesBetween
-                var needsRemoving =  bound.Polygon[iEval].LiesBetween(
+                
+                var needsRemoving =  FixExtensions.AreAligned(
+                    bound.Polygon[iEval],
                     bound.Polygon[iPrec],
                     bound.Polygon[iNext]
                     );
-
-                // if next lies between prev and this the shape is overlapping
-                needsRemoving = needsRemoving |
-                    bound.Polygon[iNext].LiesBetween(
-                    bound.Polygon[iPrec],
-                    bound.Polygon[iEval]
-                    );
-                // if prev lies between next and this the shape is overlapping
-                needsRemoving = needsRemoving |
-                    bound.Polygon[iPrec].LiesBetween(
-                    bound.Polygon[iNext],
-                    bound.Polygon[iEval]
-                    );
-
+                
                 if (needsRemoving)
                 {
                     using (var txn = bound.Model.BeginTransaction("removing"))
