@@ -34,14 +34,20 @@ namespace XbimXplorer
     /// </summary>
     public partial class App
     {
-        private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
+        private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.App");
+
+        private static bool IsSquirrelInstall
+        {
+            get
+            {
+                var updateDotExe = Path.Combine(SquirrelFolder(), "Update.exe");
+                return File.Exists(updateDotExe);
+            }
+        }
 
         private static async void update()
         {
-
-            var updateDotExe = Path.Combine(SquirrelFolder(), "Update.exe");
-
-            if (!File.Exists(updateDotExe))
+            if (!IsSquirrelInstall)
                 return;
             try
             {
@@ -53,13 +59,15 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
-                Log.Error("Error in UpdateManager", ex);
+                Log.Error("Error in UpdateManager.", ex);
             }
         }
 
         private static string SquirrelFolder()
         {
-            return "C:\\Users\\Claudio\\AppData\\Local\\Xbim";
+            //var t = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            //t = Path.Combine(t, "Xbim");
+            //return t;
 
             var assembly = Assembly.GetEntryAssembly();
             return Path.Combine(Path.GetDirectoryName(assembly.Location), "..");
@@ -67,6 +75,11 @@ namespace XbimXplorer
 
         internal static void PortPlugins()
         {
+            if (!IsSquirrelInstall)
+            {
+                Log.Info("Application is not under Squirrel installer. Nothing done.");
+                return;
+            }
             var sf = SquirrelFolder();
             var dsf = new DirectoryInfo(sf);
             var stringVersions = dsf.GetDirectories("app-*").Select(x => x.Name.Substring(4)).ToArray();
@@ -78,18 +91,74 @@ namespace XbimXplorer
                 {
                     var t = new SemanticVersion(version);
                     vrs.Add(t);
+                    Log.Info($"Version found: {version}.");
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // ignored
+                    Log.Error($"Error converting semver: {version}.", ex);
                 }
             }
 
             vrs.Sort();
-            foreach (var semanticVersion in vrs)
+            if (vrs.Count < 2)
             {
-                Debug.WriteLine(semanticVersion);
+                Log.Info($"Nothing done.");
+                return;
             }
+            var latest = pluginFolder(vrs[vrs.Count - 1]);
+            Log.Info($"Latest to test: {latest.FullName}");
+            var prev = pluginFolder(vrs[vrs.Count - 2]);
+            Log.Info($"Previous to test: {prev.FullName}");
+            if (latest.Exists)
+                // if it's already been created we ignore the case, 
+                // if plugins get deleted we don't want them back
+                return;
+
+            // make the directory so the action is not repeted.
+            //
+            Directory.CreateDirectory(latest.FullName);
+
+            // check if there's nothing to copy anyway
+            if (!prev.Exists)
+                return;
+
+            Log.Info("Attempting copy.");
+            // perform the copy
+            DirectoryCopy(prev, latest.FullName, true);
+            Log.Info("Completed copy.");
+        }
+
+        // taken from https://msdn.microsoft.com/en-us/library/bb762914(v=vs.110).aspx
+        // then changed signature for local implementation
+        private static void DirectoryCopy(DirectoryInfo dir, string destDirName, bool copySubDirs)
+        {
+            if (!dir.Exists)
+            {
+                return;
+            }
+            var dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            var files = dir.GetFiles();
+            foreach (var file in files)
+            {
+                var temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (!copySubDirs)
+                return;
+            foreach (var subdir in dirs)
+            {
+                var temppath = Path.Combine(destDirName, subdir.Name);
+                DirectoryCopy(subdir, temppath, true);
+            }            
         }
 
         private static DirectoryInfo pluginFolder(SemanticVersion version)
@@ -106,8 +175,6 @@ namespace XbimXplorer
         /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
-            // PortPlugins();
-
             // evaluate special parameters before loading MainWindow
             var blockUpdate = false;
             foreach (var thisArg in e.Args)
