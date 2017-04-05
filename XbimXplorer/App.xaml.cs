@@ -36,16 +36,19 @@ namespace XbimXplorer
     {
         private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.App");
 
-        private static bool IsSquirrelInstall
+        internal static bool IsSquirrelInstall
         {
             get
             {
-                var updateDotExe = Path.Combine(SquirrelFolder(), "Update.exe");
+                var sFold = SquirrelFolder();
+                if (string.IsNullOrEmpty(sFold))
+                    return false;
+                var updateDotExe = Path.Combine(sFold, "Update.exe");
                 return File.Exists(updateDotExe);
             }
         }
 
-        private static async void update()
+        private static async void Update()
         {
             if (!IsSquirrelInstall)
                 return;
@@ -70,7 +73,13 @@ namespace XbimXplorer
             //return t;
 
             var assembly = Assembly.GetEntryAssembly();
-            return Path.Combine(Path.GetDirectoryName(assembly.Location), "..");
+            if (assembly?.Location == null)
+                return "";
+            var loc = assembly.Location;
+            var dirName = Path.GetDirectoryName(loc);
+            return string.IsNullOrEmpty(dirName) 
+                ? "" 
+                : Path.Combine(dirName, "..");
         }
 
         internal static void PortPlugins()
@@ -81,6 +90,11 @@ namespace XbimXplorer
                 return;
             }
             var sf = SquirrelFolder();
+            if (string.IsNullOrEmpty(sf))
+            {
+                Log.Info("Squirrel folder not found. Nothing done.");
+                return;
+            }
             var dsf = new DirectoryInfo(sf);
             var stringVersions = dsf.GetDirectories("app-*").Select(x => x.Name.Substring(4)).ToArray();
 
@@ -102,12 +116,12 @@ namespace XbimXplorer
             vrs.Sort();
             if (vrs.Count < 2)
             {
-                Log.Info($"Nothing done.");
+                Log.Info($"Low version count; nothing to do.");
                 return;
             }
-            var latest = pluginFolder(vrs[vrs.Count - 1]);
+            var latest = PluginFolder(vrs[vrs.Count - 1]);
             Log.Info($"Latest to test: {latest.FullName}");
-            var prev = pluginFolder(vrs[vrs.Count - 2]);
+            var prev = PluginFolder(vrs[vrs.Count - 2]);
             Log.Info($"Previous to test: {prev.FullName}");
             if (latest.Exists)
                 // if it's already been created we ignore the case, 
@@ -161,10 +175,11 @@ namespace XbimXplorer
             }            
         }
 
-        private static DirectoryInfo pluginFolder(SemanticVersion version)
+        private static DirectoryInfo PluginFolder(SemanticVersion version)
         {
-            var versionAppFolder = "app-" + version.ToString();
-            var cmb = Path.Combine(SquirrelFolder(), versionAppFolder);
+            var versionAppFolder = "app-" + version;
+            var sf = SquirrelFolder();
+            var cmb = Path.Combine(sf, versionAppFolder);
             cmb = Path.Combine(cmb, "Plugins");
             return new DirectoryInfo(cmb);
         }
@@ -185,7 +200,9 @@ namespace XbimXplorer
                 }
             }
             if (!blockUpdate)
-                update();
+                Update();
+
+            PortPlugins();
             
 
             // evaluate special parameters before loading MainWindow

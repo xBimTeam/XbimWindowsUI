@@ -27,6 +27,7 @@
                         </TextBlock>
                         <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding AppVersion}" />
                         <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding FileVersion}" />
+                        <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding SquirrelVersion}" />
                         <TextBlock Margin="0,3" >
                             <Hyperlink RequestNavigate="Link_RequestNavigate" NavigateUri="https://github.com/xbimteam">
 					            <TextBlock Text="https://github.com/xbimteam"/>

@@ -208,6 +208,7 @@ namespace XbimXplorer.Commands
                 {
                     ReportAdd("Attempting plugins port.", Brushes.Black);
                     App.PortPlugins();
+                    ReportAdd("Plugins port completed.", Brushes.Black);
                     continue;
                 }
 
@@ -285,7 +286,6 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    var recursion = 0;
                     int iEl;
                     if (int.TryParse(m.Groups["el"].Value, out iEl))
                     {
@@ -937,9 +937,9 @@ namespace XbimXplorer.Commands
             {
                 model = IfcStore.Open(fileName, null, -1);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                ReportAdd($"Error opening source file. Ignored.", Brushes.Red);;
+                ReportAdd($"Error opening source file. Ignored.", Brushes.Red);
             }
             if (model == null)
             {

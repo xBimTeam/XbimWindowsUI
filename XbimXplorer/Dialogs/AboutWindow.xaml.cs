@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using Squirrel;
 using Xbim.Ifc;
 using Xbim.Ifc4.GeometricModelResource;
 using Xbim.Ifc4.GeometryResource;
@@ -44,14 +45,38 @@ namespace XbimXplorer.Dialogs
         {
             get { return string.Format("Assembly Version: {0}", _assembly.GetName().Version); }
         }
+
         public string FileVersion
         {
             get
             {
-                var fvi = FileVersionInfo.GetVersionInfo(_assembly.Location);
-                return string.Format("File Version: {0}", fvi.FileVersion);
+                if (string.IsNullOrEmpty(_assembly.Location))
+                    return "File version: n/a";
+                var xa = new XbimAssemblyInfo(_assembly);
+                return string.Format("File Version: {0} compiled on {1}", xa.FileVersion, xa.CompilationTime);
             }
         }
+
+        public string SquirrelVersion
+        {
+            get
+            {
+                if (!App.IsSquirrelInstall)
+                    return "";
+                try
+                {
+                    using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
+                    {
+                        return "Squirrel version: " + mgr.CurrentlyInstalledVersion();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+            }
+        }
+
 
         public string AssembliesInfo
         {
