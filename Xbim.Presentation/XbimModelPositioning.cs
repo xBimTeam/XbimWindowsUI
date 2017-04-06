@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Geometry;
@@ -119,9 +120,11 @@ namespace Xbim.Presentation
                 var regions = reader.ContextRegions.Where(cr => cr.MostPopulated() != null).Select(c => c.MostPopulated());
                 var rect = XbimRect3D.Empty;
                 var pop = 0;
+                var mergedRegions = new List<XbimRegion>();
                 // then perform their union
                 foreach (var r in regions)
                 {
+                    mergedRegions.Add(r);
                     pop += r.Population;
                     if (rect.IsEmpty)
                     {
@@ -130,15 +133,50 @@ namespace Xbim.Presentation
                     }
                     else
                     {
-                        rect.Union(r.ToXbimRect3D());
-                        name = "MostPopulatedMerge";
+                        rect.Union(r.ToXbimRect3D());   
                     }
                 }
-                if (pop > 0)
-                    SelectedRegion = new XbimRegion(name, rect, pop);
+                
+                if (pop <= 0)
+                    return;
+                // look at expandind the region to any othe that might be visible in the viewspace
+                //
+                var selectedRad = rect.Radius() * 2;
+                var testOtherRegions = true;
+                while (testOtherRegions)
+                {
+                    testOtherRegions = false;
+                    foreach (var contextRegion in reader.ContextRegions)
+                    {
+                        foreach (var otherRegion in contextRegion.Where(x => !mergedRegions.Contains(x)))
+                        {
+                            var otherRad = otherRegion.Size.Length/2;
+                            var centreDistance = GetDistance(otherRegion.Centre, rect.Centroid());
+                            if (otherRad + selectedRad > centreDistance)
+                            {
+                                mergedRegions.Add(otherRegion);
+                                pop += otherRegion.Population;
+                                rect.Union(otherRegion.ToXbimRect3D());
+                                testOtherRegions = true;
+                                selectedRad = rect.Radius() * 2;
+                            }
+                        }
+                    }
+                }
+                SelectedRegion = new XbimRegion(name, rect, pop);
             }
         }
-        
+
+        // todo: create distance function in XbimPoint3D?
+        private double GetDistance(XbimPoint3D point1, XbimPoint3D point2)
+        {
+            return Math.Sqrt(
+                Math.Pow(point1.X - point2.X, 2) +
+                Math.Pow(point1.Y - point2.Y, 2) +
+                Math.Pow(point1.Z - point2.Z, 2)
+            );
+        }
+
         /// <summary>
         /// Creates the transform based on the model dimensional unit (oneMeter)
         /// </summary>
