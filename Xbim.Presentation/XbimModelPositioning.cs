@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NPOI.POIFS.Storage;
 using Xbim.Common.Geometry;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
@@ -13,7 +11,7 @@ namespace Xbim.Presentation
 {
     public class XbimModelPositioning
     {
-        public XbimRegion LargestRegion;
+        public XbimRegion SelectedRegion;
         public Xbim3DModelContext Context;
         // todo: rename this
         public XbimMatrix3D Transfrom;
@@ -34,9 +32,9 @@ namespace Xbim.Presentation
 
         public XbimRect3D GetLargestRegionRectInMeters()
         {
-            if (LargestRegion == null)
+            if (SelectedRegion == null)
                 return XbimRect3D.Empty;
-            var pts = MinMaxPoints(LargestRegion, OneMeter);
+            var pts = MinMaxPoints(SelectedRegion, OneMeter);
             return new XbimRect3D(pts[0], pts[1]);
         }
 
@@ -68,16 +66,79 @@ namespace Xbim.Presentation
             switch (supportLevel)
             {
                 case 1:
-                    LargestRegion = GetLargestRegion(model);
+                    SelectedRegion = GetLargestRegion(model);
                     break;
                 case 2:
-                    LargestRegion = Context.GetLargestRegion();
+                    // SelectedRegion = Context.GetLargestRegion();
+                    SelectedRegion = GetView(Context.GetRegions());
                     break;
             }
         }
 
+        private XbimRegion GetView(IEnumerable<XbimRegion> enumRegions)
+        {
+            var arrRegions = enumRegions.ToArray();
+            var name = "";
+            var MaxPopulation = arrRegions.Max(r => r.Population);
 
-        
+            var mostPopulated = arrRegions.Where(cr => cr.Population == MaxPopulation);
+            var rect = XbimRect3D.Empty;
+            var pop = 0;
+            var mergedRegions = new List<XbimRegion>();
+            // then perform their union
+            foreach (var r in mostPopulated)
+            {
+                mergedRegions.Add(r);
+                pop += r.Population;
+                if (rect.IsEmpty)
+                {
+                    rect = r.ToXbimRect3D();
+                    name = r.Name;
+                }
+                else
+                {
+                    rect.Union(r.ToXbimRect3D());
+                }
+            }
+
+            if (pop > 0)
+            {
+                // look at expandind the region to any othe that might be visible in the viewspace
+                //
+                var selectedRad = rect.Radius()*2;
+                var testOtherRegions = true;
+                while (testOtherRegions)
+                {
+                    testOtherRegions = false;
+
+                    foreach (var otherRegion in arrRegions.Where(x => !mergedRegions.Contains(x)))
+                    {
+                        var otherRad = otherRegion.Size.Length/2;
+                        var centreDistance = GetDistance(otherRegion.Centre, rect.Centroid());
+                        if (otherRad + selectedRad > centreDistance)
+                        {
+                            mergedRegions.Add(otherRegion);
+                            pop += otherRegion.Population;
+                            rect.Union(otherRegion.ToXbimRect3D());
+                            testOtherRegions = true;
+                            selectedRad = rect.Radius()*2;
+                        }
+                    }
+
+                }
+            }
+            return new XbimRegion(name, rect, pop);
+        }
+
+        private double GetDistance(XbimPoint3D point1, XbimPoint3D point2)
+        {
+            return Math.Sqrt(
+                Math.Pow(point1.X - point2.X, 2) +
+                Math.Pow(point1.Y - point2.Y, 2) +
+                Math.Pow(point1.Z - point2.Z, 2)
+            );
+        }
+
         /// <summary>
         /// Works only on models version 1.
         /// </summary>
@@ -142,7 +203,7 @@ namespace Xbim.Presentation
         public XbimRect3D GetEnvelopOfCentes()
         {
             var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.LargestRegion).Where(r => r != null))
+            foreach (var r in _collection.Values.Select(positioning => positioning.SelectedRegion).Where(r => r != null))
             {
                 if (bb.IsEmpty)
                     bb = new XbimRect3D(r.Centre, r.Centre);
