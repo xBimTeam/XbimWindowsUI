@@ -813,11 +813,9 @@ namespace Xbim.Presentation
                                     if (qrd != null) //transform the normal if we have to
                                         wpfNormal = qrd.Transform(wpfNormal);
                                     normals.Add(wpfNormal);
-
                                 }
                             }
-                        }
-                       
+                        }                       
                     }
 
                     _unfrozenPositions.AddRange(vertices);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Geometry;
-using Xbim.Ifc;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -112,6 +111,7 @@ namespace Xbim.Presentation
             var geomStore = model.GeometryStore;
             if (_model.GeometryStore.IsEmpty)
                 return;
+            var gc = new Xbim3DModelContext(_model);
             using (var reader = geomStore.BeginRead())
             {
                 // ContextRegions is a collection of ContextRegions, which is also a collection.
