@@ -103,6 +103,18 @@ namespace XbimXplorer.LogViewer
             _mw.UpdateLoggerCounts();
         }
 
+        private void ClearWarning(object sender, RoutedEventArgs e)
+        {
+            LoggedEvents.RemoveAll(x =>
+                x.Level == "DEBUG"
+                || x.Level == "INFO"
+                || x.Level == "WARN"
+                );
+            if (_mw == null)
+                return;
+            _mw.UpdateLoggerCounts();
+        }
+
         private void DoCopy(object sender, RoutedEventArgs e)
         {
             Copy();
@@ -126,6 +138,6 @@ namespace XbimXplorer.LogViewer
                 Copy();
                 e.Handled = true;
             }
-        }
+        }        
     }
 }

@@ -36,6 +36,7 @@
                     <MenuItem Header="Copy" Click="DoCopy"/>
                     <MenuItem Header="Clear 'Debug' entries" Click="ClearDebug"/>
                     <MenuItem Header="Clear 'Information' entries" Click="ClearInformation"/>
+                    <MenuItem Header="Clear 'Warning' entries" Click="ClearWarning"/>
                 </ContextMenu>
             </ListBox.ContextMenu>
             <ListView.View>

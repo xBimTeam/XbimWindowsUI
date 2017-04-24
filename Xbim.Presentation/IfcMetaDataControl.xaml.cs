@@ -654,12 +654,19 @@ namespace Xbim.Presentation
             _objectProperties.Add(new PropertyItem { Name = "GUID", Value = root.GlobalId, PropertySetName = "OldUI" });
             if (root.OwnerHistory != null)
             {
+                var user = root.OwnerHistory.OwningUser?.ToString() ?? "<null>";
+
+                var app  = ( root.OwnerHistory.OwningApplication != null
+                    && root.OwnerHistory.OwningApplication.ApplicationIdentifier != null
+                    && !string.IsNullOrEmpty(root.OwnerHistory.OwningApplication.ApplicationIdentifier) ) 
+                    ? root.OwnerHistory.OwningApplication.ApplicationIdentifier.ToString()
+                    : "<null>";
+
+
                 _objectProperties.Add(new PropertyItem
                 {
                     Name = "Ownership",
-                    Value =
-                        root.OwnerHistory.OwningUser + " using " +
-                        root.OwnerHistory.OwningApplication.ApplicationIdentifier,
+                    Value = user + " using " + app,
                     PropertySetName = "OldUI"
                 });
             }
