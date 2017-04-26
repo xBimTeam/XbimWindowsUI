@@ -17,7 +17,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows;
 using log4net;
 using NuGet;
@@ -213,6 +212,16 @@ namespace XbimXplorer
                 {
                     blockPlugin = true;
                 }
+            }
+
+            // see if an update of settings is required from a previous version of the app.
+            // this will allow to retain the configuration across versions, it is useful for the squirrel installer
+            //
+            if (XbimXplorer.Properties.Settings.Default.SettingsUpdateRequired)
+            {
+                XbimXplorer.Properties.Settings.Default.Upgrade();
+                XbimXplorer.Properties.Settings.Default.SettingsUpdateRequired = false;
+                XbimXplorer.Properties.Settings.Default.Save();
             }
 
             var mainView = new XplorerMainWindow(blockPlugin);
