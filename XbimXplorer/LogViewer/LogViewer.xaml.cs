@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using log4net;
@@ -138,6 +139,27 @@ namespace XbimXplorer.LogViewer
                 Copy();
                 e.Handled = true;
             }
-        }        
+        }
+
+        private void AttemptOpenSelection(object sender, MouseButtonEventArgs e)
+        {
+            var first = View.SelectedItems.OfType<EventViewModel>().FirstOrDefault();
+            var msg = first?.Message;
+            if (string.IsNullOrEmpty(msg))
+                return;
+            var re = new Regex(@"#(\d+)");
+            var m = re.Match(msg);
+            if (!m.Success)
+                return;
+
+            int eLabel;
+            if (!int.TryParse(m.Groups[1].Value, out eLabel))
+                return;
+
+            var ipers = _mw.Model.Instances[eLabel];
+            if (ipers == null)
+                return;
+            _mw.SelectedItem = ipers;
+        }
     }
 }

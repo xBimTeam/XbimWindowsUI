@@ -343,9 +343,9 @@ namespace XbimXplorer
                             Title = pluginWindow.WindowTitle,
                             Content = asControl
                         };
-
-                        GetRightPane().Children.Add(inner);
-
+                        var pane = GetRightPane();
+                        pane.Children.Add(inner);
+                        inner.Closed += PluginWindowClosed;
                         if (setCurrent)
                             inner.IsActive = true;
                         return inner;
@@ -376,7 +376,7 @@ namespace XbimXplorer
 
         private LayoutAnchorablePaneGroup GetRightPaneGroup()
         {
-            if (_rightPaneGroup != null)
+            if (_rightPaneGroup != null && _rightPaneGroup.IsVisible)
                 return _rightPaneGroup;
             _rightPaneGroup = new LayoutAnchorablePaneGroup
             {
@@ -391,7 +391,7 @@ namespace XbimXplorer
 
         private LayoutAnchorablePane GetRightPane()
         {
-            if (_rightPane != null)
+            if (_rightPane != null && _rightPane.IsVisible)
                 return _rightPane;
             var rigthPanel = GetRightPaneGroup();
             _rightPane = new LayoutAnchorablePane();
@@ -452,6 +452,10 @@ namespace XbimXplorer
                 return;
             if (anchorable.IsHidden)
                 anchorable.Show();
+            if (!anchorable.IsVisible)
+            {
+                GetRightPane().Children.Add(anchorable);
+            }
             anchorable.IsActive = true;
         }
 
@@ -460,8 +464,10 @@ namespace XbimXplorer
             IXbimXplorerPluginWindow vPlug = null;
             if (sender is LayoutAnchorable)
             {
-                // nothing to do here, window is only hidden
-                return;
+                // if it get here it is because the anchorable has been moved to a dockedDocument and then closed
+                //
+                var cnt = ((LayoutAnchorable)sender).Content;
+                vPlug = cnt as IXbimXplorerPluginWindow;
             }
             // here we find the associated plugin item
             if (sender is LayoutDocument)
@@ -479,7 +485,6 @@ namespace XbimXplorer
                 return;
             var tp = vPlug.GetType();
             var closeAction = vPlug.GetUiAttribute().CloseAction;
-
             if (closeAction == PluginWindowCloseAction.Close && _retainedControls.ContainsKey(tp) )
             {
                 _retainedControls.Remove(tp);

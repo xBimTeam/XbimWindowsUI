@@ -15,7 +15,7 @@
             <RowDefinition Height="Auto" ></RowDefinition>
         </Grid.RowDefinitions>
 
-        <ListView Grid.Row="0" x:Name="View" Margin="5" ItemsSource="{Binding LoggedEvents}" >
+        <ListView Grid.Row="0" x:Name="View" Margin="5" ItemsSource="{Binding LoggedEvents}" MouseDoubleClick="AttemptOpenSelection" >
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
