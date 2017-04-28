@@ -55,7 +55,8 @@ namespace XbimXplorer
             {
                 using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
                 {
-                    await mgr.UpdateApp();
+                    const string ext = ".php";
+                    await mgr.UpdateApp(releasesExtension: ext);
                     mgr.Dispose();
                 }
             }
