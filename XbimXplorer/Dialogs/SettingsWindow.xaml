@@ -59,6 +59,45 @@
                     </DockPanel>
                 </Grid>
             </TabItem>
+            <TabItem Header="Geometry">
+                <Grid Background="#FFE5E5E5">
+                    <DockPanel>
+                        <GroupBox Header="Geometry engine" Margin="10,5"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Column="1" Grid.Row="2" VerticalAlignment="Bottom" Foreground="OrangeRed" >
+                                    Geometry settings are not saved when XbimXplorer is closed.
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" >
+                                    On file load
+                                </TextBlock>
+                                <CheckBox Name="ComputeGeometry" IsChecked="True" Grid.Column="1" Grid.Row="0" Margin="3" >
+                                    Perform meshing
+                                </CheckBox>
+
+                                <TextBlock Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" >
+                                    Threading configuration 
+                                </TextBlock>
+                                <CheckBox Name="MultiThreading" IsChecked="True" Grid.Column="1" Grid.Row="1" Margin="3" >
+                                    Use multiple threads
+                                </CheckBox>
+
+                            </Grid>
+                        </GroupBox>
+                    </DockPanel>
+
+                </Grid>
+            </TabItem>
             <TabItem Header="Plugins">
                 <Grid Background="#FFE5E5E5">
                     <PluginSystem:PluginsConfig x:Name="PluginsConfig" Margin="10" />
