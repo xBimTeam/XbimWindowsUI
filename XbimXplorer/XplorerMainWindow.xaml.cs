@@ -788,6 +788,9 @@ namespace XbimXplorer
                 _meshModel = sett.ComputeGeometry.IsChecked.Value;
             if (sett.MultiThreading.IsChecked != null)
                 _multiThreading = sett.MultiThreading.IsChecked.Value;
+            if (sett.SimplifiedRendering.IsChecked != null)
+                DrawingControl.HighSpeed = sett.SimplifiedRendering.IsChecked.Value;
+
         }
 
         private void RecentFileClick(object sender, RoutedEventArgs e)

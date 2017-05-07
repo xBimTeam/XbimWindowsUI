@@ -94,6 +94,20 @@
 
                             </Grid>
                         </GroupBox>
+                        <GroupBox Header="3D viewer" Margin="10,5"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="0" Text="Simplified rendering" VerticalAlignment="Center" />
+                                <CheckBox x:Name="SimplifiedRendering" Grid.Column="1" Margin="5" Grid.Row="0" Content="Enabled" />
+                            </Grid>
+                        </GroupBox>
                     </DockPanel>
 
                 </Grid>
