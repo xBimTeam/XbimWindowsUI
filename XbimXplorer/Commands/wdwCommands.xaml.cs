@@ -9,26 +9,25 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
+using HelixToolkit.Wpf;
 using Xbim.Common;
 using Xbim.Common.Enumerations;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
 using Xbim.Geometry.Engine.Interop;
-using Xbim.Ifc4.Kernel;
-using Xbim.Ifc4.MaterialResource;
 using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.Simplify;
 using Xbim.Ifc;
 using Xbim.Ifc.Validation;
-using Xbim.Ifc2x3.GeometryResource;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
+using Xceed.Wpf.AvalonDock.Controls;
 using Binding = System.Windows.Data.Binding;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
@@ -233,11 +232,61 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
+
+
                 mdbclosed = Regex.Match(cmd, @"^SimplifyGUI$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     var s = new IfcSimplify();
                     s.Show();
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^(IfcSchema|is) (?<mode>(list|count|short|full) )*(?<type>\w+)[ ]*",
+                    RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var type = mdbclosed.Groups["type"].Value;
+                    var mode = mdbclosed.Groups["mode"].Value;
+
+                    if (type == "/")
+                    {
+                        // this is a magic case handled by the matchingType
+                    }
+                    else if (type == PrepareRegex(type))
+                    // there's not a regex expression, we will prepare one assuming the search for a bare name.
+                    {
+                        type = @".*\." + type + "$";
+                        // any character repeated then a dot then the name and the end of line
+                    }
+                    else
+                        type = PrepareRegex(type);
+
+                    var typeList = MatchingTypes(type);
+
+
+                    if (mode.ToLower() == "list ")
+                    {
+                        foreach (var item in typeList)
+                            ReportAdd(item);
+                    }
+                    else if (mode.ToLower() == "count ")
+                    {
+                        ReportAdd("count: " + typeList.Count());
+                    }
+                    else
+                    {
+                        // report
+                        var beVerbose = 1;
+                        if (mode.ToLower() == "short ")
+                            beVerbose = 0;
+                        if (mode.ToLower() == "full ")
+                            beVerbose = 2;
+                        foreach (var item in typeList)
+                        {
+                            ReportAdd(ReportType(item, beVerbose));
+                        }
+                    }
                     continue;
                 }
 
@@ -342,55 +391,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-
-                m = Regex.Match(cmd, @"^(IfcSchema|is) (?<mode>(list|count|short|full) )*(?<type>\w+)[ ]*",
-                    RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    var type = m.Groups["type"].Value;
-                    var mode = m.Groups["mode"].Value;
-
-                    if (type == "/")
-                    {
-                        // this is a magic case handled by the matchingType
-                    }
-                    else if (type == PrepareRegex(type))
-                        // there's not a regex expression, we will prepare one assuming the search for a bare name.
-                    {
-                        type = @".*\." + type + "$";
-                        // any character repeated then a dot then the name and the end of line
-                    }
-                    else
-                        type = PrepareRegex(type);
-
-                    var typeList = MatchingTypes(type);
-
-
-                    if (mode.ToLower() == "list ")
-                    {
-                        foreach (var item in typeList)
-                            ReportAdd(item);
-                    }
-                    else if (mode.ToLower() == "count ")
-                    {
-                        ReportAdd("count: " + typeList.Count());
-                    }
-                    else
-                    {
-                        // report
-                        var beVerbose = 1;
-                        if (mode.ToLower() == "short ")
-                            beVerbose = 0;
-                        if (mode.ToLower() == "full ")
-                            beVerbose = 2;
-                        foreach (var item in typeList)
-                        {
-                            ReportAdd(ReportType(item, beVerbose));
-                        }
-                    }
-                    continue;
-                }
-
+                
                 m = Regex.Match(cmd, @"^(reload|re\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -783,6 +784,8 @@ namespace XbimXplorer.Commands
                     continue;
                 }
                 
+                // todo: layers are gone; needs cleanup
+                //
                 m = Regex.Match(cmd, @"^Visual (?<action>list|tree|on|off|mode)( (?<Name>[^ ]+))*",
                     RegexOptions.IgnoreCase);
                 if (m.Success)
@@ -794,6 +797,8 @@ namespace XbimXplorer.Commands
                         {
                             ReportAdd(item);
                         }
+                        Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
+                        Report("TransparentsVisual3D", _parentWindow.DrawingControl.TransparentsVisual3D);
                     }
                     else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
                     {
@@ -881,6 +886,88 @@ namespace XbimXplorer.Commands
                 }
                 ReportAdd($"Command not understood: {cmd}.");
             }
+        }
+
+        private void Report(string opaquesvisual3d, ModelVisual3D visualElement)
+        {
+            ReportAdd(opaquesvisual3d, Brushes.Blue);
+            foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
+            {
+                Report(visualElementChild);
+            }
+        }
+
+        private void Report(ModelVisual3D mv3d, int indent = 0)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd(string.Format(
+                    "{0}{1} isSealed:{2} children: {3}", 
+                    ind, mv3d.GetType().Name,
+                    mv3d.IsSealed, mv3d.Children.Count)
+                    );
+            foreach (var child in mv3d.Children)
+            {
+                // Report(child, indent + 1);
+            }
+            if (mv3d.Content is Model3DGroup)
+                Report((Model3DGroup)mv3d.Content, indent + 1);
+        }
+
+        private void Report(Model3DGroup content, int indent)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd(string.Format(
+                    "{0}{1} isSealed:{2} children: {3}",
+                    ind, content.GetType().Name,
+                    content.IsSealed, content.Children.Count)
+                    );
+            foreach (var child in content.Children.OfType<GeometryModel3D>())
+            {
+                Report(child, indent + 1);
+            }
+        }
+
+        private void Report(GeometryModel3D content, int indent)
+        {
+            var mRep = content.Material.GetType().Name;
+            var mat = content.Material as DiffuseMaterial;
+            Brush b = null;
+            if (mat != null)
+            {
+                mRep = mat.Brush.ToString() + " ";
+                b = mat.Brush;
+            }
+            
+            var ind = new string('\t', indent);
+            var msg = string.Format(
+                    "{0}{1} isSealed:{2} Material: {3}",
+                    ind, content.GetType().Name,
+                    content.IsSealed,
+                    mRep
+                    );
+            var rb = new TextHighliter();
+            var txt = new List<string>() {msg};
+            var bs = new List<Brush>() { Brushes.Black};
+            
+            if (b != null)
+            {
+                txt.Add("█████████"); // used to present colour
+                bs.Add(b);
+            }
+            rb.AppendSpans(txt.ToArray(), bs.ToArray());
+            ReportAdd(rb);
+            if (content.Geometry is MeshGeometry3D)
+                Report(content.Geometry as MeshGeometry3D, indent + 1);
+
+        }
+
+        private void Report(MeshGeometry3D content, int indent)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd(string.Format(
+                    "{0}{1} isSealed:{2}\tPositions:\t{3}\tTriangleIndices:\t{4}",
+                    ind, content.GetType().Name, content.IsSealed, content.Positions.Count, content.TriangleIndices.Count)
+                    );
         }
 
         private void IfcZipAndDelete(string directoryName, bool subfolders)
@@ -1180,7 +1267,7 @@ namespace XbimXplorer.Commands
                 return -1;
             var t = entity.GetType();
            
-            if (mode == RepresentationItemSelectionMode.all && (typeof(IfcRepresentationItem)).IsAssignableFrom(t))
+            if (mode == RepresentationItemSelectionMode.all && (typeof(IIfcRepresentationItem)).IsAssignableFrom(t))
             {
                 outList.Add(entity.EntityLabel);
                 return entity.EntityLabel;

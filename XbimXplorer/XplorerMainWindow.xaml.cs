@@ -220,6 +220,7 @@ namespace XbimXplorer
                             var context = new Xbim3DModelContext(model);
                             if (!_multiThreading)
                                 context.MaxThreads = 1;
+                            SetDeflection(model);
                             //upgrade to new geometry representation, uses the default 3D model
                             context.CreateContext(progDelegate: worker.ReportProgress);
                         }
@@ -243,6 +244,7 @@ namespace XbimXplorer
                         var context = new Xbim3DModelContext(modelReference.Model);
                         if (!_multiThreading)
                             context.MaxThreads = 1;
+                        SetDeflection(modelReference.Model);                        
                         //upgrade to new geometry representation, uses the default 3D model
                         context.CreateContext(worker.ReportProgress);
                     }
@@ -280,7 +282,18 @@ namespace XbimXplorer
                 args.Result = newexception;
             }
         }
-        
+
+        private void SetDeflection(IModel model)
+        {
+            var mf = model.ModelFactors;
+            if (mf == null)
+                return;
+            if (!double.IsNaN(_angularDeflectionOverride))
+                mf.DeflectionAngle = _angularDeflectionOverride;
+            if (!double.IsNaN(_deflectionOverride))
+                mf.DeflectionTolerance = mf.OneMilliMetre * _deflectionOverride;
+        }
+
         private void dlg_OpenAnyFile(object sender, CancelEventArgs e)
         {
             var dlg = sender as OpenFileDialog;
@@ -358,7 +371,6 @@ namespace XbimXplorer
             if (args.Result is IfcStore) //all ok
             {
                 ModelProvider.ObjectInstance = args.Result; //this Triggers the event to load the model into the views 
-                // PropertiesControl.Model = (XbimModel)args.Result; // // done thtough binding in xaml
                 ModelProvider.Refresh();
                 ProgressBar.Value = 0;
                 StatusMsg.Text = "Ready";
@@ -735,6 +747,12 @@ namespace XbimXplorer
         private bool _meshModel = true;
 
         /// <summary>
+        /// determines if models need to be meshed on opening
+        /// </summary>
+        private double _deflectionOverride = double.NaN;
+        private double _angularDeflectionOverride = double.NaN;
+        
+        /// <summary>
         /// determines if the geometry engine will run on parallel threads.
         /// </summary>
         private bool _multiThreading = true;
@@ -780,14 +798,50 @@ namespace XbimXplorer
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();
+            // geom engine
+            sett.ComputeGeometry.IsChecked = _meshModel;
+            sett.MultiThreading.IsChecked = _multiThreading;
+            if (!double.IsNaN(_angularDeflectionOverride))
+                sett.AngularDeflection.Text = _angularDeflectionOverride.ToString();
+            if (!double.IsNaN(_deflectionOverride))
+                sett.Deflection.Text = _deflectionOverride.ToString();
+            
+            // visuals
+            sett.SimplifiedRendering.IsChecked = DrawingControl.HighSpeed;
+            sett.ShowFps.IsChecked = DrawingControl.ShowFps;
+            
+            // show dialog
             sett.ShowDialog();
+            
+            
+            // dialog closed
             if (!sett.SettingsChanged)
                 return;
             InitFromSettings();
+
+            // all settings that are not saved
+            //
+
+            // geom engine
             if (sett.ComputeGeometry.IsChecked != null)
                 _meshModel = sett.ComputeGeometry.IsChecked.Value;
             if (sett.MultiThreading.IsChecked != null)
                 _multiThreading = sett.MultiThreading.IsChecked.Value;
+            
+            _deflectionOverride = double.NaN;
+            _angularDeflectionOverride = double.NaN;
+            if (!string.IsNullOrWhiteSpace(sett.AngularDeflection.Text))
+                double.TryParse(sett.AngularDeflection.Text, out _angularDeflectionOverride);
+            
+            if (!string.IsNullOrWhiteSpace(sett.Deflection.Text))
+                double.TryParse(sett.Deflection.Text, out _deflectionOverride);
+            
+            // visuals
+            if (sett.SimplifiedRendering.IsChecked != null)
+                DrawingControl.HighSpeed = sett.SimplifiedRendering.IsChecked.Value;
+            if (sett.ShowFps.IsChecked != null)
+                DrawingControl.ShowFps = sett.ShowFps.IsChecked.Value;
+
         }
 
         private void RecentFileClick(object sender, RoutedEventArgs e)

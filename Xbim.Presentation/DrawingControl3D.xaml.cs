@@ -110,6 +110,8 @@ namespace Xbim.Presentation
                 Canvas.MouseDown += Canvas_MouseDown;
                 Canvas.MouseMove += Canvas_MouseMove;
                 Canvas.MouseWheel += Canvas_MouseWheel;
+                // Canvas.ShowFrameRate = true;
+                var p = RenderOptions.GetEdgeMode((DependencyObject)Canvas);
             }
             Loaded += DrawingControl3D_Loaded;
 
@@ -129,6 +131,33 @@ namespace Xbim.Presentation
             var pInfo = typeof (MeshVisual3D).GetProperty(e.PropertyName);
             var sourceValue = pInfo.GetValue(Highlighted, null);
             pInfo.SetValue(TransHighlighted, sourceValue, null);
+        }
+
+        public bool ShowFps
+        {
+            get { return Canvas.ShowFrameRate; }
+            set { Canvas.ShowFrameRate = value; }
+        }
+
+        public bool HighSpeed
+        {
+            get
+            {
+                return Canvas.ClipToBounds == false;
+            }
+            set
+            {
+                if (value == true)
+                {
+                    Canvas.ClipToBounds = false;
+                    RenderOptions.SetEdgeMode((DependencyObject)Canvas, EdgeMode.Aliased);
+                }
+                else
+                {
+                    Canvas.ClipToBounds = true;
+                    RenderOptions.SetEdgeMode((DependencyObject)Canvas, EdgeMode.Unspecified);
+                }
+            }
         }
         
         protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -1246,14 +1275,16 @@ namespace Xbim.Presentation
             if (mod == null)
                 return;
             var pos = ModelPositions[mod.ReferencingModel].Transform;
-            Scenes.Add(
-                DefaultLayerStyler.BuildScene(
+            var scene = DefaultLayerStyler.BuildScene(
                     refModel.Model,
                     pos,
                     Opaques,
                     Transparents,
-                    ExcludedTypes)
-            );
+                    ExcludedTypes);
+            if (scene != null && scene.Layers.Any())
+            {
+                Scenes.Add(scene);
+            }           
         }
 
         private void RecalculateView(ModelRefreshOptions options = ModelRefreshOptions.None)
@@ -1300,7 +1331,6 @@ namespace Xbim.Presentation
 
         public void ReportData(StringBuilder sb, IModel model, int entityLabel)
         {
-
             if (model == null)
                 return;
             foreach (var scene in Scenes)

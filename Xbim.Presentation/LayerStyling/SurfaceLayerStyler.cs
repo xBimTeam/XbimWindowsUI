@@ -83,8 +83,6 @@ namespace Xbim.Presentation.LayerStyling
                         {
                             ProgressChanged(this, new ProgressChangedEventArgs(currentProgress, "Creating visuals"));
                             lastProgress = currentProgress;
-                            // Log.DebugFormat("Progress to {0}% time: {1} seconds", lastProgress,  timer.Elapsed.TotalSeconds.ToString("F3"));
-                            // Debug.Print("Progress to {0}% time:\t{1} seconds", lastProgress, timer.Elapsed.TotalSeconds.ToString("F3"));
                         }
 
                         // work out style
@@ -167,19 +165,15 @@ namespace Xbim.Presentation.LayerStyling
                     {
                         wpfMeshGeometry3D.EndUpdate();
                     }
-                    //}
                     if (tmpOpaquesGroup.Children.Any())
                     {
                         var mv = new ModelVisual3D {Content = tmpOpaquesGroup};
                         opaqueShapes.Children.Add(mv);
-                        // Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
                     }
                     if (tmpTransparentsGroup.Children.Any())
                     {
                         var mv = new ModelVisual3D {Content = tmpTransparentsGroup};
                         transparentShapes.Children.Add(mv);
-                        //if (Control.ModelBounds.IsEmpty) Control.ModelBounds = mv.Content.Bounds.ToXbimRect3D();
-                        //else Control.ModelBounds.Union(mv.Content.Bounds.ToXbimRect3D());
                     }
                 }
             }
@@ -203,6 +197,7 @@ namespace Xbim.Presentation.LayerStyling
             Model3DGroup tmpOpaquesGroup)
         {
             var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
+            
             mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
             mg.BeginUpdate();
             if (wpfMaterial.IsTransparent)
