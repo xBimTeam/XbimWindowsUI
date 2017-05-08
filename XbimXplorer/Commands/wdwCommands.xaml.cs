@@ -270,24 +270,7 @@ namespace XbimXplorer.Commands
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
-
-                m = Regex.Match(cmd, @"^(geometryView|gv) (?<el>\d+)",
-                    RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    var recursion = 0;
-                    int iEl;
-                    if (int.TryParse(m.Groups["el"].Value, out iEl))
-                    {
-                        var ra = GeometryView.ReportAcadScript(Model.Instances[iEl]);
-                        ReportAdd(ra);
-                    }
-                    else
-                        ReportAdd("Not found.", Brushes.Red);
-                    continue;
-                }
-
-
+                
                 m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -449,7 +432,8 @@ namespace XbimXplorer.Commands
                                 ReportAdd($"=== Entity {label} not found in model.", Brushes.Red);
                                 continue;
                             }
-                            ReportAdd($"=== Geometry functions for {entity.GetType().Name} #{label}", Brushes.Blue);
+                            ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
+                            ReportAdd($"=== Geometry functions", Brushes.Blue);
                             // todo: cache methods by type
                             var methods =
                                 typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
@@ -516,6 +500,9 @@ namespace XbimXplorer.Commands
                                     ReportAdd(msg, Brushes.Red);
                                 }
                             }
+                            ReportAdd($"=== Autocad views", Brushes.Blue);
+                            var ra = GeometryView.ReportAcadScript(entity);
+                            ReportAdd(ra);
                         }
                     }
                     continue;
@@ -1341,9 +1328,6 @@ namespace XbimXplorer.Commands
 
             t.AppendFormat("- clip [off|<Elevation>|<px>, <py>, <pz>, <nx>, <ny>, <nz>|<Storey name>]");
             t.Append("    Clipping the 3D model is still and unstable feature. Use with caution.", Brushes.Gray);
-
-            t.AppendFormat("- GeometryView <EntityLabel>");
-            t.Append("    Reports text to be used as Autocad Script to debug geometry. Very crude, developed when debugging.", Brushes.Gray);
             
             t.AppendFormat("- ObjectPlacement <EntityLabel>");
             t.Append("    Reports the place tree of an element.", Brushes.Gray);

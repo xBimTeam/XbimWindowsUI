@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
+using Xbim.Common;
 using Xbim.Ifc4.Interfaces;
 
 namespace XbimXplorer.Commands
@@ -13,28 +10,28 @@ namespace XbimXplorer.Commands
     /// </summary>
     internal static class GeometryView
     {
-        internal static void ReportAcadScript(IIfcClosedShell shell, TextHighliter sb)
+        private static void Report(IIfcClosedShell shell, TextHighliter sb)
         {
             foreach (var face in shell.CfsFaces)
             {
-                ReportAcadScript(face, sb);
+                Report(face, sb);
             }
         }
 
-        private static void ReportAcadScript(IIfcFace face, TextHighliter sb)
+        private static void Report(IIfcFace face, TextHighliter sb)
         {
             foreach (var ifcFaceBound in face.Bounds)
             {
-                ReportAcadScript(ifcFaceBound, sb);
+                Report(ifcFaceBound, sb);
             }
         }
 
-        private static void ReportAcadScript(IIfcFaceOuterBound ifcFaceBound, TextHighliter sb)
+        private static void Report(IIfcFaceOuterBound ifcFaceBound, TextHighliter sb)
         {
-            ReportAcadScript(ifcFaceBound.Bound, sb);
+            Report(ifcFaceBound.Bound, sb);
         }
 
-        private static void ReportAcadScript(IIfcPolyLoop bound, TextHighliter sb)
+        private static void Report(IIfcPolyLoop bound, TextHighliter sb)
         {
             sb.Append($"-LAYER M {bound.Polygon.Count} ", Brushes.Black);
 
@@ -43,7 +40,8 @@ namespace XbimXplorer.Commands
             IIfcCartesianPoint last = null;
             foreach (var ifcCartesianPoint in bound.Polygon)
             {
-                sb.Append($"{ifcCartesianPoint.X},{ifcCartesianPoint.Y},{ifcCartesianPoint.Z}" , Brushes.Black);
+                WritePointCoord(sb, ifcCartesianPoint);
+
                 last = ifcCartesianPoint;
             }
             if ( false && last != null)
@@ -57,37 +55,152 @@ namespace XbimXplorer.Commands
             sb.Append($"", Brushes.Black);
         }
 
-        private static void ReportAcadScript(IIfcLoop bound, TextHighliter sb)
+        private static void WritePointCoord(TextHighliter sb, double x, double y, double z, bool relative = false)
+        {
+            var rel = relative ? "@" : "";
+            sb.Append($"{rel}{x},{y},{z}", Brushes.Black);
+        }
+
+        private static void WritePointCoord(TextHighliter sb, IIfcCartesianPoint ifcCartesianPoint, bool relative = false)
+        {
+            WritePointCoord(sb, ifcCartesianPoint.X, ifcCartesianPoint.Y, ifcCartesianPoint.Z, relative);
+        }
+
+        private static void WritePointCoord(TextHighliter sb, IIfcDirection ifcCartesianPoint, bool relative = false)
+        {
+            WritePointCoord(sb, ifcCartesianPoint.X, ifcCartesianPoint.Y, ifcCartesianPoint.Z, relative);
+        }
+
+        private static void WritePointCoord(TextHighliter sb, IIfcVector p, bool relative = false)
+        {
+            double val = Convert.ToDouble(p.Magnitude.Value);
+            WritePointCoord(sb, p.Orientation.X * val, 
+                                p.Orientation.Y * val, 
+                                p.Orientation.Z * val, relative);
+        }
+
+        private static void Report(IIfcLoop bound, TextHighliter sb)
         {
             if (bound is IIfcPolyLoop)
             {
-                ReportAcadScript((IIfcPolyLoop)bound, sb);
+                Report((IIfcPolyLoop)bound, sb);
             }
             else
             {
-                sb.Append($"{bound.GetType().Name} not implemented.", Brushes.Red);
+                sb.Append($"{bound.GetType().Name} not implemented in IIfcLoop.", Brushes.Red);
             }
         }
 
-        private static void ReportAcadScript(IIfcFaceBound ifcFaceBound, TextHighliter sb)
+        private static void Report(IIfcFaceBound ifcFaceBound, TextHighliter sb)
         {
             if (ifcFaceBound is IIfcFaceOuterBound)
             {
-                ReportAcadScript((IIfcFaceOuterBound)ifcFaceBound, sb);
+                Report((IIfcFaceOuterBound)ifcFaceBound, sb);
             }
             else
             {
-                sb.Append($"{ifcFaceBound.GetType().Name} not implemented.", Brushes.Red);
+                sb.Append($"{ifcFaceBound.GetType().Name} not implemented in IIfcFaceBound.", Brushes.Red);
             }
         }
 
-        internal static TextHighliter ReportAcadScript(object obj)
+        private static void Report(IIfcCompositeCurve curve, TextHighliter sb)
+        {
+            foreach (var ifcCompositeCurveSegment in curve.Segments)
+            {
+                Report(ifcCompositeCurveSegment, sb);
+            }
+        }
+
+        private static void Report(IIfcCompositeCurveSegment ifcCompositeCurveSegment, TextHighliter sb)
+        {
+            Report(ifcCompositeCurveSegment.ParentCurve, sb);
+        }
+
+        private static void Report(IIfcTrimmedCurve ifcCompositeCurveSegment, TextHighliter sb)
+        {
+            Report(ifcCompositeCurveSegment.BasisCurve, sb);
+        }
+
+        private static void Report(IIfcCircle cr, TextHighliter sb)
+        {
+            SetUcs(sb, cr.Position);           
+            sb.Append("CIRCLE", Brushes.Black);
+            WritePointCoord(sb, 0, 0, 0);
+            sb.Append(cr.Radius.ToString(), Brushes.Black);
+            SetUcs(sb);
+        }
+
+        private static void Report(IIfcLine line, TextHighliter sb)
+        {
+            sb.Append("line", Brushes.Black);
+            WritePointCoord(sb, line.Pnt);
+            WritePointCoord(sb, line.Dir, true);
+            sb.Append("", Brushes.Black);
+        }
+        
+        private static void SetUcs(TextHighliter sb, IIfcAxis2Placement pos = null)
+        {
+            if (pos == null)
+            {
+                sb.Append("UCS w", Brushes.Black);
+            }
+            else if (pos is IIfcAxis2Placement3D)
+            {
+                var as1 = pos as IIfcAxis2Placement3D;
+                sb.Append("UCS", Brushes.Black);
+                WritePointCoord(sb, as1.Location);
+                WritePointCoord(sb, as1.Axis);
+                WritePointCoord(sb, as1.RefDirection);
+                sb.Append("UCS", Brushes.Black);
+                sb.Append("x", Brushes.Black);
+                sb.Append("90", Brushes.Black);
+            }
+            else
+            {
+                sb.Append($"{pos.GetType().Name} not implemented in IIfcCurve.", Brushes.Red);
+            }
+        }
+
+       
+
+        private static void Report(IIfcCurve obj, TextHighliter sb)
+        {
+            if (obj is IIfcCompositeCurve)
+            {
+                Report((IIfcCompositeCurve)obj, sb);
+            }
+            else if (obj is IIfcTrimmedCurve)
+            {
+                Report((IIfcTrimmedCurve) obj, sb);
+            }
+            else if (obj is IIfcCircle)
+            {
+                Report((IIfcCircle)obj, sb);
+            }
+            else if (obj is IIfcLine)
+            {
+                Report((IIfcLine)obj, sb);
+            }
+            else
+            {
+                sb.Append($"{obj.GetType().Name} not implemented in IIfcCurve.", Brushes.Red);
+            }
+        }
+
+        private static void Report(IIfcSweptDiskSolid obj, TextHighliter sb)
+        {
+            Report((IIfcCurve)obj.Directrix, sb);
+        }
+
+        internal static TextHighliter ReportAcadScript(IPersistEntity obj)
         {
             var sb = new TextHighliter();
             if (obj is IIfcClosedShell)
-                ReportAcadScript((IIfcClosedShell) obj, sb);
+                Report((IIfcClosedShell) obj, sb);
             if (obj is IIfcPolyLoop)
-                ReportAcadScript((IIfcPolyLoop)obj, sb);
+                Report((IIfcPolyLoop)obj, sb);
+            if (obj is IIfcSweptDiskSolid)
+                Report((IIfcSweptDiskSolid)obj, sb);
             else
             {
                 sb.Append("No information", Brushes.Black);
