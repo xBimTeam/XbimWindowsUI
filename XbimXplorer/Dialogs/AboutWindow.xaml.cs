@@ -178,5 +178,13 @@ namespace XbimXplorer.Dialogs
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
             e.Handled = true;
         }
+        
+        private void LoadAssemblies(object sender, System.Windows.RoutedEventArgs e)
+        {
+            using (var c =  new Xbim.Presentation.WaitCursor())
+            {
+                AssembliesText.Text = AssembliesInfo;
+            }
+        }
     }
 }

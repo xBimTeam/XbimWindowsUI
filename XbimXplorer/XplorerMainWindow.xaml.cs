@@ -211,49 +211,64 @@ namespace XbimXplorer
                 _temporaryXbimFileName = Path.GetTempFileName();
                 SetOpenedModelFileName(ifcFilename);
                 var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress, FileAccessMode);
-                if (model.GeometryStore.IsEmpty)
+                if (_meshModel)
                 {
-                    try
+                    if (model.GeometryStore.IsEmpty)
                     {
-                        var context = new Xbim3DModelContext(model);
+                        try
+                        {
+                            var context = new Xbim3DModelContext(model);
+                            if (!_multiThreading)
+                                context.MaxThreads = 1;
+                            SetDeflection(model);
+                            //upgrade to new geometry representation, uses the default 3D model
+                            context.CreateContext(progDelegate: worker.ReportProgress);
+                        }
+                        catch (Exception geomEx)
+                        {
+                            var sb = new StringBuilder();
+                            sb.AppendLine($"Error creating geometry context of '{ifcFilename}' {geomEx.StackTrace}.");
+                            var newexception = new Exception(sb.ToString(), geomEx);
+                            Log.Error(sb.ToString(), newexception);
+                        }
+                    }
+
+                    foreach (var modelReference in model.ReferencedModels)
+                    {
+                        // creates federation geometry contexts if needed
+                        Debug.WriteLine(modelReference.Name);
+                        if (modelReference.Model == null)
+                            continue;
+                        if (!modelReference.Model.GeometryStore.IsEmpty)
+                            continue;
+                        var context = new Xbim3DModelContext(modelReference.Model);
+                        if (!_multiThreading)
+                            context.MaxThreads = 1;
+                        SetDeflection(modelReference.Model);                        
                         //upgrade to new geometry representation, uses the default 3D model
-                        context.CreateContext(progDelegate: worker.ReportProgress);
+                        context.CreateContext(worker.ReportProgress);
                     }
-                    catch (Exception geomEx)
+                    if (worker.CancellationPending)
+                        //if a cancellation has been requested then don't open the resulting file
                     {
-                        var sb = new StringBuilder();
-                        sb.AppendLine($"Error creating geometry context of '{ifcFilename}' {geomEx.StackTrace}.");
-                        var newexception = new Exception(sb.ToString(), geomEx);
-                        Log.Error(sb.ToString(), newexception);
+                        try
+                        {
+                            model.Close();
+                            if (File.Exists(_temporaryXbimFileName))
+                                File.Delete(_temporaryXbimFileName); //tidy up;
+                            _temporaryXbimFileName = null;
+                            SetOpenedModelFileName(null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex.Message, ex);
+                        }
+                        return;
                     }
                 }
-                foreach (var modelReference in model.ReferencedModels)
+                else
                 {
-                    // creates federation geometry contexts if needed
-                    Debug.WriteLine(modelReference.Name);
-                    if (modelReference.Model == null) 
-                        continue;
-                    if (!modelReference.Model.GeometryStore.IsEmpty) 
-                        continue;
-                    var context = new Xbim3DModelContext(modelReference.Model);
-                    //upgrade to new geometry representation, uses the default 3D model
-                    context.CreateContext(worker.ReportProgress);
-                }
-                if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
-                {
-                    try
-                    {
-                        model.Close();
-                        if (File.Exists(_temporaryXbimFileName))
-                            File.Delete(_temporaryXbimFileName); //tidy up;
-                        _temporaryXbimFileName = null;
-                        SetOpenedModelFileName(null);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex.Message, ex);
-                    }
-                    return;
+                    Log.WarnFormat("Settings prevent mesh creation.");
                 }
                 args.Result = model;
             }
@@ -267,7 +282,18 @@ namespace XbimXplorer
                 args.Result = newexception;
             }
         }
-        
+
+        private void SetDeflection(IModel model)
+        {
+            var mf = model.ModelFactors;
+            if (mf == null)
+                return;
+            if (!double.IsNaN(_angularDeflectionOverride))
+                mf.DeflectionAngle = _angularDeflectionOverride;
+            if (!double.IsNaN(_deflectionOverride))
+                mf.DeflectionTolerance = mf.OneMilliMetre * _deflectionOverride;
+        }
+
         private void dlg_OpenAnyFile(object sender, CancelEventArgs e)
         {
             var dlg = sender as OpenFileDialog;
@@ -345,7 +371,6 @@ namespace XbimXplorer
             if (args.Result is IfcStore) //all ok
             {
                 ModelProvider.ObjectInstance = args.Result; //this Triggers the event to load the model into the views 
-                // PropertiesControl.Model = (XbimModel)args.Result; // // done thtough binding in xaml
                 ModelProvider.Refresh();
                 ProgressBar.Value = 0;
                 StatusMsg.Text = "Ready";
@@ -709,12 +734,29 @@ namespace XbimXplorer
             }
         }
 
-        // this variable is used to determine when the user is trying again to double click on the selected item
-        // from this we detect that he's probably not happy with the view, therefore we add a cutting plane to make the 
-        // element visible.
-        //
+        /// <summary>
+        /// this variable is used to determine when the user is trying again to double click on the selected item
+        /// from this we detect that he's probably not happy with the view, therefore we add a cutting plane to make the 
+        /// element visible.
+        /// </summary>
         private bool _camChanged;
+
+        /// <summary>
+        /// determines if models need to be meshed on opening
+        /// </summary>
+        private bool _meshModel = true;
+
+        /// <summary>
+        /// determines if models need to be meshed on opening
+        /// </summary>
+        private double _deflectionOverride = double.NaN;
+        private double _angularDeflectionOverride = double.NaN;
         
+        /// <summary>
+        /// determines if the geometry engine will run on parallel threads.
+        /// </summary>
+        private bool _multiThreading = true;
+
         private void SpatialControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             _camChanged = false;
@@ -756,9 +798,50 @@ namespace XbimXplorer
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();
+            // geom engine
+            sett.ComputeGeometry.IsChecked = _meshModel;
+            sett.MultiThreading.IsChecked = _multiThreading;
+            if (!double.IsNaN(_angularDeflectionOverride))
+                sett.AngularDeflection.Text = _angularDeflectionOverride.ToString();
+            if (!double.IsNaN(_deflectionOverride))
+                sett.Deflection.Text = _deflectionOverride.ToString();
+            
+            // visuals
+            sett.SimplifiedRendering.IsChecked = DrawingControl.HighSpeed;
+            sett.ShowFps.IsChecked = DrawingControl.ShowFps;
+            
+            // show dialog
             sett.ShowDialog();
-            if (sett.SettingsChanged)
-                InitFromSettings();
+            
+            
+            // dialog closed
+            if (!sett.SettingsChanged)
+                return;
+            InitFromSettings();
+
+            // all settings that are not saved
+            //
+
+            // geom engine
+            if (sett.ComputeGeometry.IsChecked != null)
+                _meshModel = sett.ComputeGeometry.IsChecked.Value;
+            if (sett.MultiThreading.IsChecked != null)
+                _multiThreading = sett.MultiThreading.IsChecked.Value;
+            
+            _deflectionOverride = double.NaN;
+            _angularDeflectionOverride = double.NaN;
+            if (!string.IsNullOrWhiteSpace(sett.AngularDeflection.Text))
+                double.TryParse(sett.AngularDeflection.Text, out _angularDeflectionOverride);
+            
+            if (!string.IsNullOrWhiteSpace(sett.Deflection.Text))
+                double.TryParse(sett.Deflection.Text, out _deflectionOverride);
+            
+            // visuals
+            if (sett.SimplifiedRendering.IsChecked != null)
+                DrawingControl.HighSpeed = sett.SimplifiedRendering.IsChecked.Value;
+            if (sett.ShowFps.IsChecked != null)
+                DrawingControl.ShowFps = sett.ShowFps.IsChecked.Value;
+
         }
 
         private void RecentFileClick(object sender, RoutedEventArgs e)

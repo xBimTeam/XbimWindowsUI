@@ -10,6 +10,6 @@
         <description>XbimXplorer</description>
     </metadata>
     <files>
-        <file src="Output\Release\**\*.*" target="lib\net45\" exclude="*.pdb;*.nupkg;*.vshost.*" />
+        <file src="Output\Release\**\*.*" target="lib\net45\" exclude="**\*.pdb;**\*.nupkg;**\*.vshost.*" />
     </files>
 </package>
