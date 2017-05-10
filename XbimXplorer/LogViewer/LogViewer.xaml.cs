@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -147,19 +148,29 @@ namespace XbimXplorer.LogViewer
             var msg = first?.Message;
             if (string.IsNullOrEmpty(msg))
                 return;
-            var re = new Regex(@"#(\d+)");
-            var m = re.Match(msg);
-            if (!m.Success)
-                return;
+            var reEntityLabel = new Regex(@"#(\d+)");
+            var mEntityLabel = reEntityLabel.Match(msg);
+            if (mEntityLabel.Success)
+            {
+                int eLabel;
+                if (!int.TryParse(mEntityLabel.Groups[1].Value, out eLabel))
+                    return;
 
-            int eLabel;
-            if (!int.TryParse(m.Groups[1].Value, out eLabel))
-                return;
+                var ipers = _mw.Model.Instances[eLabel];
+                if (ipers == null)
+                    return;
+                _mw.SelectedItem = ipers;
+            }
 
-            var ipers = _mw.Model.Instances[eLabel];
-            if (ipers == null)
-                return;
-            _mw.SelectedItem = ipers;
+            var reUrl = new Regex(@"(http([^ ]+))", RegexOptions.IgnoreCase);
+            var mUrl = reUrl.Match(msg);
+            
+            // ReSharper disable once InvertIf
+            if (mUrl.Success)
+            {
+                var text = mUrl.Groups[1].Value;
+                System.Diagnostics.Process.Start(text);
+            }
         }
     }
 }

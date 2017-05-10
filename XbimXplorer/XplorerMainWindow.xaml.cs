@@ -116,6 +116,7 @@ namespace XbimXplorer
 
             // initialise the logging repository
             LoggedEvents = new ObservableCollection<EventViewModel>();
+            // any logging event required should happen after XplorerMainWindow_Loaded
         }
 
 
@@ -191,6 +192,16 @@ namespace XbimXplorer
 
             var hier = LogManager.GetRepository() as Hierarchy;
             hier?.Root.AddAppender(_appender);
+
+            TestCRedist();
+        }
+
+        private void TestCRedist()
+        {
+            if (Xbim.ModelGeometry.XbimEnvironment.RedistInstalled())
+                return;
+            var msg = $"Requisite C++ environment missing, download and install from {Xbim.ModelGeometry.XbimEnvironment.RedistDownloadPath()}";
+            Log.Error(msg);
         }
 
         private void XplorerMainWindow_Closed(object sender, EventArgs e)
