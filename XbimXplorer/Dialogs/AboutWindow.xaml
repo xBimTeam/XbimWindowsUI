@@ -1,7 +1,7 @@
 ﻿<Window x:Class="XbimXplorer.Dialogs.AboutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AboutWindow" Height="340" Width="500" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" WindowStyle="None"
+        Title="AboutWindow" Height="340" Width="600" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" WindowStyle="None"
         Deactivated="AboutWindow_OnDeactivated"
         MouseLeftButtonDown="UserControl_MouseLeftButtonDown"
         >
