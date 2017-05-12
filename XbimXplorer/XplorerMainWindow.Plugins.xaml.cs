@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using NuGet;
+using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -282,7 +283,10 @@ namespace XbimXplorer
             var mi = sender as MenuItem;
             if (mi == null)
                 return;
-            OpenOrFocusPluginWindow(mi.Tag as Type);
+            using (var c = new WaitCursor())
+            {
+                OpenOrFocusPluginWindow(mi.Tag as Type);
+            }
         }
         
         private Assembly PluginAssemblyResolvingFunction(object sender, ResolveEventArgs args)
