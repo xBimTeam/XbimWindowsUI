@@ -195,3 +195,4 @@ Xbim.Geometry.Engine[0-9]*.dll
 /Xbim.Presentation/x86
 */ClickOnce/
 SharedFileVersionInfo.cs
+DuplicateCodeReport.xml

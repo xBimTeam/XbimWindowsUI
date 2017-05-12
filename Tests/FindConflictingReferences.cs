@@ -5,10 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xbim.Common;
 using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.Presentation.Extensions;
 
-namespace MyProject
+namespace Tests
 {
     // this function to investigate the warining sometimes received:
     // Warning: Found conflicts between different versions of the same dependent assembly
@@ -34,11 +35,11 @@ namespace MyProject
  
             foreach (var group in groupsOfConflicts)
             {
-                Debug.Write(String.Format("Possible conflicts for {0}:\r\n", group.Key));
+                Debug.Write(string.Format("Possible conflicts for {0}:\r\n", group.Key));
                 foreach (var reference in group)
                 {
                     Debug.Write(
-                        String.Format(
+                        string.Format(
                             "- {0} references {1}\r\n",
                             reference.Assembly.Name.PadRight(35),
                             reference.ReferencedAssembly.FullName));
@@ -97,7 +98,6 @@ namespace MyProject
         {
             public AssemblyName Assembly { get; set; }
             public AssemblyName ReferencedAssembly { get; set; }
-        }
- 
+        } 
     }
 }
