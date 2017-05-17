@@ -862,9 +862,9 @@ namespace Xbim.Presentation
         protected virtual void HighlighSelected(IPersistEntity newVal)
         {
             // 0. prepare
-            var mat = new WpfMaterial();
-            mat.CreateMaterial(new XbimColour(
-                "Selection", SelectionColor.ScR, SelectionColor.ScG, SelectionColor.ScB, SelectionColor.ScA)
+            var mat = new WpfMaterial(
+                new XbimColour(
+                    "Selection", SelectionColor.ScR, SelectionColor.ScG, SelectionColor.ScB, SelectionColor.ScA)
                 );
 
             // 1. get the geometry first

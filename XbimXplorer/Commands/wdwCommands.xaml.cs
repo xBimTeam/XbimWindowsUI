@@ -107,8 +107,6 @@ namespace XbimXplorer.Commands
                 writer.Close();
             }
 #endif
-
-
             if (_bDoClear)
                 TxtOut.Document = new FlowDocument();
 
@@ -319,7 +317,38 @@ namespace XbimXplorer.Commands
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
-                
+
+                m = Regex.Match(cmd, @"^(TypeReport|tr)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    ReportAdd("TypeReport", Brushes.Blue);
+                    // very low efficiency, just to have it quick and dirty.
+                    var td = new Dictionary<ExpressType, int>();
+                    foreach (var modelInstance in Model.Instances)
+                    {
+                        var t = modelInstance.ExpressType;
+                        if (td.ContainsKey(t))
+                        {
+                            td[t] += 1;
+                        }
+                        else
+                        {
+                            td.Add(t, 1);
+                        }
+                    }
+
+                    var keys = td.Keys.ToList();
+                    keys.Sort( // sort inverted
+                            (x1, x2) => td[x2].CompareTo(td[x1])
+                        );
+
+                    foreach (var key in keys)
+                    {
+                        ReportAdd($"{td[key]}\t\t{key.Name}", Brushes.Black);
+                    }
+                    continue;
+                }
+
                 m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -881,7 +910,28 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                   
+                    ReportAdd($"Testing Xbim3DModelContext creation.");
+                    var w = new Stopwatch();
+                    w.Restart();
+                    var ccnt = Model.Instances.OfType<Xbim.Ifc2x3.RepresentationResource.IfcRepresentationContext>().ToList();
+                    Debug.Write(ccnt.Count);
+                    w.Stop();
+                    ReportAdd($"Elapsed for ifc2x3.IfcRepresentationContext: {w.ElapsedMilliseconds} msec.");
+
+
+                    w.Restart();
+                    var ccnt2 = Model.Instances.OfType<IIfcGeometricRepresentationSubContext>().ToList();
+                    Debug.Write(ccnt.Count);
+                    w.Stop();
+                    ReportAdd($"Elapsed for IIfcRepresentationContext: {w.ElapsedMilliseconds} msec.");
+
+                    w.Restart();
+                    var c = new Xbim3DModelContext(Model);
+                    w.Stop();
+                    var msg = c.GetRegions();
+                    ReportAdd($"Elapsed for createcontext: {w.ElapsedMilliseconds} msec.");
+                    ReportAdd($"regions: {msg.Count()}");
+
                     continue;
                 }
                 ReportAdd($"Command not understood: {cmd}.");
@@ -1544,7 +1594,7 @@ namespace XbimXplorer.Commands
                     );
 
                 sb.AppendFormat(indentationHeader + "Namespace: {0}", ot.Type.Namespace);
-                // sb.AppendFormat(indentationHeader + "Xbim Type Id: {0}", ot.TypeId);
+                sb.AppendFormat(indentationHeader + "IsIndexed: {0}", ot.IndexedClass);
                 sb.DefaultBrush = Brushes.DarkOrange;
                 var supertypes = new List<string>();
                 var iterSuper = ot.SuperType;
