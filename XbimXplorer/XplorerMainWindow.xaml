@@ -99,7 +99,7 @@
                     <MenuItem Header="_Styler Reset" Click="SetDefaultModeStyler" />
                     <MenuItem Header="Styler _Configuration" Click="ConfigureStyler" />
                     <MenuItem Header="IfcSpaces only" Click="StylerIfcSpacesOnly" />
-                    
+                    <MenuItem Header="Display bounding corners" Click="SetStylerBoundCorners" />
                 </MenuItem>
                 <MenuItem Header="Selection view _mode">
                     <MenuItem x:Name="WholeMesh" Header="Whole mesh" Click="SelectionMode" IsChecked="True" />

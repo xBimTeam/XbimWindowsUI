@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -846,7 +847,10 @@ namespace XbimXplorer
             
             if (!string.IsNullOrWhiteSpace(sett.Deflection.Text))
                 double.TryParse(sett.Deflection.Text, out _deflectionOverride);
-            
+
+            if (!string.IsNullOrWhiteSpace(sett.BooleanTimeout.Text))
+                ConfigurationManager.AppSettings["BooleanTimeOut"] = sett.BooleanTimeout.Text;
+
             // visuals
             if (sett.SimplifiedRendering.IsChecked != null)
                 DrawingControl.HighSpeed = sett.SimplifiedRendering.IsChecked.Value;
@@ -1005,6 +1009,13 @@ namespace XbimXplorer
 
             DrawingControl.ExcludedTypes = tpcoll;
             DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
+        }
+
+        private void SetStylerBoundCorners(object sender, RoutedEventArgs e)
+        {
+            DrawingControl.DefaultLayerStyler = new BoundingBoxStyler();
+            ConnectStylerFeedBack();
+            DrawingControl.ReloadModel();
         }
     }
 }

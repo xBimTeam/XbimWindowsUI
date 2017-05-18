@@ -13,7 +13,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
-using HelixToolkit.Wpf;
 using Xbim.Common;
 using Xbim.Common.Enumerations;
 using Xbim.Common.Geometry;
@@ -27,7 +26,7 @@ using Xbim.Ifc.Validation;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using Xceed.Wpf.AvalonDock.Controls;
+using Xbim.Presentation.LayerStyling;
 using Binding = System.Windows.Data.Binding;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
@@ -910,6 +909,10 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler();
+                    _parentWindow.DrawingControl.ReloadModel();
+                    continue;
+
                     ReportAdd($"Testing Xbim3DModelContext creation.");
                     var w = new Stopwatch();
                     w.Restart();
@@ -1435,8 +1438,10 @@ namespace XbimXplorer.Commands
             var t = new TextHighliter();
 
             t.AppendFormat("Commands:");
-            t.AppendFormat(
-                "- select [count|list|typelist|full|short] [tt|transverse] [representationitems|ri|surfacesolid|ss|wire|wi] [hi|highlight] [svt|showvaluetype] <startingElement> [Property [Property...]]");
+            t.Append(
+                "- select [count|list|typelist|full|short] [tt|transverse] [representationitems|ri|surfacesolid|ss|wire|wi] [hi|highlight] [svt|showvaluetype] <startingElement> [Property [Property...]]"
+                , Brushes.Blue
+                );
             t.Append(
                 "    <startingElement>: <EntityLabel, <EntityLabel>> or <TypeIdentificator>[<+|-><TypeIdentificator>]",
                 Brushes.Gray);
@@ -1453,31 +1458,32 @@ namespace XbimXplorer.Commands
             t.Append("      Examples:", Brushes.Gray);
             t.Append("        ge 12,14", Brushes.Gray);
             
-            t.AppendFormat("- EntityLabel <label> [recursion]");
+            t.Append("- EntityLabel <label> [recursion]" , Brushes.Blue
+            );
             t.Append("    [recursion] is an int representing the depth of children to report", Brushes.Gray);
 
-            t.AppendFormat("- IfcSchema [list|count|short|full] <TypeName>");
+            t.Append("- IfcSchema [list|count|short|full] <TypeName>", Brushes.Blue);
             t.Append("    <TypeName> can contain wildcards", Brushes.Gray);
             t.Append("    use / in <TypeName> to select all root types", Brushes.Gray);
             
-            t.AppendFormat("- Reload <EntityLabel,<EntityLabel>>");
+            t.Append("- Reload <EntityLabel,<EntityLabel>>", Brushes.Blue);
             t.Append("    <EntityLabel> filters the elements to load in the viewer.", Brushes.Gray);
 
-            t.AppendFormat("- clip [off|<Elevation>|<px>, <py>, <pz>, <nx>, <ny>, <nz>|<Storey name>]");
+            t.Append("- clip [off|<Elevation>|<px>, <py>, <pz>, <nx>, <ny>, <nz>|<Storey name>]", Brushes.Blue);
             t.Append("    Clipping the 3D model is still and unstable feature. Use with caution.", Brushes.Gray);
             
-            t.AppendFormat("- ObjectPlacement <EntityLabel>");
+            t.Append("- ObjectPlacement <EntityLabel>", Brushes.Blue);
             t.Append("    Reports the place tree of an element.", Brushes.Gray);
 
-            t.AppendFormat("- TransformGraph <EntityLabel,<EntityLabel>>");
+            t.Append("- TransformGraph <EntityLabel,<EntityLabel>>", Brushes.Blue);
             t.Append("    Reports the transofrm graph for a set of elements.", Brushes.Gray);
 
-            t.AppendFormat("- IfcZip <file|folder [/s]>");
+            t.Append("- IfcZip <file|folder [/s]>", Brushes.Blue);
             t.Append("    Compresses ifc files to ifczip, the function is slow. ", Brushes.Gray);
             t.Append("    It goes through ifcstore.open rather than simple compression, ", Brushes.Gray);
             t.Append("    so it can be used totest for model correctness.", Brushes.Gray);
 
-            t.AppendFormat("- zoom <Region name>");
+            t.Append("- zoom <Region name>", Brushes.Blue);
             t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
 
             //t.AppendFormat("- Visual [list|tree|[on|off <name>]|mode <ModeCommand>]");
@@ -1485,21 +1491,21 @@ namespace XbimXplorer.Commands
             //t.Append("    'Visual tree' provides a tree layer structure", Brushes.Gray);
             //t.Append("    'Visual mode ...' changes the mode of the layer tree structure", Brushes.Gray);
             //t.Append("      <ModeCommand> in: type, entity, oddeven or demo.", Brushes.Gray);
+            t.Append("- clear [on|off]", Brushes.Blue);
 
-
-            t.AppendFormat("- clear [on|off]");
-
-            t.AppendFormat("- SelectionHighlighting [WholeMesh|Normals]");
+            t.Append("- SelectionHighlighting [WholeMesh|Normals]", Brushes.Blue);
             t.Append("    defines the graphical style for selection highliting.", Brushes.Gray);
 
-            t.AppendFormat("- SimplifyGUI");
+            t.Append("- SimplifyGUI", Brushes.Blue);
             t.Append("    opens a GUI for simplifying IFC files (useful for debugging purposes).", Brushes.Gray);
+
+            t.AppendFormat("");
+            t.AppendFormat("Notes:");
+            t.AppendFormat("1. double slash (//) are the comments token and the remainder of lines is ignored.");
+            t.AppendFormat("2. If a portion of text is selected, only selected text will be executed.");
             
             t.AppendFormat("");
-            t.Append("Commands are executed on <ctrl>+<Enter>.", Brushes.Blue);
-            t.AppendFormat("double slash (//) are the comments token and the remainder of lines is ignored.");
-            t.AppendFormat("If a portion of text is selected, only selected text will be executed.");
-
+            t.Append("Commands are executed on <ctrl>+<Enter> or pressing the Run button.", Brushes.OrangeRed);
             t.DropInto(TxtOut.Document);
         }
 
