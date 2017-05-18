@@ -722,6 +722,8 @@ namespace Xbim.Presentation
             _properties.Clear();
             _typeProperties.Clear();
             _materials.Clear();
+            _history.Clear();
+            
             NotifyPropertyChanged("Properties");
             NotifyPropertyChanged("PropertySets");
         }
