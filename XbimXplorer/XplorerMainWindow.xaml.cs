@@ -288,7 +288,6 @@ namespace XbimXplorer
             {
                 var sb = new StringBuilder();
                 sb.AppendLine($"Error opening '{ifcFilename}' {ex.StackTrace}.");
-
                 var newexception = new Exception(sb.ToString(), ex);
                 Log.Error(sb.ToString(), ex);
                 args.Result = newexception;

@@ -74,6 +74,8 @@ namespace Xbim.Presentation
 
         public ModelVisual3D TransparentsVisual3D => Transparents;
 
+        public ObservableMeshVisual3D HighlightedVisual => Highlighted;
+
         #endregion
 
         protected HashSet<Material> Materials { get; } = new HashSet<Material>();
@@ -868,47 +870,20 @@ namespace Xbim.Presentation
                 );
 
             // 1. get the geometry first
-            WpfMeshGeometry3D m;
-            if (newVal is IIfcShapeRepresentation)
-            {
-                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat);
-            }
-            if (newVal is IIfcRelVoidsElement)
-            {
-                var vd = newVal as IIfcRelVoidsElement;
-                var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>().FirstOrDefault();
-                if (rep != null)
-                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)rep, ModelPositions, mat);
-                else
-                {
-                    m = new WpfMeshGeometry3D();
-                }
-            }
-            else
-            {
-                if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
-                {
-                    m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);
-                }
-                else if (newVal != null) // single element selection, requires the newval to get the model
-                {
-                    m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
-                }
-                else // otherwise we create an empty mesh
-                {
-                    m = new WpfMeshGeometry3D();
-                }
-            }
+            //
+            var m = GetSelectionGeometry(newVal, mat);
             // 2. then determine how to highlight it
             //
             if (SelectionHighlightMode == SelectionHighlightModes.WholeMesh)
             {
                 // Highlighted is defined in the XAML of drawingcontrol3d
+                //
                 Highlighted.Content = m;
             }
             else if (SelectionHighlightMode == SelectionHighlightModes.Normals)
             {
                 // prepares the normals to faces (or points)
+                //
                 var axesMeshBuilder = new MeshBuilder();
                 var pos = m.Positions.ToArray();
                 var nor = m.Normals.ToArray();
@@ -977,6 +952,43 @@ namespace Xbim.Presentation
                 }
                 Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
             }
+        }
+
+        private WpfMeshGeometry3D GetSelectionGeometry(IPersistEntity newVal, WpfMaterial mat)
+        {
+            WpfMeshGeometry3D m;
+            if (newVal is IIfcShapeRepresentation)
+            {
+                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat);
+            }
+            if (newVal is IIfcRelVoidsElement)
+            {
+                var vd = newVal as IIfcRelVoidsElement;
+                var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
+                    .FirstOrDefault();
+                if (rep != null)
+                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) rep, ModelPositions, mat);
+                else
+                {
+                    m = new WpfMeshGeometry3D();
+                }
+            }
+            else
+            {
+                if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
+                {
+                    m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);
+                }
+                else if (newVal != null) // single element selection, requires the newval to get the model
+                {
+                    m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
+                }
+                else // otherwise we create an empty mesh
+                {
+                    m = new WpfMeshGeometry3D();
+                }
+            }
+            return m;
         }
 
         public ComponentSelectionMode ComponentSelectionDisplay = ComponentSelectionMode.All;

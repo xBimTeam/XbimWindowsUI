@@ -192,7 +192,7 @@ namespace XbimXplorer.Commands
                     foreach (var asm in asms)
                     {
                         var asmName = asm.GetName();
-                        ReportAdd(string.Format(" - {0}", asmName.FullName), Brushes.Black);
+                        ReportAdd($" - {asmName.FullName}", Brushes.Black);
                     }
                     continue;
                 }
@@ -215,10 +215,10 @@ namespace XbimXplorer.Commands
                             _bDoClear = false;
                         else
                         {
-                            ReportAdd(string.Format("Autoclear not changed ({0} is not a valid option).", option));
+                            ReportAdd($"Autoclear not changed ({option} is not a valid option).");
                             continue;
                         }
-                        ReportAdd(string.Format("Autoclear set to {0}", option.ToLower()));
+                        ReportAdd($"Autoclear set to {option.ToLower()}");
                         continue;
                     }
                     // ReSharper disable once EmptyGeneralCatchClause
@@ -320,9 +320,11 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^(TypeReport|tr)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    ReportAdd("TypeReport", Brushes.Blue);
+                    ReportAdd("========== TypeReport for " + Model.FileName, Brushes.Blue);
+                    ReportAdd("");
                     // very low efficiency, just to have it quick and dirty.
                     var td = new Dictionary<ExpressType, int>();
+
                     foreach (var modelInstance in Model.Instances)
                     {
                         var t = modelInstance.ExpressType;
@@ -343,7 +345,17 @@ namespace XbimXplorer.Commands
 
                     foreach (var key in keys)
                     {
-                        ReportAdd($"{td[key]}\t\t{key.Name}", Brushes.Black);
+                        var b = Brushes.Black;
+                        if (typeof(IIfcElement).IsAssignableFrom(key.Type))
+                            b = Brushes.Blue;
+                        else if (typeof(IIfcProduct).IsAssignableFrom(key.Type))
+                            b = Brushes.BlueViolet;
+                        else if (typeof(IIfcRepresentationItem).IsAssignableFrom(key.Type))
+                            b = Brushes.ForestGreen;
+                        else if (typeof(IIfcRelationship).IsAssignableFrom(key.Type))
+                            b = Brushes.DarkOrange;
+                        
+                        ReportAdd($"{td[key]}\t\t{key.Name}", b);
                     }
                     continue;
                 }
@@ -354,42 +366,37 @@ namespace XbimXplorer.Commands
                     if (Model.Header == null)
                     {
                         ReportAdd("Model header is not defined.", Brushes.Red);
-                        continue;
                     }
-                    ReportAdd("FileDescription:");
-                    foreach (var item in Model.Header.FileDescription.Description)
+                    else
                     {
-                        ReportAdd(string.Format("- Description: {0}", item));
-                    }
-                    ReportAdd(string.Format("- ImplementationLevel: {0}",
-                        Model.Header.FileDescription.ImplementationLevel));
-                    ReportAdd(string.Format("- EntityCount: {0}", Model.Header.FileDescription.EntityCount));
+                        ReportAdd("FileDescription:");
+                        foreach (var item in Model.Header.FileDescription.Description)
+                            ReportAdd($"- Description: {item}");
+                        ReportAdd($"- ImplementationLevel: {Model.Header.FileDescription.ImplementationLevel}");
+                        ReportAdd($"- EntityCount: {Model.Header.FileDescription.EntityCount}");
 
-                    ReportAdd("FileName:");
-                    ReportAdd(string.Format("- Name: {0}", Model.Header.FileName.Name));
-                    ReportAdd(string.Format("- TimeStamp: {0}", Model.Header.FileName.TimeStamp));
-                    foreach (var item in Model.Header.FileName.Organization)
-                    {
-                        ReportAdd(string.Format("- Organization: {0}", item));
-                    }
-                    ReportAdd(string.Format("- OriginatingSystem: {0}", Model.Header.FileName.OriginatingSystem));
-                    ReportAdd(string.Format("- PreprocessorVersion: {0}", Model.Header.FileName.PreprocessorVersion));
-                    foreach (var item in Model.Header.FileName.AuthorName)
-                    {
-                        ReportAdd(string.Format("- AuthorName: {0}", item));
-                    }
+                        ReportAdd("FileName:");
+                        ReportAdd($"- Name: {Model.Header.FileName.Name}");
+                        ReportAdd($"- TimeStamp: {Model.Header.FileName.TimeStamp}");
+                        foreach (var item in Model.Header.FileName.Organization)
+                            ReportAdd($"- Organization: {item}");
+                        ReportAdd($"- OriginatingSystem: {Model.Header.FileName.OriginatingSystem}");
+                        ReportAdd($"- PreprocessorVersion: {Model.Header.FileName.PreprocessorVersion}");
+                        foreach (var item in Model.Header.FileName.AuthorName)
+                            ReportAdd($"- AuthorName: {item}");
+                        
+                        ReportAdd($"- AuthorizationName: {Model.Header.FileName.AuthorizationName}");
+                        foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
+                            ReportAdd($"- AuthorizationMailingAddress: {item}");
 
-                    ReportAdd(string.Format("- AuthorizationName: {0}", Model.Header.FileName.AuthorizationName));
-                    foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
-                    {
-                        ReportAdd(string.Format("- AuthorizationMailingAddress: {0}", item));
+                        ReportAdd("FileSchema:");
+                        foreach (var item in Model.Header.FileSchema.Schemas)
+                            ReportAdd($"- Schema: {item}");
                     }
 
-                    ReportAdd("FileSchema:");
-                    foreach (var item in Model.Header.FileSchema.Schemas)
-                    {
-                        ReportAdd(string.Format("- Schema: {0}", item));
-                    }
+                    ReportAdd($"Modelfactors:");
+                    ReportAdd($"- OneMeter: {Model.ModelFactors.OneMetre}");
+                    
                     continue;
                 }
 
@@ -620,8 +627,7 @@ namespace XbimXplorer.Commands
                                 break;
                         }
                     }
-                    // visual selection
-                    if (highlight)
+                    if (highlight) // set selection in Xplorer 
                     {
                         var s = new EntitySelection();
                         foreach (var item in ret)
@@ -679,11 +685,16 @@ namespace XbimXplorer.Commands
                     continue;
                 }
                 
-                m = Regex.Match(cmd, @"^region (?<mode>list|set|add|\?) *(?<RegionName>.+)*$", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^region ?(?<mode>list|set|add|\?)? *(?<RegionName>.+)*$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     var mode = m.Groups["mode"].Value;
                     var rName = m.Groups["RegionName"].Value;
+                    if (string.IsNullOrWhiteSpace(mode))
+                    {
+                        ReportAdd($"Region syntax is: ^region ?(?<mode>list|set|add|\\?)? *(?<RegionName>.+)*$");
+                        continue;
+                    }
                     if (mode == "?" || mode == "list")
                     {
                         using (var reader = Model.GeometryStore.BeginRead())
@@ -692,6 +703,7 @@ namespace XbimXplorer.Commands
                             ReportAdd($"Region Collections count: {allRegCollections.Count}");
                             foreach (var regionCollection in allRegCollections)
                             {
+                                
                                 ReportAdd($"Region Collection (#{regionCollection.ContextLabel}) count: {regionCollection.Count}");
                                 foreach (var r in regionCollection)
                                 {
@@ -773,18 +785,18 @@ namespace XbimXplorer.Commands
 
                             var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
                             var transformed = mcp.Transform(pt);
-                            msg = string.Format("Clip 1m above storey elevation {0} (View space height: {1})", pt.Z, transformed.Z + 1);
+                            msg = $"Clip 1m above storey elevation {pt.Z} (View space height: {transformed.Z + 1})";
                             pz = transformed.Z + 1;
                             
                         }
                         if (msg == "")
                         {
-                            ReportAdd(string.Format("Something wrong with storey name: '{0}'", storName));
+                            ReportAdd($"Something wrong with storey name: '{storName}'");
                             ReportAdd("Names that should work are: ");
                             var strs = Model.Instances.OfType<IIfcBuildingStorey>();
                             foreach (var str in strs)
                             {
-                                ReportAdd(string.Format(" - '{0}'", str.Name));
+                                ReportAdd($" - '{str.Name}'");
                             }
                             continue;
                         }
@@ -799,7 +811,6 @@ namespace XbimXplorer.Commands
                         ny = Convert.ToDouble(m.Groups["ny"].Value);
                         nz = Convert.ToDouble(m.Groups["nz"].Value);
                     }
-
 
                     _parentWindow.DrawingControl.ClearCutPlane();
                     _parentWindow.DrawingControl.SetCutPlane(
@@ -827,6 +838,8 @@ namespace XbimXplorer.Commands
                         }
                         Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
                         Report("TransparentsVisual3D", _parentWindow.DrawingControl.TransparentsVisual3D);
+                        Report("Selection", _parentWindow.DrawingControl.HighlightedVisual, true);
+
                     }
                     else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
                     {
@@ -941,9 +954,14 @@ namespace XbimXplorer.Commands
             }
         }
 
-        private void Report(string opaquesvisual3d, ModelVisual3D visualElement)
+        private void Report(string opaquesvisual3d, ModelVisual3D visualElement, bool triangulation = false)
         {
             ReportAdd(opaquesvisual3d, Brushes.Blue);
+            if (visualElement.Content != null)
+            {
+                var as3D = visualElement.Content as GeometryModel3D;
+                Report(as3D, 1, triangulation);
+            }
             foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
             {
                 Report(visualElementChild);
@@ -953,11 +971,8 @@ namespace XbimXplorer.Commands
         private void Report(ModelVisual3D mv3d, int indent = 0)
         {
             var ind = new string('\t', indent);
-            ReportAdd(string.Format(
-                    "{0}{1} isSealed:{2} children: {3}", 
-                    ind, mv3d.GetType().Name,
-                    mv3d.IsSealed, mv3d.Children.Count)
-                    );
+            ReportAdd($"{ind}{mv3d.GetType().Name} isSealed:{mv3d.IsSealed} children: {mv3d.Children.Count}"
+            );
             foreach (var child in mv3d.Children)
             {
                 // Report(child, indent + 1);
@@ -969,35 +984,27 @@ namespace XbimXplorer.Commands
         private void Report(Model3DGroup content, int indent)
         {
             var ind = new string('\t', indent);
-            ReportAdd(string.Format(
-                    "{0}{1} isSealed:{2} children: {3}",
-                    ind, content.GetType().Name,
-                    content.IsSealed, content.Children.Count)
-                    );
+            ReportAdd($"{ind}{content.GetType().Name} isSealed:{content.IsSealed} children: {content.Children.Count}"
+            );
             foreach (var child in content.Children.OfType<GeometryModel3D>())
             {
                 Report(child, indent + 1);
             }
         }
 
-        private void Report(GeometryModel3D content, int indent)
+        private void Report(GeometryModel3D content, int indent, bool triangulation = false)
         {
             var mRep = content.Material.GetType().Name;
             var mat = content.Material as DiffuseMaterial;
             Brush b = null;
             if (mat != null)
             {
-                mRep = mat.Brush.ToString() + " ";
+                mRep = mat.Brush + " ";
                 b = mat.Brush;
             }
             
             var ind = new string('\t', indent);
-            var msg = string.Format(
-                    "{0}{1} isSealed:{2} Material: {3}",
-                    ind, content.GetType().Name,
-                    content.IsSealed,
-                    mRep
-                    );
+            var msg = $"{ind}{content.GetType().Name} isSealed:{content.IsSealed} Material: {mRep}";
             var rb = new TextHighliter();
             var txt = new List<string>() {msg};
             var bs = new List<Brush>() { Brushes.Black};
@@ -1010,17 +1017,25 @@ namespace XbimXplorer.Commands
             rb.AppendSpans(txt.ToArray(), bs.ToArray());
             ReportAdd(rb);
             if (content.Geometry is MeshGeometry3D)
-                Report(content.Geometry as MeshGeometry3D, indent + 1);
+                Report(content.Geometry as MeshGeometry3D, indent + 1, triangulation);
 
         }
 
-        private void Report(MeshGeometry3D content, int indent)
+        private void Report(MeshGeometry3D content, int indent, bool triangulation = false)
         {
             var ind = new string('\t', indent);
-            ReportAdd(string.Format(
-                    "{0}{1} isSealed:{2}\tPositions:\t{3}\tTriangleIndices:\t{4}",
-                    ind, content.GetType().Name, content.IsSealed, content.Positions.Count, content.TriangleIndices.Count)
-                    );
+            ReportAdd(
+                $"{ind}{content.GetType().Name} isSealed:{content.IsSealed}\tPositions:\t{content.Positions.Count}\tTriangleIndices:\t{content.TriangleIndices.Count}"
+            );
+            if (triangulation)
+            {
+                for (int i = 0; i < content.Positions.Count; i++)
+                {
+                    var p = content.Positions[i];
+                    var n = content.Normals[i];
+                    ReportAdd($"{p.X} {p.Y} {p.Z} {n.X} {n.Y} {n.Z}");
+                }
+            }
         }
 
         private void IfcZipAndDelete(string directoryName, bool subfolders)
@@ -1053,7 +1068,7 @@ namespace XbimXplorer.Commands
             {
                 model = IfcStore.Open(fileName, null, -1);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 ReportAdd($"Error opening source file. Ignored.", Brushes.Red);;
             }
@@ -1080,40 +1095,33 @@ namespace XbimXplorer.Commands
             }
             ReportAdd($"Completed. Delta is {diff:N}");
             return diff;
-
         }
 
         private void ReportTransformGraph(TextHighliter sb, IIfcProduct ent, int i)
         {
             var v = new TransformGraph(ent.Model);
             v.AddProduct(ent);
-            
-            // var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
-
             sb.Append(
-                string.Format("=== #{0} ({1}) ", ent.EntityLabel, ent.GetType().Name),
+                $"=== #{ent.EntityLabel} ({ent.GetType().Name}) ",
                 Brushes.Blue
                 );
-            sb.Append(
-                    string.Format("   Local matrix:"),
-                    Brushes.Black
-                );
+            sb.Append(string.Format("   Local matrix:"), Brushes.Black);
             ReportMatrix(sb, v[ent].LocalMatrix);
-
-            sb.Append(
-                    string.Format("   World matrix:"),
-                    Brushes.Black
-                );
+            sb.Append(string.Format("   World matrix:"), Brushes.Black);
             ReportMatrix(sb, v[ent].WorldMatrix());
         }
 
         private void ReportMatrix(TextHighliter sb, XbimMatrix3D matrix)
         {
             var frmt = "G7";
-            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M11.ToString(frmt), matrix.M21.ToString(frmt), matrix.M31.ToString(frmt), matrix.OffsetX.ToString(frmt)), Brushes.Black);
-            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M12.ToString(frmt), matrix.M22.ToString(frmt), matrix.M32.ToString(frmt), matrix.OffsetY.ToString(frmt)), Brushes.Black);
-            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M13.ToString(frmt), matrix.M23.ToString(frmt), matrix.M33.ToString(frmt), matrix.OffsetZ.ToString(frmt)), Brushes.Black);
-            sb.Append(string.Format("   \t{0,10}\t{1,10}\t{2,10}\t{3,10}", matrix.M14.ToString(frmt), matrix.M24.ToString(frmt), matrix.M34.ToString(frmt), matrix.M44.ToString(frmt)), Brushes.Black);
+            sb.Append(
+                $"   \t{matrix.M11.ToString(frmt),10}\t{matrix.M21.ToString(frmt),10}\t{matrix.M31.ToString(frmt),10}\t{matrix.OffsetX.ToString(frmt),10}", Brushes.Black);
+            sb.Append(
+                $"   \t{matrix.M12.ToString(frmt),10}\t{matrix.M22.ToString(frmt),10}\t{matrix.M32.ToString(frmt),10}\t{matrix.OffsetY.ToString(frmt),10}", Brushes.Black);
+            sb.Append(
+                $"   \t{matrix.M13.ToString(frmt),10}\t{matrix.M23.ToString(frmt),10}\t{matrix.M33.ToString(frmt),10}\t{matrix.OffsetZ.ToString(frmt),10}", Brushes.Black);
+            sb.Append(
+                $"   \t{matrix.M14.ToString(frmt),10}\t{matrix.M24.ToString(frmt),10}\t{matrix.M34.ToString(frmt),10}\t{matrix.M44.ToString(frmt),10}", Brushes.Black);
             sb.Append("", Brushes.Black);
         }
 
@@ -2042,10 +2050,7 @@ namespace XbimXplorer.Commands
                     else
                     {
                         ctrl.ReportAdd(
-                            string.Format(
-                                "Selected entity label is: {0}",
-                                Math.Abs(((IPersistEntity) e.NewValue).EntityLabel)
-                                ));
+                            $"Selected entity label is: {Math.Abs(((IPersistEntity) e.NewValue).EntityLabel)}");
                     }
                     break;
             }
