@@ -215,7 +215,7 @@
                 </avalonDock:LayoutPanel>
             </avalonDock:LayoutRoot>
         </avalonDock:DockingManager>
-        
+
         <StatusBar Grid.Row="2" Height="23"  Name="StatusBar" VerticalAlignment="Top" >
             <StatusBarItem>
                 <TextBlock Name="ProjectName"></TextBlock>
@@ -252,6 +252,5 @@
                 </Grid>
             </StatusBarItem>
         </StatusBar>
-
     </Grid>
 </Window>

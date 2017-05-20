@@ -578,7 +578,6 @@ namespace Xbim.Presentation
 
         protected virtual void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            
         }
         
         private PointGeomInfo GetClosestPoint(RayMeshGeometry3DHitTestResult hit)
