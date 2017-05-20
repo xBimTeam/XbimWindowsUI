@@ -76,6 +76,7 @@
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
@@ -113,6 +114,16 @@
                                          Width="200"  />
                                 <TextBlock Grid.Column="1" Grid.Row="3" Margin="210,3,10,3" >
                                     (empty for default = 0.5)
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" >
+                                    Boolean operations timeout
+                                </TextBlock>
+                                <TextBox Name="BooleanTimeout" Grid.Column="1" Grid.Row="4" Margin="3" 
+                                         HorizontalAlignment="Left"
+                                         Width="200"  />
+                                <TextBlock Grid.Column="1" Grid.Row="4" Margin="210,3,10,3" >
+                                    in sec (empty for default = 60 sec)
                                 </TextBlock>
 
                             </Grid>

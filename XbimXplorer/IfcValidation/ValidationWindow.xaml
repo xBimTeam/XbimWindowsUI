@@ -6,7 +6,7 @@
              mc:Ignorable="d"
         >
     <Grid Margin="0">
-        <TextBox Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" Margin="0,0,0,26" />
+        <TextBox Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" Margin="0,0,0,26" MouseDoubleClick="Results_MouseDoubleClick" />
         <Button  Name="Commands" Height="22" VerticalAlignment="Bottom" Click="ValidateModel">Validate model</Button>
     </Grid>
 </UserControl>

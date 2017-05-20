@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -70,6 +71,11 @@ namespace XbimXplorer.IfcValidation
             var newValue = e.NewValue as IPersistEntity;
             if (newValue == null)
                 return;
+            if (ctrl.IgnoreNextSelectionChange)
+            {
+                ctrl.IgnoreNextSelectionChange = false;
+                return;
+            }
             var validator = new IfcValidator()
             {
                 CreateEntityHierarchy = true,
@@ -106,6 +112,23 @@ namespace XbimXplorer.IfcValidation
 
                 var ret = validator.Validate(Model.Instances);
                 Report(ret);
+            }
+        }
+
+        public bool IgnoreNextSelectionChange { get; set; }
+
+        private void Results_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var ln  = Results.GetLineIndexFromCharacterIndex(Results.CaretIndex);
+            var lineStr = Results.GetLineText(ln);
+            var r = new Regex("#(\\d+)");
+            var m = r.Match(lineStr);
+            if (m.Success)
+            {
+                var elS = m.Groups[1].Value;
+                var el = Convert.ToInt32(elS);
+                IgnoreNextSelectionChange = true;
+                _xpWindow.SelectedItem = Model.Instances[el];
             }
         }
     }
