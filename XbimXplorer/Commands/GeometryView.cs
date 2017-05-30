@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Media;
 using Xbim.Common;
 using Xbim.Ifc4.Interfaces;
