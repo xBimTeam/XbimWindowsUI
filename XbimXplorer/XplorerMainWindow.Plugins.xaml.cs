@@ -176,8 +176,9 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
-                Log.Error($"Error activating plugin {mfst.Id}; startup mode set to 'Ignore'.", ex);
+                Log.Error($"Error activating plugin {mfst.Id}; startup mode set to 'Disabled'.", ex);
                 PluginManagement.SetStartup(dir, PluginConfiguration.StartupBehaviour.Disabled);
+                PluginMenu.Visibility = PluginMenuVisibility;
                 return false;
             }
             PluginMenu.Visibility = PluginMenuVisibility;

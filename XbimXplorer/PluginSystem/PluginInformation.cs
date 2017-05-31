@@ -7,7 +7,7 @@ using NuGet;
 
 namespace XbimXplorer.PluginSystem
 {
-    internal class PluginInformation
+    public class PluginInformation
     {
         private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.PluginConfiguration");
        
@@ -72,7 +72,12 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
-        public void ExtractPlugin(DirectoryInfo pluginDirectory)
+        /// <summary>
+        /// Extract files and creates manifest
+        /// </summary>
+        /// <param name="pluginDirectory">Destination folder, a subdir will be created.</param>
+        /// <returns>false on error</returns>
+        public bool ExtractPlugin(DirectoryInfo pluginDirectory)
         {
             // ensure top leved plugin directory exists
             try
@@ -83,7 +88,7 @@ namespace XbimXplorer.PluginSystem
             catch (Exception)
             {
                 Log.Error($"Could not create directory {pluginDirectory.FullName}");
-                return;
+                return false;
             }
 
             // ensure specific plugin directory exists
@@ -97,7 +102,7 @@ namespace XbimXplorer.PluginSystem
             catch (Exception)
             {
                 Log.Error($"Could not create directory {subdir.FullName}");
-                return;
+                return false;
             }
 
             // now extract files
@@ -107,14 +112,13 @@ namespace XbimXplorer.PluginSystem
                 var destname = Path.Combine(subdir.FullName, file.EffectivePath);
                 try
                 {
-
                     if (File.Exists(destname))
                         File.Delete(destname);
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"Error trying to delete: {destname}", ex);
-                    return;
+                    return false;
                 }
 
                 try
@@ -128,7 +132,7 @@ namespace XbimXplorer.PluginSystem
                 catch (Exception ex)
                 {
                     Log.Error($"Error trying to extract: {destname}", ex);
-                    return;
+                    return false;
                 }
             }
 
@@ -137,16 +141,22 @@ namespace XbimXplorer.PluginSystem
             var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Id}.manifest");
             try
             {
-                if (_onlinePackage.ExtractManifestFile(packageName))
-                    return;
-                Log.Error($"Error trying to create manifest file for {packageName}");                
+                if (!_onlinePackage.ExtractManifestFile(packageName))
+                {
+                    Log.Error($"Error trying to create manifest file for {packageName}");
+                    return false;
+                }
+                SetDirectoryInfo(subdir);
             }
             catch (Exception ex)
             {
                 Log.Error($"Error trying to create manifest file for: {packageName}", ex);
+                return false;
             }
+            return true;
         }
 
+        /// <returns>True if plugin is completely loaded. False if not, for any reason.</returns>
         public bool Load()
         {
             return _directory != null && MainWindow.LoadPlugin(_directory, true);
