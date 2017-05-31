@@ -198,16 +198,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-
-                mdbclosed = Regex.Match(cmd, @"^PortPlugins", RegexOptions.IgnoreCase);
-                if (mdbclosed.Success)
-                {
-                    ReportAdd("Attempting plugins port.", Brushes.Black);
-                    App.PortPlugins();
-                    ReportAdd("Plugins port completed.", Brushes.Black);
-                    continue;
-                }
-
+                
                 mdbclosed = Regex.Match(cmd, @"clear *\b(?<mode>(on|off))*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {

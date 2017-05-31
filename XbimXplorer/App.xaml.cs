@@ -23,6 +23,7 @@ using NuGet;
 using Squirrel;
 using Xbim.IO.Esent;
 using System.Collections.Generic;
+using System.Configuration;
 
 #endregion
 
@@ -56,14 +57,76 @@ namespace XbimXplorer
                 using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
                 {
                     const string ext = ".php";
-                    await mgr.UpdateApp(releasesExtension: ext);
+                    var t = await mgr.UpdateApp(releasesExtension: ext);
                     mgr.Dispose();
+
+                    if (!EqualityComparer<ReleaseEntry>.Default.Equals(t, default(ReleaseEntry)))
+                    {
+                        // an update happened, backup the settings
+                        BackupSettings();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Log.Error("Error in UpdateManager.", ex);
             }
+        }
+
+        // the followint two functions taken from https://github.com/Squirrel/Squirrel.Windows/issues/198
+
+        /// <summary>
+        /// Make a backup of our settings.
+        /// Used to persist settings across updates.
+        /// </summary>
+        internal static void BackupSettings()
+        {
+            if (!IsSquirrelInstall)
+                return;
+            var settingsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            var destination = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\..\\last.config";
+            File.Copy(settingsFile, destination, true);
+        }
+
+        /// <summary>
+        /// Restore our settings backup if any.
+        /// Used to persist settings across updates.
+        /// </summary>
+        internal static void RestoreSettings()
+        {
+            //Restore settings after application update            
+            var destFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            var sourceFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\..\\last.config";
+            // Check if we have settings that we need to restore
+            if (!File.Exists(sourceFile))
+            {
+                // Nothing we need to do
+                return;
+            }
+            // Create directory as needed
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destFile));
+            }
+            catch (Exception)
+            {
+                
+            }
+
+            // Copy our backup file in place 
+            try
+            {
+                File.Copy(sourceFile, destFile, true);
+            }
+            catch (Exception) { }
+
+            // Delete backup file
+            try
+            {
+                File.Delete(sourceFile);
+            }
+            catch (Exception) { }
+
         }
 
         private static string SquirrelFolder()
@@ -82,18 +145,20 @@ namespace XbimXplorer
                 : Path.Combine(dirName, "..");
         }
 
-        internal static void PortPlugins()
+        
+        /// <returns>true if it's a first run of the new app.</returns>
+        internal static bool PortPlugins()
         {
             if (!IsSquirrelInstall)
             {
                 Log.Info("Application is not under Squirrel installer. Nothing done.");
-                return;
+                return false;
             }
             var sf = SquirrelFolder();
             if (string.IsNullOrEmpty(sf))
             {
                 Log.Info("Squirrel folder not found. Nothing done.");
-                return;
+                return false;
             }
             var dsf = new DirectoryInfo(sf);
             var stringVersions = dsf.GetDirectories("app-*").Select(x => x.Name.Substring(4)).ToArray();
@@ -117,7 +182,7 @@ namespace XbimXplorer
             if (vrs.Count < 2)
             {
                 Log.Info($"Low version count; nothing to do.");
-                return;
+                return false;
             }
             var latest = PluginFolder(vrs[vrs.Count - 1]);
             Log.Info($"Latest to test: {latest.FullName}");
@@ -126,7 +191,7 @@ namespace XbimXplorer
             if (latest.Exists)
                 // if it's already been created we ignore the case, 
                 // if plugins get deleted we don't want them back
-                return;
+                return false;
 
             // make the directory so the action is not repeted.
             //
@@ -134,12 +199,13 @@ namespace XbimXplorer
 
             // check if there's nothing to copy anyway
             if (!prev.Exists)
-                return;
+                return true;
 
             Log.Info("Attempting copy.");
             // perform the copy
             DirectoryCopy(prev, latest.FullName, true);
             Log.Info("Completed copy.");
+            return true;
         }
 
         // taken from https://msdn.microsoft.com/en-us/library/bb762914(v=vs.110).aspx
@@ -202,7 +268,11 @@ namespace XbimXplorer
             if (!blockUpdate)
                 Update();
 
-            PortPlugins();
+            var firstRun = PortPlugins();
+            if (firstRun)
+            {
+                RestoreSettings();
+            }
             
 
             // evaluate special parameters before loading MainWindow
@@ -213,16 +283,6 @@ namespace XbimXplorer
                 {
                     blockPlugin = true;
                 }
-            }
-
-            // see if an update of settings is required from a previous version of the app.
-            // this will allow to retain the configuration across versions, it is useful for the squirrel installer
-            //
-            if (XbimXplorer.Properties.Settings.Default.SettingsUpdateRequired)
-            {
-                XbimXplorer.Properties.Settings.Default.Upgrade();
-                XbimXplorer.Properties.Settings.Default.SettingsUpdateRequired = false;
-                XbimXplorer.Properties.Settings.Default.Save();
             }
 
             var mainView = new XplorerMainWindow(blockPlugin);

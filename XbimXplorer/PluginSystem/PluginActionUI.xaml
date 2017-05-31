@@ -8,7 +8,6 @@
              d:DataContext="{d:DesignInstance Type=local:PluginInformationVm}"
              d:DesignHeight="50" d:DesignWidth="400">
     <Grid>
-        <TextBlock Text="{Binding PluginId}" Background="Aqua" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" Margin="0,0,200,0" />
         <Button Margin="0,0,0,0" IsEnabled="{Binding CanDownload}" Click="Download" Content="{Binding DownloadCaption}" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" />
         <Button IsEnabled="{Binding CanLoad}" Margin="0,0,100,0" Click="Load" Content="Load" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" />
         <Button Visibility="{Binding ShowEnableToggle}"  IsEnabled="{Binding IsInstalled}" Margin="0,0,200,0" Click="ToggleEnabled" Content="{Binding EnableToggleCaption}" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Center" />

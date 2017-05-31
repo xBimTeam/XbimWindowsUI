@@ -1,4 +1,4 @@
-@set "version=4.0.12-V0041"
+@set "version=4.0.12-V0042"
 @echo Ensure an updated version of the squirrel repo in Squirrel.Windows
 @rmdir OutPut\Release /s /q
 @echo Build the solution in release mode now.
