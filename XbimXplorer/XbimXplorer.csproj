@@ -307,6 +307,9 @@
       <DependentUpon>LogViewer.xaml</DependentUpon>
     </Compile>
     <Compile Include="PluginSystem\IPackageExtensions.cs" />
+    <Compile Include="PluginSystem\PluginActionUI.xaml.cs">
+      <DependentUpon>PluginActionUI.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PluginSystem\PluginConfiguration.cs" />
     <Compile Include="PluginSystem\PluginInformation.cs" />
     <Compile Include="PluginSystem\PluginInformationVm.cs" />
@@ -354,6 +357,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="LogViewer\LogViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PluginSystem\PluginActionUI.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

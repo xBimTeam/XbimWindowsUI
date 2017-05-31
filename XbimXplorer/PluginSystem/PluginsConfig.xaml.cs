@@ -24,6 +24,8 @@ namespace XbimXplorer.PluginSystem
             InitializeComponent();
             RefreshPluginList();
             _mainWindow = Application.Current.MainWindow as XplorerMainWindow;
+            DataContext = this;
+            SelectedPlugin = new PluginInformationVm(null);
         }
 
         internal string SelectedRepoUrl => "https://www.myget.org/F/xbim-plugins/api/v2";
@@ -69,6 +71,8 @@ namespace XbimXplorer.PluginSystem
         private readonly Dictionary<string, PluginInformation> _diskPlugins =
             new Dictionary<string, PluginInformation>();
 
+        private PluginInformationVm _selectedPlugin;
+
         private void RefreshLocalPlugins()
         {
             _diskPlugins.Clear();
@@ -80,19 +84,6 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
-        PluginInformationVm SelectedPlugin => PluginList.SelectedItem as PluginInformationVm;
-
-        private void Download(object sender, RoutedEventArgs e)
-        {
-            SelectedPlugin?.ExtractPlugin(PluginManagement.GetPluginsDirectory());
-            RefreshPluginList();
-        }
-
-        private void RefreshPluginList(object sender, RoutedEventArgs e)
-        {
-            RefreshPluginList();
-        }
-
         private string DisplayOptionText
         {
             get
@@ -102,8 +93,6 @@ namespace XbimXplorer.PluginSystem
             }
         }
         
-    
-
         private void RefreshPluginList()
         {
             using (new WaitCursor())
@@ -127,17 +116,14 @@ namespace XbimXplorer.PluginSystem
             PluginList.ItemsSource = plugins;
         }
 
-        private void Load(object sender, RoutedEventArgs e)
+        public PluginInformationVm SelectedPlugin
         {
-            var v = SelectedPlugin;
-            v?.Load();
-            RefreshPluginList();
-        }
-
-        private void ToggleEnabled(object sender, RoutedEventArgs e)
-        {
-            var v = SelectedPlugin;
-            v?.ToggleEnabled();
+            get { return _selectedPlugin; }
+            set
+            {
+                _selectedPlugin = value;
+                CurrentPlugin.DataContext = _selectedPlugin;
+            }
         }
 
         private void PluginList_OnDrop(object sender, DragEventArgs e)
