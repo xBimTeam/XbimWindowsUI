@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -169,6 +170,21 @@ namespace XbimXplorer.Dialogs
         public IfcStore Model { get; set; }
         public List<Assembly> Assemblies { get; set; }
 
+        public bool UpdateAvailable
+        {
+            set
+            {
+                UpdateTab.Visibility = value
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+                if (value)
+                {
+                    Dispatcher.BeginInvoke((Action)(() => Tabs.SelectedItem = UpdateTab));
+                }
+            }
+        }
+
         private void UserControl_MouseLeftButtonDown(object sender, MouseButtonEventArgs eventArgs)
         {
             DragMove();
@@ -186,6 +202,11 @@ namespace XbimXplorer.Dialogs
             {
                 AssembliesText.Text = AssembliesInfo;
             }
+        }
+
+        private void Restart(object sender, System.Windows.RoutedEventArgs e)
+        {
+            UpdateManager.RestartApp();
         }
     }
 }

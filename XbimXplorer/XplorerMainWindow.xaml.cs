@@ -115,6 +115,8 @@ namespace XbimXplorer
             InitFromSettings();
             RefreshRecentFiles();
 
+            
+
             // initialise the logging repository
             LoggedEvents = new ObservableCollection<EventViewModel>();
             // any logging event required should happen after XplorerMainWindow_Loaded
@@ -797,15 +799,21 @@ namespace XbimXplorer
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
+            ShowAboutDialog();
+        }
+
+        private void ShowAboutDialog()
+        {
             var w = new AboutWindow
             {
                 Model = Model,
                 Assemblies = _pluginAssemblies,
-                MainWindow = this
+                MainWindow = this,
+                UpdateAvailable = _updateAvailable
             };
             w.Show();
         }
-        
+
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();
@@ -1016,5 +1024,7 @@ namespace XbimXplorer
             ConnectStylerFeedBack();
             DrawingControl.ReloadModel();
         }
+
+        
     }
 }

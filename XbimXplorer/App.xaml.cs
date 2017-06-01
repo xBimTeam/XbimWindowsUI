@@ -24,6 +24,7 @@ using Squirrel;
 using Xbim.IO.Esent;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Threading;
 
 #endregion
 
@@ -49,22 +50,41 @@ namespace XbimXplorer
         }
 
         private static async void Update()
-        {
+        {            
+            // Thread.Sleep(2000);
+            // XplorerMainWindow.AppUpdate.Execute(null, null);
             if (!IsSquirrelInstall)
                 return;
             try
             {
-                using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
+                
+
+                var updateSource = "http://www.overarching.it/dload/XbimXplorer";
+                var ext = ".php";
+
+                // used to test local installations
+                if (false)
                 {
-                    const string ext = ".php";
+                    var di = new DirectoryInfo(@"C:\Data\dev\XbimTeam\Squirrel.Windows\XplorerReleases");
+                    if (di.Exists)
+                    {
+                        updateSource = di.FullName;
+                        ext = "";
+                    }
+                }
+
+                using (var mgr = new UpdateManager(updateSource))
+                {
                     var t = await mgr.UpdateApp(releasesExtension: ext);
                     mgr.Dispose();
 
-                    if (!EqualityComparer<ReleaseEntry>.Default.Equals(t, default(ReleaseEntry)))
-                    {
-                        // an update happened, backup the settings
-                        BackupSettings();
-                    }
+                    if (EqualityComparer<ReleaseEntry>.Default.Equals(t, default(ReleaseEntry)))
+                        return;
+
+                    // an update happened, backup the settings
+                    BackupSettings();
+                    // this will notify the XplorerMainWindow instance
+                    XplorerMainWindow.AppUpdate.Execute(null, null);
                 }
             }
             catch (Exception ex)
@@ -73,7 +93,7 @@ namespace XbimXplorer
             }
         }
 
-        // the followint two functions taken from https://github.com/Squirrel/Squirrel.Windows/issues/198
+        // the following two functions taken from https://github.com/Squirrel/Squirrel.Windows/issues/198
 
         /// <summary>
         /// Make a backup of our settings.
@@ -84,6 +104,8 @@ namespace XbimXplorer
             if (!IsSquirrelInstall)
                 return;
             var settingsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            if (!File.Exists(settingsFile))
+                return;
             var destination = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\..\\last.config";
             File.Copy(settingsFile, destination, true);
         }
@@ -342,7 +364,10 @@ namespace XbimXplorer
                     bOneModelLoaded = true;
                     mainView.LoadAnyModel(thisArg);
                 }
+
+                
             }
+            
         }
     }
 }

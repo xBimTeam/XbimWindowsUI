@@ -452,6 +452,10 @@
     <Compile Include="Simplify\IfcSimplify.xaml.cs">
       <DependentUpon>IfcSimplify.xaml</DependentUpon>
     </Compile>
+    <Compile Include="XplorerMainWindow.Update.cs">
+      <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XplorerMainWindow.xaml.cs">
       <DependentUpon>XplorerMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -544,6 +548,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="LogViewer\LogViewer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Squirrel-Logo-Square.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
