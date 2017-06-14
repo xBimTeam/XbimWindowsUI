@@ -12,6 +12,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using Xbim.Common.Geometry;
 using Xbim.Geometry.Engine.Interop;
 using Xbim.Ifc2x3.GeometricConstraintResource;
@@ -839,6 +840,9 @@ namespace XbimXplorer.Querying
                         {
                             ReportAdd(item);
                         }
+                        Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
+                        Report("TransparentsVisual3D", _parentWindow.DrawingControl.TransparentsVisual3D);
+                        // Report("Selection", _parentWindow.DrawingControl.HighlightedVisual, true);
                     }
                     else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
                     {
@@ -941,7 +945,92 @@ namespace XbimXplorer.Querying
                 ReportAdd(string.Format("Command not understood: {0}.", cmd));
             }
         }
-        
+
+        private void Report(string opaquesvisual3d, ModelVisual3D visualElement, bool triangulation = false)
+        {
+            ReportAdd(opaquesvisual3d, Brushes.Blue);
+            if (visualElement.Content != null)
+            {
+                var as3D = visualElement.Content as GeometryModel3D;
+                Report(as3D, 1, triangulation);
+            }
+            foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
+            {
+                Report(visualElementChild);
+            }
+        }
+
+        private void Report(ModelVisual3D mv3d, int indent = 0)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd($"{ind}{mv3d.GetType().Name} isSealed:{mv3d.IsSealed} children: {mv3d.Children.Count}"
+            );
+            foreach (var child in mv3d.Children)
+            {
+                // Report(child, indent + 1);
+            }
+            if (mv3d.Content is Model3DGroup)
+                Report((Model3DGroup)mv3d.Content, indent + 1);
+        }
+
+        private void Report(Model3DGroup content, int indent)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd($"{ind}{content.GetType().Name} isSealed:{content.IsSealed} children: {content.Children.Count}"
+            );
+            foreach (var child in content.Children.OfType<GeometryModel3D>())
+            {
+                Report(child, indent + 1);
+            }
+        }
+
+        private void Report(GeometryModel3D content, int indent, bool triangulation = false)
+        {
+            var mRep = content.Material.GetType().Name;
+            var mat = content.Material as DiffuseMaterial;
+            Brush b = null;
+            if (mat != null)
+            {
+                mRep = mat.Brush + " ";
+                b = mat.Brush;
+            }
+
+            var ind = new string('\t', indent);
+            var msg = $"{ind}{content.GetType().Name} isSealed:{content.IsSealed} Material: {mRep}";
+            var rb = new TextHighliter();
+            var txt = new List<string>() { msg };
+            var bs = new List<Brush>() { Brushes.Black };
+
+            if (b != null)
+            {
+                txt.Add("█████████"); // used to present colour
+                bs.Add(b);
+            }
+            rb.AppendSpans(txt.ToArray(), bs.ToArray());
+            ReportAdd(rb);
+            if (content.Geometry is MeshGeometry3D)
+                Report(content.Geometry as MeshGeometry3D, indent + 1, triangulation);
+
+        }
+
+        private void Report(MeshGeometry3D content, int indent, bool triangulation = false)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd(
+                $"{ind}{content.GetType().Name} isSealed:{content.IsSealed}\tPositions:\t{content.Positions.Count}\tTriangleIndices:\t{content.TriangleIndices.Count}"
+            );
+            if (triangulation)
+            {
+                for (int i = 0; i < content.Positions.Count; i++)
+                {
+                    var p = content.Positions[i];
+                    var n = content.Normals[i];
+                    ReportAdd($"{p.X} {p.Y} {p.Z} {n.X} {n.Y} {n.Z}");
+                }
+            }
+        }
+
+
         private void ReportObjectPlacement(TextHighliter sb, IPersistIfcEntity ent, int indentation)
         {
 

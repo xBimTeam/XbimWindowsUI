@@ -28,6 +28,9 @@ using System.Windows.Input;
 using log4net;
 using log4net.Repository.Hierarchy;
 using Microsoft.Win32;
+using Xbim.Common;
+using Xbim.Ifc2x3.SharedComponentElements;
+using Xbim.Ifc2x3.StructuralElementsDomain;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
@@ -299,6 +302,9 @@ namespace XbimXplorer
                 {
                     model.CreateFrom(ifcFilename, _temporaryXbimFileName, worker.ReportProgress, true);
                     var context = new Xbim3DModelContext(model);//upgrade to new geometry represenation, uses the default 3D model
+                    if (_instanceLevelDeflection)
+                        context.CustomMeshingBehaviour += CustomMeshingBehaviour;
+                    SetDeflection(model);
                     context.CreateContext(geomStorageType: XbimGeometryType.PolyhedronBinary,  progDelegate: worker.ReportProgress,  adjustWCS: false);
             
                     if (worker.CancellationPending) //if a cancellation has been requested then don't open the resulting file
@@ -336,7 +342,38 @@ namespace XbimXplorer
             }
         }
 
-      
+        private Xbim3DModelContext.MeshingSimplification CustomMeshingBehaviour(int elementId, short typeId, XbimModelFactors modelfactors, ref double linearDeflection, ref double angularDeflection)
+        {
+            // to determine the id of an ifctype it's possible to use the following
+            int typeIdOfWallstandardCase = IfcMetaData.IfcTypeId(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWallStandardCase));
+            // but then it should be retained as number for speed
+
+            // if enabled the following does not punch openings into walls
+
+            if (false)
+            {
+                if (typeId == 452 || typeId == typeIdOfWallstandardCase) // ifcWall or wallStandardCase
+                {
+                    return Xbim3DModelContext.MeshingSimplification.SkipSubtractions;
+                }
+            }
+
+            int aTypeId = IfcMetaData.IfcTypeId(typeof(IfcFastener));
+            if (typeId == 571) // 571 is IfcReinforcingBar
+            {
+                linearDeflection = 5 * linearDeflection;
+                angularDeflection = 5 * angularDeflection;
+            }
+            else if (typeId == 535) // 535 is IfcFastener
+            {
+                linearDeflection = 5 * linearDeflection;
+                angularDeflection = 5 * angularDeflection;
+                return Xbim3DModelContext.MeshingSimplification.SkipBooleans;
+            }
+
+            return Xbim3DModelContext.MeshingSimplification.None;
+        }
+
 
         XbimDBAccess _fileAccessMode = XbimDBAccess.Read;
         /// <summary>
@@ -935,13 +972,55 @@ namespace XbimXplorer
             var w = new AboutWindow {Model = Model};
             w.Show();
         }
-        
+
+        private double _deflectionOverride = double.NaN;
+        private double _angularDeflectionOverride = double.NaN;
+        private bool _instanceLevelDeflection = false;
+
+        private void SetDeflection(IModel model)
+        {
+            var mf = model.ModelFactors;
+            if (mf == null)
+                return;
+            if (!double.IsNaN(_angularDeflectionOverride))
+                mf.DeflectionAngle = _angularDeflectionOverride;
+            if (!double.IsNaN(_deflectionOverride))
+                mf.DeflectionTolerance = mf.OneMilliMetre * _deflectionOverride;
+        }
+
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();
+
+            // geom engine
+            // sett.ComputeGeometry.IsChecked = _meshModel;
+            // sett.MultiThreading.IsChecked = _multiThreading;
+            if (!double.IsNaN(_angularDeflectionOverride))
+                sett.AngularDeflection.Text = _angularDeflectionOverride.ToString();
+            if (!double.IsNaN(_deflectionOverride))
+                sett.Deflection.Text = _deflectionOverride.ToString();
+            sett.InstanceCustomDeflection.IsChecked = _instanceLevelDeflection;
+
+            // visuals
+            // sett.SimplifiedRendering.IsChecked = DrawingControl.HighSpeed;
+
+
             sett.ShowDialog();
             if (sett.SettingsChanged)
                 InitFromSettings();
+
+
+            // all settings that are not saved
+            //
+            _deflectionOverride = double.NaN;
+            _angularDeflectionOverride = double.NaN;
+            _instanceLevelDeflection = sett.InstanceCustomDeflection.IsChecked.Value;
+            
+            if (!string.IsNullOrWhiteSpace(sett.AngularDeflection.Text))
+                double.TryParse(sett.AngularDeflection.Text, out _angularDeflectionOverride);
+
+            if (!string.IsNullOrWhiteSpace(sett.Deflection.Text))
+                double.TryParse(sett.Deflection.Text, out _deflectionOverride);
         }
 
         private void RecentFileClick(object sender, RoutedEventArgs e)

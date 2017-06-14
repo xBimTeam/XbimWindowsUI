@@ -1,7 +1,7 @@
 ﻿<Window x:Class="XbimXplorer.Dialogs.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SettingsWindow" Height="378" Width="500">
+        Title="SettingsWindow" Height="400" Width="750">
     <Grid>
         <DockPanel>
             <Grid DockPanel.Dock="Bottom" >
@@ -9,67 +9,167 @@
                 <Button Content="Ok" Margin="0,5,5,5" HorizontalAlignment="Right" Width="80" Click="ButtonOK_Click" />
                 <Button Content="Cancel" Margin="0,5,95,5" HorizontalAlignment="Right" Width="80" Click="ButtonCancel_Click" />
             </Grid>
-            <GroupBox Header="File Management" Margin="10"  DockPanel.Dock="Top">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto" />
-                        <RowDefinition Height="auto" />
-                    </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="File access mode:" VerticalAlignment="Center" />
-                    <ComboBox Grid.Column="1" Grid.Row="0" Margin="3" SelectedItem="{Binding SelFileAccessMode}" ItemsSource="{Binding FileAccessModes}" />
+            <TabControl x:Name="tabControl" Margin="5">
+                <TabItem Header="General">
+                    <DockPanel>
+                        <GroupBox Header="File Management" Margin="10"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Number of recent files:" VerticalAlignment="Center" />
-                    <TextBox Grid.Column="1" Grid.Row="1" Margin="3" Text="{Binding NumberRecentFiles}" TextAlignment="Right" PreviewTextInput="IntOnly_PreviewTextInput" />
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="File access mode:" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1" Grid.Row="0" Margin="3" SelectedItem="{Binding SelFileAccessMode}" ItemsSource="{Binding FileAccessModes}" />
 
-                </Grid>
-            </GroupBox>
-            <GroupBox Header="Plugin Management" Margin="10"  DockPanel.Dock="Top">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto" />
-                        <RowDefinition Height="auto" />
-                    </Grid.RowDefinitions>
+                                <TextBlock Grid.Column="0" Grid.Row="1" Text="Number of recent files:" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Grid.Row="1" Margin="3" Text="{Binding NumberRecentFiles}" TextAlignment="Right" PreviewTextInput="IntOnly_PreviewTextInput" />
+
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox Header="Plugin Management" Margin="10"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+
+
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Load plugins on startup" VerticalAlignment="Center" />
+                                <CheckBox Grid.Column="1" Grid.Row="0" Content="Enabled" IsChecked="{Binding PluginStartupLoad}"  />
+
+                                <TextBlock Grid.Column="0" Grid.Row="1" Text="Manual plugins load" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Grid.Row="1" >
+                                    <Hyperlink Click="ManualPluginLoad" >Load now</Hyperlink>
+                                </TextBlock>
+
+
+
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox Header="UI Configuration" Margin="10"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+
+
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Developer mode" VerticalAlignment="Center" />
+                                <CheckBox Grid.Column="1" Grid.Row="0" Content="Enabled" IsChecked="{Binding DeveloperMode}"  />
+                            </Grid>
+                        </GroupBox>
+                    </DockPanel>
+                    
+                </TabItem>
+                <TabItem Header="Geometry">
+                    <DockPanel>
+                        <TextBlock Margin="10,5" VerticalAlignment="Bottom" Foreground="OrangeRed" DockPanel.Dock="Top" >
+                            Geometry settings are not saved when XbimXplorer is closed.
+                        </TextBlock>
+                        <GroupBox Header="Geometry engine" Margin="10,5"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+
+
+                                <TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" >
+                                    On file load
+                                </TextBlock>
+                                <CheckBox Name="ComputeGeometry" IsEnabled="False" IsChecked="True" Grid.Column="1" Grid.Row="0" Margin="3" >
+                                    Perform meshing
+                                </CheckBox>
+
+                                <TextBlock Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" >
+                                    Threading configuration
+                                </TextBlock>
+                                <CheckBox Name="MultiThreading" IsEnabled="False"  IsChecked="True" Grid.Column="1" Grid.Row="1" Margin="3" >
+                                    Use multiple threads
+                                </CheckBox>
+
+                                <TextBlock Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" >
+                                    Linear deflection
+                                </TextBlock>
+                                <TextBox Name="Deflection" Grid.Column="1" Grid.Row="2" Margin="3" Width="200" 
+                                         HorizontalAlignment="Left" VerticalAlignment="Center"
+                                />
+                                <TextBlock Grid.Column="1" Grid.Row="2" Margin="210,3,10,3" >
+                                    (empty for default = 5, measure in mm)
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" >
+                                    Angular deflection
+                                </TextBlock>
+                                <TextBox Name="AngularDeflection" Grid.Column="1" Grid.Row="3" Margin="3" 
+                                         HorizontalAlignment="Left"
+                                         Width="200"  />
+                                <TextBlock Grid.Column="1" Grid.Row="3" Margin="210,3,10,3" >
+                                    (empty for default = 0.5)
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" >
+                                    Instance level deflection
+                                </TextBlock>
+                                <CheckBox Name="InstanceCustomDeflection" IsEnabled="True"  IsChecked="True" Grid.Column="1" Grid.Row="4" Margin="3" >
+                                    Enable reduced meshing for rebars
+                                </CheckBox>
+                                
+
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox Header="3D viewer" Margin="10,5"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="0" Text="Simplified rendering" VerticalAlignment="Center" />
+                                <CheckBox x:Name="SimplifiedRendering" Grid.Column="1" Margin="5" Grid.Row="0" IsEnabled="False" Content="Enabled" />
+
+                                
+                                
+
+                            </Grid>
+                        </GroupBox>
+                    </DockPanel>
+
+                </TabItem>
+            </TabControl>
+
 
                     
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Load plugins on startup" VerticalAlignment="Center" />
-                    <CheckBox Grid.Column="1" Grid.Row="0" Content="Enabled" IsChecked="{Binding PluginStartupLoad}"  />
-
-                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Manual plugins load" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1" Grid.Row="1" >
-                        <Hyperlink Click="ManualPluginLoad" >Load now</Hyperlink>
-                    </TextBlock>
-
-                    
-                    
-                </Grid>
-            </GroupBox>
-            <GroupBox Header="UI Configuration" Margin="10"  DockPanel.Dock="Top">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto" />
-                        <RowDefinition Height="auto" />
-                    </Grid.RowDefinitions>
-
-
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Developer mode" VerticalAlignment="Center" />
-                    <CheckBox Grid.Column="1" Grid.Row="0" Content="Enabled" IsChecked="{Binding DeveloperMode}"  />
-                </Grid>
-            </GroupBox>
         </DockPanel>
         
         
     </Grid>
 </Window>
+
