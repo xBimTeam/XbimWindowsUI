@@ -148,6 +148,22 @@ namespace Xbim.Presentation.LayerStyling
                             else //it is a one off, merge it with shapes of same style
                             {
                                 var targetMergeMeshByStyle = meshesByStyleId[styleId];
+
+                                // replace target mesh beyond suggested size
+                                // https://docs.microsoft.com/en-us/dotnet/framework/wpf/graphics-multimedia/maximize-wpf-3d-performance
+                                // 
+                                if (targetMergeMeshByStyle.PositionCount > 20000
+                                    ||
+                                    targetMergeMeshByStyle.TriangleIndexCount > 60000
+                                )
+                                {
+                                    targetMergeMeshByStyle.EndUpdate();
+                                    var replace = GetNewStyleMesh(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup);
+                                    meshesByStyleId[styleId] = replace;
+                                    targetMergeMeshByStyle = replace;
+                                }
+                                // end replace
+
                                 if (shapeGeom.Format != (byte) XbimGeometryType.PolyhedronBinary) 
                                     continue;
                                 var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
