@@ -247,11 +247,23 @@ namespace XbimXplorer.Simplify
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+
+            var ftArr = new[]
+            {
+                "Ifc files (.ifc)|*.ifc",
+                "Any file|*.*"
+            };
+
             // Configure open file dialog box
-            var dlg = new OpenFileDialog();
-            dlg.FileName = ""; // Default file name
-            dlg.DefaultExt = ".ifc"; // Default file extension
-            dlg.Filter = "Ifc files (.ifc)|*.ifc"; // Filter files by extension 
+            var dlg = new OpenFileDialog
+            {
+                FileName = "",
+                DefaultExt = ".ifc",
+                Filter = string.Join("|", ftArr)
+            };
+            // Default file name
+            // Default file extension
+            // Filter files by extension 
 
             // Show open file dialog box
             var result = dlg.ShowDialog();
@@ -271,9 +283,7 @@ namespace XbimXplorer.Simplify
         {
             if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl)))
                 return;
-
             ConsiderManualSelection();
-
         }
 
         private void ConsiderManualSelection()

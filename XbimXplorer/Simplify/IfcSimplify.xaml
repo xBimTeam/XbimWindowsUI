@@ -46,7 +46,8 @@
                     </TabItem>
                     <TabItem Header="Manual selection" KeyDown="txtCommand_KeyDown">
                         <Grid Background="#FFE5E5E5">
-                            <TextBox x:Name="TxtHandPicked" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
+                            <TextBox x:Name="TxtHandPicked" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0,0,0,31" VerticalScrollBarVisibility="Auto"/>
+                            <Label Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" >Press ctrl-Enter to re-evaluate</Label>
                         </Grid>
                     </TabItem>
 

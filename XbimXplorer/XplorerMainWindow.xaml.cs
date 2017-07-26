@@ -507,8 +507,20 @@ namespace XbimXplorer
 
         private void CommandBinding_Open(object sender, ExecutedRoutedEventArgs e)
         {
+            var corefilters = new[] {
+                "Xbim Files|*.xbim;*.xbimf;*.ifc;*.ifcxml;*.ifczip",
+                "Ifc File (*.ifc)|*.ifc",
+                "xBIM File (*.xBIM)|*.xBIM",
+                "IfcXml File (*.IfcXml)|*.ifcxml",
+                "IfcZip File (*.IfcZip)|*.ifczip",
+                "Zipped File (*.zip)|*.zip"
+            };
+
             // Filter files by extension 
-            var dlg = new OpenFileDialog {Filter = "Xbim Files|*.xbim;*.xbimf;*.ifc;*.ifcxml;*.ifczip"};
+            var dlg = new OpenFileDialog
+            {
+                Filter = string.Join("|", corefilters)
+            };
             dlg.FileOk += dlg_OpenAnyFile;
             dlg.ShowDialog(this);
         }
@@ -757,9 +769,7 @@ namespace XbimXplorer
         /// </summary>
         private bool _meshModel = true;
 
-        /// <summary>
-        /// determines if models need to be meshed on opening
-        /// </summary>
+        
         private double _deflectionOverride = double.NaN;
         private double _angularDeflectionOverride = double.NaN;
         
