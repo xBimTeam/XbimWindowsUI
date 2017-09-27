@@ -29,6 +29,7 @@ namespace XbimXplorer.Simplify
         private Dictionary<int, string> _ifcType = new Dictionary<int, string>();
         private List<int> _elementsToExport = new List<int>();
         private Dictionary<string, int> _guids = new Dictionary<string, int>();
+        private List<int> _relVoids = new List<int>();
 
         private string _header;
         private string _footer;
@@ -52,6 +53,7 @@ namespace XbimXplorer.Simplify
             _ifcContents = new Dictionary<int, string>();
             _elementsToExport = new List<int>();
             _ifcType = new Dictionary<int, string>();
+            _relVoids = new List<int>();
             _header = "";
             _footer = "";
 
@@ -101,6 +103,8 @@ namespace XbimXplorer.Simplify
                     _ifcLines.Add(iId, lineBuffer);
                     _ifcContents.Add(iId, content);
                     _ifcType.Add(iId, type);
+                    if (type == "IFCRELVOIDSELEMENT")
+                        _relVoids.Add(iId);
 
                     var mGuid = reGuid.Match(content);
                     if (mGuid.Success)
@@ -199,6 +203,29 @@ namespace XbimXplorer.Simplify
             catch
             {
                 // ignored
+            }
+            
+            // if approprite add voids
+            //
+            if (PreserveVoids.IsChecked.HasValue && PreserveVoids.IsChecked.Value)
+            {
+                var tp = _ifcType[ifcIndex];
+                if (tp.StartsWith("IFCWALL")) // todo expand to others?
+                {
+                    var str = $@"#{ifcIndex} *, *#(\d+) *";
+                    Regex re2 = new Regex(str);
+                    foreach (var relVoid in _relVoids)
+                    {
+                        var reltext = _ifcContents[relVoid];
+                        var m = re2.Match(reltext);
+                        if (m.Success)
+                        {
+                            var voidLabel = m.Groups[1].Value;
+                            int voidEl = Convert.ToInt32(voidLabel);
+                            RecursiveAdd(voidEl);
+                        }
+                    }
+                }
             }
         }
 
