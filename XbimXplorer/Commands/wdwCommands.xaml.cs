@@ -29,6 +29,7 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.LayerStyling;
 using Binding = System.Windows.Data.Binding;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using log4net;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -130,6 +131,24 @@ namespace XbimXplorer.Commands
                 if (mdbclosed.Success)
                 {
                     DisplayHelp();
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^Log *(?<count>[\d]+)? *(?<message>.+)?$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ILog Log = LogManager.GetLogger("XbimXplorer.CommandWindow");
+                    int iCnt;
+                    if (!Int32.TryParse(mdbclosed.Groups["count"].Value, out iCnt))
+                        iCnt = 1;
+                    var msg = (string.IsNullOrEmpty(mdbclosed.Groups["message"].Value)) 
+                        ? "Message"
+                        : mdbclosed.Groups["message"].Value;
+
+                    for (int iLoop = 0; iLoop < iCnt; iLoop++)
+                    {
+                        Log.Info(iLoop+1 + " " + msg);
+                    }
                     continue;
                 }
 

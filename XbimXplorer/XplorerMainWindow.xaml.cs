@@ -181,13 +181,14 @@ namespace XbimXplorer
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // this enables a basic configuration for the logger.
+            //
             BasicConfigurator.Configure();
-
             var model = IfcStore.Create(null,IfcSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
 
             // logging information warnings
+            //
             _appender = new EventAppender {Tag = "MainWindow"};
             _appender.Logged += appender_Logged;
 
@@ -939,6 +940,7 @@ namespace XbimXplorer
             if (Settings.Default.PluginStartupLoad && !PreventPluginLoad)
                 RefreshPlugins();
             ConnectStylerFeedBack();
+            _appender.EventsLimit = 100;
         }
         
         private void EntityLabel_KeyDown()

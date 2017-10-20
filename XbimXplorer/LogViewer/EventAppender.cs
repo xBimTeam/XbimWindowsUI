@@ -1,12 +1,26 @@
 ﻿using System;
 using log4net.Appender;
 using log4net.Core;
+using log4net;
 
 namespace XbimXplorer.LogViewer
 {
     public class EventAppender : AppenderSkeleton
     {
-        // Note, you will probably have to override other things here.
+        /// <summary>
+        /// Pauses processing events for EventsQuantityInterval if their number reached EventsQuantityLimit within the time.
+        /// </summary>
+        public int EventsLimit = Int32.MaxValue;
+
+        /// <summary>
+        /// resets events after EventsResetInterval without events.
+        /// </summary>
+        public int EventsResetInterval = 60;
+
+        private int _eventsTally = 0;
+        private DateTime _lastEvent = DateTime.Now;
+
+
 
         public string Tag;
 
@@ -49,18 +63,40 @@ namespace XbimXplorer.LogViewer
         // Multiple case.
         protected override void Append(LoggingEvent[] loggingEvents)
         {
+            if (DateTime.Now.Subtract(_lastEvent).TotalSeconds > EventsResetInterval)
+                _eventsTally = 0;
+        
+            // logging was already suspended
+            if (_eventsTally == -1)
+                return;
+
             // Validate parameters.
             if (loggingEvents == null)
                 throw new ArgumentNullException(nameof(loggingEvents));
 
-            // The event handlers.
-            EventHandler<LogEventArgs> handlers;
+            _eventsTally += loggingEvents.Length;
+            // determine what to 
+            var eventsToReport = loggingEvents;
 
-            // Get the handlers.
+            if (_eventsTally > EventsLimit)
+            {
+                // todo: log warning then suspend
+                LoggingEventData d = new LoggingEventData();
+                d.Level = Level.Warn;
+                d.LoggerName = "XbimXplorer.LogViewer.EventAppender";
+                d.Message = $"Message limit reached, logging suspended for {EventsResetInterval} seconds.";
+                d.TimeStampUtc = DateTime.Now.ToUniversalTime();
+                LoggingEvent l = new LoggingEvent(d);
+                _eventsTally = -1;
+                eventsToReport = new[] { l };
+            }
+            
+            // define and get the event handlers.
+            EventHandler<LogEventArgs> handlers;
             lock (_eventLock) handlers = _loggedEventHandlers;
 
             // Fire if not null.
-            handlers?.Invoke(this, new LogEventArgs(loggingEvents));
+            handlers?.Invoke(this, new LogEventArgs(eventsToReport));
         }
     }
 }
