@@ -740,9 +740,7 @@ namespace Xbim.Presentation
 
         public void ReloadModel(ModelRefreshOptions options = ModelRefreshOptions.None)
         {
-            LoadGeometry((IfcStore)GetValue(ModelProperty),
-                options: options
-                );
+            LoadGeometry((IfcStore)GetValue(ModelProperty), options: options);
             SetValue(LayerSetProperty, LayerSetRefresh());
         }
 
@@ -1183,33 +1181,33 @@ namespace Xbim.Presentation
         public ILayerStyler DefaultLayerStyler { get; set; }
 
         //TODO resolve issues with reference models
-/*
-        private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-
-            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
-                return;
-            var refModel = e.NewItems[0] as XbimReferencedModel;
-            if (refModel != null)
-            {
-                // adding and updating the model to positioning database
-                ModelPositions.AddModel(refModel.Model);
-                // _modelTranslation is not recalculated unless there are no models in the scene 
-                // becayse it's burnt into the other models already
-                if (Scenes.Count == 0)
+        /*
+                private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
                 {
-                    //can recalculate extents and _modelTranslation
-                    DefineModelTranslation();
-                }
-                ModelPositions.SetCenterInMeters(_modelTranslation);
-                ModelBounds = ModelPositions.GetEnvelopeInMeters();
 
-                // actually load the model geometry
-                LoadReferencedModel(refModel);
-            }
-            RecalculateView();
-        }
-*/
+                    if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
+                        return;
+                    var refModel = e.NewItems[0] as XbimReferencedModel;
+                    if (refModel != null)
+                    {
+                        // adding and updating the model to positioning database
+                        ModelPositions.AddModel(refModel.Model);
+                        // _modelTranslation is not recalculated unless there are no models in the scene 
+                        // becayse it's burnt into the other models already
+                        if (Scenes.Count == 0)
+                        {
+                            //can recalculate extents and _modelTranslation
+                            DefineModelTranslation();
+                        }
+                        ModelPositions.SetCenterInMeters(_modelTranslation);
+                        ModelBounds = ModelPositions.GetEnvelopeInMeters();
+
+                        // actually load the model geometry
+                        LoadReferencedModel(refModel);
+                    }
+                    RecalculateView();
+                }
+        */
 
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
@@ -1224,15 +1222,16 @@ namespace Xbim.Presentation
 
             // reset all the visuals
             // - ModelPositions is emptied in here
-            ClearGraphics(options); 
+            ClearGraphics(options);
 
             if (model == null)
             {
+                
                 RecalculateView(options);
                 return; //nothing to show
             }
             _hasModelGrid = model.Instances.OfType<IIfcGrid>().Any();
-            
+
             // ensure a unique userDefinedId
             short userDefinedId = 0;
             model.UserDefinedId = userDefinedId;
@@ -1240,12 +1239,12 @@ namespace Xbim.Presentation
             {
                 foreach (var refModel in model.ReferencedModels)
                 {
-                    refModel.Model.UserDefinedId = ++userDefinedId;   
+                    refModel.Model.UserDefinedId = ++userDefinedId;
                 }
                 // todo: model federation needs to be enabled back
                 // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
             }
-            
+
             // model positioning routine
             if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelectedRegion))
             {
@@ -1264,19 +1263,26 @@ namespace Xbim.Presentation
                 }
             }
             ModelPositions.ComputeViewBoundsTransform();
-            
+
             if (DefaultLayerStyler == null)
                 DefaultLayerStyler = new SurfaceLayerStyler();
+
 
             // build the geometric scene and render as we go
             // loading the main model
             DefaultLayerStyler.SetFederationEnvironment(null);
-            var scene = DefaultLayerStyler.BuildScene(model.ReferencingModel,ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
+
+
+            // load the geometry in the direct model
+            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
+            if (! Model.GeometryStore.IsEmpty)
+                scene = DefaultLayerStyler.BuildScene(model.ReferencingModel, ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
+
             if (scene != null && scene.Layers.Any())
             {
                 Scenes.Add(scene);
             }
-            
+
             if (model.IsFederation)
             {
                 // loading all referenced models.
@@ -1285,6 +1291,7 @@ namespace Xbim.Presentation
                     LoadReferencedModel(refModel);
                 }
             }
+
             RecalculateView(options);
         }
         
@@ -1298,12 +1305,10 @@ namespace Xbim.Presentation
             if (mod == null)
                 return;
             var pos = ModelPositions[mod.ReferencingModel].Transform;
-            var scene = DefaultLayerStyler.BuildScene(
-                    refModel.Model,
-                    pos,
-                    Opaques,
-                    Transparents,
-                    ExcludedTypes);
+
+            XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
+            if (!mod.GeometryStore.IsEmpty)
+                scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, ExcludedTypes);
             if (scene != null && scene.Layers.Any())
             {
                 Scenes.Add(scene);

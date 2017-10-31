@@ -382,7 +382,8 @@ namespace XbimXplorer
         {
             if (args.Result is IfcStore) //all ok
             {
-                ModelProvider.ObjectInstance = args.Result; //this Triggers the event to load the model into the views 
+                //this Triggers the event to load the model into the views 
+                ModelProvider.ObjectInstance = args.Result; 
                 ModelProvider.Refresh();
                 ProgressBar.Value = 0;
                 StatusMsg.Text = "Ready";
