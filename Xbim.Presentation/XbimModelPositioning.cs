@@ -79,6 +79,8 @@ namespace Xbim.Presentation
         {
             var arrRegions = enumRegions.ToArray();
             var name = "";
+            if (!arrRegions.Any())
+                return null;
             var MaxPopulation = arrRegions.Max(r => r.Population);
 
             var mostPopulated = arrRegions.Where(cr => cr.Population == MaxPopulation);
