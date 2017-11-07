@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common.Geometry;
@@ -70,7 +71,8 @@ namespace Xbim.Presentation
                     break;
                 case 2:
                     // SelectedRegion = Context.GetLargestRegion();
-                    SelectedRegion = GetView(Context.GetRegions());
+                    var regions = Context.GetRegions();
+                    SelectedRegion = GetView(regions);
                     break;
             }
         }
@@ -80,7 +82,11 @@ namespace Xbim.Presentation
             var arrRegions = enumRegions.ToArray();
             var name = "";
             if (!arrRegions.Any())
+            {
+                ILog Log = LogManager.GetLogger("Xbim.Presentation.XbimModelPositioning");
+                Log.Warn("No regions defined in the model.");
                 return null;
+            }
             var MaxPopulation = arrRegions.Max(r => r.Population);
 
             var mostPopulated = arrRegions.Where(cr => cr.Population == MaxPopulation);
