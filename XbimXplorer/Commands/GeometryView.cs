@@ -94,14 +94,7 @@ namespace XbimXplorer.Commands
 
         private static void Report(IIfcFaceBound ifcFaceBound, TextHighliter sb)
         {
-            if (ifcFaceBound is IIfcFaceOuterBound)
-            {
-                Report((IIfcFaceOuterBound)ifcFaceBound, sb);
-            }
-            else
-            {
-                sb.Append($"{ifcFaceBound.GetType().Name} not implemented in IIfcFaceBound.", Brushes.Red);
-            }
+            Report(ifcFaceBound.Bound, sb);
         }
 
         private static void Report(IIfcCompositeCurve curve, TextHighliter sb)
