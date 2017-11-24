@@ -32,6 +32,29 @@ namespace XbimXplorer.Commands
             Report(ifcFaceBound.Bound, sb);
         }
 
+        private static void Report(IIfcPolyline bound, TextHighliter sb)
+        {
+            sb.Append($"-LAYER M {bound.Points.Count} ", Brushes.Black);
+
+            sb.Append("3DPOLY", Brushes.Black);
+            var first = bound.Points.FirstOrDefault();
+            IIfcCartesianPoint last = null;
+            foreach (var ifcCartesianPoint in bound.Points)
+            {
+                WritePointCoord(sb, ifcCartesianPoint);
+                last = ifcCartesianPoint;
+            }
+            if (false && last != null)
+            {
+                if (!last.Equals(first))
+                    sb.Append($";open polyloop", Brushes.Black);
+            }
+            sb.Append($"", Brushes.Black);
+            sb.Append($"-HYPERLINK I O l  #{bound.EntityLabel}", Brushes.Black);
+            sb.Append($"", Brushes.Black);
+            sb.Append($"", Brushes.Black);
+        }
+
         private static void Report(IIfcPolyLoop bound, TextHighliter sb)
         {
             sb.Append($"-LAYER M {bound.Polygon.Count} ", Brushes.Black);
@@ -42,7 +65,6 @@ namespace XbimXplorer.Commands
             foreach (var ifcCartesianPoint in bound.Polygon)
             {
                 WritePointCoord(sb, ifcCartesianPoint);
-
                 last = ifcCartesianPoint;
             }
             if ( false && last != null)
@@ -59,7 +81,10 @@ namespace XbimXplorer.Commands
         private static void WritePointCoord(TextHighliter sb, double x, double y, double z, bool relative = false)
         {
             var rel = relative ? "@" : "";
-            sb.Append($"{rel}{x},{y},{z}", Brushes.Black);
+            if (!double.IsNaN(z))
+                sb.Append($"{rel}{x},{y},{z}", Brushes.Black);
+            else
+                sb.Append($"{rel}{x},{y}", Brushes.Black);
         }
 
         private static void WritePointCoord(TextHighliter sb, IIfcCartesianPoint ifcCartesianPoint, bool relative = false)
@@ -171,6 +196,10 @@ namespace XbimXplorer.Commands
             {
                 Report((IIfcCircle)obj, sb);
             }
+            else if (obj is IIfcPolyline)
+            {
+                Report((IIfcPolyline)obj, sb);
+            }
             else if (obj is IIfcLine)
             {
                 Report((IIfcLine)obj, sb);
@@ -193,6 +222,8 @@ namespace XbimXplorer.Commands
                 Report((IIfcClosedShell) obj, sb);
             if (obj is IIfcPolyLoop)
                 Report((IIfcPolyLoop)obj, sb);
+            if (obj is IIfcCurve)
+                Report((IIfcCurve)obj, sb);
             if (obj is IIfcSweptDiskSolid)
                 Report((IIfcSweptDiskSolid)obj, sb);
             else

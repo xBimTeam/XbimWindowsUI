@@ -447,7 +447,26 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                
+
+                // we intend to offer estraction of breps here.
+                m = Regex.Match(cmd, @"^(brep|br\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    // add "DBRep_DrawableShape" as first line
+                    var start = m.Groups["entities"].Value;
+                    IEnumerable<int> labels = ToIntarray(start, ',');
+                    if (labels.Any())
+                    {
+                        foreach (int item in labels)
+                        {
+                            var e = Model.Instances[item];
+                            if (e == null)
+                                continue;
+                        }
+                    }
+                    continue;
+                }
+
                 m = Regex.Match(cmd, @"^(reload|re\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -724,19 +743,34 @@ namespace XbimXplorer.Commands
                             ReportAdd($"Region Collections count: {allRegCollections.Count}");
                             foreach (var regionCollection in allRegCollections)
                             {
-                                
                                 ReportAdd($"Region Collection (#{regionCollection.ContextLabel}) count: {regionCollection.Count}");
                                 foreach (var r in regionCollection)
                                 {
-                                    ReportAdd($"{r.Name}\t{r.Population}\t{r.Size}\t{r.Centre}");
+                                    ReportAdd($"Region\t'{r.Name}'\t{r.Population}\t{r.Size}\t{r.Centre}");
                                 }
                             }
                         }
                     }
                     else
                     {
+                        bool setOk = true;
                         var add = (mode == "add");
-                        var setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
+                        if (add && rName == "*")
+                        {
+                            using (var reader = Model.GeometryStore.BeginRead())
+                            {
+                                var allRegCollections = reader.ContextRegions;
+                                foreach (var regionCollection in allRegCollections)
+                                {
+                                    foreach (var r in regionCollection)
+                                    {
+                                        setOk &= _parentWindow.DrawingControl.SetRegion(r.Name, add);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                            setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
                         if (setOk)
                         {
                             ReportAdd("Region set.");
@@ -746,7 +780,6 @@ namespace XbimXplorer.Commands
                         {
                             ReportAdd($"Region \"{rName}\"not found.");
                         }
-                         
                     }
                     continue;
                 }
@@ -1487,8 +1520,7 @@ namespace XbimXplorer.Commands
             t.Append("      Examples:", Brushes.Gray);
             t.Append("        ge 12,14", Brushes.Gray);
             
-            t.Append("- EntityLabel <label> [recursion]" , Brushes.Blue
-            );
+            t.Append("- EntityLabel <label> [recursion]" , Brushes.Blue);
             t.Append("    [recursion] is an int representing the depth of children to report", Brushes.Gray);
 
             t.Append("- IfcSchema [list|count|short|full] <TypeName>", Brushes.Blue);
@@ -1512,8 +1544,9 @@ namespace XbimXplorer.Commands
             t.Append("    It goes through ifcstore.open rather than simple compression, ", Brushes.Gray);
             t.Append("    so it can be used totest for model correctness.", Brushes.Gray);
 
-            t.Append("- zoom <Region name>", Brushes.Blue);
-            t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
+            t.Append("- Region <list|set|add> <Region name>", Brushes.Blue);
+            t.Append("    'select the named region for display.", Brushes.Gray);
+            t.Append("    'use 'region add *' to zoom to whole model.", Brushes.Gray);
 
             //t.AppendFormat("- Visual [list|tree|[on|off <name>]|mode <ModeCommand>]");
             //t.Append("    'Visual list' provides a list of valid layer names", Brushes.Gray);
