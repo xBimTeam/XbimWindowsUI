@@ -90,14 +90,21 @@ namespace Xbim.Presentation
             return false;
         }
 
-        private XbimRegion Merge(XbimRegion selectedRegion, XbimRegion reg)
+        private XbimRegion Merge(XbimRegion reg1, XbimRegion reg2)
         {
-            var s1 = MinMaxPoints(selectedRegion);
-            var s2 = MinMaxPoints(reg);
+            // todo: needs to review the merge function to consider region's WorldCoordinateSystem
+            //
+            var s1 = MinMaxPoints(reg1);
+            var s2 = MinMaxPoints(reg2);
             var r1 = new XbimRect3D(s1[0], s1[1]);
             var r2 = new XbimRect3D(s2[0], s2[1]);
             r1.Union(r2);
-            var merged = new XbimRegion("Merged", r1, selectedRegion.Population + reg.Population);
+            var merged = new XbimRegion(
+                "Merged", 
+                r1,
+                reg1.Population + reg2.Population,
+                reg1.WorldCoordinateSystem
+                );
             return merged;
         }
 
@@ -163,7 +170,9 @@ namespace Xbim.Presentation
                         }
                     }
                 }
-                SelectedRegion = new XbimRegion(name, rect, pop);
+                // todo: the identity matrix should be replaced with a correct model matrix.
+                //
+                SelectedRegion = new XbimRegion(name, rect, pop, XbimMatrix3D.Identity);
             }
         }
 

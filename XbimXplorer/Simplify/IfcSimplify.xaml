@@ -13,7 +13,7 @@
         <GroupBox x:Name="GCommands" Margin="10,69,10,41" IsEnabled="False" Grid.ColumnSpan="2">
             <GroupBox.Header>Entities</GroupBox.Header>
             <Grid Margin="5,5,5,5">
-                <TabControl x:Name="TabControl">
+                <TabControl x:Name="TabControl" Margin="0,0,0,25">
                     <TabItem Header="Search">
                         <Grid Background="#FFE5E5E5" >
                             <Grid.ColumnDefinitions>
@@ -46,13 +46,15 @@
                     </TabItem>
                     <TabItem Header="Manual selection" KeyDown="txtCommand_KeyDown">
                         <Grid Background="#FFE5E5E5">
-                            <TextBox x:Name="TxtHandPicked" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0" VerticalScrollBarVisibility="Auto"/>
+                            <TextBox x:Name="TxtHandPicked" AcceptsReturn="True" TextWrapping="Wrap" Text="" Margin="0,0,0,31" VerticalScrollBarVisibility="Auto"/>
+                            <Label Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" >Press ctrl-Enter to re-evaluate</Label>
                         </Grid>
                     </TabItem>
 
                 </TabControl>
+                <CheckBox x:Name="PreserveVoids" Content="Preserve Voids (walls only)" HorizontalAlignment="Left" Margin="0,0,0,5" Height="15" VerticalAlignment="Bottom"/>
             </Grid>
         </GroupBox>
-        <Button IsEnabled="False" x:Name="CmdSave" Content="Save simplified" Margin="0,0,11,10" Click="cmdSave_Click" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="117" />
+        <Button IsEnabled="False" x:Name="CmdSave" Content="Save simplified" Margin="0,0,10,10" Click="cmdSave_Click" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="117" />
     </Grid>
 </Window>

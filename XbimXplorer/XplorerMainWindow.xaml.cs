@@ -183,13 +183,14 @@ namespace XbimXplorer
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // this enables a basic configuration for the logger.
+            //
             BasicConfigurator.Configure();
-
             var model = IfcStore.Create(null,IfcSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
 
             // logging information warnings
+            //
             _appender = new EventAppender {Tag = "MainWindow"};
             _appender.Logged += appender_Logged;
 
@@ -383,7 +384,8 @@ namespace XbimXplorer
         {
             if (args.Result is IfcStore) //all ok
             {
-                ModelProvider.ObjectInstance = args.Result; //this Triggers the event to load the model into the views 
+                //this Triggers the event to load the model into the views 
+                ModelProvider.ObjectInstance = args.Result; 
                 ModelProvider.Refresh();
                 ProgressBar.Value = 0;
                 StatusMsg.Text = "Ready";
@@ -509,8 +511,20 @@ namespace XbimXplorer
 
         private void CommandBinding_Open(object sender, ExecutedRoutedEventArgs e)
         {
+            var corefilters = new[] {
+                "Xbim Files|*.xbim;*.xbimf;*.ifc;*.ifcxml;*.ifczip",
+                "Ifc File (*.ifc)|*.ifc",
+                "xBIM File (*.xBIM)|*.xBIM",
+                "IfcXml File (*.IfcXml)|*.ifcxml",
+                "IfcZip File (*.IfcZip)|*.ifczip",
+                "Zipped File (*.zip)|*.zip"
+            };
+
             // Filter files by extension 
-            var dlg = new OpenFileDialog {Filter = "Xbim Files|*.xbim;*.xbimf;*.ifc;*.ifcxml;*.ifczip"};
+            var dlg = new OpenFileDialog
+            {
+                Filter = string.Join("|", corefilters)
+            };
             dlg.FileOk += dlg_OpenAnyFile;
             dlg.ShowDialog(this);
         }
@@ -759,9 +773,7 @@ namespace XbimXplorer
         /// </summary>
         private bool _meshModel = true;
 
-        /// <summary>
-        /// determines if models need to be meshed on opening
-        /// </summary>
+        
         private double _deflectionOverride = double.NaN;
         private double _angularDeflectionOverride = double.NaN;
         
@@ -937,6 +949,7 @@ namespace XbimXplorer
             if (Settings.Default.PluginStartupLoad && !PreventPluginLoad)
                 RefreshPlugins();
             ConnectStylerFeedBack();
+            _appender.EventsLimit = 100;
         }
         
         private void EntityLabel_KeyDown()

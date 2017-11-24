@@ -31,6 +31,9 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.LayerStyling;
 using Binding = System.Windows.Data.Binding;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using log4net;
+using Microsoft.CSharp;
+using System.CodeDom;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -135,6 +138,24 @@ namespace XbimXplorer.Commands
                     continue;
                 }
                 
+                mdbclosed = Regex.Match(cmd, @"^Log *(?<count>[\d]+)? *(?<message>.+)?$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ILog Log = LogManager.GetLogger("XbimXplorer.CommandWindow");
+                    int iCnt;
+                    if (!Int32.TryParse(mdbclosed.Groups["count"].Value, out iCnt))
+                        iCnt = 1;
+                    var msg = (string.IsNullOrEmpty(mdbclosed.Groups["message"].Value)) 
+                        ? "Message"
+                        : mdbclosed.Groups["message"].Value;
+
+                    for (int iLoop = 0; iLoop < iCnt; iLoop++)
+                    {
+                        Log.Info(iLoop+1 + " " + msg);
+                    }
+                    continue;
+                }
+
                 mdbclosed = Regex.Match(cmd, @"^Plugin Refresh$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -245,23 +266,23 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    var type = mdbclosed.Groups["type"].Value;
+                    var typeString = mdbclosed.Groups["type"].Value;
                     var mode = mdbclosed.Groups["mode"].Value;
 
-                    if (type == "/")
+                    if (typeString == "/")
                     {
                         // this is a magic case handled by the matchingType
                     }
-                    else if (type == PrepareRegex(type))
+                    else if (typeString == PrepareRegex(typeString))
                     // there's not a regex expression, we will prepare one assuming the search for a bare name.
                     {
-                        type = @".*\." + type + "$";
+                        typeString = @".*\." + typeString + "$";
                         // any character repeated then a dot then the name and the end of line
                     }
                     else
-                        type = PrepareRegex(type);
+                        typeString = PrepareRegex(typeString);
 
-                    var typeList = MatchingTypes(type);
+                    var typeList = MatchingTypes(typeString);
 
 
                     if (mode.ToLower() == "list ")
@@ -428,7 +449,26 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                
+
+                // we intend to offer estraction of breps here.
+                m = Regex.Match(cmd, @"^(brep|br\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    // add "DBRep_DrawableShape" as first line
+                    var start = m.Groups["entities"].Value;
+                    IEnumerable<int> labels = ToIntarray(start, ',');
+                    if (labels.Any())
+                    {
+                        foreach (int item in labels)
+                        {
+                            var e = Model.Instances[item];
+                            if (e == null)
+                                continue;
+                        }
+                    }
+                    continue;
+                }
+
                 m = Regex.Match(cmd, @"^(reload|re\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -705,19 +745,34 @@ namespace XbimXplorer.Commands
                             ReportAdd($"Region Collections count: {allRegCollections.Count}");
                             foreach (var regionCollection in allRegCollections)
                             {
-                                
                                 ReportAdd($"Region Collection (#{regionCollection.ContextLabel}) count: {regionCollection.Count}");
                                 foreach (var r in regionCollection)
                                 {
-                                    ReportAdd($"{r.Name}\t{r.Population}\t{r.Size}\t{r.Centre}");
+                                    ReportAdd($"Region\t'{r.Name}'\t{r.Population}\t{r.Size}\t{r.Centre}");
                                 }
                             }
                         }
                     }
                     else
                     {
+                        bool setOk = true;
                         var add = (mode == "add");
-                        var setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
+                        if (add && rName == "*")
+                        {
+                            using (var reader = Model.GeometryStore.BeginRead())
+                            {
+                                var allRegCollections = reader.ContextRegions;
+                                foreach (var regionCollection in allRegCollections)
+                                {
+                                    foreach (var r in regionCollection)
+                                    {
+                                        setOk &= _parentWindow.DrawingControl.SetRegion(r.Name, add);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                            setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
                         if (setOk)
                         {
                             ReportAdd("Region set.");
@@ -727,7 +782,6 @@ namespace XbimXplorer.Commands
                         {
                             ReportAdd($"Region \"{rName}\"not found.");
                         }
-                         
                     }
                     continue;
                 }
@@ -1469,8 +1523,7 @@ namespace XbimXplorer.Commands
             t.Append("      Examples:", Brushes.Gray);
             t.Append("        ge 12,14", Brushes.Gray);
             
-            t.Append("- EntityLabel <label> [recursion]" , Brushes.Blue
-            );
+            t.Append("- EntityLabel <label> [recursion]" , Brushes.Blue);
             t.Append("    [recursion] is an int representing the depth of children to report", Brushes.Gray);
 
             t.Append("- IfcSchema [list|count|short|full] <TypeName>", Brushes.Blue);
@@ -1494,8 +1547,9 @@ namespace XbimXplorer.Commands
             t.Append("    It goes through ifcstore.open rather than simple compression, ", Brushes.Gray);
             t.Append("    so it can be used totest for model correctness.", Brushes.Gray);
 
-            t.Append("- zoom <Region name>", Brushes.Blue);
-            t.Append("    'zoom ?' provides a list of valid region names", Brushes.Gray);
+            t.Append("- Region <list|set|add> <Region name>", Brushes.Blue);
+            t.Append("    'select the named region for display.", Brushes.Gray);
+            t.Append("    'use 'region add *' to zoom to whole model.", Brushes.Gray);
 
             //t.AppendFormat("- Visual [list|tree|[on|off <name>]|mode <ModeCommand>]");
             //t.Append("    'Visual list' provides a list of valid layer names", Brushes.Gray);
@@ -1588,6 +1642,15 @@ namespace XbimXplorer.Commands
             return rex;
         }
 
+        private string GetFriendlyTypeName(Type type)
+        {
+            using (var p = new CSharpCodeProvider())
+            {
+                var r = new CodeTypeReference(type);
+                return p.GetTypeOutput(r);
+            }
+        }
+
         internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
         {
             {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
@@ -1610,8 +1673,13 @@ namespace XbimXplorer.Commands
                     Brushes.Blue
                     );
 
-                sb.AppendFormat(indentationHeader + "Namespace: {0}", ot.Type.Namespace);
-                sb.AppendFormat(indentationHeader + "IsIndexed: {0}", ot.IndexedClass);
+                
+                if (beVerbose > 0)
+                {
+                    sb.AppendFormat(indentationHeader + "Namespace: {0}", ot.Type.Namespace);
+                    sb.AppendFormat(indentationHeader + "xbim.TypeId: {0}", ot.TypeId);
+                    sb.AppendFormat(indentationHeader + "IsIndexed: {0}", ot.IndexedClass);
+                }
                 sb.DefaultBrush = Brushes.DarkOrange;
                 var supertypes = new List<string>();
                 var iterSuper = ot.SuperType;
@@ -1628,19 +1696,21 @@ namespace XbimXplorer.Commands
                     if (beVerbose > 1)
                     {
                         sb.DefaultBrush = null;
-                        sb.AppendFormat(indentationHeader + "Subtypes tree:");
+                        sb.AppendFormat(indentationHeader + "== Subtypes tree:");
                         sb.DefaultBrush = Brushes.DarkOrange;
-                        ChildTree(ot, sb, indentationHeader, 0);
+                        var cnt = ChildTree(ot, sb, indentationHeader, 0);
+                        sb.AppendFormat(indentationHeader + "count: {0}\r\n", cnt);
                     }
                     else
                     {
                         sb.DefaultBrush = null;
-                        sb.AppendFormat(indentationHeader + "Subtypes: {0}", ot.SubTypes.Count);
+                        sb.AppendFormat(indentationHeader + "== Direct subtypes:");
                         sb.DefaultBrush = Brushes.DarkOrange;
-                        foreach (var item in ot.SubTypes)
+                        foreach (var item in ot.SubTypes.OrderBy(x=>x.Name))
                         {
                             sb.AppendFormat(indentationHeader + "- {0}", item);
                         }
+                        sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.SubTypes.Count);
                     }
                 }
                 if (beVerbose > 0)
@@ -1649,25 +1719,27 @@ namespace XbimXplorer.Commands
                     {
                         var allSub = ot.NonAbstractSubTypes;
                         sb.DefaultBrush = null;
-                        sb.AppendFormat(indentationHeader + "All non abstract subtypes: {0}", allSub.Count());
+                        sb.AppendFormat(indentationHeader + "== All Concrete subtypes:");
                         sb.DefaultBrush = Brushes.DarkOrange;
                         foreach (var item in allSub)
                         {
                             sb.AppendFormat(indentationHeader + "- {0}", item.Name);
                         }
+                        sb.AppendFormat(indentationHeader + "count: {0}\r\n", allSub.Count());
                     }
                     sb.DefaultBrush = null;
-                    sb.AppendFormat(indentationHeader + "xbim.TypeId: {0}", ot.TypeId);
-                    sb.AppendFormat(indentationHeader + "Interfaces: {0}", ot.Type.GetInterfaces().Count());
+                    
+                    sb.AppendFormat(indentationHeader + "== Interfaces:");
                     sb.DefaultBrush = Brushes.DarkOrange;
-                    foreach (var item in ot.Type.GetInterfaces())
+                    foreach (var implementedName in ot.Type.GetInterfaces().Select(x=> GetFriendlyTypeName(x)).OrderBy(y=>y))
                     {
-                        sb.AppendFormat(indentationHeader + "- {0}", item.Name);
+                        sb.AppendFormat(indentationHeader + "- {0}", implementedName);
                     }
+                    sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Type.GetInterfaces().Count());
 
                     sb.DefaultBrush = null;
                     // sb.DefaultBrush = Brushes.DimGray;
-                    sb.AppendFormat(indentationHeader + "Properties: {0}", ot.Properties.Count());
+                    sb.AppendFormat(indentationHeader + "== Properties:");
                     sb.DefaultBrush = null;
                     var brushArray = new Brush[]
                     {
@@ -1677,7 +1749,6 @@ namespace XbimXplorer.Commands
                     };
                     foreach (var item in ot.Properties.Values)
                     {
-
                         var topParent = ot.SuperType;
                         var sTopParent = "";
                         while (topParent != null &&
@@ -1686,19 +1757,17 @@ namespace XbimXplorer.Commands
                             sTopParent = " \tfrom: " + topParent;
                             topParent = topParent.SuperType;
                         }
-                        sb.AppendSpans(
-                            new[]
+                        sb.AppendSpans(new[]
                             {
                                 indentationHeader + "- " + item.PropertyInfo.Name + "\t\t",
                                 CleanPropertyName(item.PropertyInfo.PropertyType.FullName),
                                 sTopParent
                             },
                             brushArray);
-
-
-                        // sb.AppendFormat(\t{1}{2}", , , );
                     }
-                    sb.AppendFormat(indentationHeader + "Inverses: {0}", ot.Inverses.Count());
+                    sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Properties.Count());
+
+                    sb.AppendFormat(indentationHeader + "== Inverses:");
                     foreach (var item in ot.Inverses)
                     {
                         var topParent = ot.SuperType;
@@ -1719,91 +1788,119 @@ namespace XbimXplorer.Commands
                             },
                             brushArray);
                     }
+                    sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Inverses.Count());
                 }
                 sb.DefaultBrush = null;
-                sb.AppendFormat("");
+                if (beVerbose > 0)
+                    sb.AppendFormat("");
             }
             else
             {
                 // test to see if it's a select type...
+                
                 var ifcModule2 = SchemaMetadatas[schema].Module;
-
-
-                var selectType = ifcModule2.GetTypes().FirstOrDefault(t => t.Name.Contains(type));
+                var selectType = ifcModule2.GetTypes().FirstOrDefault(t => t.Name == type);
+                
+                
 
                 if (selectType == null)
                     return sb;
-                sb.AppendFormat("=== {0} is a Select type", type);
+
+                
+                sb.AppendFormat(indentationHeader + "=== {1}.{0} is an Express Select type", type, schema);
                 
                 
                 var selectSubTypes = ifcModule2.GetTypes().Where(
                     t => t.GetInterfaces().Contains(selectType)
-                    ).ToArray();
+                    ).ToList();
 
-                // CommontIF sets up the infrastructure to check for common interfaces shared by the select type elements
-                Type[] commontIf = null;
+                // sub interfaces 
+                var subInt = selectSubTypes.Where(x => x.IsInterface);
+
+                // all the ones whose superclass in the list are children, need removing
+                var toRemove = selectSubTypes.Where(x => x.BaseType != null && selectSubTypes.Contains(x.BaseType)).ToArray();
+                selectSubTypes = selectSubTypes.Except(toRemove).ToList();
+                toRemove = selectSubTypes.Where(x => x.GetInterfaces().Intersect(subInt).Any()).ToArray();
+                selectSubTypes = selectSubTypes.Except(toRemove).ToList();
+
+                // can't remember what the following did, it was connected with some code cleanup needed in Essentials
+                //
+
+                //// CommontIF sets up the infrastructure to check for common interfaces shared by the select type elements
+                //if (beVerbose > 1)
+                //{
+                //    Type[] commontIf = null;
+                //    foreach (var item in selectSubTypes)
+                //    {
+                //        if (commontIf == null)
+                //            commontIf = item.GetInterfaces();
+                //        else
+                //        {
+                //            var chk = item.GetInterfaces();
+                //            for (var i = 0; i < commontIf.Length; i++)
+                //            {
+                //                if (!chk.Contains(commontIf[i]))
+                //                {
+                //                    commontIf[i] = null;
+                //                }
+                //            }
+                //        }
+                //    }
+
+                //    var existingIf = selectType.GetInterfaces();
+                //    sb.AppendFormat(indentationHeader + "Interfaces: {0}", existingIf.Length);
+                //    foreach (var item in existingIf)
+                //    {
+                //        sb.AppendFormat(indentationHeader + "- {0}", item.Name);
+                //    }
+                //    // need to remove implemented interfaces from the ones shared 
+                //    for (var i = 0; i < commontIf.Length; i++)
+                //    {
+                //        if (commontIf[i] == selectType)
+                //            commontIf[i] = null;
+                //        if (existingIf.Contains(commontIf[i]))
+                //        {
+                //            commontIf[i] = null;
+                //        }
+                //    }
+
+                //    foreach (var item in commontIf.Where(item => item != null))
+                //    {
+                //        sb.AppendFormat(indentationHeader + "Missing Common Interface: {0}", item.Name);
+                //    }
+                //}
+
+                // just list the names first
                 foreach (var item in selectSubTypes)
                 {
-                    if (commontIf == null)
-                        commontIf = item.GetInterfaces();
-                    else
-                    {
-                        var chk = item.GetInterfaces();
-                        for (var i = 0; i < commontIf.Length; i++)
-                        {
-                            if (!chk.Contains(commontIf[i]))
-                            {
-                                commontIf[i] = null;
-                            }
-                        }
-                    }
+                    sb.Append(ReportType(item.FullName, 0, indentationHeader + "  "));
                 }
-
-                var existingIf = selectType.GetInterfaces();
-                sb.AppendFormat(indentationHeader + "Interfaces: {0}", existingIf.Length);
-                foreach (var item in existingIf)
-                {
-                    sb.AppendFormat(indentationHeader + "- {0}", item.Name);
-                }
-                // need to remove implemented interfaces from the ones shared 
-                for (var i = 0; i < commontIf.Length; i++)
-                {
-                    if (commontIf[i] == selectType)
-                        commontIf[i] = null;
-                    if (existingIf.Contains(commontIf[i]))
-                    {
-                        commontIf[i] = null;
-                    }
-                }
-
-                foreach (var item in commontIf.Where(item => item != null))
-                {
-                    sb.AppendFormat(indentationHeader + "Missing Common Interface: {0}", item.Name);
-                }
-                if (beVerbose == 1)
+                // only report subitmes in higher verbosity
+                if (beVerbose > 1)
                 {
                     foreach (var item in selectSubTypes)
                     {
-                        // reduced versobity for sub calls
-                        sb.Append(ReportType(item.FullName, 0, indentationHeader + "  "));
+                        sb.Append(ReportType(item.FullName, beVerbose, indentationHeader + "  "));
                     }
+                    sb.AppendFormat("");
                 }
-                sb.AppendFormat("");
             }
-
             return sb;
         }
 
-        private static void ChildTree(ExpressType ot, TextHighliter sb, string indentationHeader, int indent)
+        private static int ChildTree(ExpressType ot, TextHighliter sb, string indentationHeader, int indent)
         {
-            var sSpace = new string(' ', indent*2);
+            int count = 0;
+            var sSpace = new string('#', indent);
             // sSpace = sSpace.Replace(new string[] { " " }, "  ");
-            foreach (var item in ot.SubTypes)
+            foreach (var item in ot.SubTypes.OrderBy(x=>x.Name))
             {
                 var isAbstract = item.Type.IsAbstract ? " (abstract)" : "";
-                sb.AppendFormat(indentationHeader + sSpace + "- {0} {1}", item, isAbstract);
-                ChildTree(item, sb, indentationHeader, indent + 1);
+                count++;
+                sb.AppendFormat(indentationHeader + sSpace + "# {0} {1}", item, isAbstract);
+                count += ChildTree(item, sb, indentationHeader, indent + 1);
             }
+            return count;
         }
 
         private TextHighliter ReportEntity(int entityLabel, int recursiveDepth = 0, int indentationLevel = 0,

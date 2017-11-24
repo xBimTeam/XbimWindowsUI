@@ -29,6 +29,7 @@ namespace XbimXplorer.Simplify
         private Dictionary<int, string> _ifcType = new Dictionary<int, string>();
         private List<int> _elementsToExport = new List<int>();
         private Dictionary<string, int> _guids = new Dictionary<string, int>();
+        private List<int> _relVoids = new List<int>();
 
         private string _header;
         private string _footer;
@@ -52,6 +53,7 @@ namespace XbimXplorer.Simplify
             _ifcContents = new Dictionary<int, string>();
             _elementsToExport = new List<int>();
             _ifcType = new Dictionary<int, string>();
+            _relVoids = new List<int>();
             _header = "";
             _footer = "";
 
@@ -101,6 +103,8 @@ namespace XbimXplorer.Simplify
                     _ifcLines.Add(iId, lineBuffer);
                     _ifcContents.Add(iId, content);
                     _ifcType.Add(iId, type);
+                    if (type == "IFCRELVOIDSELEMENT")
+                        _relVoids.Add(iId);
 
                     var mGuid = reGuid.Match(content);
                     if (mGuid.Success)
@@ -200,6 +204,29 @@ namespace XbimXplorer.Simplify
             {
                 // ignored
             }
+            
+            // if approprite add voids
+            //
+            if (PreserveVoids.IsChecked.HasValue && PreserveVoids.IsChecked.Value)
+            {
+                var tp = _ifcType[ifcIndex];
+                if (tp.StartsWith("IFCWALL")) // todo expand to others?
+                {
+                    var str = $@"#{ifcIndex} *, *#(\d+) *";
+                    Regex re2 = new Regex(str);
+                    foreach (var relVoid in _relVoids)
+                    {
+                        var reltext = _ifcContents[relVoid];
+                        var m = re2.Match(reltext);
+                        if (m.Success)
+                        {
+                            var voidLabel = m.Groups[1].Value;
+                            int voidEl = Convert.ToInt32(voidLabel);
+                            RecursiveAdd(voidEl);
+                        }
+                    }
+                }
+            }
         }
 
         private void CmdAdd_Click(object sender, RoutedEventArgs e)
@@ -247,11 +274,23 @@ namespace XbimXplorer.Simplify
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+
+            var ftArr = new[]
+            {
+                "Ifc files (.ifc)|*.ifc",
+                "Any file|*.*"
+            };
+
             // Configure open file dialog box
-            var dlg = new OpenFileDialog();
-            dlg.FileName = ""; // Default file name
-            dlg.DefaultExt = ".ifc"; // Default file extension
-            dlg.Filter = "Ifc files (.ifc)|*.ifc"; // Filter files by extension 
+            var dlg = new OpenFileDialog
+            {
+                FileName = "",
+                DefaultExt = ".ifc",
+                Filter = string.Join("|", ftArr)
+            };
+            // Default file name
+            // Default file extension
+            // Filter files by extension 
 
             // Show open file dialog box
             var result = dlg.ShowDialog();
@@ -271,9 +310,7 @@ namespace XbimXplorer.Simplify
         {
             if (e.Key != Key.Enter || (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl)))
                 return;
-
             ConsiderManualSelection();
-
         }
 
         private void ConsiderManualSelection()

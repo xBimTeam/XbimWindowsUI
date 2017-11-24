@@ -196,7 +196,7 @@ namespace Xbim.Presentation
                 _history.Push(_entity);
                 UpdateButtonBack();
             }
-            Clear(); //remove any bindings
+            Clear(false); //remove any bindings
             _entity = null;
             if (entity != null)
             {
@@ -715,14 +715,15 @@ namespace Xbim.Presentation
         }
 
 
-        private void Clear()
+        private void Clear(bool clearHistory = true)
         {
             _objectProperties.Clear();
             _quantities.Clear();
             _properties.Clear();
             _typeProperties.Clear();
             _materials.Clear();
-            _history.Clear();
+            if (clearHistory)
+                _history.Clear();
             
             NotifyPropertyChanged("Properties");
             NotifyPropertyChanged("PropertySets");
