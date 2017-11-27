@@ -459,6 +459,8 @@ namespace XbimXplorer.Commands
                     {
                         foreach (int label in labels)
                         {
+                            bool firstWrite = true;
+                            string prevSol = "";
                             var entity = Model.Instances[label];
                             if (entity == null)
                                 continue;
@@ -472,14 +474,23 @@ namespace XbimXplorer.Commands
                                 {
                                     if (solid != null && solid.IsValid)
                                     {
-                                        var fileName = $"{item.Item1}.{label}.{iCnt++}.brep";
+                                        var thisSol = solid.ToBRep;
+                                        if (thisSol == prevSol)
+                                            continue;
+                                        var fileName = $"{label}.{item.Item1}.{iCnt++}.brep";
+                                        if (firstWrite)
+                                        {
+                                            fileName = $"{label}.brep";
+                                            firstWrite = false;
+                                        }
                                         FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
                                         using (var tw = fBrep.CreateText())
                                         {
                                             tw.WriteLine("DBRep_DrawableShape");
-                                            tw.WriteLine(solid.ToBRep);
+                                            tw.WriteLine(thisSol);
                                         }
                                         ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
+                                        prevSol = thisSol;
                                     }
                                 }
                             }
