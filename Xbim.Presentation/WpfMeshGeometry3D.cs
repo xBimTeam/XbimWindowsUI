@@ -77,24 +77,22 @@ namespace Xbim.Presentation
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             using (var geomstore = entity.Model.GeometryStore)
+            using (var geomReader = geomstore.BeginRead())
             {
-                using (var geomReader = geomstore.BeginRead())
+                foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(entity).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                 {
-                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(entity).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
-                    {
-                        IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                        if(shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
-                                    continue;
-                        var transform = shapeInstance.Transformation * modelTransform;
-                        tgt.Add(
-                            shapegeom.ShapeData,
-                            shapeInstance.IfcTypeId,
-                            shapeInstance.IfcProductLabel,
-                            shapeInstance.InstanceLabel,
-                            transform,
-                            (short)entity.Model.UserDefinedId
-                            );
-                    }
+                    IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                        continue;
+                    var transform = shapeInstance.Transformation * modelTransform;
+                    tgt.Add(
+                        shapegeom.ShapeData,
+                        shapeInstance.IfcTypeId,
+                        shapeInstance.IfcProductLabel,
+                        shapeInstance.InstanceLabel,
+                        transform,
+                        (short)entity.Model.UserDefinedId
+                        );
                 }
             }
             tgt.EndUpdate();
@@ -159,26 +157,24 @@ namespace Xbim.Presentation
                 if (modelTransform != null)
                 {
                     using (var geomstore = model.GeometryStore)
+                    using (var geomReader = geomstore.BeginRead())
                     {
-                        using (var geomReader = geomstore.BeginRead())
+                        foreach (var item in modelgroup)
                         {
-                            foreach (var item in modelgroup)
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                             {
-                                foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
-                                {
-                                    IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                                    if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
-                                        continue;
-                                    var transform = shapeInstance.Transformation * modelTransform;
-                                    tgt.Add(
-                                        shapegeom.ShapeData,
-                                        shapeInstance.IfcTypeId,
-                                        shapeInstance.IfcProductLabel,
-                                        shapeInstance.InstanceLabel,
-                                        transform,
-                                        (short)model.UserDefinedId
-                                        );
-                                }
+                                IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                                if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                                    continue;
+                                var transform = shapeInstance.Transformation * modelTransform;
+                                tgt.Add(
+                                    shapegeom.ShapeData,
+                                    shapeInstance.IfcTypeId,
+                                    shapeInstance.IfcProductLabel,
+                                    shapeInstance.InstanceLabel,
+                                    transform,
+                                    (short)model.UserDefinedId
+                                    );
                             }
                         }
                     }
