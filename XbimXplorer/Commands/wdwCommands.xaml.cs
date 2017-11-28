@@ -478,7 +478,13 @@ namespace XbimXplorer.Commands
                                 entities.Clear();
                                 entities.AddRange(prod.Representation?.Representations.SelectMany(x=>x.Items));
                             }
-
+                            else if (entity is IIfcRelVoidsElement)
+                            {
+                                var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
+                                trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+                                entities.Clear();
+                                entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
+                            }
                             foreach (var solEntity in entities)
                             {
                                 var sols = GetSolids(solEntity);
@@ -1789,15 +1795,19 @@ namespace XbimXplorer.Commands
                         }
                         sb.AppendFormat(indentationHeader + "count: {0}\r\n", allSub.Count());
                     }
-                    sb.DefaultBrush = null;
                     
-                    sb.AppendFormat(indentationHeader + "== Interfaces:");
-                    sb.DefaultBrush = Brushes.DarkOrange;
-                    foreach (var implementedName in ot.Type.GetInterfaces().Select(x=> GetFriendlyTypeName(x)).OrderBy(y=>y))
+
+                    if (beVerbose > 1)
                     {
-                        sb.AppendFormat(indentationHeader + "- {0}", implementedName);
+                        sb.DefaultBrush = null;
+                        sb.AppendFormat(indentationHeader + "== Interfaces:");
+                        sb.DefaultBrush = Brushes.DarkOrange;
+                        foreach (var implementedName in ot.Type.GetInterfaces().Select(x => GetFriendlyTypeName(x)).OrderBy(y => y))
+                        {
+                            sb.AppendFormat(indentationHeader + "- {0}", implementedName);
+                        }
+                        sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Type.GetInterfaces().Count());
                     }
-                    sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Type.GetInterfaces().Count());
 
                     sb.DefaultBrush = null;
                     // sb.DefaultBrush = Brushes.DimGray;
