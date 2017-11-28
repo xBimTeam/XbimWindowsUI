@@ -452,6 +452,9 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^(brep|br\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    FileInfo fi = new FileInfo(Model.FileName);
+                    var dirName = fi.DirectoryName;
+                    XbimPlacementTree pt = new XbimPlacementTree(Model);
                     // add "DBRep_DrawableShape" as first line
                     var start = m.Groups["entities"].Value;
                     IEnumerable<int> labels = ToIntarray(start, ',');
@@ -459,30 +462,55 @@ namespace XbimXplorer.Commands
                     {
                         foreach (int label in labels)
                         {
+                            bool firstWrite = true;
+                            string prevSol = "";
                             var entity = Model.Instances[label];
                             if (entity == null)
                                 continue;
-                            FileInfo fi = new FileInfo(Model.FileName);
-                            var dirName = fi.DirectoryName;
-                            var sols = GetSolids(entity);
-                            foreach (var item in sols)
+
+                            var entities = new List<IPersistEntity>() { entity };
+                            // todo: what to do with subtractionElements?
+                            XbimMatrix3D trsf = XbimMatrix3D.Identity;
+                            if (entity is IIfcProduct)
                             {
-                                int iCnt = 0;
-                                foreach (var solid in item.Item2)
+                                var prod = (IIfcProduct)entity;
+                                trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+                                entities.Clear();
+                                entities.AddRange(prod.Representation?.Representations.SelectMany(x=>x.Items));
+                            }
+
+                            foreach (var solEntity in entities)
+                            {
+                                var sols = GetSolids(solEntity);
+                                foreach (var item in sols)
                                 {
-                                    if (solid != null && solid.IsValid)
+                                    int iCnt = 0;
+                                    foreach (var solid in item.Item2)
                                     {
-                                        var fileName = $"{item.Item1}.{label}.{iCnt++}.brep";
-                                        FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
-                                        using (var tw = fBrep.CreateText())
+                                        if (solid != null && solid.IsValid)
                                         {
-                                            tw.WriteLine("DBRep_DrawableShape");
-                                            tw.WriteLine(solid.ToBRep);
+                                            var trsfSolid = (IXbimSolid)solid.Transform(trsf);
+                                            var thisSol = trsfSolid.ToBRep;
+                                            if (thisSol == prevSol)
+                                                continue;
+                                            var fileName = $"{label}.{item.Item1}.{iCnt++}.brep";
+                                            if (firstWrite)
+                                            {
+                                                fileName = $"{label}.brep";
+                                                firstWrite = false;
+                                            }
+                                            FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
+                                            using (var tw = fBrep.CreateText())
+                                            {
+                                                tw.WriteLine("DBRep_DrawableShape");
+                                                tw.WriteLine(thisSol);
+                                            }
+                                            ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
+                                            prevSol = thisSol;
                                         }
-                                        ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
                                     }
                                 }
-                            }
+                            }                           
                         }
                     }
                     continue;
