@@ -675,7 +675,10 @@ namespace Xbim.Presentation
             }
         }
 
-        private void SetOpacity(double opacityPercent)
+        /// <summary>
+        /// Iterates all the materials to set the required opacity.
+        /// </summary>
+        public void SetOpacity(double opacityPercent)
         {
             var opacity = Math.Min(1, opacityPercent);
             opacity = Math.Max(0, opacity); //bound opacity factor
