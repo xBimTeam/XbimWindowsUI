@@ -104,7 +104,15 @@ namespace Xbim.Presentation
             }
             _materialGroups = new ListCollectionView(_materials);
             if (_materialGroups.GroupDescriptions != null)
+            {
                 _materialGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+            }
+            _relationsGroups = new ListCollectionView(_relationsProperties);
+            if (_relationsGroups.GroupDescriptions != null)
+            {
+                _relationsGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
+                _relationsGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+            }
         }
 
         private void TheTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -132,6 +140,8 @@ namespace Xbim.Presentation
                 FillQuantityData();
             else if (selectedTab == MaterialTab)
                 FillMaterialData();
+            else if (selectedTab == RelationsTab)
+                FillRelationsData();
             // ReSharper restore PossibleUnintendedReferenceComparison
         }
 
@@ -156,11 +166,25 @@ namespace Xbim.Presentation
             get { return _objectGroups; }
         }
 
+        private readonly ListCollectionView _relationsGroups;
+
+        public ListCollectionView RelationsGroups
+        {
+            get { return _relationsGroups; }
+        }
+
         private readonly ObservableCollection<PropertyItem> _objectProperties = new ObservableCollection<PropertyItem>();
 
         public ObservableCollection<PropertyItem> ObjectProperties
         {
             get { return _objectProperties; }
+        }
+
+        private readonly ObservableCollection<PropertyItem> _relationsProperties = new ObservableCollection<PropertyItem>();
+
+        public ObservableCollection<PropertyItem> RelationsProperties
+        {
+            get { return _relationsProperties; }
         }
 
         private readonly ObservableCollection<PropertyItem> _quantities = new ObservableCollection<PropertyItem>();
@@ -535,9 +559,104 @@ namespace Xbim.Presentation
             return retItem;
         }
 
+        private void FillRelationsData()
+        {
+            if (_relationsProperties.Any()) //don't fill unless empty
+                return; 
+            if (_entity == null)
+                return;
+            var ifcObj = _entity as IfcProduct;
+            if (ifcObj != null)
+            {
+                foreach (var item in ifcObj.HasAssignments)
+                {
+                    foreach (var ret in GetViewGridEntries(item, "HasAssignments", _entity))
+                    {
+                        _relationsProperties.Add(ret);
+                    }
+                }
+                //foreach (var item in ifcObj.HasAssociations)
+                //{
+                //    _relationsProperties.Add(GetViewGridEntry(item, "HasAssociations"));
+                //}
+                ////foreach (var item in ifcObj.IsDecomposedBy)
+                ////{
+                ////    _relationsProperties.Add(GetViewGridEntryDown(item, "IsDecomposedBy"));
+                ////}
+                //foreach (var item in ifcObj.Decomposes)
+                //{
+                //    _relationsProperties.Add(GetViewGridEntryUp(item, "Decomposes"));
+                //}
+            }
+        }
+
+        private IEnumerable<PropertyItem> GetViewGridEntries(IfcRelAssigns item, string groupName, IPersistIfcEntity entity)
+        {
+            // IfcRelAssignsToProcess, IfcRelAssignsToProduct, IfcRelAssignsToControl, IfcRelAssignsToResource, IfcRelAssignsToActor, IfcRelAssignsToGroup
+            var nm = item.GetType().Name;
+            var lab = item.EntityLabel;
+            var desc = item.Description;
+
+            if (item is IfcRelAssignsToProcess pcs)
+            {
+                if (pcs != null)
+                {
+                    lab = pcs.RelatingProcess.EntityLabel;
+                    desc = pcs.RelatingProcess.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssignsToProduct pdc)
+            {
+                if (pdc != null)
+                {
+                    lab = pdc.RelatingProduct.EntityLabel;
+                    desc = pdc.RelatingProduct.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssignsToControl ctl)
+            {
+                if (ctl != null)
+                {
+                    lab = ctl.RelatingControl.EntityLabel;
+                    desc = ctl.RelatingControl.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssignsToResource res)
+            {
+                if (res != null)
+                {
+                    lab = res.RelatingResource.EntityLabel;
+                    desc = res.RelatingResource.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssignsToActor act)
+            {
+                if (act != null)
+                {
+                    lab = act.RelatingActor.EntityLabel;
+                    desc = act.RelatingActor.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssignsToGroup grp)
+            {
+                if (grp != null)
+                {
+                    lab = grp.RelatingGroup.EntityLabel;
+                    desc = grp.RelatingGroup.GetType().ToString();
+                }
+            }
+
+            yield return new PropertyItem { Name = nm, Value = desc, PropertySetName = groupName, IfcLabel = lab };
+        }
+
+        private static PropertyItem GetViewGridEntry(IfcRelAssociates item, string groupName)
+        {
+            return new PropertyItem { Name = item.GetType().Name, Value = item.Description, PropertySetName = groupName, IfcLabel = item.EntityLabel };
+        }
+
         private void FillObjectData()
         {
-            if (_objectProperties.Count > 0) 
+            if (_objectProperties.Any()) 
                 return; //don't fill unless empty
             if (_entity == null) 
                 return;
@@ -632,6 +751,7 @@ namespace Xbim.Presentation
         private void Clear()
         {
             _objectProperties.Clear();
+            _relationsProperties.Clear();
             _quantities.Clear();
             _properties.Clear();
             _typeProperties.Clear();
