@@ -24,6 +24,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Navigation;
+using Xbim.Ifc2x3.ControlExtension;
 using Xbim.Ifc2x3.Extensions;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.MaterialResource;
@@ -31,6 +32,8 @@ using Xbim.Ifc2x3.MeasureResource;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.PropertyResource;
 using Xbim.Ifc2x3.QuantityResource;
+using Xbim.Ifc2x3.SharedMgmtElements;
+using Xbim.Ifc2x3.StructuralAnalysisDomain;
 using Xbim.IO;
 using Xbim.XbimExtensions;
 using Xbim.XbimExtensions.Interfaces;
@@ -540,10 +543,8 @@ namespace Xbim.Presentation
         private PropertyItem GetPropItem(object propVal)
         {
             var retItem = new PropertyItem();
-
-            var pe = propVal as IPersistIfcEntity;
             var propLabel = 0;
-            if (pe != null)
+            if (propVal is IPersistIfcEntity pe)
             {
                 propLabel = pe.EntityLabel;
             }
@@ -555,39 +556,95 @@ namespace Xbim.Presentation
 
             retItem.Value = ret;
             retItem.IfcLabel = propLabel;
-
             return retItem;
         }
 
         private void FillRelationsData()
         {
             if (_relationsProperties.Any()) //don't fill unless empty
-                return; 
+                return;
             if (_entity == null)
                 return;
-            var ifcObj = _entity as IfcProduct;
-            if (ifcObj != null)
+
+            if (_entity is IfcProduct ifcProd)
             {
-                foreach (var item in ifcObj.HasAssignments)
+                foreach (var item in ifcProd.IsDefinedBy.OfType<IfcRelDefinesByType>())
+                {
+                    foreach (var ret in GetViewGridEntries(item, "IsDefinedByType", _entity))
+                    {
+                        _relationsProperties.Add(ret);
+                    }
+                }
+                foreach (var item in ifcProd.HasAssignments)
                 {
                     foreach (var ret in GetViewGridEntries(item, "HasAssignments", _entity))
                     {
                         _relationsProperties.Add(ret);
                     }
                 }
-                //foreach (var item in ifcObj.HasAssociations)
-                //{
-                //    _relationsProperties.Add(GetViewGridEntry(item, "HasAssociations"));
-                //}
-                ////foreach (var item in ifcObj.IsDecomposedBy)
-                ////{
-                ////    _relationsProperties.Add(GetViewGridEntryDown(item, "IsDecomposedBy"));
-                ////}
-                //foreach (var item in ifcObj.Decomposes)
-                //{
-                //    _relationsProperties.Add(GetViewGridEntryUp(item, "Decomposes"));
-                //}
+                foreach (var item in ifcProd.HasAssociations)
+                {
+                    foreach (var ret in GetViewGridEntries(item, "HasAssociations", _entity))
+                    {
+                        _relationsProperties.Add(ret);
+                    }
+                }
             }
+            if (_entity is IfcElement ifcElem)
+            {
+                foreach (var item in ifcElem.ConnectedFrom)
+                {
+                    foreach (var ret in GetViewGridEntries(item, "ConnectedFrom", _entity))
+                    {
+                        _relationsProperties.Add(ret);
+                    }
+                }
+                foreach (var item in ifcElem.ConnectedTo)
+                {
+                    foreach (var ret in GetViewGridEntries(item, "ConnectedTo", _entity))
+                    {
+                        _relationsProperties.Add(ret);
+                    }
+                }
+                foreach (var item in ifcElem.ProvidesBoundaries)
+                {
+                    foreach (var ret in GetViewGridEntries(item, "ProvidesBoundaries", _entity))
+                    {
+                        _relationsProperties.Add(ret);
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<PropertyItem> GetViewGridEntries(IfcRelSpaceBoundary item, string groupName, IPersistIfcEntity entity)
+        {
+            var other = item.RelatingSpace;
+
+            var nm = item.GetType().Name;
+            var lab = other.EntityLabel;
+            var desc = other.GetType().ToString();
+            yield return new PropertyItem { Name = nm, Value = desc, PropertySetName = groupName, IfcLabel = lab };
+        }
+
+        private IEnumerable<PropertyItem> GetViewGridEntries(IfcRelConnectsElements item, string groupName, IPersistIfcEntity entity)
+        {
+            IfcElement other = item.RelatingElement.EntityLabel == entity.EntityLabel
+                ? item.RelatedElement
+                : item.RelatingElement;
+
+
+            var nm = item.GetType().Name;
+            var lab = other.EntityLabel;
+            var desc = other.GetType().ToString();
+            yield return new PropertyItem { Name = nm, Value = desc, PropertySetName = groupName, IfcLabel = lab };
+        }
+
+        private IEnumerable<PropertyItem> GetViewGridEntries(IfcRelDefinesByType item, string groupName, IPersistIfcEntity entity)
+        {           
+            var nm = item.GetType().Name;
+            var lab = item.RelatingType.EntityLabel;
+            var desc = item.RelatingType.GetType().ToString();
+            yield return new PropertyItem { Name = nm, Value = desc, PropertySetName = groupName, IfcLabel = lab };
         }
 
         private IEnumerable<PropertyItem> GetViewGridEntries(IfcRelAssigns item, string groupName, IPersistIfcEntity entity)
@@ -648,10 +705,77 @@ namespace Xbim.Presentation
 
             yield return new PropertyItem { Name = nm, Value = desc, PropertySetName = groupName, IfcLabel = lab };
         }
-
-        private static PropertyItem GetViewGridEntry(IfcRelAssociates item, string groupName)
+        private IEnumerable<PropertyItem> GetViewGridEntries(IfcRelAssociates item, string groupName, IPersistIfcEntity entity)
         {
-            return new PropertyItem { Name = item.GetType().Name, Value = item.Description, PropertySetName = groupName, IfcLabel = item.EntityLabel };
+            var nm = item.GetType().Name;
+            var lab = item.EntityLabel;
+            var desc = item.Description;
+
+            if (item is IfcRelAssociatesClassification cls)
+            {
+                if (cls != null)
+                {
+                    lab = cls.RelatingClassification.EntityLabel;
+                    desc = cls.RelatingClassification.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesDocument doc)
+            {
+                if (doc != null)
+                {
+                    lab = doc.RelatingDocument.EntityLabel;
+                    desc = doc.RelatingDocument.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesLibrary lib)
+            {
+                if (lib != null)
+                {
+                    lab = lib.RelatingLibrary.EntityLabel;
+                    desc = lib.RelatingLibrary.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesMaterial mat)
+            {
+                if (mat != null)
+                {
+                    lab = mat.RelatingMaterial.EntityLabel;
+                    desc = mat.RelatingMaterial.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesProfileProperties prof)
+            {
+                if (prof != null)
+                {
+                    lab = prof.RelatingProfileProperties.EntityLabel;
+                    desc = prof.RelatingProfileProperties.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesAppliedValue appVal)
+            {
+                if (appVal != null)
+                {
+                    lab = appVal.RelatingAppliedValue.EntityLabel;
+                    desc = appVal.RelatingAppliedValue.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesApproval approv)
+            {
+                if (approv != null)
+                {
+                    lab = approv.RelatingApproval.EntityLabel;
+                    desc = approv.RelatingApproval.GetType().ToString();
+                }
+            }
+            else if (item is IfcRelAssociatesConstraint constr)
+            {
+                if (constr != null)
+                {
+                    lab = constr.RelatingConstraint.EntityLabel;
+                    desc = constr.RelatingConstraint.GetType().ToString();
+                }
+            }
+            yield return new PropertyItem { Name = nm, Value = desc, PropertySetName = groupName, IfcLabel = lab };
         }
 
         private void FillObjectData()
