@@ -284,10 +284,9 @@ namespace XbimXplorer
             var mi = sender as MenuItem;
             if (mi == null)
                 return;
-            using (var c = new WaitCursor())
-            {
-                OpenOrFocusPluginWindow(mi.Tag as Type);
-            }
+            
+            OpenOrFocusPluginWindow(mi.Tag as Type);
+            
         }
         
         private Assembly PluginAssemblyResolvingFunction(object sender, ResolveEventArgs args)
@@ -310,7 +309,6 @@ namespace XbimXplorer
             var aswindow = pluginWindow as Window;
             if (aswindow != null)
             {
-                
                 var cmode = pluginWindow.GetUiContainerMode();
                 if (cmode == PluginWindowUiContainerEnum.Dialog)
                 {
