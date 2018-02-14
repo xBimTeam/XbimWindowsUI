@@ -742,36 +742,34 @@ namespace Xbim.Presentation
                 matrix3D = transform.Value.ToMatrix3D();
             }
             using (var ms = new MemoryStream(mesh))
+            using (var br = new BinaryReader(ms))
             {
-                using (var br = new BinaryReader(ms))
+                var t = br.ReadShapeTriangulation();
+                List<float[]> pts;
+                List<int> idx;
+                t.ToPointsWithNormalsAndIndices(out pts, out idx);
+
+
+                // add to unfrozen list
+                //
+                _unfrozenPositions.Capacity += pts.Count;
+                _unfrozenNormals.Capacity += pts.Count;
+                _unfrozenIndices.Capacity += idx.Count;
+                foreach (var floatsArray in pts)
                 {
-                    var t = br.ReadShapeTriangulation();
-                    List<float[]> pts;
-                    List<int> idx;
-                    t.ToPointsWithNormalsAndIndices(out pts, out idx);
+                    var wpfPosition = new Point3D(floatsArray[0], floatsArray[1], floatsArray[2]);
+                    if (matrix3D.HasValue)
+                        wpfPosition = matrix3D.Value.Transform(wpfPosition);
+                    _unfrozenPositions.Add(wpfPosition);
 
-
-                    // add to unfrozen list
-                    //
-                    _unfrozenPositions.Capacity += pts.Count;
-                    _unfrozenNormals.Capacity += pts.Count;
-                    _unfrozenIndices.Capacity += idx.Count;
-                    foreach (var floatsArray in pts)
-                    {
-                        var wpfPosition = new Point3D(floatsArray[0], floatsArray[1], floatsArray[2]);
-                        if (matrix3D.HasValue)
-                            wpfPosition = matrix3D.Value.Transform(wpfPosition);
-                        _unfrozenPositions.Add(wpfPosition);
-
-                        var wpfNormal = new Vector3D(floatsArray[3], floatsArray[4], floatsArray[5]);
-                        if (qrd != null) //transform the normal if we have to
-                            wpfNormal = qrd.Transform(wpfNormal);
-                        _unfrozenNormals.Add(wpfNormal);
-                    }
-                    foreach (var index in idx)
-                    {
-                        _unfrozenIndices.Add(index + indexBase);
-                    }
+                    var wpfNormal = new Vector3D(floatsArray[3], floatsArray[4], floatsArray[5]);
+                    if (qrd != null) //transform the normal if we have to
+                        wpfNormal = qrd.Transform(wpfNormal);
+                    _unfrozenNormals.Add(wpfNormal);
+                }
+                foreach (var index in idx)
+                {
+                    _unfrozenIndices.Add(index + indexBase);
                 }
             }
         }
