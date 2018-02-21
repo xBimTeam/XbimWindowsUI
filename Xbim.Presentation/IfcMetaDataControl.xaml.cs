@@ -465,6 +465,8 @@ namespace Xbim.Presentation
 
             if (_entity is IIfcObject)
             {
+                // add material information
+                //
                 var ifcObj = _entity as IIfcObject;
                 var matRels = ifcObj.HasAssociations.OfType<IIfcRelAssociatesMaterial>();
                 foreach (var matRel in matRels)
@@ -479,6 +481,27 @@ namespace Xbim.Presentation
                 foreach (var matRel in matRels)
                 {
                     AddMaterialData(matRel.RelatingMaterial, "");
+                }
+            }
+            if (_entity is IIfcProduct)
+            {
+                var ifcprod = _entity as IIfcProduct;
+                // styles are attached to representation items
+                //
+                var repItemsLabels = ifcprod.Representation?.Representations?.SelectMany(rep => rep.Items).Select(i => i.EntityLabel).ToList();
+
+                // is there style information too?
+                var styles = ifcprod.Model.Instances.OfType<IIfcStyledItem>().Where(x => x.Item != null && repItemsLabels.Contains(x.Item.EntityLabel));
+                foreach (var style in styles)
+                {
+                    int i = 0;
+                    _materials.Add(new PropertyItem
+                    {
+                        PropertySetName = "Connected Style Items",
+                        Name = $"Connected Style Items[{i++}]",
+                        Value = $"{style.EntityLabel}",
+                        IfcLabel = style.EntityLabel
+                    });
                 }
             }
         }
@@ -554,15 +577,16 @@ namespace Xbim.Presentation
                             break;
                         case 1:
                             var tmpSingle = GetPropItem(propVals[0]);
-                            tmpSingle.Name = prop.PropertyInfo.Name + " (∞)";
+                            tmpSingle.Name = prop.PropertyInfo.Name + "[0]";
                             tmpSingle.PropertySetName = "General";
                             _objectProperties.Add(tmpSingle);
                             break;
                         default:
+                            int i = 0;
                             foreach (var item in propVals)
                             {
                                 var tmpLoop = GetPropItem(item);
-                                tmpLoop.Name = item.GetType().Name;
+                                tmpLoop.Name = $"{prop.PropertyInfo.Name}[{i++}]";
                                 tmpLoop.PropertySetName = prop.PropertyInfo.Name;
                                 _objectProperties.Add(tmpLoop);
                             }
@@ -601,9 +625,51 @@ namespace Xbim.Presentation
                 ret = propVal.GetType().Name;
             }
 
+            if (pe is IIfcRepresentation)
+            {
+                var t = (IIfcRepresentation)pe;
+                ret += $" ('{t.RepresentationIdentifier}' '{t.RepresentationType}')";
+            }
+            else if (pe is IIfcRelDefinesByProperties)
+            {
+                var t = (IIfcRelDefinesByProperties)pe;
+                var stringValues = new List<string>();
+                var name = t.RelatingPropertyDefinition?.PropertySetDefinitions.FirstOrDefault()?.Name;
+                if (!string.IsNullOrEmpty(name))
+                    stringValues.Add($"'{name}'");
+                if (stringValues.Any())
+                {
+                    ret += $" ({string.Join(" ", stringValues.ToArray())})";
+                }
+            }
+            else if (pe is IIfcRoot)
+            {
+                var t = (IIfcRoot)pe;
+                var stringValues = new List<string>();
+                if (!string.IsNullOrEmpty(t.Name))
+                    stringValues.Add($"'{t.Name}'");
+                if (!string.IsNullOrEmpty(t.GlobalId))
+                    stringValues.Add($"'{t.GlobalId}'");
+                if (stringValues.Any())
+                {
+                    ret += $" ({string.Join(" ", stringValues.ToArray())})";
+                }
+            }
+            else if (pe is IIfcOwnerHistory)
+            {
+                var t = (IIfcOwnerHistory)pe;
+                var stringValues = new List<string>();
+                if (!string.IsNullOrEmpty(t.OwningUser?.EntityLabel.ToString()))
+                    stringValues.Add($"#{t.OwningUser?.EntityLabel.ToString()}");
+                if (!string.IsNullOrEmpty(t.OwningApplication?.ApplicationIdentifier))
+                    stringValues.Add($"'{t.OwningApplication?.ApplicationIdentifier}'");
+                if (stringValues.Any())
+                {
+                    ret += $" ({string.Join(" using ", stringValues.ToArray())})";
+                }
+            }
             retItem.Value = ret;
             retItem.IfcLabel = propLabel;
-
             return retItem;
         }
 
@@ -645,49 +711,50 @@ namespace Xbim.Presentation
             {
                 ReportProp(_entity, inverse, false);
             }
+            //// removed old ui
+            //return;
+            //var root = _entity as IIfcRoot;
+            //if (root == null)
+            //    return;            
+            //_objectProperties.Add(new PropertyItem {Name = "Name", Value = root.Name, PropertySetName = "OldUI"});
+            //_objectProperties.Add(new PropertyItem { Name = "Description", Value = root.Description, PropertySetName = "OldUI" });
+            //_objectProperties.Add(new PropertyItem { Name = "GUID", Value = root.GlobalId, PropertySetName = "OldUI" });
+            //if (root.OwnerHistory != null)
+            //{
+            //    var user = root.OwnerHistory.OwningUser?.ToString() ?? "<null>";
 
-            var root = _entity as IIfcRoot;
-            if (root == null)
-                return;            
-            _objectProperties.Add(new PropertyItem {Name = "Name", Value = root.Name, PropertySetName = "OldUI"});
-            _objectProperties.Add(new PropertyItem { Name = "Description", Value = root.Description, PropertySetName = "OldUI" });
-            _objectProperties.Add(new PropertyItem { Name = "GUID", Value = root.GlobalId, PropertySetName = "OldUI" });
-            if (root.OwnerHistory != null)
-            {
-                var user = root.OwnerHistory.OwningUser?.ToString() ?? "<null>";
-
-                var app  = ( root.OwnerHistory.OwningApplication != null
-                    && root.OwnerHistory.OwningApplication.ApplicationIdentifier != null
-                    && !string.IsNullOrEmpty(root.OwnerHistory.OwningApplication.ApplicationIdentifier) ) 
-                    ? root.OwnerHistory.OwningApplication.ApplicationIdentifier.ToString()
-                    : "<null>";
+            //    var app  = ( root.OwnerHistory.OwningApplication != null
+            //        && root.OwnerHistory.OwningApplication.ApplicationIdentifier != null
+            //        && !string.IsNullOrEmpty(root.OwnerHistory.OwningApplication.ApplicationIdentifier) ) 
+            //        ? root.OwnerHistory.OwningApplication.ApplicationIdentifier.ToString()
+            //        : "<null>";
 
 
-                _objectProperties.Add(new PropertyItem
-                {
-                    Name = "Ownership",
-                    Value = user + " using " + app,
-                    PropertySetName = "OldUI"
-                });
-            }
+            //    _objectProperties.Add(new PropertyItem
+            //    {
+            //        Name = "Ownership",
+            //        Value = user + " using " + app,
+            //        PropertySetName = "OldUI"
+            //    });
+            //}
 
-            //now do properties in further specialisations that are text labels
-            foreach (var pInfo in ifcType.Properties.Where
-                (p => p.Value.EntityAttribute.Order > 4
-                      && p.Value.EntityAttribute.State != EntityAttributeState.DerivedOverride)
-                ) //skip the first for of root, and derived and things that are objects
-            {
-                var val = pInfo.Value.PropertyInfo.GetValue(_entity, null);
-                if (val == null || !(val is ExpressType))
-                    continue;
-                var pi = new PropertyItem
-                {
-                    Name = pInfo.Value.PropertyInfo.Name,
-                    Value = ((ExpressType) val).ToString(),
-                    PropertySetName = "OldUI"
-                };
-                _objectProperties.Add(pi);
-            }
+            ////now do properties in further specialisations that are text labels
+            //foreach (var pInfo in ifcType.Properties.Where
+            //    (p => p.Value.EntityAttribute.Order > 4
+            //          && p.Value.EntityAttribute.State != EntityAttributeState.DerivedOverride)
+            //    ) //skip the first for of root, and derived and things that are objects
+            //{
+            //    var val = pInfo.Value.PropertyInfo.GetValue(_entity, null);
+            //    if (val == null || !(val is ExpressType))
+            //        continue;
+            //    var pi = new PropertyItem
+            //    {
+            //        Name = pInfo.Value.PropertyInfo.Name,
+            //        Value = ((ExpressType) val).ToString(),
+            //        PropertySetName = "OldUI"
+            //    };
+            //    _objectProperties.Add(pi);
+            //}
         }
 
         public IfcStore Model

@@ -222,7 +222,7 @@ namespace XbimXplorer.Simplify
                         {
                             var voidLabel = m.Groups[1].Value;
                             int voidEl = Convert.ToInt32(voidLabel);
-                            RecursiveAdd(voidEl);
+                            RecursiveAdd(relVoid);
                         }
                     }
                 }

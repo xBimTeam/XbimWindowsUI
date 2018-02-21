@@ -77,24 +77,22 @@ namespace Xbim.Presentation
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             using (var geomstore = entity.Model.GeometryStore)
+            using (var geomReader = geomstore.BeginRead())
             {
-                using (var geomReader = geomstore.BeginRead())
+                foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(entity).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                 {
-                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(entity).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
-                    {
-                        IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                        if(shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
-                                    continue;
-                        var transform = shapeInstance.Transformation * modelTransform;
-                        tgt.Add(
-                            shapegeom.ShapeData,
-                            shapeInstance.IfcTypeId,
-                            shapeInstance.IfcProductLabel,
-                            shapeInstance.InstanceLabel,
-                            transform,
-                            (short)entity.Model.UserDefinedId
-                            );
-                    }
+                    IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                        continue;
+                    var transform = shapeInstance.Transformation * modelTransform;
+                    tgt.Add(
+                        shapegeom.ShapeData,
+                        shapeInstance.IfcTypeId,
+                        shapeInstance.IfcProductLabel,
+                        shapeInstance.InstanceLabel,
+                        transform,
+                        (short)entity.Model.UserDefinedId
+                        );
                 }
             }
             tgt.EndUpdate();
@@ -105,41 +103,42 @@ namespace Xbim.Presentation
         // 
         public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat)
         {
-            var placementTree = new XbimPlacementTree(rep.Model);
+            var productContexts = rep.OfProductRepresentation?.OfType<IIfcProductDefinitionShape>().SelectMany(x => x.ShapeOfProduct);
+            var representationLabels = rep.Items.Select(x => x.EntityLabel);
+            var selModel = rep.Model;
+            var modelTransform = positions[selModel].Transform;
 
+            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
+        }
+
+        // attempting to load the shapeGeometry from the database; 
+        // 
+        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform)
+        {
+            var placementTree = new XbimPlacementTree(selModel);
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
-            var prodShapes = rep.OfProductRepresentation.OfType<IIfcProductDefinitionShape>();
-
-            foreach (var prodShape in prodShapes)
+            using (var geomstore = selModel.GeometryStore)
+            using (var geomReader = geomstore.BeginRead())
             {
-                if (prodShape?.ShapeOfProduct == null)
-                    continue;
-                foreach (var contextualProduct in prodShape?.ShapeOfProduct)
+                var matchingGeometries = geomReader.ShapeGeometries.Where(x => representationLabels.Contains(x.IfcShapeLabel));
+                foreach (var contextualProduct in productContexts)
                 {
                     var trsf = placementTree[contextualProduct.ObjectPlacement.EntityLabel];
-                    var modelTransform = positions[rep.Model].Transform;
-                    using (var geomstore = rep.Model.GeometryStore)
-                    using (var geomReader = geomstore.BeginRead())
+                    foreach (IXbimShapeGeometryData shapegeom in matchingGeometries)
                     {
-                        var dispitems = rep.Items.Select(x => x.EntityLabel);
-                        var r2 = geomReader.ShapeGeometries.Where(x => dispitems.Contains(x.IfcShapeLabel));
-
-                        foreach (IXbimShapeGeometryData shapegeom in r2)
-                        {
-                            if (shapegeom.Format != (byte) XbimGeometryType.PolyhedronBinary)
-                                continue;
-                            // Debug.WriteLine($"adding {shapegeom.ShapeLabel} at {DateTime.Now.ToLongTimeString()}");
-                            var transform = trsf*modelTransform;
-                            tgt.Add(
-                                shapegeom.ShapeData,
-                                453, // shapeInstance.IfcTypeId,
-                                contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
-                                -1, // shapeInstance.InstanceLabel,
-                                transform,
-                                (short) rep.Model.UserDefinedId
-                            );
-                        }
+                        if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                            continue;
+                        // Debug.WriteLine($"adding {shapegeom.ShapeLabel} at {DateTime.Now.ToLongTimeString()}");
+                        var transform = trsf * modelTransform;
+                        tgt.Add(
+                            shapegeom.ShapeData,
+                            453, // shapeInstance.IfcTypeId,
+                            contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
+                            -1, // shapeInstance.InstanceLabel,
+                            transform,
+                            (short)contextualProduct.Model.UserDefinedId
+                        );
                     }
                 }
             }
@@ -154,14 +153,15 @@ namespace Xbim.Presentation
             foreach (var modelgroup in selection.GroupBy(i => i.Model))
             {
                 var model = modelgroup.Key;
-                var modelTransform = positions[model].Transform;
-                using (var geomstore = model.GeometryStore)
+                var modelTransform = positions[model]?.Transform;
+                if (modelTransform != null)
                 {
+                    using (var geomstore = model.GeometryStore)
                     using (var geomReader = geomstore.BeginRead())
                     {
                         foreach (var item in modelgroup)
                         {
-                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x=>x.RepresentationType==XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                             {
                                 IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                                 if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
@@ -176,7 +176,7 @@ namespace Xbim.Presentation
                                     (short)model.UserDefinedId
                                     );
                             }
-                        }                        
+                        }
                     }
                 }
             }

@@ -454,16 +454,71 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^(brep|br\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    FileInfo fi = new FileInfo(Model.FileName);
+                    var dirName = fi.DirectoryName;
+                    XbimPlacementTree pt = new XbimPlacementTree(Model);
                     // add "DBRep_DrawableShape" as first line
                     var start = m.Groups["entities"].Value;
                     IEnumerable<int> labels = ToIntarray(start, ',');
                     if (labels.Any())
                     {
-                        foreach (int item in labels)
+                        foreach (int label in labels)
                         {
-                            var e = Model.Instances[item];
-                            if (e == null)
+                            bool firstWrite = true;
+                            string prevSol = "";
+                            var entity = Model.Instances[label];
+                            if (entity == null)
                                 continue;
+
+                            var entities = new List<IPersistEntity>() { entity };
+                            // todo: what to do with subtractionElements?
+                            XbimMatrix3D trsf = XbimMatrix3D.Identity;
+                            if (entity is IIfcProduct)
+                            {
+                                var prod = (IIfcProduct)entity;
+                                trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+                                entities.Clear();
+                                entities.AddRange(prod.Representation?.Representations.SelectMany(x=>x.Items));
+                            }
+                            else if (entity is IIfcRelVoidsElement)
+                            {
+                                var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
+                                trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+                                entities.Clear();
+                                entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
+                            }
+                            foreach (var solEntity in entities)
+                            {
+                                var sols = GetSolids(solEntity);
+                                foreach (var item in sols)
+                                {
+                                    int iCnt = 0;
+                                    foreach (var solid in item.Item2)
+                                    {
+                                        if (solid != null && solid.IsValid)
+                                        {
+                                            var trsfSolid = (IXbimSolid)solid.Transform(trsf);
+                                            var thisSol = trsfSolid.ToBRep;
+                                            if (thisSol == prevSol)
+                                                continue;
+                                            var fileName = $"{label}.{item.Item1}.{iCnt++}.brep";
+                                            if (firstWrite)
+                                            {
+                                                fileName = $"{label}.brep";
+                                                firstWrite = false;
+                                            }
+                                            FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
+                                            using (var tw = fBrep.CreateText())
+                                            {
+                                                tw.WriteLine("DBRep_DrawableShape");
+                                                tw.WriteLine(thisSol);
+                                            }
+                                            ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
+                                            prevSol = thisSol;
+                                        }
+                                    }
+                                }
+                            }                           
                         }
                     }
                     continue;
@@ -501,7 +556,6 @@ namespace XbimXplorer.Commands
                     var labels = GetSelection(m).ToArray();
                     if (labels.Any())
                     {
-                        var engine = new XbimGeometryEngine();
                         foreach (var label in labels)
                         {
                             var entity = Model.Instances[label];
@@ -512,72 +566,29 @@ namespace XbimXplorer.Commands
                             }
                             ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
                             ReportAdd($"=== Geometry functions", Brushes.Blue);
-                            // todo: cache methods by type
-                            var methods =
-                                typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                            foreach (var methodInfo in methods)
-                            {
-                                var pars = methodInfo.GetParameters().ToArray();
-                                if (pars.Length!=1) // only consider functinons with a single parameter
-                                    continue;
-                                if (methodInfo.ReturnParameter.ParameterType == typeof(bool))
-                                    continue; // excludes the equal function
 
-                                var firstParam = pars.FirstOrDefault();
-                                if (firstParam == null)
-                                    continue;
-                                if (!firstParam.ParameterType.IsInstanceOfType(entity))
-                                    continue;
-                                var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name.Replace("IIfc", "Ifc")})";
-                                ReportAdd($"- {functionShort}");
-                                try
+                            var sols = GetSolids(entity);
+                            foreach (var item in sols)
+                            {
+                                ReportAdd($"- {item.Item1}");
+                                foreach (var solid in item.Item2)
                                 {
-                                    var ret = methodInfo.Invoke(engine, new object[] { entity });
-                                    if (ret != null)
+                                    if (solid != null)
                                     {
-                                        var sol = ret as IXbimSolid;
-                                        var solset = ret as IXbimSolidSet;
-                                        if (sol != null)
+                                        if (solid.IsValid)
                                         {
-                                            if (sol.IsValid)
-                                            {
-                                                ReportAdd($"  ok, returned {ret.GetType().Name} - Volume: {sol.Volume}", Brushes.Green);
-                                            }
-                                            else
-                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)",
-                                                    Brushes.Red);
-                                        }
-                                        else if (solset != null)
-                                        {
-                                            if (solset.IsValid)
-                                            {
-                                                ReportAdd($"  ok, returned {ret.GetType().Name}", Brushes.Green);
-                                                int iCnt = 0;
-                                                foreach (var subSol in solset)
-                                                {
-                                                    ReportAdd($"    [{iCnt++}]: {subSol.GetType().Name} - Volume: {subSol.Volume}", Brushes.Green);
-                                                }
-                                            }
-                                            else
-                                                ReportAdd($"  Err, returned {ret.GetType().Name} (not valid)",
-                                                    Brushes.Red);
+                                            ReportAdd($"  Ok, returned {solid.GetType().Name} - Volume: {solid.Volume}", Brushes.Green);
                                         }
                                         else
-                                        {
-                                            ReportAdd($"  ok, returned {ret.GetType().Name} ({ret})", Brushes.Green);
-                                        }
+                                            ReportAdd($"  Err, returned {solid.GetType().Name} (not valid)", Brushes.Red);
                                     }
                                     else
                                     {
-                                        ReportAdd($"  returned value is null (function return type is ${methodInfo.ReturnType.Name})", Brushes.Orange);
+                                        // probably an error
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    var msg = $"  Failed on {functionShort} for #{label}. {ex.Message}";
-                                    ReportAdd(msg, Brushes.Red);
-                                }
                             }
+
                             ReportAdd($"=== Autocad views", Brushes.Blue);
                             var ra = GeometryView.ReportAcadScript(entity);
                             ReportAdd(ra);
@@ -1008,6 +1019,66 @@ namespace XbimXplorer.Commands
                     continue;
                 }
                 ReportAdd($"Command not understood: {cmd}.");
+            }
+        }
+
+        private IEnumerable<Tuple<string, List<IXbimSolid>>> GetSolids(IPersistEntity entity)
+        {
+            // todo: cache methods by type
+            var engine = new XbimGeometryEngine();
+            var methods = typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var methodInfo in methods)
+            {
+                var pars = methodInfo.GetParameters().ToArray();
+                if (pars.Length != 1) // only consider functinons with a single parameter
+                    continue;
+                if (methodInfo.ReturnParameter.ParameterType == typeof(bool))
+                    continue; // excludes the equal function
+
+                var firstParam = pars.FirstOrDefault();
+                if (firstParam == null)
+                    continue;
+                if (!firstParam.ParameterType.IsInstanceOfType(entity))
+                    continue;
+                var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name.Replace("IIfc", "Ifc")})";
+                
+
+                var getSolidRet = new Tuple<string, List<IXbimSolid>>( 
+                    functionShort, new List<IXbimSolid>()
+                    );
+
+                try
+                {
+                    var ret = methodInfo.Invoke(engine, new object[] { entity });
+                    if (ret != null)
+                    {
+                        var sol = ret as IXbimSolid;
+                        var solset = ret as IXbimSolidSet;
+                        if (sol != null)
+                        {
+                            getSolidRet.Item2.Add(sol);
+                        }
+                        else if (solset != null)
+                        {
+                            foreach (var subSol in solset)
+                            {
+                                getSolidRet.Item2.Add(subSol);
+                                // ReportAdd($"    [{iCnt++}]: {subSol.GetType().Name} - Volume: {subSol.Volume}", Brushes.Green);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        getSolidRet.Item2.Add(null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    getSolidRet.Item2.Add(null);
+                    var msg = $"  Failed on {functionShort} for #{entity.EntityLabel}. {ex.Message}";
+                    ReportAdd(msg, Brushes.Red);
+                }
+                yield return getSolidRet;
             }
         }
 
@@ -1727,15 +1798,19 @@ namespace XbimXplorer.Commands
                         }
                         sb.AppendFormat(indentationHeader + "count: {0}\r\n", allSub.Count());
                     }
-                    sb.DefaultBrush = null;
                     
-                    sb.AppendFormat(indentationHeader + "== Interfaces:");
-                    sb.DefaultBrush = Brushes.DarkOrange;
-                    foreach (var implementedName in ot.Type.GetInterfaces().Select(x=> GetFriendlyTypeName(x)).OrderBy(y=>y))
+
+                    if (beVerbose > 1)
                     {
-                        sb.AppendFormat(indentationHeader + "- {0}", implementedName);
+                        sb.DefaultBrush = null;
+                        sb.AppendFormat(indentationHeader + "== Interfaces:");
+                        sb.DefaultBrush = Brushes.DarkOrange;
+                        foreach (var implementedName in ot.Type.GetInterfaces().Select(x => GetFriendlyTypeName(x)).OrderBy(y => y))
+                        {
+                            sb.AppendFormat(indentationHeader + "- {0}", implementedName);
+                        }
+                        sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Type.GetInterfaces().Count());
                     }
-                    sb.AppendFormat(indentationHeader + "count: {0}\r\n", ot.Type.GetInterfaces().Count());
 
                     sb.DefaultBrush = null;
                     // sb.DefaultBrush = Brushes.DimGray;

@@ -951,14 +951,35 @@ namespace Xbim.Presentation
             }
         }
 
+        IIfcProduct _lastSelectedProduct = null;
+
         private WpfMeshGeometry3D GetSelectionGeometry(IPersistEntity newVal, WpfMaterial mat)
         {
+            if (newVal is IIfcProduct)
+            {
+                _lastSelectedProduct = newVal as IIfcProduct;
+            }
+
             WpfMeshGeometry3D m;
-            if (newVal is IIfcShapeRepresentation)
+            if (newVal is IIfcRepresentationItem)
+            {
+                if (_lastSelectedProduct == null)
+                    m = new WpfMeshGeometry3D();
+                else
+                {
+                    var productContexts = new List<IIfcProduct>() { _lastSelectedProduct } ;
+                    var representationLabels = new List<int>() { newVal.EntityLabel };
+                    var selModel = _lastSelectedProduct.Model;
+                    var modelTransform = ModelPositions[selModel].Transform;
+                    
+                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
+                }
+            }
+            else if (newVal is IIfcShapeRepresentation)
             {
                 m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat);
             }
-            if (newVal is IIfcRelVoidsElement)
+            else if (newVal is IIfcRelVoidsElement)
             {
                 var vd = newVal as IIfcRelVoidsElement;
                 var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
