@@ -465,6 +465,8 @@ namespace Xbim.Presentation
 
             if (_entity is IIfcObject)
             {
+                // add material information
+                //
                 var ifcObj = _entity as IIfcObject;
                 var matRels = ifcObj.HasAssociations.OfType<IIfcRelAssociatesMaterial>();
                 foreach (var matRel in matRels)
@@ -479,6 +481,27 @@ namespace Xbim.Presentation
                 foreach (var matRel in matRels)
                 {
                     AddMaterialData(matRel.RelatingMaterial, "");
+                }
+            }
+            if (_entity is IIfcProduct)
+            {
+                var ifcprod = _entity as IIfcProduct;
+                // styles are attached to representation items
+                //
+                var repItemsLabels = ifcprod.Representation?.Representations?.SelectMany(rep => rep.Items).Select(i => i.EntityLabel).ToList();
+
+                // is there style information too?
+                var styles = ifcprod.Model.Instances.OfType<IIfcStyledItem>().Where(x => x.Item != null && repItemsLabels.Contains(x.Item.EntityLabel));
+                foreach (var style in styles)
+                {
+                    int i = 0;
+                    _materials.Add(new PropertyItem
+                    {
+                        PropertySetName = "Connected Style Items",
+                        Name = $"Connected Style Items[{i++}]",
+                        Value = $"{style.EntityLabel}",
+                        IfcLabel = style.EntityLabel
+                    });
                 }
             }
         }
