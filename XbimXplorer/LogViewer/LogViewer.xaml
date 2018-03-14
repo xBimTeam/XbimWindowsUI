@@ -29,6 +29,7 @@
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
                     </Style.Triggers>
+                    <Setter Property="ToolTip" Value="{Binding Path=Summary}" />
                 </Style>
             </ListView.Resources>
             <ListBox.ContextMenu>
