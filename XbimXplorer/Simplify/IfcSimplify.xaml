@@ -6,7 +6,7 @@
         <Label Content="Input file:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="TxtInputFile" Height="23" Margin="80,12,59,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" ToolTip="Only IFC files are valid." Grid.ColumnSpan="2"/>
         <Button Content="..." HorizontalAlignment="Right" Margin="0,12,11,0" VerticalAlignment="Top" Width="35" Height="24" Click="Button_Click" />
-        
+
         <Button x:Name="CmdInit" Content="Initialise" HorizontalAlignment="Left" Margin="80,40,188.175,0" VerticalAlignment="Top" Width="120" Height="24" Click="cmdInit_Click"/>
         <TextBlock x:Name="ElementCount" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="209,41,11,0" Height="23" />
 
@@ -50,9 +50,17 @@
                             <Label Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" >Press ctrl-Enter to re-evaluate</Label>
                         </Grid>
                     </TabItem>
+                    <TabItem Header="Extra" KeyDown="txtCommand_KeyDown">
+                        <Grid Background="#FFE5E5E5">
+                            <TextBox x:Name="txtClassName" VerticalAlignment="Top" Margin="5" AcceptsReturn="True" TextWrapping="Wrap" Text="class" Height="24" VerticalScrollBarVisibility="Auto"/>
+                            <Button Content="Select" VerticalAlignment="Top" Margin="5,63,5,0" Click="Button_Click_1" ></Button>
+                            <TextBox x:Name="cmbLimit" Margin="413,34,5,0" Height="24" VerticalAlignment="Top" />
+                        </Grid>
+                    </TabItem>
 
                 </TabControl>
                 <CheckBox x:Name="PreserveVoids" Content="Preserve Voids (walls only)" HorizontalAlignment="Left" Margin="0,0,0,5" Height="15" VerticalAlignment="Bottom"/>
+                <CheckBox x:Name="PreserveProps" Content="Preserve properties" HorizontalAlignment="Left" Margin="200,0,0,5" Height="15" VerticalAlignment="Bottom"/>
             </Grid>
         </GroupBox>
         <Button IsEnabled="False" x:Name="CmdSave" Content="Save simplified" Margin="0,0,10,10" Click="cmdSave_Click" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="117" />
