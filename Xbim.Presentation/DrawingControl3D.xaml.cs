@@ -80,7 +80,7 @@ namespace Xbim.Presentation
 
         protected HashSet<Material> Materials { get; } = new HashSet<Material>();
 
-        protected Dictionary<Material, double> Opacities { get; } = new Dictionary<Material, double>();
+        // protected Dictionary<Material, double> Opacities { get; } = new Dictionary<Material, double>();
 
         protected CombinedManipulator ClipHandler;
 
@@ -672,18 +672,59 @@ namespace Xbim.Presentation
             }
         }
 
-        private void SetOpacity(double opacityPercent)
+        /// <summary>
+        /// Iterates all the materials to set the required opacity.
+        /// </summary>
+        public void SetOpacity(double opacityPercent)
         {
             var opacity = Math.Min(1, opacityPercent);
             opacity = Math.Max(0, opacity); //bound opacity factor
 
+
+            foreach (var item in OpaquesVisual3D.Children.OfType<ModelVisual3D>())
+            {
+                SetOp(item, opacityPercent);
+            }
             foreach (var material in Materials)
             {
                 SetOpacityPercent(material, opacity);
             }
         }
 
-        private void SetOpacityPercent(Material material, double opacity)
+        private void SetOp(ModelVisual3D mv3d, double opacity)
+        {
+            if (mv3d.Content is Model3DGroup)
+                SetOp((Model3DGroup)mv3d.Content, opacity);
+
+            if (mv3d.Content != null)
+            {
+                var as3D = mv3d.Content as GeometryModel3D;
+                SetOp(as3D, opacity);
+            }
+            foreach (var visualElementChild in mv3d.Children.OfType<ModelVisual3D>())
+            {
+                SetOp(visualElementChild, opacity);
+            }
+        }
+
+        private void SetOp(Model3DGroup content, double opacity)
+        {
+            foreach (var child in content.Children.OfType<GeometryModel3D>())
+            {
+                SetOp(child, opacity);
+            }
+        }
+
+        private void SetOp(GeometryModel3D as3D, double opacity)
+        {
+            if (as3D == null)
+                return;
+            var ret = SetOpacityPercent(as3D.Material, opacity);
+            if (ret != null)
+                as3D.Material = ret;
+        }
+
+        private Material SetOpacityPercent(Material material, double opacity)
         {
             var g = material as MaterialGroup;
             if (g != null)
@@ -692,32 +733,33 @@ namespace Xbim.Presentation
                 {
                     SetOpacityPercent(item, opacity);
                 }
-                return;
+                return null;
             }
 
             var dm = material as DiffuseMaterial;
             if (dm != null)
             {
-                double oldValue;
-                if (!Opacities.TryGetValue(dm, out oldValue))
+                if (dm.IsFrozen)
                 {
-                    oldValue = dm.Brush.Opacity;
-                    Opacities.Add(dm, oldValue);
+                    dm = dm.Clone();
+                }                
+                if (!dm.Brush.IsFrozen)
+                    dm.Brush.Opacity = opacity;
+                else
+                {
+                    var b = dm.Brush.Clone();
+                    b.Opacity = opacity;
+                    dm.Brush = b;
                 }
-                dm.Brush.Opacity = oldValue*opacity;
+                return dm;
+
             }
             var sm = material as SpecularMaterial;
-            // ReSharper disable once InvertIf
             if (sm != null)
             {
-                double oldValue;
-                if (!Opacities.TryGetValue(sm, out oldValue))
-                {
-                    oldValue = sm.Brush.Opacity;
-                    Opacities.Add(sm, oldValue);
-                }
-                sm.Brush.Opacity = oldValue*opacity;
+                sm.Brush.Opacity = opacity;
             }
+            return null;
         }
 
         public IfcStore Model
@@ -1161,9 +1203,7 @@ namespace Xbim.Presentation
         {
             PercentageLoaded = 0;
             UserModeledDimension.Clear();
-
             Materials.Clear();
-            Opacities.Clear();
 
             Opaques.Children.Clear();
             Transparents.Children.Clear();
