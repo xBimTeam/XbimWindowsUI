@@ -721,7 +721,10 @@ namespace Xbim.Presentation
                 return;
             var ret = SetOpacityPercent(as3D.Material, opacity);
             if (ret != null)
+            {
                 as3D.Material = ret;
+                as3D.BackMaterial = ret;
+            }
         }
 
         private Material SetOpacityPercent(Material material, double opacity)
