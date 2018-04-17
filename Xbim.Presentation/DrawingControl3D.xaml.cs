@@ -679,12 +679,15 @@ namespace Xbim.Presentation
         {
             var opacity = Math.Min(1, opacityPercent);
             opacity = Math.Max(0, opacity); //bound opacity factor
-
-
             foreach (var item in OpaquesVisual3D.Children.OfType<ModelVisual3D>())
             {
                 SetOp(item, opacityPercent);
             }
+            foreach (var item in TransparentsVisual3D.Children.OfType<ModelVisual3D>())
+            {
+                SetOp(item, opacityPercent);
+            }
+
             foreach (var material in Materials)
             {
                 SetOpacityPercent(material, opacity);
@@ -715,16 +718,42 @@ namespace Xbim.Presentation
             }
         }
 
+        protected Dictionary<GeometryModel3D, double> OriginalOpacities { get; } = new Dictionary<GeometryModel3D, double>();
+
         private void SetOp(GeometryModel3D as3D, double opacity)
         {
             if (as3D == null)
                 return;
-            var ret = SetOpacityPercent(as3D.Material, opacity);
+
+            double origOp = 1;
+            if (!OriginalOpacities.TryGetValue(as3D, out origOp))
+            {
+                // needs storing original opacity
+                origOp = getOpacity(as3D.Material);
+                OriginalOpacities.Add(as3D, origOp);
+            }
+
+            var ret = SetOpacityPercent(as3D.Material, opacity * origOp);
             if (ret != null)
             {
                 as3D.Material = ret;
                 as3D.BackMaterial = ret;
             }
+        }
+
+        private double getOpacity(Material material)
+        {
+            if (material is DiffuseMaterial)
+            {
+                var dm = material as DiffuseMaterial;
+                return dm.Brush.Opacity;
+            }
+            if (material is SpecularMaterial)
+            {
+                var sm = material as DiffuseMaterial;
+                return sm.Brush.Opacity;
+            }
+            return 1;
         }
 
         private Material SetOpacityPercent(Material material, double opacity)
@@ -1207,6 +1236,7 @@ namespace Xbim.Presentation
             PercentageLoaded = 0;
             UserModeledDimension.Clear();
             Materials.Clear();
+            OriginalOpacities.Clear();
 
             Opaques.Children.Clear();
             Transparents.Children.Clear();
