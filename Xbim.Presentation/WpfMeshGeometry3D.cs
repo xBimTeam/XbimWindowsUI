@@ -161,7 +161,7 @@ namespace Xbim.Presentation
                     {
                         foreach (var item in modelgroup)
                         {
-                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded))
                             {
                                 IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                                 if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)

@@ -523,7 +523,21 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-
+                m = Regex.Match(cmd, @"^(opacity|op) *(?<opac>[\d\.]+)", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var op = 0.0;
+                    if (double.TryParse(m.Groups["opac"].Value, out op))
+                    {
+                        ReportAdd($"=== opacity set to {op}", Brushes.Blue);
+                        _parentWindow.DrawingControl.SetOpacity(op);
+                    }
+                    else
+                    {
+                        ReportAdd($"=== invalid opacity level ({op})", Brushes.Blue);
+                    }
+                    continue;
+                }
                 m = Regex.Match(cmd, @"^(reload|re\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -1082,9 +1096,9 @@ namespace XbimXplorer.Commands
             }
         }
 
-        private void Report(string opaquesvisual3d, ModelVisual3D visualElement, bool triangulation = false)
+        private void Report(string title, ModelVisual3D visualElement, bool triangulation = false)
         {
-            ReportAdd(opaquesvisual3d, Brushes.Blue);
+            ReportAdd(title, Brushes.Blue);
             if (visualElement.Content != null)
             {
                 var as3D = visualElement.Content as GeometryModel3D;

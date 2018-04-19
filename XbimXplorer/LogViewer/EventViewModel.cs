@@ -54,5 +54,19 @@ namespace XbimXplorer.LogViewer
         public string TimeStamp {
             get { return loggingEvent.TimeStamp.ToShortTimeString(); }
         }
+
+        public string Summary
+        {
+            get
+            {
+                return string.Format("==== {0}\t{1}\t{2}\r\n{3}\r\n{4}\r\n\r\n",
+                    TimeStamp,
+                    Level,
+                    Logger,
+                    Message,
+                    ErrorMessage
+                    );
+            }
+        }
     }
 }

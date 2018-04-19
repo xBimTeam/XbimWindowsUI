@@ -30,6 +30,7 @@ namespace XbimXplorer.Simplify
         private List<int> _elementsToExport = new List<int>();
         private Dictionary<string, int> _guids = new Dictionary<string, int>();
         private List<int> _relVoids = new List<int>();
+        private List<int> _relProps = new List<int>();
 
         private string _header;
         private string _footer;
@@ -54,6 +55,7 @@ namespace XbimXplorer.Simplify
             _elementsToExport = new List<int>();
             _ifcType = new Dictionary<int, string>();
             _relVoids = new List<int>();
+            _relProps = new List<int>();
             _header = "";
             _footer = "";
 
@@ -105,6 +107,8 @@ namespace XbimXplorer.Simplify
                     _ifcType.Add(iId, type);
                     if (type == "IFCRELVOIDSELEMENT")
                         _relVoids.Add(iId);
+                    if (type == "IFCRELDEFINESBYPROPERTIES")
+                        _relProps.Add(iId);
 
                     var mGuid = reGuid.Match(content);
                     if (mGuid.Success)
@@ -180,11 +184,15 @@ namespace XbimXplorer.Simplify
                 : "Not found";
         }
 
-        private void RecursiveAdd(int ifcIndex)
+        private void RecursiveAdd(int ifcIndex, bool includeProperties = false)
         {
             if (_elementsToExport.Contains(ifcIndex))
                 return; // been exported already;
+
             _elementsToExport.Add(ifcIndex);
+
+            System.Diagnostics.Debug.WriteLine($"Exporting {ifcIndex} {_ifcType[ifcIndex]} ({_elementsToExport.Count})");
+
             var re = new Regex(
                 "#(\\d+)" + // hash and integer index
                 ""
@@ -204,7 +212,7 @@ namespace XbimXplorer.Simplify
             {
                 // ignored
             }
-            
+
             // if approprite add voids
             //
             if (PreserveVoids.IsChecked.HasValue && PreserveVoids.IsChecked.Value)
@@ -224,6 +232,22 @@ namespace XbimXplorer.Simplify
                             int voidEl = Convert.ToInt32(voidLabel);
                             RecursiveAdd(relVoid);
                         }
+                    }
+                }
+            }
+            // if approprite add properties
+            //
+            if (includeProperties)
+            {
+                foreach (var relProp in _relProps)
+                {
+                    var str = $@"#{ifcIndex}\b";
+                    Regex re2 = new Regex(str);
+                    var reltext = _ifcContents[relProp];
+                    var m = re2.Match(reltext);
+                    if (m.Success)
+                    {
+                        RecursiveAdd(relProp);
                     }
                 }
             }
@@ -341,6 +365,23 @@ namespace XbimXplorer.Simplify
             TxtHandPicked.Text = sb.ToString();
             TxtHandPicked.CaretIndex = TxtHandPicked.Text.Length;
             UpdateExportList();
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            var iLimit = -1;
+            int.TryParse(cmbLimit.Text, out iLimit);
+            
+            int iCount = 0;
+            foreach (var item in _ifcType)
+            {
+                if (item.Value == txtClassName.Text)
+                {
+                    RecursiveAdd(item.Key, PreserveProps.IsChecked.HasValue && PreserveProps.IsChecked.Value);
+                    if (iLimit > 0 && ++iCount >= iLimit)
+                        return;
+                }
+            }
         }
     }
 }

@@ -221,18 +221,17 @@
 
         <StatusBar Grid.Row="2" Height="27"  Name="StatusBar"  >
             <StatusBarItem>
-                <TextBlock Name="ProjectName"></TextBlock>
+                <etb:EditableTextBlock x:Name="EntityLabel" ValueSet="EntityLabel_KeyDown"></etb:EditableTextBlock>
             </StatusBarItem>
             <StatusBarItem Height="23" VerticalAlignment="Top">
                 <Separator/>
             </StatusBarItem>
-            <etb:EditableTextBlock x:Name="EntityLabel" ValueSet="EntityLabel_KeyDown"></etb:EditableTextBlock>
-            <StatusBarItem>
-                <Separator/>
-            </StatusBarItem>
-            <!-- todo: restore transparency function -->
-            <StatusBarItem Visibility="Collapsed">
-                <Slider x:Name="ModelOpacity"  Minimum="0.1" Maximum="1.0" Value="{Binding Path=ModelOpacity, ElementName=DrawingControl}" Width="100" LargeChange=".01"></Slider>
+            <StatusBarItem Visibility="Visible">
+                <Slider x:Name="ModelOpacity"  Minimum="0.1" Maximum="1.0" Value="{Binding Path=ModelOpacity, ElementName=DrawingControl}" Width="100" LargeChange=".01">
+                    <Slider.LayoutTransform>
+                        <ScaleTransform ScaleY="0.8" CenterX="15" CenterY="15"/>
+                    </Slider.LayoutTransform>
+                </Slider>
             </StatusBarItem>
             <StatusBarItem >
                 <WrapPanel Visibility="{Binding AnyErrors, ElementName=MainWindow}" PreviewMouseDown="ShowErrors" >
