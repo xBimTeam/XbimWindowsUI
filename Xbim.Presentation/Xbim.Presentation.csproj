@@ -163,6 +163,7 @@
     <Compile Include="DynamicProductSelectionControl.xaml.cs">
       <DependentUpon>DynamicProductSelectionControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Extensions\BiDimensional.cs" />
     <Compile Include="Extensions\ObservableMeshVisual3D.cs" />
     <Compile Include="Extensions\Utility\GeomUtils.cs" />
     <Compile Include="Extensions\Utility\PropertyHelper.cs" />
