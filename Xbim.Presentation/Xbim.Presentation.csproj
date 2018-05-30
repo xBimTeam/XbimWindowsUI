@@ -52,6 +52,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -78,28 +79,12 @@
       <HintPath>..\packages\HelixToolkit.Wpf.2015.1.715\lib\net45\HelixToolkit.Wpf.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NPOI, Version=2.2.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NPOI.2.2.1\lib\net40\NPOI.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NPOI.OOXML, Version=2.2.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NPOI.2.2.1\lib\net40\NPOI.OOXML.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NPOI.OpenXml4Net, Version=2.2.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NPOI.2.2.1\lib\net40\NPOI.OpenXml4Net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NPOI.OpenXmlFormats, Version=2.2.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NPOI.2.2.1\lib\net40\NPOI.OpenXmlFormats.dll</HintPath>
+    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PresentationCore">
@@ -135,48 +120,37 @@
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="Xbim.CobieExpress, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.CobieExpress.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.CobieExpress.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Common.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Common.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.4.0.11\lib\net40\Xbim.Geometry.Engine.Interop.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Geometry.4.0.15-V0030\lib\net40\Xbim.Geometry.Engine.Interop.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Ifc.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Ifc.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Ifc.Extensions.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Ifc.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc2x3, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Ifc2x3.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Ifc2x3.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc2x3.IO, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Ifc2x3.IO.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Ifc2x3.IO.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc4, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Ifc4.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Ifc4.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.IO, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.IO.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.IO.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.ModelGeometry.Scene, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.4.0.11\lib\net40\Xbim.ModelGeometry.Scene.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Geometry.4.0.15-V0030\lib\net40\Xbim.ModelGeometry.Scene.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.7\lib\net40\Xbim.Tessellator.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V005\lib\net40\Xbim.Tessellator.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -190,10 +164,10 @@
     <Compile Include="DynamicProductSelectionControl.xaml.cs">
       <DependentUpon>DynamicProductSelectionControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Extensions\BiDimensional.cs" />
     <Compile Include="Extensions\ObservableMeshVisual3D.cs" />
     <Compile Include="Extensions\Utility\GeomUtils.cs" />
     <Compile Include="Extensions\Utility\PropertyHelper.cs" />
-    <Compile Include="Extensions\XbimAssemblyInfo.cs" />
     <Compile Include="FederatedModel\FederatedModelDialog.xaml.cs">
       <DependentUpon>FederatedModelDialog.xaml</DependentUpon>
     </Compile>
@@ -207,6 +181,7 @@
     </Compile>
     <Compile Include="LayerStyling\ILayerStyler.cs" />
     <Compile Include="LayerStyling\LayerStylingExtensions.cs" />
+    <Compile Include="LayerStyling\BoundingBoxStyler.cs" />
     <Compile Include="LayerStyling\SurfaceLayerStyler.cs" />
     <Compile Include="Rect3DExtensions.cs" />
     <Compile Include="WpfExtensions.cs" />
@@ -235,6 +210,7 @@
     <Compile Include="XbimMaterialModelVisual.cs" />
     <Compile Include="XbimMaterialProvider.cs" />
     <Compile Include="XbimModelPositioning.cs" />
+    <Compile Include="XbimModelPositioningCollection.cs" />
     <Compile Include="XbimModelPresentationExtensions.cs" />
     <Compile Include="FederatedModel\XbimReferencedModelViewModel.cs" />
     <Compile Include="XbimMouseClickActions.cs" />
@@ -291,11 +267,11 @@
   <Target Name="BeforeBuild">
     <WriteLinesToFile File="..\SharedFileVersionInfo.cs" Lines="$(AssemblyFileVersionAttribute)" Overwrite="true" Encoding="Unicode" />
   </Target>
-  <Import Project="..\packages\Xbim.Geometry.4.0.11\build\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.4.0.11\build\Xbim.Geometry.targets')" />
+  <Import Project="..\packages\Xbim.Geometry.4.0.15-V0030\build\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.4.0.15-V0030\build\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xbim.Geometry.4.0.11\build\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.4.0.11\build\Xbim.Geometry.targets'))" />
+    <Error Condition="!Exists('..\packages\Xbim.Geometry.4.0.15-V0030\build\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.4.0.15-V0030\build\Xbim.Geometry.targets'))" />
   </Target>
 </Project>

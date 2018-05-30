@@ -3,40 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Geometry;
-using Xbim.Ifc;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
 {
     public class XbimModelPositioning
     {
-        public XbimRegion LargestRegion;
-        public Xbim3DModelContext Context;
-        public XbimMatrix3D Transform;
-        
-        private double _oneMeter = Double.NaN;
+        public XbimRegion SelectedRegion { get; private set; }
 
-        public double OneMeter
+        internal XbimRect3D SelectedRegionInMeters
+        {
+            get
+            {
+                if (SelectedRegion == null)
+                    return XbimRect3D.Empty;
+                var pts = MinMaxPoints(SelectedRegion, OneMeter);
+                return new XbimRect3D(pts[0], pts[1]);
+            }
+        }
+
+        public XbimMatrix3D Transform { get; private set; }
+
+        private double _oneMeter = double.NaN;
+
+        private double OneMeter
         {
             get
             {
                 if (double.IsNaN(_oneMeter))
                 {
-                    
                     _oneMeter = _model.ModelFactors.OneMetre;
                 }
                 return _oneMeter;
             }
         }
-
-        public XbimRect3D GetLargestRegionRectInMeters()
-        {
-            if (LargestRegion == null)
-                return XbimRect3D.Empty;
-            var pts = MinMaxPoints(LargestRegion, OneMeter);
-            return new XbimRect3D(pts[0], pts[1]);
-        }
-
+        
         private XbimPoint3D[] MinMaxPoints(XbimRegion rect, double oneMeter =  1.0)
         {
             var pMin = new XbimPoint3D(
@@ -55,102 +56,145 @@ namespace Xbim.Presentation
         }
 
         private readonly IModel _model;
+        
 
+        /// <summary>
+        /// Sets the region specified by name as selected.
+        /// </summary>
+        /// <param name="name">the region name to match</param>
+        /// <returns>true if the region has ben found and set, false otherwise</returns>
+        public bool SetSelectedRegionByName(string name, bool add)
+        {
+            var geomStore = _model.GeometryStore;
+            if (_model.GeometryStore.IsEmpty)
+                return false;
+            using (var reader = geomStore.BeginRead())
+            {
+                foreach (var readerContextRegion in reader.ContextRegions)
+                {
+                    if (!readerContextRegion.Any())
+                        continue;
+                    var reg = readerContextRegion.FirstOrDefault(x => x.Name == name);
+                    if (reg == null)
+                        continue;
+
+                    if (!add)
+                        SelectedRegion = reg;
+                    else
+                    {
+                        SelectedRegion = Merge(SelectedRegion, reg);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private XbimRegion Merge(XbimRegion reg1, XbimRegion reg2)
+        {
+            // todo: needs to review the merge function to consider region's WorldCoordinateSystem
+            //
+            var s1 = MinMaxPoints(reg1);
+            var s2 = MinMaxPoints(reg2);
+            var r1 = new XbimRect3D(s1[0], s1[1]);
+            var r2 = new XbimRect3D(s2[0], s2[1]);
+            r1.Union(r2);
+            var merged = new XbimRegion(
+                "Merged", 
+                r1,
+                reg1.Population + reg2.Population,
+                reg1.WorldCoordinateSystem
+                );
+            return merged;
+        }
+
+        /// <summary>
+        /// Initialises the position class and 
+        /// </summary>
+        /// <param name="model"></param>
         public XbimModelPositioning(IModel model)
         {
             _model = model;
             var geomStore = model.GeometryStore;
             if (_model.GeometryStore.IsEmpty)
                 return;
+            var gc = new Xbim3DModelContext(_model);
             using (var reader = geomStore.BeginRead())
             {
-                var regions = reader.ContextRegions.Where(cr => cr.MostPopulated()!=null).Select(c=>c.MostPopulated());
+                // ContextRegions is a collection of ContextRegions, which is also a collection.
+                // we get the most populated from each
+                var name = "MostPopulated";
+                var regions = reader.ContextRegions.Where(cr => cr.MostPopulated() != null).Select(c => c.MostPopulated());
                 var rect = XbimRect3D.Empty;
-                int pop = 0;
+                var pop = 0;
+                var mergedRegions = new List<XbimRegion>();
+                // then perform their union
                 foreach (var r in regions)
                 {
+                    mergedRegions.Add(r);
                     pop += r.Population;
-                    if (rect.IsEmpty) rect = r.ToXbimRect3D();
-                    else rect.Union(r.ToXbimRect3D());
+                    if (rect.IsEmpty)
+                    {
+                        rect = r.ToXbimRect3D();
+                        name = r.Name;
+                    }
+                    else
+                    {
+                        rect.Union(r.ToXbimRect3D());   
+                    }
                 }
-                if(pop>0)
-                    LargestRegion = new XbimRegion("Largest", rect, pop);
                 
+                if (pop <= 0)
+                    return;
+                // look at expandind the region to any othe that might be visible in the viewspace
+                //
+                var selectedRad = rect.Radius() * 2;
+                var testOtherRegions = true;
+                while (testOtherRegions)
+                {
+                    testOtherRegions = false;
+                    foreach (var contextRegion in reader.ContextRegions)
+                    {
+                        foreach (var otherRegion in contextRegion.Where(x => !mergedRegions.Contains(x)))
+                        {
+                            var otherRad = otherRegion.Size.Length/2;
+                            var centreDistance = GetDistance(otherRegion.Centre, rect.Centroid());
+                            if (otherRad + selectedRad > centreDistance)
+                            {
+                                mergedRegions.Add(otherRegion);
+                                pop += otherRegion.Population;
+                                rect.Union(otherRegion.ToXbimRect3D());
+                                testOtherRegions = true;
+                                selectedRad = rect.Radius() * 2;
+                            }
+                        }
+                    }
+                }
+                // todo: the identity matrix should be replaced with a correct model matrix.
+                //
+                SelectedRegion = new XbimRegion(name, rect, pop, XbimMatrix3D.Identity);
             }
         }
 
+        // todo: create distance function in XbimPoint3D?
+        private double GetDistance(XbimPoint3D point1, XbimPoint3D point2)
+        {
+            return Math.Sqrt(
+                Math.Pow(point1.X - point2.X, 2) +
+                Math.Pow(point1.Y - point2.Y, 2) +
+                Math.Pow(point1.Z - point2.Z, 2)
+            );
+        }
 
-        internal void SetCenterInMeters(XbimVector3D modelTranslation)
+        /// <summary>
+        /// Creates the transform based on the model dimensional unit (oneMeter)
+        /// </summary>
+        /// <param name="modelTranslation">The translation is expressed in meters.</param>
+        internal void PrepareTransform(XbimVector3D modelTranslation)
         {
             var translation = XbimMatrix3D.CreateTranslation(modelTranslation * OneMeter);
             var scaling = XbimMatrix3D.CreateScale(1/OneMeter);
             Transform =  translation * scaling;
-        }
-    }
-    
-    public class XbimModelPositioningCollection
-    {
-        public XbimModelPositioning this[IModel modelKey]
-        {
-            get
-            {
-                XbimModelPositioning returnValue;
-                if (_collection.TryGetValue(modelKey, out returnValue))
-                    return returnValue;
-                return null;
-            }
-            set { _collection[modelKey] = value; }
-        }
-
-        private readonly Dictionary<IModel, XbimModelPositioning> _collection;
-
-        public void AddModel(IModel model)
-        {
-            var tmp = new XbimModelPositioning(model);
-            _collection.Add(model, tmp);
-        }
-
-        public XbimRect3D GetEnvelopeInMeters()
-        {
-            var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.GetLargestRegionRectInMeters()))
-            {
-                if (r.IsEmpty)
-                    continue;
-                if (bb.IsEmpty)
-                    bb = r;
-                else
-                {
-                    bb.Union(r);
-                }
-            }
-            return bb;
-        }
-
-        public XbimRect3D GetEnvelopOfCentes()
-        {
-            var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.LargestRegion).Where(r => r != null))
-            {
-                if (bb.IsEmpty)
-                    bb = new XbimRect3D(r.Centre, r.Centre);
-                else
-                    bb.Union(r.Centre);
-            }
-            return bb;
-        }
-
-        public XbimModelPositioningCollection()
-        {
-            _collection = new Dictionary<IModel, XbimModelPositioning>();
-        }
-
-        internal void SetCenterInMeters(XbimVector3D modelTranslation)
-        {
-            foreach (var model in _collection.Values)
-            {
-                model.SetCenterInMeters(modelTranslation);
-            }
         }
     }
 }

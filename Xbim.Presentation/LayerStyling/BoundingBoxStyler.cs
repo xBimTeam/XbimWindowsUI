@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
@@ -14,17 +15,18 @@ using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Presentation.LayerStyling
 {
-    public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
+    /// <summary>
+    /// A class that just diplays bounding boxes of elements in the tree
+    /// </summary>
+    public class BoundingBoxStyler : ILayerStyler, IProgressiveLayerStyler
     {
-        protected static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
+        protected static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.BoundingBoxStyler");
 
         public event ProgressChangedEventHandler ProgressChanged;
 
         // ReSharper disable once CollectionNeverUpdated.Local
         readonly XbimColourMap _colourMap = new XbimColourMap();
-
-        public bool UseMaps = false;
-
+        
         /// <summary>
         /// This version uses the new Geometry representation
         /// </summary>
@@ -47,7 +49,6 @@ namespace Xbim.Presentation.LayerStyling
                 using (var geomReader = geomStore.BeginRead())
                 {
                     var materialsByStyleId = new Dictionary<int, WpfMaterial>();
-                    var repeatedShapeGeometries = new Dictionary<int, MeshGeometry3D>();
                     var meshesByStyleId = new Dictionary<int, WpfMeshGeometry3D>();
                     var tmpOpaquesGroup = new Model3DGroup();
                     var tmpTransparentsGroup = new Model3DGroup();
@@ -88,9 +89,9 @@ namespace Xbim.Presentation.LayerStyling
                         // work out style
                         var styleId = shapeInstance.StyleLabel > 0
                             ? shapeInstance.StyleLabel
-                            : shapeInstance.IfcTypeId*-1;
-                        
-                        if (!materialsByStyleId.ContainsKey(styleId)) 
+                            : shapeInstance.IfcTypeId * -1;
+
+                        if (!materialsByStyleId.ContainsKey(styleId))
                         {
                             // if the style is not available we build one by ExpressType
                             var material2 = GetWpfMaterialByType(model, shapeInstance.IfcTypeId);
@@ -99,82 +100,18 @@ namespace Xbim.Presentation.LayerStyling
                             var mg = GetNewStyleMesh(material2, tmpTransparentsGroup, tmpOpaquesGroup);
                             meshesByStyleId.Add(styleId, mg);
                         }
-
-                        //GET THE ACTUAL GEOMETRY 
-                        MeshGeometry3D wpfMesh;
-                        //see if we have already read it
-                        if (UseMaps && repeatedShapeGeometries.TryGetValue(shapeInstance.ShapeGeometryLabel, out wpfMesh))
-                        {
-                            var mg = new GeometryModel3D(wpfMesh, materialsByStyleId[styleId]);
-                            mg.SetValue(FrameworkElement.TagProperty,
-                                new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
-                            mg.BackMaterial = mg.Material;
-                            mg.Transform =
-                                XbimMatrix3D.Multiply(shapeInstance.Transformation,
-                                    modelTransform)
-                                    .ToMatrixTransform3D();
-                            if (materialsByStyleId[styleId].IsTransparent)
-                                tmpTransparentsGroup.Children.Add(mg);
-                            else
-                                tmpOpaquesGroup.Children.Add(mg);
-                        }
-                        else //we need to get the shape geometry
-                        {
-                            IXbimShapeGeometryData shapeGeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-
-                            if (UseMaps && shapeGeom.ReferenceCount > 1) //only store if we are going to use again
-                            {
-                                wpfMesh = new MeshGeometry3D();
-                                switch ((XbimGeometryType) shapeGeom.Format)
-                                {
-                                    case XbimGeometryType.PolyhedronBinary:
-                                        wpfMesh.Read(shapeGeom.ShapeData);
-                                        break;
-                                    case XbimGeometryType.Polyhedron:
-                                        wpfMesh.Read(((XbimShapeGeometry) shapeGeom).ShapeData);
-                                        break;
-                                }
-                                repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
-                                var mg = new GeometryModel3D(wpfMesh, materialsByStyleId[styleId]);
-                                mg.SetValue(FrameworkElement.TagProperty,
-                                    new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
-                                mg.BackMaterial = mg.Material;
-                                mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform).ToMatrixTransform3D();
-                                if (materialsByStyleId[styleId].IsTransparent)
-                                    tmpTransparentsGroup.Children.Add(mg);
-                                else
-                                    tmpOpaquesGroup.Children.Add(mg);
-                            }
-                            else //it is a one off, merge it with shapes of same style
-                            {
-                                var targetMergeMeshByStyle = meshesByStyleId[styleId];
-
-                                // replace target mesh beyond suggested size
-                                // https://docs.microsoft.com/en-us/dotnet/framework/wpf/graphics-multimedia/maximize-wpf-3d-performance
-                                // 
-                                if (targetMergeMeshByStyle.PositionCount > 20000
-                                    ||
-                                    targetMergeMeshByStyle.TriangleIndexCount > 60000
-                                )
-                                {
-                                    targetMergeMeshByStyle.EndUpdate();
-                                    var replace = GetNewStyleMesh(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup);
-                                    meshesByStyleId[styleId] = replace;
-                                    targetMergeMeshByStyle = replace;
-                                }
-                                // end replace
-
-                                if (shapeGeom.Format != (byte) XbimGeometryType.PolyhedronBinary) 
-                                    continue;
-                                var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
-                                targetMergeMeshByStyle.Add(
-                                    shapeGeom.ShapeData,
-                                    shapeInstance.IfcTypeId,
-                                    shapeInstance.IfcProductLabel,
-                                    shapeInstance.InstanceLabel, transform,
-                                    (short) model.UserDefinedId);
-                            }
-                        }
+                        
+                        var boxRep = GetSlicedBoxRepresentation(shapeInstance.BoundingBox);
+                        var targetMergeMeshByStyle = meshesByStyleId[styleId];
+                        
+                        var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
+                        targetMergeMeshByStyle.Add(
+                            boxRep,
+                            shapeInstance.IfcTypeId,    
+                            shapeInstance.IfcProductLabel,
+                            shapeInstance.InstanceLabel, 
+                            transform,
+                            (short) model.UserDefinedId);
                     }
 
                     foreach (var wpfMeshGeometry3D in meshesByStyleId.Values)
@@ -197,6 +134,105 @@ namespace Xbim.Presentation.LayerStyling
 
             ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(0, "Ready"));
             return scene;
+        }
+
+        /// <summary>
+        /// this is just three triangles per boundinng box at the moment.
+        /// </summary>
+        /// <param name="BoundingBox"></param>
+        /// <returns></returns>
+        private byte[] GetSlicedBoxRepresentation(XbimRect3D BoundingBox)
+        {
+            var TriSize = 2;
+            var pts = new List<XbimPoint3D>(4);
+            pts.Add(new XbimPoint3D(BoundingBox.Min.X, BoundingBox.Min.Y, BoundingBox.Min.Z));
+            pts.Add(new XbimPoint3D(BoundingBox.Min.X + BoundingBox.SizeX / TriSize, BoundingBox.Min.Y, BoundingBox.Min.Z));
+            pts.Add(new XbimPoint3D(BoundingBox.Min.X, BoundingBox.Min.Y + BoundingBox.SizeY / TriSize, BoundingBox.Min.Z));
+            pts.Add(new XbimPoint3D(BoundingBox.Min.X, BoundingBox.Min.Y, BoundingBox.Min.Z + BoundingBox.SizeZ / TriSize));
+
+            pts.Add(new XbimPoint3D(BoundingBox.Max.X, BoundingBox.Max.Y, BoundingBox.Max.Z));
+            pts.Add(new XbimPoint3D(BoundingBox.Max.X - BoundingBox.SizeX / TriSize, BoundingBox.Max.Y, BoundingBox.Max.Z));
+            pts.Add(new XbimPoint3D(BoundingBox.Max.X, BoundingBox.Max.Y - BoundingBox.SizeY / TriSize, BoundingBox.Max.Z));
+            pts.Add(new XbimPoint3D(BoundingBox.Max.X, BoundingBox.Max.Y, BoundingBox.Max.Z - BoundingBox.SizeZ / TriSize));
+
+            var n1 = new XbimPackedNormal(0, 0, 1);
+            var n2 = new XbimPackedNormal(0, 1, 0);
+            var n3 = new XbimPackedNormal(1, 0, 0);
+
+            var n4 = new XbimPackedNormal(0, 0, -1);
+            var n5 = new XbimPackedNormal(0, -1, 0);
+            var n6 = new XbimPackedNormal(-1, 0, 0);
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream))
+                {
+                    writer.Write((byte) 1); // version
+                    writer.Write((int)pts.Count); // points
+                    writer.Write((int)6); // total triangles
+
+                    // write the points
+                    foreach (var pt in pts)
+                    {
+                        writer.Write((float)pt.X);
+                        writer.Write((float)pt.Y);
+                        writer.Write((float)pt.Z);
+                    }
+
+                    writer.Write((int)6); // faces
+
+                    // face 1
+                    // 
+                    writer.Write((int)1); // 1 triangle
+                    n1.Write(writer); // the normal
+                    writer.Write((byte) 0); // small indices are stored in a single byte
+                    writer.Write((byte) 1);
+                    writer.Write((byte) 2);
+
+                    // face 2
+                    // 
+                    writer.Write((int)1); // 1 triangle
+                    n2.Write(writer); // the normal
+                    writer.Write((byte)0); // small indices are stored in a single byte
+                    writer.Write((byte)1);
+                    writer.Write((byte)3);
+
+                    // face 3
+                    // 
+                    writer.Write((int)1); // 1 triangle
+                    n3.Write(writer); // the normal
+                    writer.Write((byte)0); // small indices are stored in a single byte
+                    writer.Write((byte)2);
+                    writer.Write((byte)3);
+
+                    // face 4
+                    // 
+                    writer.Write((int)1); // 1 triangle
+                    n4.Write(writer); // the normal
+                    writer.Write((byte)4); // small indices are stored in a single byte
+                    writer.Write((byte)6);
+                    writer.Write((byte)5);
+
+                    // face 5
+                    // 
+                    writer.Write((int)1); // 1 triangle
+                    n5.Write(writer); // the normal
+                    writer.Write((byte)5); // small indices are stored in a single byte
+                    writer.Write((byte)4);
+                    writer.Write((byte)7);
+
+                    // face 6
+                    // 
+                    writer.Write((int)1); // 1 triangle
+                    n6.Write(writer); // the normal
+                    writer.Write((byte)6); // small indices are stored in a single byte
+                    writer.Write((byte)4);
+                    writer.Write((byte)7);
+                }
+                stream.Flush();
+                byte[] bytes = stream.GetBuffer();
+                return bytes;
+            }
         }
 
         protected IEnumerable<XbimShapeInstance> GetShapeInstancesToRender(IGeometryStoreReader geomReader, HashSet<short> excludedTypes)

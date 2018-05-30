@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 using NuGet;
+using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
+using Image = System.Windows.Controls.Image;
 
 namespace XbimXplorer
 {
@@ -47,7 +51,8 @@ namespace XbimXplorer
         /// <summary>
         /// key is ManifestMetadata.Id, data is ManifestMetadata
         /// </summary>
-        private readonly Dictionary<string, ManifestMetadata> _loadedPlugins = new Dictionary<string, ManifestMetadata>();
+        private readonly Dictionary<string, ManifestMetadata> _loadedPlugins =
+            new Dictionary<string, ManifestMetadata>();
 
         /// <summary>
         /// 
@@ -166,13 +171,14 @@ namespace XbimXplorer
             {
                 foreach (var tp in types)
                 {
-                    EvaluateXbimUiType(tp);
+                    EvaluateXbimUiType(tp, false);
                 }
             }
             catch (Exception ex)
             {
-                Log.Error($"Error activating plugin {mfst.Id}; startup mode set to 'Ignore'.", ex);
+                Log.Error($"Error activating plugin {mfst.Id}; startup mode set to 'Disabled'.", ex);
                 PluginManagement.SetStartup(dir, PluginConfiguration.StartupBehaviour.Disabled);
+                PluginMenu.Visibility = PluginMenuVisibility;
                 return false;
             }
             PluginMenu.Visibility = PluginMenuVisibility;
@@ -203,16 +209,16 @@ namespace XbimXplorer
             return loaded;
         }
 
-        private void EvaluateXbimUiType(Type type)
+        private void EvaluateXbimUiType(Type type, bool InsertAtTopOfMenu)
         {
             if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
             {
                 return;
             }
-            EvaluateXbimUiMenu(type);
+            EvaluateXbimUiMenu(type, InsertAtTopOfMenu);
 
             var act = type.GetUiActivation();
-            if (act != PluginWindowActivation.OnLoad) 
+            if (act != PluginWindowActivation.OnLoad)
                 return;
             var instance = Activator.CreateInstance(type);
             var asPWin = instance as IXbimXplorerPluginWindow;
@@ -223,16 +229,16 @@ namespace XbimXplorer
             ShowPluginWindow(asPWin);
         }
 
-        private void EvaluateXbimUiMenu(Type type)
+        private void EvaluateXbimUiMenu(Type type, bool InsertAtTopOfMenu)
         {
             var att = type.GetUiAttribute();
-            if (string.IsNullOrEmpty(att?.MenuText)) 
+            if (string.IsNullOrEmpty(att?.MenuText))
                 return;
             var destMenu = PluginMenu;
             var menuHeader = type.Name;
             if (!string.IsNullOrEmpty(att.MenuText))
             {
-                menuHeader = att.MenuText;    
+                menuHeader = att.MenuText;
             }
             if (att.MenuText.StartsWith(@"View/Developer/"))
             {
@@ -245,8 +251,31 @@ namespace XbimXplorer
                 destMenu = ExportMenu;
             }
 
-            var v = new MenuItem { Header = menuHeader, Tag = type };
-            destMenu.Items.Add(v);
+            var v = new MenuItem {Header = menuHeader, Tag = type};
+            if (att.IconPath != "")
+            {
+                try
+                {
+                    var aname = type.Assembly.GetName().Name;
+                    var str = $"pack://application:,,,/{aname};component/{att.IconPath}";
+                    var bi = new BitmapImage(new Uri(str, UriKind.Absolute));
+                    var i = new Image() { Source = bi };
+                    v.Icon = i;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Path {att.IconPath} not found when loading icon.", ex);
+                }                
+            }
+            if (InsertAtTopOfMenu)
+            {
+                destMenu.Items.Insert(0, v);
+            }
+                else
+            {
+                destMenu.Items.Add(v);
+            }
+            
             v.Click += OpenPluginWindow;
         }
 
@@ -255,7 +284,9 @@ namespace XbimXplorer
             var mi = sender as MenuItem;
             if (mi == null)
                 return;
+            
             OpenOrFocusPluginWindow(mi.Tag as Type);
+            
         }
         
         private Assembly PluginAssemblyResolvingFunction(object sender, ResolveEventArgs args)
@@ -278,7 +309,6 @@ namespace XbimXplorer
             var aswindow = pluginWindow as Window;
             if (aswindow != null)
             {
-                
                 var cmode = pluginWindow.GetUiContainerMode();
                 if (cmode == PluginWindowUiContainerEnum.Dialog)
                 {
@@ -316,9 +346,9 @@ namespace XbimXplorer
                             Title = pluginWindow.WindowTitle,
                             Content = asControl
                         };
-
-                        GetRightPane().Children.Add(inner);
-
+                        var pane = GetRightPane();
+                        pane.Children.Add(inner);
+                        inner.Closed += PluginWindowClosed;
                         if (setCurrent)
                             inner.IsActive = true;
                         return inner;
@@ -349,7 +379,7 @@ namespace XbimXplorer
 
         private LayoutAnchorablePaneGroup GetRightPaneGroup()
         {
-            if (_rightPaneGroup != null)
+            if (_rightPaneGroup != null && _rightPaneGroup.IsVisible)
                 return _rightPaneGroup;
             _rightPaneGroup = new LayoutAnchorablePaneGroup
             {
@@ -364,7 +394,7 @@ namespace XbimXplorer
 
         private LayoutAnchorablePane GetRightPane()
         {
-            if (_rightPane != null)
+            if (_rightPane != null && _rightPane.IsVisible)
                 return _rightPane;
             var rigthPanel = GetRightPaneGroup();
             _rightPane = new LayoutAnchorablePane();
@@ -425,6 +455,10 @@ namespace XbimXplorer
                 return;
             if (anchorable.IsHidden)
                 anchorable.Show();
+            if (!anchorable.IsVisible)
+            {
+                GetRightPane().Children.Add(anchorable);
+            }
             anchorable.IsActive = true;
         }
 
@@ -433,8 +467,10 @@ namespace XbimXplorer
             IXbimXplorerPluginWindow vPlug = null;
             if (sender is LayoutAnchorable)
             {
-                // nothing to do here, window is only hidden
-                return;
+                // if it get here it is because the anchorable has been moved to a dockedDocument and then closed
+                //
+                var cnt = ((LayoutAnchorable)sender).Content;
+                vPlug = cnt as IXbimXplorerPluginWindow;
             }
             // here we find the associated plugin item
             if (sender is LayoutDocument)
@@ -452,7 +488,6 @@ namespace XbimXplorer
                 return;
             var tp = vPlug.GetType();
             var closeAction = vPlug.GetUiAttribute().CloseAction;
-
             if (closeAction == PluginWindowCloseAction.Close && _retainedControls.ContainsKey(tp) )
             {
                 _retainedControls.Remove(tp);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.IO;
@@ -9,6 +10,13 @@ namespace Tests
     [TestClass]
     public class PositioningTests
     {
+        [TestMethod]
+        public void XbimModelPositioningReview()
+        {
+            throw new Exception(
+                "Xbim.Presentation\\XbimModelPositioning.cs TODOs need to be cleaned up.");
+        }
+
         // todo: Must review scaling of models.
         [TestMethod]
         [DeploymentItem(@"FederationPositioningTests\", @"Scale\")]
@@ -40,7 +48,7 @@ namespace Tests
             foreach (var xbimModel in m)
             {
                 var tmp = new XbimModelPositioning(xbimModel);
-                r.Add(tmp.GetLargestRegionRectInMeters());
+                r.Add(tmp.SelectedRegionInMeters);
             }
 
             HaveSameSize(r[1], r[2]);

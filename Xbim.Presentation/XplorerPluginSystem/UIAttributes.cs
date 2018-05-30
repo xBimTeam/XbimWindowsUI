@@ -7,12 +7,14 @@ namespace Xbim.Presentation.XplorerPluginSystem
         public XplorerUiElement(
             PluginWindowUiContainerEnum initialContainer,
             PluginWindowActivation activation,
-            string menuText = ""
+            string menuText = "",
+            string iconPath = ""
             )
         {
             InitialContainer = initialContainer;
             Activation = activation;
             MenuText = menuText;
+            IconPath = iconPath;
         }
 
         private PluginWindowCloseAction? _closeAction;
@@ -33,6 +35,7 @@ namespace Xbim.Presentation.XplorerPluginSystem
         }
 
         public string MenuText { get; private set; }
+        public string IconPath { get; private set; }
         public PluginWindowUiContainerEnum InitialContainer { get; private set; }
         public PluginWindowActivation Activation { get; }
 

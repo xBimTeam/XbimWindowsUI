@@ -25,11 +25,21 @@
             <Button Content="Run" Height="23" VerticalAlignment="Bottom" Margin="0, 5" Click="cmdRun" />
         </Grid>
         
-        <RichTextBox x:Name="TxtOut" Grid.Row="1" FontFamily="Lucida Console" Background="#FFFFFFE1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True">
+        <RichTextBox x:Name="TxtOut" Grid.Row="1" 
+                     FontFamily="Lucida Console" Background="#FFFFFFE1" 
+                     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
+                     ScrollViewer.CanContentScroll="True"
+                     IsReadOnly="True"
+                     IsDocumentEnabled="True"
+                     >
             <RichTextBox.Resources>
                 <Style TargetType="{x:Type Paragraph}">
                     <Setter Property="Margin" Value="0"/>
                 </Style>
+                <Style TargetType="{x:Type Hyperlink}">
+                    <EventSetter Event="RequestNavigate" Handler="Hyperlink_RequestNavigate"/>
+                </Style>
+
             </RichTextBox.Resources>
         </RichTextBox>
         <GridSplitter Height="5"  Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />

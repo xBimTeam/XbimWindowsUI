@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using log4net;
 using NuGet;
 using Xbim.Presentation;
@@ -23,9 +24,11 @@ namespace XbimXplorer.PluginSystem
             InitializeComponent();
             RefreshPluginList();
             _mainWindow = Application.Current.MainWindow as XplorerMainWindow;
+            DataContext = this;
+            SelectedPlugin = new PluginInformationVm(null);
         }
 
-        internal string SelectedRepoUrl => RepoSource.Text;
+        internal string SelectedRepoUrl => "https://www.myget.org/F/xbim-plugins/api/v2";
 
         private void ShowRepository()
         {
@@ -36,11 +39,19 @@ namespace XbimXplorer.PluginSystem
 
             try
             {
-                var fnd = repo.Search("XplorerPlugin", true);
+                var option = DisplayOptionText;
+                var allowDevelop = option != "Stable";
+                
+                var fnd = repo.Search("XplorerPlugin", allowDevelop);
                 foreach (var package in fnd)
                 {
-                    if (LatestOnly.IsChecked.HasValue && LatestOnly.IsChecked.Value && !package.IsAbsoluteLatestVersion)
-                        continue;
+                    if (option != "All versions")
+                    {
+                        if (allowDevelop && !package.IsAbsoluteLatestVersion)
+                            continue;
+                        if (!allowDevelop && !package.IsLatestVersion)
+                            continue;
+                    }
                     var pv = new PluginInformation(package);
                     if (_diskPlugins.ContainsKey(package.Id))
                     {
@@ -60,6 +71,8 @@ namespace XbimXplorer.PluginSystem
         private readonly Dictionary<string, PluginInformation> _diskPlugins =
             new Dictionary<string, PluginInformation>();
 
+        private PluginInformationVm _selectedPlugin;
+
         private void RefreshLocalPlugins()
         {
             _diskPlugins.Clear();
@@ -71,28 +84,24 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
-        PluginInformationVm SelectedPlugin => PluginList.SelectedItem as PluginInformationVm;
-
-        private void Download(object sender, RoutedEventArgs e)
+        private string DisplayOptionText
         {
-            SelectedPlugin?.ExtractPlugin(PluginManagement.GetPluginsDirectory());
-            RefreshPluginList();
+            get
+            {
+                var ci = DisplayOption.SelectedItem as ComboBoxItem;
+                return ci.Content as string;
+            }
         }
-
-        private void RefreshPluginList(object sender, RoutedEventArgs e)
-        {
-            RefreshPluginList();
-        }
-
+        
         private void RefreshPluginList()
         {
             using (new WaitCursor())
             {
-                if (SelectedRepoUrl.StartsWith("http://") || SelectedRepoUrl.StartsWith("https://"))
-                    ShowRepository();
+                if (DisplayOptionText == "Installed")
+                    ShowDiskPlugins();
                 else
                 {
-                    ShowDiskPlugins();
+                    ShowRepository();
                 }
             }
         }
@@ -107,17 +116,14 @@ namespace XbimXplorer.PluginSystem
             PluginList.ItemsSource = plugins;
         }
 
-        private void Load(object sender, RoutedEventArgs e)
+        public PluginInformationVm SelectedPlugin
         {
-            var v = SelectedPlugin;
-            v?.Load();
-            RefreshPluginList();
-        }
-
-        private void ToggleEnabled(object sender, RoutedEventArgs e)
-        {
-            var v = SelectedPlugin;
-            v?.ToggleEnabled();
+            get { return _selectedPlugin; }
+            set
+            {
+                _selectedPlugin = value;
+                CurrentPlugin.DataContext = _selectedPlugin;
+            }
         }
 
         private void PluginList_OnDrop(object sender, DragEventArgs e)
@@ -146,6 +152,11 @@ namespace XbimXplorer.PluginSystem
                     Log.Error($"Error processing package file [{fname}].", ex);
                 }
             }
+            RefreshPluginList();
+        }
+
+        private void DisplayOption_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
             RefreshPluginList();
         }
     }

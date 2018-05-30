@@ -72,7 +72,7 @@ namespace XbimXplorer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool DeveloperMode {
             get {
                 return ((bool)(this["DeveloperMode"]));
@@ -90,6 +90,18 @@ namespace XbimXplorer.Properties {
             }
             set {
                 this["PluginSettings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SettingsUpdateRequired {
+            get {
+                return ((bool)(this["SettingsUpdateRequired"]));
+            }
+            set {
+                this["SettingsUpdateRequired"] = value;
             }
         }
     }

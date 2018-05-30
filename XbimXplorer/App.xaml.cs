@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using Xbim.IO.Esent;
+using XbimXplorer.Properties;
 
 #endregion
 
@@ -41,6 +42,16 @@ namespace XbimXplorer
                 {
                     blockPlugin = true;
                 }
+            }
+
+            // see if an update of settings is required from a previous version of the app.
+            // this will allow to retain the configuration across versions, it is useful for the squirrel installer
+            //
+            if (Settings.Default.SettingsUpdateRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.SettingsUpdateRequired = false;
+                Settings.Default.Save();
             }
 
             var mainView = new XplorerMainWindow(blockPlugin);

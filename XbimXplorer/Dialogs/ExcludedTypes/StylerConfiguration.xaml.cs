@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using Xbim.Common.Metadata;
 using Xbim.Ifc;
+using Xbim.Presentation;
 
 namespace XbimXplorer.Dialogs.ExcludedTypes
 {
@@ -30,6 +31,8 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
         
         private void PopulateTree()
         {
+            TypesTree.Items.Clear();
+
             // this is done through the metadata in order to ensure that class relationships are loaded
             var module4 = (typeof(Xbim.Ifc4.Kernel.IfcProduct)).Module;
             var meta4 = ExpressMetaData.GetMetadata(module4);
@@ -88,6 +91,12 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
             {
                 item.InitialiseSettings(excludedTypes);
             }            
+        }
+
+        private void SetDefaults(object sender, RoutedEventArgs e)
+        {
+            PopulateTree();
+            InitialiseSettings(DrawingControl3D.DefaultExcludedTypes);
         }
     }
 }
