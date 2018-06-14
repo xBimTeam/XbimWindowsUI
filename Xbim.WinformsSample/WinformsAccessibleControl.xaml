@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="Xbim.WinformsSample.WinformsAccessibleControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:presentation="http://schemas.Xbim.com/Presentation"
+             Height="600" Width="800"
+             x:Name="MainWindow"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <Grid Name="MainFrame">
+        <presentation:DrawingControl3D x:Name="DrawingControl" 
+                               x:FieldModifier="public"  
+                               Model ="{Binding ModelProvider.ObjectInstance}" 
+                               Focusable="True" 
+                               Width="Auto" 
+                               Height="Auto"
+                               SelectedEntityChanged="DrawingControl_SelectedEntityChanged"
+                               ModelOpacity="1">
+        </presentation:DrawingControl3D>
+    </Grid>
+</UserControl>

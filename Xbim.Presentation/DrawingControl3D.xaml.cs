@@ -854,6 +854,7 @@ namespace Xbim.Presentation
             set { SetValue(SelectionProperty, value); }
         }
 
+
         public static readonly DependencyProperty SelectionProperty = DependencyProperty.Register("Selection",
             typeof (EntitySelection), typeof (DrawingControl3D), new PropertyMetadata(OnSelectionChanged));
 
@@ -862,8 +863,25 @@ namespace Xbim.Presentation
             var d3D = d as DrawingControl3D;
             if (d3D == null)
                 return;
+
+
             var newVal = e.NewValue as EntitySelection;
+            
+
             d3D.ReplaceSelection(newVal);
+        }
+
+        private static void FireSelectionChanged(DrawingControl3D d3D, EntitySelection newVal, EntitySelection oldVal)
+        {
+            if (oldVal == null)
+                oldVal = new EntitySelection();
+
+            var a = new SelectionChangedEventArgs(
+                SelectedEntityChangedEvent,
+                oldVal.Except(newVal).ToList(),
+                newVal.Except(oldVal).ToList());
+            d3D.RaiseEvent(a);
+            
         }
 
         private void ReplaceSelection(EntitySelection newVal)
@@ -889,7 +907,15 @@ namespace Xbim.Presentation
         public IPersistEntity SelectedEntity
         {
             get { return (IPersistEntity) GetValue(SelectedEntityProperty); }
-            set { SetValue(SelectedEntityProperty, value); }
+            set {
+                SelectionChangedEventArgs a = new SelectionChangedEventArgs(
+                    SelectedEntityChangedEvent,
+                    new[] { SelectedEntityProperty },
+                    new[] { value }
+                    );
+                RaiseEvent(a);
+                SetValue(SelectedEntityProperty, value);
+            }
         }
 
         // Using a DependencyProperty as the backing store for SelectedEntity.  This enables animation, styling, binding, etc...
