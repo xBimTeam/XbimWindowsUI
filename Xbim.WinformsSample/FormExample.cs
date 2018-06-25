@@ -1,16 +1,19 @@
-﻿using System;
-using System.Diagnostics;
-using System.Windows.Forms;
+﻿using log4net;
+using System;
 using System.Linq;
-using Xbim.Ifc;
+using System.Windows.Forms;
 using Xbim.Common;
+using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
+using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.WinformsSample
 {
     public partial class FormExample : Form
     {
         private WinformsAccessibleControl _wpfControl;
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(FormExample));
 
         int starting = -1;
 
@@ -35,7 +38,7 @@ namespace Xbim.WinformsSample
         private void button1_Click(object sender, EventArgs e)
         {
             var dlg = new OpenFileDialog();
-            dlg.Filter = "Xbim Files|*.xbim";
+            dlg.Filter = "IFC Files|*.ifc;*.ifczip;*.ifcxml|Xbim Files|*.xbim";
             dlg.FileOk += (s, args) =>
             {
                 LoadXbimFile(dlg.FileName);
@@ -45,9 +48,28 @@ namespace Xbim.WinformsSample
 
         private void LoadXbimFile(string dlgFileName)
         {
+            // TODO: should do the load on a worker thread so as not to lock the UI. 
+            // See how we use BackgroundWorker in XbimXplorer
+
             Clear();
 
             var model = IfcStore.Open(dlgFileName);
+            if (model.GeometryStore.IsEmpty)
+            {
+                // Create the geometry using the XBIM GeometryEngine
+                try
+                {
+                    var context = new Xbim3DModelContext(model);
+                    
+                    context.CreateContext();
+
+                    // TODO: SaveAs(xbimFile); // so we don't re-process every time
+                }
+                catch (Exception geomEx)
+                {
+                    Log.Error($"Failed to create geometry for ${dlgFileName}", geomEx);
+                }
+            }
             _wpfControl.ModelProvider.ObjectInstance = model;
         }
 
