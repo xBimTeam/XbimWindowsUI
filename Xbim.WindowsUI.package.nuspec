@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>Xbim.WindowsUI</id>
-    <version>4.0.12-V0060</version>
+    <version>4.0.12-V0061</version>
     <title>xBIM WindowsUI</title>
     <authors>xBIM team</authors>
     <owners>xBIM team</owners>
