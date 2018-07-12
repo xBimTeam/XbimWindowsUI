@@ -479,23 +479,32 @@ namespace XbimXplorer
         private void CommandBinding_SaveAs(object sender, ExecutedRoutedEventArgs e)
         {
             var dlg = new SaveFileDialog();
+            var ext = "";
             if (GetOpenedModelFileName() != null)
             {
                 var f = new FileInfo(GetOpenedModelFileName());
                 dlg.DefaultExt = f.Extension;
+                ext = f.Extension.ToLower();
                 dlg.InitialDirectory = f.DirectoryName;
                 dlg.FileName = f.Name;
             }
 
-            // filter starts with basic xbim formats
-            var corefilters = new[] {
-                    "Ifc File (*.ifc)|*.ifc",
-                    "xBIM File (*.xBIM)|*.xBIM", 
-                    "IfcXml File (*.IfcXml)|*.ifcxml", 
-                    "IfcZip File (*.IfcZip)|*.ifczip"
-                };
+            Dictionary<string, string> options = new Dictionary<string, string>();
+            options.Add(".ifc", "Ifc File (*.ifc)|*.ifc");
+            options.Add(".xbim", "xBIM File (*.xBIM)|*.xBIM");
+            options.Add(".ifcxml", "IfcXml File (*.IfcXml)|*.ifcxml");
+            options.Add(".ifczip", "IfcZip File (*.IfcZip)|*.ifczip");
 
-            dlg.Filter = string.Join("|", corefilters);
+            var filters = new List<string>();
+            if (options.ContainsKey(ext))
+            {
+                filters.Add(options[ext]);
+                options.Remove(ext);
+            }
+            filters.AddRange(options.Values);
+
+            // now set dialog
+            dlg.Filter = string.Join("|", filters.ToArray());
             dlg.Title = "Save As";
             dlg.AddExtension = true;
 

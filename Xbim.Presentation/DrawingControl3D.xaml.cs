@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -854,6 +855,7 @@ namespace Xbim.Presentation
             set { SetValue(SelectionProperty, value); }
         }
 
+
         public static readonly DependencyProperty SelectionProperty = DependencyProperty.Register("Selection",
             typeof (EntitySelection), typeof (DrawingControl3D), new PropertyMetadata(OnSelectionChanged));
 
@@ -862,8 +864,25 @@ namespace Xbim.Presentation
             var d3D = d as DrawingControl3D;
             if (d3D == null)
                 return;
+
+
             var newVal = e.NewValue as EntitySelection;
+            
+
             d3D.ReplaceSelection(newVal);
+        }
+
+        private static void FireSelectionChanged(DrawingControl3D d3D, EntitySelection newVal, EntitySelection oldVal)
+        {
+            if (oldVal == null)
+                oldVal = new EntitySelection();
+
+            var a = new SelectionChangedEventArgs(
+                SelectedEntityChangedEvent,
+                oldVal.Except(newVal).ToList(),
+                newVal.Except(oldVal).ToList());
+            d3D.RaiseEvent(a);
+            
         }
 
         private void ReplaceSelection(EntitySelection newVal)
@@ -889,7 +908,15 @@ namespace Xbim.Presentation
         public IPersistEntity SelectedEntity
         {
             get { return (IPersistEntity) GetValue(SelectedEntityProperty); }
-            set { SetValue(SelectedEntityProperty, value); }
+            set {
+                SelectionChangedEventArgs a = new SelectionChangedEventArgs(
+                    SelectedEntityChangedEvent,
+                    new[] { SelectedEntityProperty },
+                    new[] { value }
+                    );
+                RaiseEvent(a);
+                SetValue(SelectedEntityProperty, value);
+            }
         }
 
         // Using a DependencyProperty as the backing store for SelectedEntity.  This enables animation, styling, binding, etc...
@@ -1275,33 +1302,32 @@ namespace Xbim.Presentation
         public ILayerStyler DefaultLayerStyler { get; set; }
 
         //TODO resolve issues with reference models
-        /*
-                private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        
+        private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
+                return;
+            var refModel = e.NewItems[0] as XbimReferencedModel;
+            if (refModel != null)
+            {
+                // adding and updating the model to positioning database
+                ModelPositions.AddModel(refModel.Model);
+                // _modelTranslation is not recalculated unless there are no models in the scene 
+                // becayse it's burnt into the other models already
+                if (Scenes.Count == 0)
                 {
-
-                    if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
-                        return;
-                    var refModel = e.NewItems[0] as XbimReferencedModel;
-                    if (refModel != null)
-                    {
-                        // adding and updating the model to positioning database
-                        ModelPositions.AddModel(refModel.Model);
-                        // _modelTranslation is not recalculated unless there are no models in the scene 
-                        // becayse it's burnt into the other models already
-                        if (Scenes.Count == 0)
-                        {
-                            //can recalculate extents and _modelTranslation
-                            DefineModelTranslation();
-                        }
-                        ModelPositions.SetCenterInMeters(_modelTranslation);
-                        ModelBounds = ModelPositions.GetEnvelopeInMeters();
-
-                        // actually load the model geometry
-                        LoadReferencedModel(refModel);
-                    }
-                    RecalculateView();
+                    //can recalculate extents and _modelTranslation
+                    // DefineModelTranslation();
                 }
-        */
+                //ModelPositions.SetCenterInMeters(_modelTranslation);
+                //ModelBounds = ModelPositions.GetEnvelopeInMeters();
+
+                // actually load the model geometry
+                LoadReferencedModel(refModel);
+            }
+            RecalculateView();
+        }
+        
 
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
