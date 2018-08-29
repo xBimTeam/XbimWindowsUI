@@ -148,7 +148,6 @@ namespace Xbim.Presentation.FederatedModel
             return ReferencedModel != null;
         }
 
-
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string prop)
         {

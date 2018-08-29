@@ -1054,6 +1054,8 @@ namespace Xbim.Presentation
 
         IIfcProduct _lastSelectedProduct = null;
 
+        public bool WcsAdjusted { get; set; } = true;
+
         private WpfMeshGeometry3D GetSelectionGeometry(IPersistEntity newVal, WpfMaterial mat)
         {
             if (newVal is IIfcProduct)
@@ -1073,12 +1075,12 @@ namespace Xbim.Presentation
                     var selModel = _lastSelectedProduct.Model;
                     var modelTransform = ModelPositions[selModel].Transform;
                     
-                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
+                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
                 }
             }
             else if (newVal is IIfcShapeRepresentation)
             {
-                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat);
+                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat, WcsAdjusted);
             }
             else if (newVal is IIfcRelVoidsElement)
             {
@@ -1086,7 +1088,7 @@ namespace Xbim.Presentation
                 var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
                     .FirstOrDefault();
                 if (rep != null)
-                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) rep, ModelPositions, mat);
+                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) rep, ModelPositions, mat, WcsAdjusted);
                 else
                 {
                     m = new WpfMeshGeometry3D();

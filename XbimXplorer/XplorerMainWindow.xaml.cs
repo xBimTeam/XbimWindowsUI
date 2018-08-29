@@ -235,7 +235,7 @@ namespace XbimXplorer
                                 context.MaxThreads = 1;
                             SetDeflection(model);
                             //upgrade to new geometry representation, uses the default 3D model
-                            context.CreateContext(progDelegate: worker.ReportProgress);
+                            context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
                         }
                         catch (Exception geomEx)
                         {
@@ -259,7 +259,7 @@ namespace XbimXplorer
                             context.MaxThreads = 1;
                         SetDeflection(modelReference.Model);                        
                         //upgrade to new geometry representation, uses the default 3D model
-                        context.CreateContext(worker.ReportProgress);
+                        context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
                     }
                     if (worker.CancellationPending)
                         //if a cancellation has been requested then don't open the resulting file

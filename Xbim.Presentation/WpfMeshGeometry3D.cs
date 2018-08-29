@@ -101,21 +101,21 @@ namespace Xbim.Presentation
 
         // attempting to load the shapeGeometry from the database; 
         // 
-        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat)
+        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat, bool wcsAdjust)
         {
             var productContexts = rep.OfProductRepresentation?.OfType<IIfcProductDefinitionShape>().SelectMany(x => x.ShapeOfProduct);
             var representationLabels = rep.Items.Select(x => x.EntityLabel);
             var selModel = rep.Model;
             var modelTransform = positions[selModel].Transform;
 
-            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
+            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, wcsAdjust);
         }
 
         // attempting to load the shapeGeometry from the database; 
         // 
-        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform)
+        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust)
         {
-            var placementTree = new XbimPlacementTree(selModel);
+            var placementTree = new XbimPlacementTree(selModel, wcsAdjust);
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             using (var geomstore = selModel.GeometryStore)
