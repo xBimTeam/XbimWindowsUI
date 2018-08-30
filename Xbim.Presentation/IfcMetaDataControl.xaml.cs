@@ -98,7 +98,6 @@ namespace Xbim.Presentation
             if (selectedTab == null)
                 return;
 
-            // ReSharper disable PossibleUnintendedReferenceComparison
             if (selectedTab == ObjectTab)
                 FillObjectData();
             else if (selectedTab == TypeTab)
@@ -109,7 +108,6 @@ namespace Xbim.Presentation
                 FillQuantityData();
             else if (selectedTab == MaterialTab)
                 FillMaterialData();
-            // ReSharper restore PossibleUnintendedReferenceComparison
         }
 
         private readonly ListCollectionView _propertyGroups;

@@ -9,8 +9,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-// ReSharper disable once RedundantUsingDirective // useful when re-implementing parallel
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -321,18 +319,16 @@ namespace Xbim.Presentation
             {
                 diag = _viewBounds.Length();
             }
-            var farPlaneDistance = centralDistance + 1.5*diag;
-            var nearPlaneDistance = centralDistance - 1.5*diag;
+            var farPlaneDistance = centralDistance + 1.5 * diag;
+            var nearPlaneDistance = centralDistance - 1.5 * diag;
 
             const double nearLimit = 0.125;
             nearPlaneDistance = Math.Max(nearPlaneDistance, nearLimit);
 
-// ReSharper disable once RedundantCheckBeforeAssignment
             if (Math.Abs(snd.Camera.NearPlaneDistance - nearPlaneDistance) > 0)
             {
                 snd.Camera.NearPlaneDistance = nearPlaneDistance; // Debug.WriteLine("Near: " + NearPlane);
             }
-// ReSharper disable once RedundantCheckBeforeAssignment
             if (Math.Abs(snd.Camera.FarPlaneDistance - farPlaneDistance) > 0)
             {
                 snd.Camera.FarPlaneDistance = farPlaneDistance; // Debug.WriteLine("Far: " + FarPlane);
@@ -1219,7 +1215,6 @@ namespace Xbim.Presentation
             HitTestFilterCallback hitFilterCallback = oFilter =>
             {
                 // Test for the object value you want to filter. 
-                // ReSharper disable once ConvertIfStatementToReturnStatement
                 if (oFilter.GetType() == typeof (MeshVisual3D))
                     return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
                 return HitTestFilterBehavior.Continue;
@@ -1777,7 +1772,6 @@ namespace Xbim.Presentation
             container.Arrange(new Rect(container.DesiredSize));
 
             // Temporarily add a PresentationSource if none exists
-            // ReSharper disable once UnusedVariable
             using (
                 var temporaryPresentationSource = new HwndSource(new HwndSourceParameters())
                 {

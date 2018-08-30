@@ -242,7 +242,6 @@ namespace XbimXplorer.Commands
                         ReportAdd($"Autoclear set to {option.ToLower()}");
                         continue;
                     }
-                    // ReSharper disable once EmptyGeneralCatchClause
                     catch
                     {
                     }
@@ -1633,12 +1632,14 @@ namespace XbimXplorer.Commands
             t.Append("- Region <list|set|add> <Region name>", Brushes.Blue);
             t.Append("    'select the named region for display.", Brushes.Gray);
             t.Append("    'use 'region add *' to zoom to whole model.", Brushes.Gray);
-
-            //t.AppendFormat("- Visual [list|tree|[on|off <name>]|mode <ModeCommand>]");
+                        
+            t.AppendFormat("- Visual [list]");
+            t.Append("    'Visual list' provides a list of the elements in the WPF visual tree with their respective size", Brushes.Gray);
             //t.Append("    'Visual list' provides a list of valid layer names", Brushes.Gray);
             //t.Append("    'Visual tree' provides a tree layer structure", Brushes.Gray);
             //t.Append("    'Visual mode ...' changes the mode of the layer tree structure", Brushes.Gray);
             //t.Append("      <ModeCommand> in: type, entity, oddeven or demo.", Brushes.Gray);
+
             t.Append("- clear [on|off]", Brushes.Blue);
 
             t.Append("- SelectionHighlighting [WholeMesh|Normals]", Brushes.Blue);

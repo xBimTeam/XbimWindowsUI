@@ -567,19 +567,18 @@ namespace Xbim.Presentation
                     {
                         case "P":
                             var pointCount = 512;
-// ReSharper disable once NotAccessedVariable
+
                             var faceCount = 128;
-// ReSharper disable once NotAccessedVariable
+
                             var triangleCount = 256;
                             var normalCount = 512;
                             if (tokens.Length > 0)
                                 version = Int32.Parse(tokens[1]);
                             if (tokens.Length > 1)
                                 pointCount = Int32.Parse(tokens[2]);
-                            // ReSharper disable once RedundantAssignment
                             if (tokens.Length > 2) 
                                 faceCount = Int32.Parse(tokens[3]);
-// ReSharper disable once RedundantAssignment
+
                             if (tokens.Length > 3) 
                                 triangleCount = Int32.Parse(tokens[4]);
                             if (tokens.Length > 4) 

@@ -42,7 +42,6 @@ namespace XbimXplorer.LogViewer
             {
                 lock (_eventLock)
                 {
-                    // ReSharper disable once DelegateSubtraction // warning does not apply to this case
                     _loggedEventHandlers -= value;
                 }
             }

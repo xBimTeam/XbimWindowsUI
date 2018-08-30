@@ -63,7 +63,6 @@ namespace XbimXplorer.PluginSystem
             return f;
         }
 
-        // ReSharper disable once SuggestBaseTypeForParameter
         internal static string GetStartupFileConfig(DirectoryInfo dir)
         {
             return Path.Combine(dir.FullName, "PluginConfig.xml");

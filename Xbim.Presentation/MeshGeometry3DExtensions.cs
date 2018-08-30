@@ -92,7 +92,6 @@ namespace Xbim.Presentation
             {
                 using (var br = new BinaryReader(ms))
                 {
-// ReSharper disable once UnusedVariable
                     var version = br.ReadByte(); //stream format version
                     var numVertices = br.ReadInt32();
                     var numTriangles = br.ReadInt32();
