@@ -9,8 +9,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-// ReSharper disable once RedundantUsingDirective // useful when re-implementing parallel
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -321,18 +319,16 @@ namespace Xbim.Presentation
             {
                 diag = _viewBounds.Length();
             }
-            var farPlaneDistance = centralDistance + 1.5*diag;
-            var nearPlaneDistance = centralDistance - 1.5*diag;
+            var farPlaneDistance = centralDistance + 1.5 * diag;
+            var nearPlaneDistance = centralDistance - 1.5 * diag;
 
             const double nearLimit = 0.125;
             nearPlaneDistance = Math.Max(nearPlaneDistance, nearLimit);
 
-// ReSharper disable once RedundantCheckBeforeAssignment
             if (Math.Abs(snd.Camera.NearPlaneDistance - nearPlaneDistance) > 0)
             {
                 snd.Camera.NearPlaneDistance = nearPlaneDistance; // Debug.WriteLine("Near: " + NearPlane);
             }
-// ReSharper disable once RedundantCheckBeforeAssignment
             if (Math.Abs(snd.Camera.FarPlaneDistance - farPlaneDistance) > 0)
             {
                 snd.Camera.FarPlaneDistance = farPlaneDistance; // Debug.WriteLine("Far: " + FarPlane);
@@ -1054,6 +1050,8 @@ namespace Xbim.Presentation
 
         IIfcProduct _lastSelectedProduct = null;
 
+        public bool WcsAdjusted { get; set; } = true;
+
         private WpfMeshGeometry3D GetSelectionGeometry(IPersistEntity newVal, WpfMaterial mat)
         {
             if (newVal is IIfcProduct)
@@ -1073,12 +1071,12 @@ namespace Xbim.Presentation
                     var selModel = _lastSelectedProduct.Model;
                     var modelTransform = ModelPositions[selModel].Transform;
                     
-                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
+                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
                 }
             }
             else if (newVal is IIfcShapeRepresentation)
             {
-                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat);
+                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat, WcsAdjusted);
             }
             else if (newVal is IIfcRelVoidsElement)
             {
@@ -1086,7 +1084,7 @@ namespace Xbim.Presentation
                 var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
                     .FirstOrDefault();
                 if (rep != null)
-                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) rep, ModelPositions, mat);
+                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) rep, ModelPositions, mat, WcsAdjusted);
                 else
                 {
                     m = new WpfMeshGeometry3D();
@@ -1217,7 +1215,6 @@ namespace Xbim.Presentation
             HitTestFilterCallback hitFilterCallback = oFilter =>
             {
                 // Test for the object value you want to filter. 
-                // ReSharper disable once ConvertIfStatementToReturnStatement
                 if (oFilter.GetType() == typeof (MeshVisual3D))
                     return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
                 return HitTestFilterBehavior.Continue;
@@ -1775,7 +1772,6 @@ namespace Xbim.Presentation
             container.Arrange(new Rect(container.DesiredSize));
 
             // Temporarily add a PresentationSource if none exists
-            // ReSharper disable once UnusedVariable
             using (
                 var temporaryPresentationSource = new HwndSource(new HwndSourceParameters())
                 {

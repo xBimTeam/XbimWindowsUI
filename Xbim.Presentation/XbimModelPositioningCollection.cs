@@ -13,19 +13,19 @@ namespace Xbim.Presentation
             get
             {
                 XbimModelPositioning returnValue;
-                if (_collection.TryGetValue(modelKey, out returnValue))
+                if (_modelPositionsCollection.TryGetValue(modelKey, out returnValue))
                     return returnValue;
                 return null;
             }
-            set { _collection[modelKey] = value; }
+            set { _modelPositionsCollection[modelKey] = value; }
         }
 
-        private readonly Dictionary<IModel, XbimModelPositioning> _collection;
+        private readonly Dictionary<IModel, XbimModelPositioning> _modelPositionsCollection;
 
         public void AddModel(IModel model)
         {
             var tmp = new XbimModelPositioning(model);
-            _collection.Add(model, tmp);
+            _modelPositionsCollection.Add(model, tmp);
         }
 
         /// <summary>
@@ -35,17 +35,15 @@ namespace Xbim.Presentation
         private XbimRect3D GetSelectedRegionsEnvelopeInMeters()
         {
             var bb = XbimRect3D.Empty;
-            var modelBoundaries = _collection.Values.Select(positioning => positioning.SelectedRegionInMeters);
-            foreach (var r in modelBoundaries)
+            var regionBoundaries = _modelPositionsCollection.Values.Select(pos => pos.SelectedRegionInMeters);
+            foreach (var regionBoundary in regionBoundaries)
             {
-                if (r.IsEmpty)
+                if (regionBoundary.IsEmpty)
                     continue;
                 if (bb.IsEmpty)
-                    bb = r;
+                    bb = regionBoundary;
                 else
-                {
-                    bb.Union(r);
-                }
+                    bb.Union(regionBoundary);
             }
             return bb;
         }
@@ -53,7 +51,7 @@ namespace Xbim.Presentation
         public XbimRect3D GetEnvelopOfCentres()
         {
             var bb = XbimRect3D.Empty;
-            foreach (var r in _collection.Values.Select(positioning => positioning.SelectedRegion).Where(r => r != null)
+            foreach (var r in _modelPositionsCollection.Values.Select(positioning => positioning.SelectedRegion).Where(r => r != null)
             )
             {
                 if (bb.IsEmpty)
@@ -68,7 +66,7 @@ namespace Xbim.Presentation
         {
             get
             {
-                if (_collection == null || !_collection.Any())
+                if (_modelPositionsCollection == null || !_modelPositionsCollection.Any())
                     return XbimRect3D.Empty;
                 return GetSelectedRegionsEnvelopeInMeters();
             }
@@ -95,14 +93,14 @@ namespace Xbim.Presentation
 
         public XbimModelPositioningCollection()
         {
-            _collection = new Dictionary<IModel, XbimModelPositioning>();
+            _modelPositionsCollection = new Dictionary<IModel, XbimModelPositioning>();
             _viewSpaceTranslation = new XbimVector3D(0, 0, 0);
         }
 
         internal void SetCenterInMeters(XbimVector3D modelTranslation)
         {
             _viewSpaceTranslation = modelTranslation;
-            foreach (var model in _collection.Values)
+            foreach (var model in _modelPositionsCollection.Values)
             {
                 // each item in the collection stores a matrix that depends on the units of measure of the model.
                 //
@@ -117,7 +115,7 @@ namespace Xbim.Presentation
         /// <returns>true if the region has ben found and set, false otherwise</returns>
         public bool SetSelectedRegionByName(string name, bool add)
         {
-            foreach (var xbimModelPositioning in _collection.Values)
+            foreach (var xbimModelPositioning in _modelPositionsCollection.Values)
             {
                 if (xbimModelPositioning.SetSelectedRegionByName(name, add))
                     return true;

@@ -72,7 +72,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel == null) 
                     return _organisationName;
-                return ReferencedModel.Name;
+                return ReferencedModel.OwningOrganisation;
             }
             set
             {
@@ -103,6 +103,8 @@ namespace Xbim.Presentation.FederatedModel
             }
         }
 
+        bool adjustWcs = false;
+
         public XbimReferencedModelViewModel() {}
 
         public XbimReferencedModelViewModel(IReferencedModel model)
@@ -127,17 +129,9 @@ namespace Xbim.Presentation.FederatedModel
             if (_xbimReferencedModel.Model.GeometryStore.IsEmpty)
             {
                 var m3D = new Xbim3DModelContext(_xbimReferencedModel.Model);
-                m3D.CreateContext();
+                m3D.CreateContext(adjustWcs: adjustWcs);
             }
-
-            //var tmpModel = IfcStore.Open(Name);
-            //if (tmpModel.GeometryStore.IsEmpty)
-            //{
-            //    var m3D = new Xbim3DModelContext(tmpModel);
-            //    m3D.CreateContext();
-            //}
-
-
+            
             if (_xbimReferencedModel == null) 
                 return ReferencedModel != null;
             //refresh all
@@ -147,7 +141,6 @@ namespace Xbim.Presentation.FederatedModel
             OnPropertyChanged("OrganisationRole");
             return ReferencedModel != null;
         }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string prop)

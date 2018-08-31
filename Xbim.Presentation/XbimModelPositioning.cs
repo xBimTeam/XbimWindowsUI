@@ -146,9 +146,10 @@ namespace Xbim.Presentation
                 
                 if (pop <= 0)
                     return;
-                // look at expandind the region to any othe that might be visible in the viewspace
+                // look at expanding the region to any other that might be visible in the viewspace
                 //
-                var selectedRad = rect.Radius() * 2;
+                var threshold = 5;
+                var selectedRad = rect.Radius() * threshold;
                 var testOtherRegions = true;
                 while (testOtherRegions)
                 {
@@ -165,7 +166,7 @@ namespace Xbim.Presentation
                                 pop += otherRegion.Population;
                                 rect.Union(otherRegion.ToXbimRect3D());
                                 testOtherRegions = true;
-                                selectedRad = rect.Radius() * 2;
+                                selectedRad = rect.Radius() * threshold;
                             }
                         }
                     }

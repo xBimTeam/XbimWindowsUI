@@ -20,7 +20,6 @@ namespace Xbim.Presentation.LayerStyling
 
         public event ProgressChangedEventHandler ProgressChanged;
 
-        // ReSharper disable once CollectionNeverUpdated.Local
         readonly XbimColourMap _colourMap = new XbimColourMap();
 
         public bool UseMaps = false;

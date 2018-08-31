@@ -165,7 +165,6 @@ namespace XbimXplorer.LogViewer
             var reUrl = new Regex(@"(http([^ ]+))", RegexOptions.IgnoreCase);
             var mUrl = reUrl.Match(msg);
             
-            // ReSharper disable once InvertIf
             if (mUrl.Success)
             {
                 var text = mUrl.Groups[1].Value;

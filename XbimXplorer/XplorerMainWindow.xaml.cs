@@ -52,7 +52,7 @@ namespace XbimXplorer
     /// </summary>
     public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
-        private BackgroundWorker _worker;
+        private BackgroundWorker _loadFileBackgroundWorker;
         /// <summary>
         /// Used for the creation of a new federation file
         /// </summary>
@@ -171,7 +171,7 @@ namespace XbimXplorer
 
         void XplorerMainWindow_Closing(object sender, CancelEventArgs e)
         {
-            if (_worker != null && _worker.IsBusy)
+            if (_loadFileBackgroundWorker != null && _loadFileBackgroundWorker.IsBusy)
             {
                 Log.Warn("Closing cancelled because of active background task.");
                 e.Cancel = true; //do nothing if a thread is alive
@@ -218,16 +218,18 @@ namespace XbimXplorer
         private void OpenAcceptableExtension(object s, DoWorkEventArgs args)
         {
             var worker = s as BackgroundWorker;
-            var ifcFilename = args.Argument as string;
+            var selectedFilename = args.Argument as string;
 
             try
             {
-                if (worker == null) throw new Exception("Background thread could not be accessed");
+                if (worker == null)
+                    throw new Exception("Background thread could not be accessed");
                 _temporaryXbimFileName = Path.GetTempFileName();
-                SetOpenedModelFileName(ifcFilename);
-                var model = IfcStore.Open(ifcFilename, null, null, worker.ReportProgress, FileAccessMode);
+                SetOpenedModelFileName(selectedFilename);
+                var model = IfcStore.Open(selectedFilename, null, null, worker.ReportProgress, FileAccessMode);
                 if (_meshModel)
                 {
+                    // mesh direct model
                     if (model.GeometryStore.IsEmpty)
                     {
                         try
@@ -237,17 +239,18 @@ namespace XbimXplorer
                                 context.MaxThreads = 1;
                             SetDeflection(model);
                             //upgrade to new geometry representation, uses the default 3D model
-                            context.CreateContext(progDelegate: worker.ReportProgress);
+                            context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
                         }
                         catch (Exception geomEx)
                         {
                             var sb = new StringBuilder();
-                            sb.AppendLine($"Error creating geometry context of '{ifcFilename}' {geomEx.StackTrace}.");
+                            sb.AppendLine($"Error creating geometry context of '{selectedFilename}' {geomEx.StackTrace}.");
                             var newexception = new Exception(sb.ToString(), geomEx);
                             Log.Error(sb.ToString(), newexception);
                         }
                     }
 
+                    // mesh references
                     foreach (var modelReference in model.ReferencedModels)
                     {
                         // creates federation geometry contexts if needed
@@ -261,7 +264,7 @@ namespace XbimXplorer
                             context.MaxThreads = 1;
                         SetDeflection(modelReference.Model);                        
                         //upgrade to new geometry representation, uses the default 3D model
-                        context.CreateContext(worker.ReportProgress);
+                        context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
                     }
                     if (worker.CancellationPending)
                         //if a cancellation has been requested then don't open the resulting file
@@ -290,7 +293,7 @@ namespace XbimXplorer
             catch (Exception ex)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine($"Error opening '{ifcFilename}' {ex.StackTrace}.");
+                sb.AppendLine($"Error opening '{selectedFilename}' {ex.StackTrace}.");
                 var newexception = new Exception(sb.ToString(), ex);
                 Log.Error(sb.ToString(), ex);
                 args.Result = newexception;
@@ -341,7 +344,7 @@ namespace XbimXplorer
                 case ".zip": //it is a zip file containing xbim or ifc File
                 case ".xbimf":
                 case ".xbim":
-                    _worker.RunWorkerAsync(modelFileName);
+                    _loadFileBackgroundWorker.RunWorkerAsync(modelFileName);
                     break;              
                 default:
                     Log.WarnFormat("Extension '{0}' has not been recognised.", ext);
@@ -370,14 +373,14 @@ namespace XbimXplorer
 
         private void SetWorkerForFileLoad()
         {
-            _worker = new BackgroundWorker
+            _loadFileBackgroundWorker = new BackgroundWorker
             {
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
             };
-            _worker.ProgressChanged += OnProgressChanged;
-            _worker.DoWork += OpenAcceptableExtension;
-            _worker.RunWorkerCompleted += FileLoadCompleted;
+            _loadFileBackgroundWorker.ProgressChanged += OnProgressChanged;
+            _loadFileBackgroundWorker.DoWork += OpenAcceptableExtension;
+            _loadFileBackgroundWorker.RunWorkerCompleted += FileLoadCompleted;
         }
 
         private void FileLoadCompleted(object s, RunWorkerCompletedEventArgs args)
@@ -545,8 +548,8 @@ namespace XbimXplorer
         {
             try
             {
-                if (_worker != null && _worker.IsBusy)
-                    _worker.CancelAsync(); //tell it to stop
+                if (_loadFileBackgroundWorker != null && _loadFileBackgroundWorker.IsBusy)
+                    _loadFileBackgroundWorker.CancelAsync(); //tell it to stop
                 
                 SetOpenedModelFileName(null);
                 if (Model != null)
@@ -560,7 +563,7 @@ namespace XbimXplorer
             }
             finally
             {
-                if (!(_worker != null && _worker.IsBusy && _worker.CancellationPending)) //it is still busy but has been cancelled 
+                if (!(_loadFileBackgroundWorker != null && _loadFileBackgroundWorker.IsBusy && _loadFileBackgroundWorker.CancellationPending)) //it is still busy but has been cancelled 
                 {
                     if (!string.IsNullOrWhiteSpace(_temporaryXbimFileName) && File.Exists(_temporaryXbimFileName))
                         File.Delete(_temporaryXbimFileName);
@@ -581,7 +584,7 @@ namespace XbimXplorer
 
         private void CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            if (_worker != null && _worker.IsBusy)
+            if (_loadFileBackgroundWorker != null && _loadFileBackgroundWorker.IsBusy)
                 e.CanExecute = false;
             else
             {

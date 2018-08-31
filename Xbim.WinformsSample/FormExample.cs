@@ -60,7 +60,7 @@ namespace Xbim.WinformsSample
                 try
                 {
                     var context = new Xbim3DModelContext(model);
-                    
+
                     context.CreateContext();
 
                     // TODO: SaveAs(xbimFile); // so we don't re-process every time

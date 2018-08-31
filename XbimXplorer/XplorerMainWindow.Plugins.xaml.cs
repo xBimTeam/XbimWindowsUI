@@ -305,7 +305,6 @@ namespace XbimXplorer
         
         private object ShowPluginWindow(IXbimXplorerPluginWindow pluginWindow, bool setCurrent = false)
         {
-            // ReSharper disable once SuspiciousTypeConversion.Global
             var aswindow = pluginWindow as Window;
             if (aswindow != null)
             {
@@ -481,7 +480,6 @@ namespace XbimXplorer
             else if (sender is Window)
             {
                 var cnt = (Window)sender;
-                // ReSharper disable once SuspiciousTypeConversion.Global
                 vPlug = cnt as IXbimXplorerPluginWindow;
             }
             if (vPlug == null)

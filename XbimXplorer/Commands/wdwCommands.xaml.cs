@@ -244,7 +244,6 @@ namespace XbimXplorer.Commands
                         ReportAdd($"Autoclear set to {option.ToLower()}");
                         continue;
                     }
-                    // ReSharper disable once EmptyGeneralCatchClause
                     catch
                     {
                     }
@@ -456,7 +455,7 @@ namespace XbimXplorer.Commands
                 {
                     FileInfo fi = new FileInfo(Model.FileName);
                     var dirName = fi.DirectoryName;
-                    XbimPlacementTree pt = new XbimPlacementTree(Model);
+                    XbimPlacementTree pt = new XbimPlacementTree(Model, App.ContextWcsAdjustment);
                     // add "DBRep_DrawableShape" as first line
                     var start = m.Groups["entities"].Value;
                     IEnumerable<int> labels = ToIntarray(start, ',');
@@ -860,12 +859,13 @@ namespace XbimXplorer.Commands
                             Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
                         if (storey != null)
                         {
-                            var v = new TransformGraph(storey.Model);
-                            v.AddProduct(storey);
-                            var v2 = v[storey].LocalMatrix;
-                            var pt = new XbimPoint3D(0, 0, v2.OffsetZ);
+                            var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
+                            var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
+                            var off = trsf.OffsetZ;
+                            var pt = new XbimPoint3D(0, 0, off);
 
                             var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
+                           
                             var transformed = mcp.Transform(pt);
                             msg = $"Clip 1m above storey elevation {pt.Z} (View space height: {transformed.Z + 1})";
                             pz = transformed.Z + 1;
@@ -1635,12 +1635,14 @@ namespace XbimXplorer.Commands
             t.Append("- Region <list|set|add> <Region name>", Brushes.Blue);
             t.Append("    'select the named region for display.", Brushes.Gray);
             t.Append("    'use 'region add *' to zoom to whole model.", Brushes.Gray);
-
-            //t.AppendFormat("- Visual [list|tree|[on|off <name>]|mode <ModeCommand>]");
+                        
+            t.AppendFormat("- Visual [list]");
+            t.Append("    'Visual list' provides a list of the elements in the WPF visual tree with their respective size", Brushes.Gray);
             //t.Append("    'Visual list' provides a list of valid layer names", Brushes.Gray);
             //t.Append("    'Visual tree' provides a tree layer structure", Brushes.Gray);
             //t.Append("    'Visual mode ...' changes the mode of the layer tree structure", Brushes.Gray);
             //t.Append("      <ModeCommand> in: type, entity, oddeven or demo.", Brushes.Gray);
+
             t.Append("- clear [on|off]", Brushes.Blue);
 
             t.Append("- SelectionHighlighting [WholeMesh|Normals]", Brushes.Blue);
