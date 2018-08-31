@@ -72,7 +72,7 @@ namespace Xbim.Presentation.FederatedModel
             {
                 if (ReferencedModel == null) 
                     return _organisationName;
-                return ReferencedModel.Name;
+                return ReferencedModel.OwningOrganisation;
             }
             set
             {
