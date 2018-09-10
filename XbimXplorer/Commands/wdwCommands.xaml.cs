@@ -307,6 +307,15 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
+                mdbclosed = Regex.Match(cmd, @"^(plugin) (?<command>(install) )*(?<name>[^ ]+)[ ]*", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var commandString = mdbclosed.Groups["command"].Value;
+                    var name = mdbclosed.Groups["name"].Value;
+
+
+                }
+
                 // above here functions that do not need an opened model
                 // ################################################################
 
