@@ -28,11 +28,9 @@ namespace XbimXplorer.PluginSystem
             SelectedPlugin = new PluginInformationVm(null);
         }
 
-        
-
         private void ShowRepository()
         {
-            _xplorerPlugins.RefreshLocalPlugins();
+            
             var plugins = new List<PluginInformationVm>();
             try
             {

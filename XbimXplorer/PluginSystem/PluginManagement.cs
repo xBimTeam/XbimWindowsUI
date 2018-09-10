@@ -83,8 +83,8 @@ namespace XbimXplorer.PluginSystem
 
         internal IEnumerable<PluginInformation> GetPlugins(PluginChannelOption option)
         {
+            RefreshLocalPlugins();
             var repo = PackageRepositoryFactory.Default.CreateRepository(SelectedRepoUrl);
-
             var allowDevelop = option != PluginChannelOption.Stable;
 
             var fnd = repo.Search("XplorerPlugin", allowDevelop);
