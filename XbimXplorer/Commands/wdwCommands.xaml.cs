@@ -34,6 +34,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using log4net;
 using Microsoft.CSharp;
 using System.CodeDom;
+using XbimXplorer.PluginSystem;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -306,6 +307,32 @@ namespace XbimXplorer.Commands
                             ReportAdd(ReportType(item, beVerbose));
                         }
                     }
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^(plugin) (?<command>(install) )*(?<name>[^ ]+)[ ]*", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var commandString = mdbclosed.Groups["command"].Value;
+                    var name = mdbclosed.Groups["name"].Value;
+                    PluginManagement pm = new PluginManagement();
+
+                    var plugin = pm.GetPlugins(PluginChannelOption.Development).FirstOrDefault(x => x.PluginId == name);
+                    if (plugin == null)
+                    {
+                        ReportAdd("Plugin not found.", Brushes.Red);
+                        continue;
+                    }
+                    
+                    // try installing
+                    ReportAdd("Plugin found; installing...", Brushes.Blue);
+                    plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                    if (plugin.Startup.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
+                    {
+                        plugin.ToggleEnabled();
+                    }
+                    plugin.Load();
+                    ReportAdd("Installed.", Brushes.Blue);
                     continue;
                 }
 

@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -31,6 +32,7 @@ using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.Common.Step21;
 using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.IO.Esent;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation;
@@ -966,13 +968,25 @@ namespace XbimXplorer
         
         private void EntityLabel_KeyDown()
         {
-            var str = EntityLabel.Text.Trim(' ', '#');
-            int isLabel;
-            if (!int.TryParse(str, out isLabel)) 
-                return;
-            var entity = Model.Instances[isLabel];
+            var input = EntityLabel.Text;
+            var re = new Regex(@"#[ \t]*(\d+)");
+            var m = re.Match(input);
+            IPersistEntity entity = null;
+            if (m.Success)
+            {
+                int isLabel;
+                if (!int.TryParse(m.Groups[1].Value, out isLabel))
+                    return;
+                entity = Model.Instances[isLabel];
+            }
+            else
+            {
+                entity = Model.Instances.OfType<IIfcRoot>().FirstOrDefault(x => x.GlobalId == input);
+            }
+
             if (entity != null)
                 SelectedItem = entity;
+
         }
 
         private void ConfigureStyler(object sender, RoutedEventArgs e)
