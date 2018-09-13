@@ -156,14 +156,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-
-                mdbclosed = Regex.Match(cmd, @"^Plugin Refresh$", RegexOptions.IgnoreCase);
-                if (mdbclosed.Success)
-                {
-                    _parentWindow?.RefreshPlugins();
-                    continue;
-                }
-
+                
                 mdbclosed = Regex.Match(cmd, @"^IfcZip (?<source>[^/]+) *(?<subFolders>/s)?$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -180,19 +173,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-
-                mdbclosed = Regex.Match(cmd, @"^Plugin Load (?<assemblyName>.+)$", RegexOptions.IgnoreCase);
-                if (mdbclosed.Success)
-                {
-                    var assemblyName = mdbclosed.Groups["assemblyName"].Value;
-                    if (Directory.Exists(assemblyName))
-                    {
-                        var pluginDir = new DirectoryInfo(assemblyName);
-                        (_parentWindow as XplorerMainWindow)?.LoadPlugin(pluginDir, true);
-                    }
-                    continue;
-                }
-
+                
                 mdbclosed = Regex.Match(cmd, @"^xplorer$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -310,40 +291,94 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
-                mdbclosed = Regex.Match(cmd, @"^(plugin) (?<command>(install) )*(?<name>[^ ]+)[ ]*", RegexOptions.IgnoreCase);
+                mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     var commandString = mdbclosed.Groups["command"].Value;
-                    var name = mdbclosed.Groups["name"].Value;
-                    PluginManagement pm = new PluginManagement();
-
-                    var plugin = pm.GetPlugins(PluginChannelOption.Development).FirstOrDefault(x => x.PluginId == name);
-                    if (plugin == null)
+                    var pluginName = mdbclosed.Groups["pluginName"].Value;
+                    if (commandString.ToLower() == "refresh")
                     {
-                        ReportAdd("Plugin not found.", Brushes.Red);
+                        _parentWindow?.RefreshPlugins();
                         continue;
                     }
-                    
-                    // try installing
-                    ReportAdd("Plugin found; installing...", Brushes.Blue);
-                    plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
-                    if (plugin.Startup.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
+                    else if (commandString.ToLower() == "folder")
                     {
-                        plugin.ToggleEnabled();
+                        // open folder
+                        var dir = PluginManagement.GetPluginsDirectory();
+                        ReportAdd($"Plugins folder is: {dir.FullName}");
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                        {
+                            FileName = dir.FullName,
+                            UseShellExecute = true,
+                            Verb = "open"
+                        });
+                        continue;
                     }
-                    plugin.Load();
-                    ReportAdd("Installed.", Brushes.Blue);
-                    continue;
+                    else if (commandString.ToLower() == "install")
+                    {
+
+                        PluginManagement pm = new PluginManagement();
+
+                        var plugin = pm.GetPlugins(PluginChannelOption.Development).FirstOrDefault(x => x.PluginId == pluginName);
+                        if (plugin == null)
+                        {
+                            ReportAdd("Plugin not found.", Brushes.Red);
+                            continue;
+                        }
+
+                        // try installing
+                        ReportAdd("Plugin found; installing...", Brushes.Blue);
+                        plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                        if (plugin.Startup.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
+                        {
+                            plugin.ToggleEnabled();
+                        }
+                        plugin.Load();
+                        ReportAdd("Installed.", Brushes.Blue);
+                        continue;
+                    }
+                    else if (commandString.ToLower() == "load")
+                    {
+                        if (Directory.Exists(pluginName))
+                        {
+                            var pluginDir = new DirectoryInfo(pluginName);
+                            (_parentWindow as XplorerMainWindow)?.LoadPlugin(pluginDir, true);
+                        }
+                        else
+                        {
+                            ReportAdd("Plugin not found.", Brushes.Red);
+                        }
+                        continue;
+                    }
+                    else if (commandString.ToLower() == "list")
+                    {
+                        PluginManagement pm = new PluginManagement();
+                        var plugins = pm.GetPlugins(PluginChannelOption.Development).ToList();
+                        if (plugins.Any())
+                        {
+                            ReportAdd("Beta versions in the development channel:");
+                            foreach (var plugin in plugins)
+                            {
+                                ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
+                            }
+                        }
+                        plugins = pm.GetPlugins(PluginChannelOption.Stable).ToList();
+                        if (plugins.Any())
+                        {
+                            ReportAdd("Versions in the stable channel:");
+                            foreach (var plugin in plugins)
+                            {
+                                ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
+                            }
+                        }
+                        continue;
+                    }
                 }
 
                 // above here functions that do not need an opened model
-                // ################################################################
+                // #####################################################
+                
 
-                if (Model == null)
-                {
-                    ReportAdd("Please open a database.", Brushes.Red);
-                    continue;
-                }
 
                 // all commands here
                 //
@@ -351,6 +386,8 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
+
                     var recursion = 0;
                     var v = Convert.ToInt32(m.Groups["el"].Value);
                     try
@@ -369,6 +406,8 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^(TypeReport|tr)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
+
                     ReportAdd("========== TypeReport for " + Model.FileName, Brushes.Blue);
                     ReportAdd("");
                     // very low efficiency, just to have it quick and dirty.
@@ -412,6 +451,8 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
+
                     if (Model.Header == null)
                     {
                         ReportAdd("Model header is not defined.", Brushes.Red);
@@ -454,6 +495,8 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
+
                     var mode = m.Groups["mode"].Value.ToLowerInvariant();
                     if (mode == "normals")
                     {
@@ -552,6 +595,7 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^(opacity|op) *(?<opac>[\d\.]+)", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var op = 0.0;
                     if (double.TryParse(m.Groups["opac"].Value, out op))
                     {
@@ -593,6 +637,7 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var labels = GetSelection(m).ToArray();
                     if (labels.Any())
                     {
@@ -651,6 +696,7 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var command = m.Groups["command"].Value.ToLowerInvariant();
                     var highlight = false;
                     var highlightT = m.Groups["hi"].Value;
@@ -740,6 +786,7 @@ namespace XbimXplorer.Commands
                                      , RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var entityId = Convert.ToInt32(m.Groups["EntityId"].Value);
                     var ent = Model.Instances[entityId];
                     if (ent == null)
@@ -758,6 +805,7 @@ namespace XbimXplorer.Commands
                                    , RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var entityIds = m.Groups["EntityIds"].Value;
                     var v = entityIds.Split(new[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
 
@@ -781,6 +829,7 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^region ?(?<mode>list|set|add|\?)? *(?<RegionName>.+)*$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var mode = m.Groups["mode"].Value;
                     var rName = m.Groups["RegionName"].Value;
                     if (string.IsNullOrWhiteSpace(mode))
@@ -840,6 +889,7 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     _parentWindow.DrawingControl.ClearCutPlane();
                     ReportAdd("Clip removed");
                     _parentWindow.Activate();
@@ -850,6 +900,7 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^ModelFix$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     ReportAdd("Attempting model fix.");
                     var f = new Fixer();
                     var cnt = f.Fix(Model);
@@ -880,6 +931,7 @@ namespace XbimXplorer.Commands
                     }
                     else if (m.Groups["StoreyName"].Value != string.Empty)
                     {
+                        if (ModelIsUnavailable) continue;
                         var msg = "";
                         var storName = m.Groups["StoreyName"].Value;
                         var storey =
@@ -938,6 +990,7 @@ namespace XbimXplorer.Commands
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     var parName = m.Groups["Name"].Value;
                     if (m.Groups["action"].Value.ToLowerInvariant() == "list")
                     {
@@ -1031,6 +1084,7 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
+                    if (ModelIsUnavailable) continue;
                     _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler();
                     _parentWindow.DrawingControl.ReloadModel();
                     continue;
@@ -1063,6 +1117,12 @@ namespace XbimXplorer.Commands
             }
         }
 
+        internal void Execute(string cmd)
+        {
+            TxtCommand.Text = cmd;
+            Execute();
+        }
+
         private IEnumerable<Tuple<string, List<IXbimSolid>>> GetSolids(IPersistEntity entity)
         {
             // todo: cache methods by type
@@ -1083,7 +1143,6 @@ namespace XbimXplorer.Commands
                     continue;
                 var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name.Replace("IIfc", "Ifc")})";
                 
-
                 var getSolidRet = new Tuple<string, List<IXbimSolid>>( 
                     functionShort, new List<IXbimSolid>()
                     );
@@ -2247,6 +2306,18 @@ namespace XbimXplorer.Commands
             set { SetValue(ModelProperty, value); }
         }
 
+        public bool ModelIsUnavailable {
+            get
+            {
+                if (Model == null)
+                {
+                    ReportAdd("This command requires an open model.", Brushes.Red);
+                    return true;
+                }
+                return false;
+            }
+        }
+
         public static DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof (IfcStore), typeof (wdwCommands),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
@@ -2260,7 +2331,7 @@ namespace XbimXplorer.Commands
             switch (e.Property.Name)
             {
                 case "Model":
-                    ctrl.ReportAdd("Model updated");
+                    // ctrl.ReportAdd("Model updated");
                     break;
                 case "SelectedEntity":
                     if (e.NewValue == null)

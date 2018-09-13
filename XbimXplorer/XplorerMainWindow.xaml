@@ -74,6 +74,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" MinHeight="24" />
             <RowDefinition />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" MinHeight="23" />
         </Grid.RowDefinitions>
 
@@ -94,6 +95,7 @@
                     <MenuItem Header="_WexBim" Command="{x:Static local:XplorerMainWindow.OpenExportWindowCmd}" />
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="_Run command" Click="ShowCommandBox" />
                 <MenuItem Header="_Exit" Click="Exit" />
             </MenuItem>
             <MenuItem Header="_View">
@@ -220,12 +222,18 @@
             </avalonDock:LayoutRoot>
         </avalonDock:DockingManager>
 
-        <StatusBar Grid.Row="2" Height="27"  Name="StatusBar"  >
+        <Grid Grid.Row="2" Margin="0,5" x:Name="CommandBox" Visibility="Collapsed" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Label>Command:</Label>
+            <TextBox x:Name="CommandPrompt" LostFocus="CommandBoxLost" KeyDown="CommandBoxEval" Margin="0,0,5,0" Grid.Column="2" TextWrapping="NoWrap" AcceptsReturn="False" VerticalAlignment="Center"></TextBox>
+        </Grid>
+        
+        <StatusBar Grid.Row="3" Height="23"  Name="StatusBar" VerticalAlignment="Top" >
             <StatusBarItem>
                 <etb:EditableTextBlock x:Name="EntityLabel" ValueSet="EntityLabel_KeyDown"></etb:EditableTextBlock>
-            </StatusBarItem>
-            <StatusBarItem Height="23" VerticalAlignment="Top">
-                <Separator/>
             </StatusBarItem>
             <StatusBarItem Visibility="Visible">
                 <Slider x:Name="ModelOpacity"  Minimum="0.1" Maximum="1.0" Value="{Binding Path=ModelOpacity, ElementName=DrawingControl}" Width="100" LargeChange=".01">

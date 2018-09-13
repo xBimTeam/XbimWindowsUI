@@ -1064,6 +1064,30 @@ namespace XbimXplorer
             DrawingControl.ReloadModel();
         }
 
-        
+        private void CommandBoxLost(object sender, RoutedEventArgs e)
+        {
+            CommandBox.Visibility = Visibility.Collapsed;
+        }
+
+        private void CommandBoxEval(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                CommandBox.Visibility = Visibility.Collapsed;
+
+                var cmd = CommandPrompt.Text;
+                if (string.IsNullOrWhiteSpace(cmd))
+                    return;
+                Type t = typeof(Commands.wdwCommands);
+                var opened = OpenOrFocusPluginWindow(t) as Commands.wdwCommands;
+                opened.Execute(cmd);
+            }
+        }
+
+        private void ShowCommandBox(object sender, RoutedEventArgs e)
+        {
+            CommandBox.Visibility = Visibility.Visible;
+            CommandPrompt.Focus();
+        }
     }
 }
