@@ -271,7 +271,7 @@ namespace XbimXplorer
             {
                 destMenu.Items.Insert(0, v);
             }
-                else
+            else
             {
                 destMenu.Items.Add(v);
             }
@@ -283,10 +283,8 @@ namespace XbimXplorer
         {
             var mi = sender as MenuItem;
             if (mi == null)
-                return;
-            
-            OpenOrFocusPluginWindow(mi.Tag as Type);
-            
+                return;            
+            OpenOrFocusPluginWindow(mi.Tag as Type);            
         }
         
         private Assembly PluginAssemblyResolvingFunction(object sender, ResolveEventArgs args)
@@ -416,7 +414,7 @@ namespace XbimXplorer
         {
         }
   
-        private void OpenOrFocusPluginWindow(Type tp)
+        private object OpenOrFocusPluginWindow(Type tp)
         {
             if (!_retainedControls.ContainsKey(tp))
             {
@@ -433,12 +431,12 @@ namespace XbimXplorer
                     {
                         var msg = $"Error creating instance of type '{tp}'";
                         Log.Error(msg, ex);
-                        return;
+                        return null;
                     }
                 }
                 var menuWindow = ShowPluginWindow(instance, true);
                 if (menuWindow == null)
-                    return;
+                    return null;
                 // if returned the window must be retained.
                 var i = new SinglePluginItem()
                 {
@@ -446,12 +444,12 @@ namespace XbimXplorer
                     UiObject = menuWindow
                 };
                 _retainedControls.Add(tp, i);
-                return;
+                return instance;
             }
             var v = _retainedControls[tp];
             var anchorable = v.UiObject as LayoutAnchorable;
             if (anchorable == null)
-                return;
+                return null;
             if (anchorable.IsHidden)
                 anchorable.Show();
             if (!anchorable.IsVisible)
@@ -459,6 +457,8 @@ namespace XbimXplorer
                 GetRightPane().Children.Add(anchorable);
             }
             anchorable.IsActive = true;
+
+            return anchorable.Content;
         }
 
         private void PluginWindowClosed(object sender, EventArgs eventArgs)
