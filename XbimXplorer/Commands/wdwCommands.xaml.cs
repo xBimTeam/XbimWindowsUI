@@ -291,7 +291,7 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
-                mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
+                mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     var commandString = mdbclosed.Groups["command"].Value;
@@ -314,27 +314,42 @@ namespace XbimXplorer.Commands
                         });
                         continue;
                     }
-                    else if (commandString.ToLower() == "install")
+                    else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
                     {
-
-                        PluginManagement pm = new PluginManagement();
-
+                        var pm = new PluginManagement();
                         var plugin = pm.GetPlugins(PluginChannelOption.Development).FirstOrDefault(x => x.PluginId == pluginName);
                         if (plugin == null)
                         {
                             ReportAdd("Plugin not found.", Brushes.Red);
                             continue;
                         }
+                        
+                        // test for the right command string
+                        if (plugin.InstalledVersion != "" 
+                            && commandString.ToLower() == "install")
+                        {
+                            ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);
+                            continue;
+                        }
 
                         // try installing
                         ReportAdd("Plugin found; installing...", Brushes.Blue);
-                        plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                        var extracted = plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                        if (!extracted)
+                        {
+                            ReportAdd("Plugin extraction failed.", Brushes.Red);
+                        }
                         if (plugin.Startup.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
                         {
                             plugin.ToggleEnabled();
                         }
-                        plugin.Load();
-                        ReportAdd("Installed.", Brushes.Blue);
+
+                        // try loading
+                        var loaded = plugin.Load();
+                        if (loaded)
+                            ReportAdd("Installed and loaded.", Brushes.Blue);
+                        else
+                            ReportAdd("Plugin installed, but a restart is required.", Brushes.Red);
                         continue;
                     }
                     else if (commandString.ToLower() == "load")
