@@ -25,9 +25,9 @@
             <Grid>
                 <ComboBox x:Name="DisplayOption" Margin="10,10,10,0" VerticalAlignment="Top" SelectionChanged="DisplayOption_SelectionChanged">
                     <ComboBoxItem Content="Installed" IsSelected="True" />
-                    <ComboBoxItem Content="Stable" />
+                    <!--<ComboBoxItem Content="Stable" />-->
                     <ComboBoxItem Content="Development" />
-                    <ComboBoxItem Content="All versions" />
+                    <!--<ComboBoxItem Content="All versions" />-->
                 </ComboBox>
             </Grid>
         </GroupBox>
