@@ -81,7 +81,11 @@ namespace XbimXplorer.Dialogs
             /// </summary>
             public bool DeveloperMode { get; set; }
 
-            public event PropertyChangedEventHandler PropertyChanged;
+            public event PropertyChangedEventHandler PropertyChanged // Not currently used
+            {
+                add { }
+                remove { }
+            }
         }
 
         private readonly SettingWindowVm _vm;
