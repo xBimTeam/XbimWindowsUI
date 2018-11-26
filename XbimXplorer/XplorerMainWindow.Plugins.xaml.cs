@@ -111,9 +111,9 @@ namespace XbimXplorer
                     }
                     if (asmName.Name.Equals(refReq.Name))
                     {
-                        Logger.LogDebug("Versioning issues:" +
-                                        "Required -> {required}. " +
-                                        "Loaded   -> {loaded}", refReq.FullName, asmName.FullName);
+                        Logger.LogWarning("Incompatible plugin components identified:" +
+                                        "Plugin requires -> {required}. " +
+                                        "But currently loaded -> {loaded}", refReq.FullName, asmName.FullName);
                     }
                 }
                 if (reqFound)
@@ -135,7 +135,7 @@ namespace XbimXplorer
                 {
                     Logger.LogError(0, ex, "Problem loading assembly {required} for {assembly}", refReq, fullAssemblyFileName);
                     var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyFileName;
-                    MessageBox.Show(msg + ", " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(msg + "\r\n\r\n" + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 AppDomain.CurrentDomain.AssemblyResolve -= PluginAssemblyResolvingFunction;
             }

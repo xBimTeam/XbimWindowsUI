@@ -118,7 +118,9 @@ namespace XbimXplorer
             // Set XBIM Essentials/Geometries's LoggerFactory - so Serilog drives everything.
             XbimLogging.LoggerFactory = LoggerFactory;
 
-            Serilog.Log.Information("Logging Started...");
+            Logger = LoggerFactory.CreateLogger<XplorerMainWindow>();
+
+            Logger.LogInformation("Xplorer started...");
 
             InitializeComponent();
 
