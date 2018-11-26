@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using log4net;
+using Microsoft.Extensions.Logging;
 using Xbim.Ifc;
 
 namespace XbimXplorer.Commands
 {
     internal static class QueryEngine
     {
-        private static readonly ILog Log = LogManager.GetLogger(nameof(QueryEngine));
+        internal static ILogger Logger { get; private set; }
+
+        static QueryEngine()
+        {
+            Logger = XplorerMainWindow.LoggerFactory.CreateLogger("XbimXplorer.Commands.QueryEngine");
+        }
 
         public static List<int> EntititesForType(string type, IfcStore model)
         {
@@ -27,7 +32,7 @@ namespace XbimXplorer.Commands
             }
             catch (Exception ex)
             {
-                   Log.Error($"Error getting entities for type:{type}.", ex);
+                   Logger.LogError(0, ex, "Error getting entities for type:{type}.", type);
             }
             
             return values;

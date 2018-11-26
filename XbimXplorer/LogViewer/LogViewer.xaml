@@ -19,13 +19,13 @@
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding Level}" Value="DEBUG">
+                        <DataTrigger Binding="{Binding Level}" Value="Debug">
                             <Setter Property="Foreground" Value="Gray" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Level}" Value="WARN">
+                        <DataTrigger Binding="{Binding Level}" Value="Warning">
                             <Setter Property="Foreground" Value="Orange" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Level}" Value="ERROR">
+                        <DataTrigger Binding="{Binding Level}" Value="Error">
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
                     </Style.Triggers>

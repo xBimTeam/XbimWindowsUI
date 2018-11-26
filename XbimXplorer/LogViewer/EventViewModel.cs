@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.ServiceModel.Channels;
+﻿using Serilog.Events;
 using System.Text;
 
 namespace XbimXplorer.LogViewer
 {
     public class EventViewModel
     {
-        private log4net.Core.LoggingEvent loggingEvent;
+        private LogEvent loggingEvent;
 
-        public EventViewModel(log4net.Core.LoggingEvent loggingEvent)
+        public EventViewModel(LogEvent loggingEvent)
         {
             this.loggingEvent = loggingEvent;
         }
@@ -19,12 +15,23 @@ namespace XbimXplorer.LogViewer
 
         public string Logger
         {
-            get { return loggingEvent.LoggerName; }
+            get { return loggingEvent.Properties.TryGetValue("SourceContext", out LogEventPropertyValue value) 
+                    ? GetTextValue(value) 
+                    : "<Global>"; }
+        }
+
+        private string GetTextValue(LogEventPropertyValue value)
+        {
+            if (value is ScalarValue scalar)
+            {
+                return scalar.Value.ToString();
+            }
+            return "";
         }
 
         public string Message
         {
-            get { return loggingEvent.RenderedMessage; }
+            get { return loggingEvent.RenderMessage(); }
             
         }
 
@@ -37,10 +44,10 @@ namespace XbimXplorer.LogViewer
         {
             get
             {
-                if (loggingEvent.ExceptionObject == null)
+                if (loggingEvent.Exception == null)
                     return "";
                 var sb = new StringBuilder();
-                var ex = loggingEvent.ExceptionObject;
+                var ex = loggingEvent.Exception;
                 string stackTrace = ex.StackTrace;
                 while (ex != null)
                 {
@@ -52,7 +59,7 @@ namespace XbimXplorer.LogViewer
             }
         }
         public string TimeStamp {
-            get { return loggingEvent.TimeStamp.ToShortTimeString(); }
+            get { return loggingEvent.Timestamp.ToString("t"); }
         }
 
         public string Summary

@@ -29,10 +29,10 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.LayerStyling;
 using Binding = System.Windows.Data.Binding;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using log4net;
 using Microsoft.CSharp;
 using System.CodeDom;
 using XbimXplorer.PluginSystem;
+using Microsoft.Extensions.Logging;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -47,12 +47,15 @@ namespace XbimXplorer.Commands
          "View/Developer/Commands", "Commands/console.bmp")]
     public partial class wdwCommands : IXbimXplorerPluginWindow
     {
+        protected ILogger Logger { get; private set; }
+
         /// <summary>
         /// WindowsUI
         /// </summary>
-        public wdwCommands()
+        public wdwCommands(ILogger logger = null)
         {
             InitializeComponent();
+            Logger = logger ?? XplorerMainWindow.LoggerFactory.CreateLogger<wdwCommands>();
             DisplayHelp();
 #if DEBUG
             // loads the last commands stored
@@ -140,7 +143,6 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^Log *(?<count>[\d]+)? *(?<message>.+)?$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    ILog Log = LogManager.GetLogger("XbimXplorer.CommandWindow");
                     int iCnt;
                     if (!Int32.TryParse(mdbclosed.Groups["count"].Value, out iCnt))
                         iCnt = 1;
@@ -150,7 +152,7 @@ namespace XbimXplorer.Commands
 
                     for (int iLoop = 0; iLoop < iCnt; iLoop++)
                     {
-                        Log.Info(iLoop+1 + " " + msg);
+                        Logger.LogInformation(iLoop+1 + " " + msg);
                     }
                     continue;
                 }
@@ -1097,7 +1099,7 @@ namespace XbimXplorer.Commands
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
-                    _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler();
+                    _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler(this.Logger);
                     _parentWindow.DrawingControl.ReloadModel();
                     //continue;
 
@@ -1307,6 +1309,7 @@ namespace XbimXplorer.Commands
             try
             {
                 model = IfcStore.Open(fileName, null, -1);
+                XplorerMainWindow.SetupLogger(model);
             }
             catch (Exception)
             {

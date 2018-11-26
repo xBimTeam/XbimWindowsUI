@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -6,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
-using log4net;
 using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
@@ -20,12 +20,17 @@ namespace Xbim.Presentation.LayerStyling
     /// </summary>
     public class BoundingBoxStyler : ILayerStyler, IProgressiveLayerStyler
     {
-        protected static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.BoundingBoxStyler");
-
         public event ProgressChangedEventHandler ProgressChanged;
 
         readonly XbimColourMap _colourMap = new XbimColourMap();
-        
+
+        protected ILogger Logger { get; private set; }
+
+        public BoundingBoxStyler(ILogger logger = null)
+        {
+            Logger = logger ?? new LoggerFactory().CreateLogger<BoundingBoxStyler>();
+        }
+
         /// <summary>
         /// This version uses the new Geometry representation
         /// </summary>
@@ -39,7 +44,6 @@ namespace Xbim.Presentation.LayerStyling
             List<Type> exclude = null)
         {
             var excludedTypes = model.DefaultExclusions(exclude);
-
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             var timer = new Stopwatch();
             timer.Start();
@@ -129,7 +133,7 @@ namespace Xbim.Presentation.LayerStyling
                     }
                 }
             }
-            Log.DebugFormat("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
+            Logger.LogDebug("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
 
             ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(0, "Ready"));
             return scene;

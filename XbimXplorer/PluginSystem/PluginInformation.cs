@@ -1,16 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Windows;
-using log4net;
+﻿using Microsoft.Extensions.Logging;
 using NuGet;
+using System;
+using System.IO;
+using System.Windows;
 
 namespace XbimXplorer.PluginSystem
 {
     public class PluginInformation
     {
-        private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.PluginConfiguration");
-       
+
+        protected Microsoft.Extensions.Logging.ILogger Logger { get; private set; }
+
         public string PluginId { get; set; }
 
         internal PluginConfiguration Startup { get; set; }
@@ -23,9 +23,9 @@ namespace XbimXplorer.PluginSystem
         private ManifestMetadata _diskManifest;
         private DirectoryInfo _directory;
         
-        public PluginInformation()
+        public PluginInformation(Microsoft.Extensions.Logging.ILogger logger = null)
         {
-            
+            Logger = logger ?? XplorerMainWindow.LoggerFactory.CreateLogger<PluginInformation>();
         }
 
         public PluginInformation(DirectoryInfo directoryInfo)
@@ -85,9 +85,9 @@ namespace XbimXplorer.PluginSystem
                 if (!pluginDirectory.Exists)
                     pluginDirectory.Create();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Error($"Could not create directory {pluginDirectory.FullName}");
+                Logger.LogError(0, ex, "Could not create directory {directory}", pluginDirectory.FullName);
                 return false;
             }
 
@@ -99,9 +99,9 @@ namespace XbimXplorer.PluginSystem
                 if (!subdir.Exists)
                     subdir.Create();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Error($"Could not create directory {subdir.FullName}");
+                Logger.LogError(0, ex, "Could not create directory {directory}", subdir.FullName);
                 return false;
             }
 
@@ -117,7 +117,7 @@ namespace XbimXplorer.PluginSystem
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error trying to delete: {destname}", ex);
+                    Logger.LogError(0, ex, "Error trying to delete: {destname}", destname);
                     return false;
                 }
 
@@ -131,7 +131,7 @@ namespace XbimXplorer.PluginSystem
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error trying to extract: {destname}", ex);
+                    Logger.LogError(0, ex, "Error trying to extract: {destname}", destname);
                     return false;
                 }
             }
@@ -143,14 +143,14 @@ namespace XbimXplorer.PluginSystem
             {
                 if (!_onlinePackage.ExtractManifestFile(packageName))
                 {
-                    Log.Error($"Error trying to create manifest file for {packageName}");
+                    Logger.LogError("Error trying to create manifest file for {packageName}", packageName);
                     return false;
                 }
                 SetDirectoryInfo(subdir);
             }
             catch (Exception ex)
             {
-                Log.Error($"Error trying to create manifest file for: {packageName}", ex);
+                Logger.LogError(0, ex, "Error trying to create manifest file for: {packageName}", packageName);
                 return false;
             }
             return true;

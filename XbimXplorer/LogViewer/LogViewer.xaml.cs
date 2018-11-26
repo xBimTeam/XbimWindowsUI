@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using log4net;
-using NuGet;
 using Xbim.Presentation.XplorerPluginSystem;
 
 namespace XbimXplorer.LogViewer
@@ -18,15 +17,20 @@ namespace XbimXplorer.LogViewer
         "View/Developer/Information Log", "LogViewer/LogViewer.png")]
     public partial class LogViewer : IXbimXplorerPluginWindow
     {
+        private const string DebugString = "Debug";
+        private const string InfoString = "Information";
+        private const string WarningString = "Warning";
+
         private XplorerMainWindow _mw;
 
-        private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
+        protected ILogger Logger { get; private set; }
 
         public ObservableCollection<EventViewModel> LoggedEvents { get; set; }
         
         public LogViewer()
         {
             InitializeComponent();
+            Logger = XplorerMainWindow.LoggerFactory.CreateLogger<LogViewer>();
             WindowTitle = "Information Log";
            
             DataContext = this;
@@ -44,7 +48,7 @@ namespace XbimXplorer.LogViewer
 
         private void Test(object sender, RoutedEventArgs e)
         {
-            Log.Debug("Test");
+            Logger.LogDebug("Test");
         }
 
         private void Clear(object sender, RoutedEventArgs e)
@@ -99,7 +103,7 @@ namespace XbimXplorer.LogViewer
 
         private void ClearDebug(object sender, RoutedEventArgs e)
         {
-            LoggedEvents.RemoveAll(x => x.Level == "DEBUG");
+            LoggedEvents.RemoveAll(x => x.Level == DebugString);
             if (_mw == null)
                 return;
             _mw.UpdateLoggerCounts();
@@ -108,9 +112,9 @@ namespace XbimXplorer.LogViewer
         private void ClearWarning(object sender, RoutedEventArgs e)
         {
             LoggedEvents.RemoveAll(x =>
-                x.Level == "DEBUG"
-                || x.Level == "INFO"
-                || x.Level == "WARN"
+                x.Level == DebugString
+                || x.Level == InfoString
+                || x.Level == WarningString
                 );
             if (_mw == null)
                 return;
@@ -125,8 +129,8 @@ namespace XbimXplorer.LogViewer
         private void ClearInformation(object sender, RoutedEventArgs e)
         {
             LoggedEvents.RemoveAll(x => 
-                x.Level == "DEBUG"
-                || x.Level == "INFO"
+                x.Level == DebugString
+                || x.Level == InfoString
                 );
             if (_mw == null)
                 return;
