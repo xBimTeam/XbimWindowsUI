@@ -1,11 +1,8 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.IO;
-using Xbim.IO.Memory;
 using Xbim.Presentation;
 
 namespace Tests

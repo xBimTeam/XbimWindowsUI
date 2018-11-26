@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>Xbim.WindowsUI</id>
-    <version>4.0.12-V0072</version>
+    <version>5.0.0-V0001</version>
     <title>xBIM WindowsUI</title>
     <authors>xBIM team</authors>
     <owners>xBIM team</owners>
@@ -17,7 +17,7 @@
       The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
       IOS and Android versions are under development.
     </description>
-    <summary>xBIM Windows UI contains a set of MS Windows controls that can be used to build Windows Xaml or forms based applications that can display the geometry and semantic data in IFC models.</summary>
+    <summary>Xbim.WindowsUI contains a set of Windows controls that can be used to build Windows Xaml or forms-based applications that can display the geometry and semantic data in IFC models.</summary>
     <releaseNotes>
       Minor change to xPlorer project to resolve problems with including geometry build targets
       Support for Ifc4 and Ifc4Xml added. All Ifc geometries supported.
@@ -26,8 +26,8 @@
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <dependency id="Xbim.Geometry" version="4.0.15-V0042" />
-      <dependency id="Xbim.Essentials" version="4.0.30-V033" />
+      <dependency id="Xbim.Geometry" version="5.0.131-prerelease" />
+      <dependency id="Xbim.Essentials" version="5.0.172" />
       <dependency id="HelixToolkit.Wpf" version="2015.1.715" />
       <dependency id="PropertyTools.Wpf" version="2015.1.66" />
     </dependencies>

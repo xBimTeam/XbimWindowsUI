@@ -1318,7 +1318,7 @@ namespace XbimXplorer.Commands
             }
 
             ReportAdd($"Saving.");
-            model.SaveAs(newFile, IfcStorageType.IfcZip);
+            model.SaveAs(newFile, StorageType.IfcZip);
             model.Close();
 
             var fBefore = new FileInfo(fileName);

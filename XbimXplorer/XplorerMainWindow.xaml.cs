@@ -185,7 +185,7 @@ namespace XbimXplorer
             // this enables a basic configuration for the logger.
             //
             BasicConfigurator.Configure();
-            var model = IfcStore.Create(null,IfcSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
+            var model = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
 
@@ -667,7 +667,7 @@ namespace XbimXplorer
                 case ".ifczip":
                 case ".ifcxml":
                     // create temp file as a placeholder for the temporory xbim file                   
-                    fedModel = IfcStore.Create(null,IfcSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);                    
+                    fedModel = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);                    
                     using (var txn = fedModel.BeginTransaction())
                     {
                         var project = fedModel.Instances.New<Xbim.Ifc2x3.Kernel.IfcProject>();
