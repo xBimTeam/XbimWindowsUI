@@ -83,7 +83,7 @@ namespace XbimXplorer.LogViewer
 
                 var messageTemplate = new MessageTemplate(new[] {
                     new Serilog.Parsing.TextToken($"Message limit reached, logging suspended for {EventsResetInterval} seconds.") });
-                LogEvent overLimit = new LogEvent(DateTime.UtcNow, LogEventLevel.Warning, null, messageTemplate, null);
+                LogEvent overLimit = new LogEvent(DateTime.UtcNow, LogEventLevel.Warning, null, messageTemplate, new LogEventProperty[0]);
 
                 _eventsTally = -1;
                 // Send the warning of overlimit

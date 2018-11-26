@@ -103,7 +103,7 @@ namespace XbimXplorer
         {
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
-            LogSink.EventsLimit = 100; // 100 event's minute
+            LogSink.EventsLimit = 1000; // log event's minute
 
             // Use the standard ME.LoggerFactory, but add Serilog as a provider. 
             // This provides a richer configuration and allows us to create a custom Sink for the disply of 'in app' logs
@@ -115,6 +115,8 @@ namespace XbimXplorer
                 .WriteTo.Sink(LogSink)
                 .Enrich.FromLogContext()
                 .CreateLogger();
+            // Set XBIM Essentials/Geometries's LoggerFactory - so Serilog drives everything.
+            XbimLogging.LoggerFactory = LoggerFactory;
 
             Serilog.Log.Information("Logging Started...");
 
@@ -206,7 +208,6 @@ namespace XbimXplorer
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             var model = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
-            SetupLogger(model);
             ModelProvider.ObjectInstance = model;
             ModelProvider.Refresh();
 
@@ -242,7 +243,6 @@ namespace XbimXplorer
                 _temporaryXbimFileName = Path.GetTempFileName();
                 SetOpenedModelFileName(selectedFilename);
                 var model = IfcStore.Open(selectedFilename, null, null, worker.ReportProgress, FileAccessMode);
-                SetupLogger(model);
                 if (_meshModel)
                 {
                     // mesh direct model
@@ -315,12 +315,6 @@ namespace XbimXplorer
                 Logger.LogError(0, ex, "Error opening {filename}", selectedFilename);
                 args.Result = newexception;
             }
-        }
-
-        // TODO: Should not be necessary - Essentials should construct a ILogger.
-        internal static void SetupLogger(IfcStore model)
-        {
-            model.Logger = LoggerFactory.CreateLogger<IfcStore>();
         }
 
         private void SetDeflection(IModel model)
@@ -684,7 +678,6 @@ namespace XbimXplorer
                         if (res == MessageBoxResult.Cancel)
                             return;
                         fedModel = IfcStore.Open(dlg.FileNames[0]);
-                        SetupLogger(fedModel);
                     }
                     break;
                 case ".ifc":
@@ -692,7 +685,6 @@ namespace XbimXplorer
                 case ".ifcxml":
                     // create temp file as a placeholder for the temporory xbim file                   
                     fedModel = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
-                    SetupLogger(fedModel);
                     using (var txn = fedModel.BeginTransaction())
                     {
                         var project = fedModel.Instances.New<Xbim.Ifc2x3.Kernel.IfcProject>();

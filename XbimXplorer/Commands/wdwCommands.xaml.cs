@@ -1309,7 +1309,6 @@ namespace XbimXplorer.Commands
             try
             {
                 model = IfcStore.Open(fileName, null, -1);
-                XplorerMainWindow.SetupLogger(model);
             }
             catch (Exception)
             {
