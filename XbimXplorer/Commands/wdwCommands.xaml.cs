@@ -1099,7 +1099,7 @@ namespace XbimXplorer.Commands
                     if (ModelIsUnavailable) continue;
                     _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler();
                     _parentWindow.DrawingControl.ReloadModel();
-                    continue;
+                    //continue;
 
                     ReportAdd($"Testing Xbim3DModelContext creation.");
                     var w = new Stopwatch();
@@ -1329,7 +1329,7 @@ namespace XbimXplorer.Commands
             {
                 File.Delete(fileName);
             }
-            catch (Exception e)
+            catch (SystemException)
             {
                 ReportAdd($"Error deleting source file.", Brushes.Red);
             }

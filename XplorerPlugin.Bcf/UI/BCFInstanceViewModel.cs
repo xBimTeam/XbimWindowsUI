@@ -149,7 +149,12 @@ namespace Xbim.BCF.UI
         /// <summary>
         /// Occurs when changes occur that affect whether or not the command should execute.
         /// </summary>
-        public event EventHandler CanExecuteChanged; // always true
+        public event EventHandler CanExecuteChanged // Never used, but required by ICommand interface
+        {
+            add { }
+            remove { }
+        }
+
 
         public void Execute(object parameter)
         {

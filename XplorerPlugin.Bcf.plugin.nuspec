@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>XplorerPlugin.Bcf</id>
-    <version>4.0.12-V0070</version>
+    <version>4.0.12-V0072</version>
     <title>XplorerPlugin.Bcf</title>
     <authors>xBIM team</authors>
     <owners>xBIM team</owners>

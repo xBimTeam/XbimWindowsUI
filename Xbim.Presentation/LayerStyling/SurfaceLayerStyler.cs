@@ -226,17 +226,13 @@ namespace Xbim.Presentation.LayerStyling
         {
             var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
             var texture = XbimTexture.Create(sStyle);
-            try
-            {
+            if(texture.ColourMap.Count > 0)
+            { 
                 if (texture.ColourMap[0].Alpha <= 0)
                 {
                     texture.ColourMap[0].Alpha = 0.5f;
                     Log.Warn($"Fully transparent style #{styleId} forced to 50% opacity.");
                 }
-            }
-            catch (Exception ex)
-            {
-
             }
 
             texture.DefinedObjectId = styleId;
