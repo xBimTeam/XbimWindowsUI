@@ -254,6 +254,9 @@ namespace XbimXplorer
                             
                             if (!_multiThreading)
                                 context.MaxThreads = 1;
+#if FastExtrusion
+                            context.UseSimplifiedFastExtruder = _simpleFastExtrusion;
+#endif
                             SetDeflection(model);
                             //upgrade to new geometry representation, uses the default 3D model
                             context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
@@ -279,7 +282,10 @@ namespace XbimXplorer
                         var context = new Xbim3DModelContext(modelReference.Model);
                         if (!_multiThreading)
                             context.MaxThreads = 1;
-                        SetDeflection(modelReference.Model);
+#if FastExtrusion
+                        context.UseSimplifiedFastExtruder = _simpleFastExtrusion;
+#endif
+                        SetDeflection(modelReference.Model);                        
                         //upgrade to new geometry representation, uses the default 3D model
                         context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
                     }
@@ -619,9 +625,9 @@ namespace XbimXplorer
         }
 
 
-        #endregion
+#endregion
 
-        # region "Federation Model operations"
+#region "Federation Model operations"
         private void EditFederationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var fdlg = new FederatedModelDialog {DataContext = Model};
@@ -738,7 +744,7 @@ namespace XbimXplorer
             ModelProvider.Refresh();
         }
         
-        #endregion
+#endregion
 
         /// <summary>
         /// 
@@ -811,6 +817,11 @@ namespace XbimXplorer
         /// </summary>
         private bool _multiThreading = true;
 
+        /// <summary>
+        /// determines if the geometry engine will run on parallel threads.
+        /// </summary>
+        private bool _simpleFastExtrusion = false;
+
         private void SpatialControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             _camChanged = false;
@@ -855,6 +866,7 @@ namespace XbimXplorer
             // geom engine
             sett.ComputeGeometry.IsChecked = _meshModel;
             sett.MultiThreading.IsChecked = _multiThreading;
+            sett.SimpleFastExtrusion.IsChecked = _simpleFastExtrusion;
             if (!double.IsNaN(_angularDeflectionOverride))
                 sett.AngularDeflection.Text = _angularDeflectionOverride.ToString();
             if (!double.IsNaN(_deflectionOverride))
@@ -881,7 +893,9 @@ namespace XbimXplorer
                 _meshModel = sett.ComputeGeometry.IsChecked.Value;
             if (sett.MultiThreading.IsChecked != null)
                 _multiThreading = sett.MultiThreading.IsChecked.Value;
-            
+            if (sett.SimpleFastExtrusion.IsChecked != null)
+                _simpleFastExtrusion = sett.SimpleFastExtrusion.IsChecked.Value;
+
             _deflectionOverride = double.NaN;
             _angularDeflectionOverride = double.NaN;
             if (!string.IsNullOrWhiteSpace(sett.AngularDeflection.Text))
