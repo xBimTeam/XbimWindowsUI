@@ -1,0 +1,131 @@
+# Yaml Pipeline Tasks for reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/index?view=vsts
+
+variables:
+  BuildConfiguration: 'Release'
+  BuildPlatform: 'Any CPU'
+  major: 5
+  minor: 0
+  # creates a counter called versioncounter and seeds it at 100 and then assigns the value to a variable named patch.
+  patch: $[counter('geomversioncounter', 100)]
+  
+steps:
+# Windows script setting up  $(version) of the nuget package based on branch
+- script: |
+    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)-prerelease
+  name: 'SettingPrereleaseNugetPackageVersion'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+- script: | 
+    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)
+  name: 'SettingNugetPackageVersion'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+- script: | 
+    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)-ignore
+  name: 'SettingOtherBranchNugetPackageVersion'
+  condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/master'),ne(variables['Build.SourceBranch'], 'refs/heads/develop'))
+
+
+# Windows script setting up $(fileversion) used to stamp AssemblyFileVersions. 
+# By convention we use 'Major.Minor.BuildNo.0' on Master and 'Major.Minor.0.BuildNo' on other branches
+- script: | 
+    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).$(patch).0
+  name: 'SettingFileVersionMaster'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+- script: | 
+    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).0.$(patch)
+  name: 'SettingFileVersionNonMaster'
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+
+#Task group has not been exported, task groups are not supported yet
+
+- task: NuGetToolInstaller@0
+  displayName: 'Use NuGet 4.3.0'
+
+# Version .NET Core project files
+# Description - Applies a version to a .NET Core assembly via the .csproj files based on the build number. 
+# Based on https://github.com/rfennell/AzurePipelines/wiki/Version-Assemblies-and-Packages-Tasks-YAML#versiondotnetcoreassembliestask
+- task: VersionDotNetCoreAssemblies@2
+  inputs: 
+    # Required arguments
+    Path: $(Build.SourcesDirectory)
+    VersionNumber: $(fileversion)
+    VersionRegex: \d+\.\d+\.\d+\.\d+
+    FilenamePattern: .csproj
+    Field: FileVersion
+    OutputVersion: OutputedVersion
+
+- task: NuGetCommand@2
+  displayName: 'NuGet restore Xbim.WindowsUI.Nuget.sln'
+  inputs:
+    restoreSolution: 'Xbim.WindowsUI.Nuget.sln'
+    feedsToUse: config
+    nugetConfigPath: nuget.config
+
+
+- task: VSBuild@1
+  displayName: 'Build solution Xbim.WindowsUI.Nuget.sln'
+  inputs:
+    solution: 'Xbim.WindowsUI.Nuget.sln'
+    msbuildArgs: '/t:build'
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
+
+# Delete all Package(s) including newly built - we're going to regenerate with the current build version
+# We need to msbuild pack to complete however before we can run 'dotnet pack' on Geometry Engine
+- task: DeleteFiles@1
+  displayName: 'Delete old *.nupkg files from $(build.sourcesdirectory)'
+  inputs:
+    SourceFolder: '$(build.sourcesdirectory)'
+    Contents: '**\bin\$(BuildConfiguration)\**\*.nupkg'
+
+
+# Pack XBIM.Presentation/WindowsUI
+#- script: dotnet pack Xbim.Presentation/Xbim.Presentation.csproj -c $(BuildConfiguration) /p:PackageVersion=$(version)
+#  name: 'Presentation_Pack'
+
+# Pack with MSBuild since dotnet pack can't do WPF
+- task: MSBuild@1
+  inputs:
+    solution: Xbim.Presentation/Xbim.Presentation.csproj
+    msbuildVersion: 'latest'
+    platform: AnyCPU
+    configuration: $(BuildConfiguration) /p:PackageVersion=$(version)
+    msbuildArguments: /t:pack
+    clean: false
+
+
+# Pack XplorerPlugin.Bcf
+- script: dotnet pack XplorerPlugin.Bcf/XplorerPlugin.Bcf.csproj -c $(BuildConfiguration) /p:PackageVersion=$(version)
+  name: 'BCF_Plugin_Pack'
+
+- task: VSTest@2
+  displayName: 'VsTest - testAssemblies'
+  inputs:
+    testAssemblyVer2: |
+     **\bin\$(BuildConfiguration)\**\Xbim.Geometry.Engine.Interop.Tests.dll
+    codeCoverageEnabled: true
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
+  continueOnError: true
+
+- task: PublishSymbols@1
+  displayName: 'Publish symbols path: '
+  inputs:
+    SearchPattern: '**\bin\**\*.pdb'
+  enabled: false
+  continueOnError: true
+
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  inputs:
+    SourceFolder: '$(build.sourcesdirectory)'
+    Contents: '**\bin\$(BuildConfiguration)\*.nupkg'
+    TargetFolder: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
+
+# TODO: Publish
