@@ -34,3 +34,5 @@ using System.Windows;
     //(used if a resource is not found in the page, 
     // app, or any theme specific resource dictionaries)
 )]
+
+[assembly: System.Reflection.AssemblyFileVersion("5.0.1811.26661")]
