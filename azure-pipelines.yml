@@ -9,17 +9,17 @@ variables:
   patch: $[counter('geomversioncounter', 100)]
 
 steps:
-# Windows script setting up  $(version) of the nuget package based on branch
+# Windows script setting up $(packageversion) of the nuget package based on branch
 - script: |
-    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)-prerelease
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(patch)-prerelease
   name: 'SettingPrereleaseNugetPackageVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
 - script: | 
-    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(patch)
   name: 'SettingNugetPackageVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 - script: | 
-    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)-ignore
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(patch)-ignore
   name: 'SettingOtherBranchNugetPackageVersion'
   condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/master'),ne(variables['Build.SourceBranch'], 'refs/heads/develop'))
 
@@ -46,8 +46,8 @@ steps:
 # Description - Applies a version to a .NET Core assembly via the .csproj files based on the build number. 
 # Based on https://github.com/rfennell/AzurePipelines/wiki/Version-Assemblies-and-Packages-Tasks-YAML#versiondotnetcoreassembliestask
 - task: VersionDotNetCoreAssemblies@2
+  displayName: 'Version *.csproj (netcore)'
   inputs: 
-    # Required arguments
     Path: $(Build.SourcesDirectory)
     VersionNumber: $(fileversion)
     VersionRegex: \d+\.\d+\.\d+\.\d+
@@ -55,6 +55,29 @@ steps:
     Field: FileVersion
     OutputVersion: OutputedVersion
 
+# Version 'classic' .NET Assemblies
+# Description - Applies a version to a .NET assembly via the assemblyinfo.cs or .vb files based on the build number.
+# For the Plugin project(s) which are ClickOnce
+- task: VersionAssemblies@2
+  displayName: 'Version AssemblyInfo.cs'
+  inputs: 
+     Path: $(Build.SourcesDirectory)
+     VersionNumber: $(fileversion)
+     VersionRegex: \d+\.\d+\.\d+\.\d+
+     FilenamePattern: AssemblyInfo.cs
+     OutputVersion: OutputedVersion
+
+# Version Nuspec package
+# Description - Applies a version to a Nuspec manifest based on the build number. For Plugins
+#- task: VersionNuspec@2
+#  displayName: 'Version *.nuspec'
+#  inputs: 
+#     Path: $(Build.SourcesDirectory)
+#     VersionNumber: $(packageversion)
+#     VersionRegex: \d+\.\d+\.\d+\.\d+
+#     OutputVersion: OutputedVersion
+
+# nuget restore sln
 - task: NuGetCommand@2
   displayName: 'NuGet restore Xbim.WindowsUI.Nuget.sln'
   inputs:
@@ -62,7 +85,7 @@ steps:
     feedsToUse: config
     nugetConfigPath: 'nuget.config'
 
-
+# vs2017 build
 - task: VSBuild@1
   displayName: 'Build solution Xbim.WindowsUI.Nuget.sln'
   inputs:
@@ -79,11 +102,6 @@ steps:
     SourceFolder: '$(build.sourcesdirectory)'
     Contents: '**\bin\$(BuildConfiguration)\**\*.nupkg'
 
-
-# Pack XBIM.Presentation/WindowsUI
-#- script: dotnet pack Xbim.Presentation/Xbim.Presentation.csproj -c $(BuildConfiguration) /p:PackageVersion=$(version)
-#  name: 'Presentation_Pack'
-
 # Pack with MSBuild since dotnet pack can't do WPF
 - task: MSBuild@1
   inputs:
@@ -91,14 +109,20 @@ steps:
     msbuildVersion: 'latest'
     platform: AnyCPU
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/t:pack /p:PackageVersion=$(version)' 
+    msbuildArguments: '/t:pack /p:PackageVersion=$(packageversion)' 
     clean: false
 
+# Pack XplorerPlugin.Bcf with nuget and nuspec. Because nothing else works with ClickOnce
+- task: NuGetCommand@2
+  displayName: 'NuGet pack BCF_Plugin'
+  inputs:
+    command: pack
+    packagesToPack: 'XplorerPlugin.Bcf.plugin.nuspec'
+    configuration: $(BuildConfiguration)
+    versioningScheme: byEnvVar
+    versionEnvVar: packageversion
 
-# Pack XplorerPlugin.Bcf
-- script: dotnet pack XplorerPlugin.Bcf/XplorerPlugin.Bcf.csproj -c $(BuildConfiguration) /p:PackageVersion=$(version)
-  name: 'BCF_Plugin_Pack'
-
+# Test
 - task: VSTest@2
   displayName: 'VsTest - testAssemblies'
   inputs:

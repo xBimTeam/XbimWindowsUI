@@ -35,4 +35,4 @@ using System.Windows;
     // app, or any theme specific resource dictionaries)
 )]
 
-[assembly: System.Reflection.AssemblyFileVersion("5.0.1811.26661")]
+[assembly: AssemblyFileVersion("5.0.1811.26661")]
