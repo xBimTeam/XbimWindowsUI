@@ -38,7 +38,6 @@ steps:
 #Task group has not been exported, task groups are not supported yet
 
 - task: NuGetToolInstaller@0
-  versionSpec: '4.6.2'
   displayName: 'Use NuGet 4.3.0'
 
 # Version .NET Core project files
