@@ -6,7 +6,7 @@
     <Title>Xbim.Presentation</Title>
     <Version>5.0.0.0</Version>
     <Copyright>Copyright Xbim Ltd.</Copyright>
-    <Description>Xbim.Presentation is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
+    <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
     or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
     <Authors>xBIM team</Authors>
     <Company>Xbim Ltd.</Company>
@@ -22,6 +22,8 @@
     <FileVersion>5.0.0.0</FileVersion>
     <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>Xbim.WindowsUI</PackageId>
+    <Product>Xbim.WindowsUI</Product>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>

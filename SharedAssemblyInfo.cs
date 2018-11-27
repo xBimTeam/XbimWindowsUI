@@ -17,4 +17,4 @@
 // AssemblyVersion is the CLR version. Change this only when making breaking changes
 // Whenever breaking changes happen update this.
 [assembly: AssemblyVersion("5.0")]
-[assembly: AssemblyInformationalVersion("5.0.develop")]
+[assembly: AssemblyInformationalVersion("5.0.0.0")]
