@@ -5,21 +5,21 @@ variables:
   BuildPlatform: 'Any CPU'
   major: 5
   minor: 0
-  # creates a counter called versioncounter and seeds it at 100 and then assigns the value to a variable named patch.
-  patch: $[counter('geomversioncounter', 100)]
+  # creates a named counter and seeds it at 100 and then assigns the value to a variable named buildNo.
+  buildNo: $[counter('winversioncounter', 100)]
 
 steps:
 # Windows script setting up $(packageversion) of the nuget package based on branch
 - script: |
-    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(patch)-prerelease
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)-prerelease
   name: 'SettingPrereleaseNugetPackageVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
 - script: | 
-    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(patch)
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)
   name: 'SettingNugetPackageVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 - script: | 
-    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(patch)-ignore
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)-ignore
   name: 'SettingOtherBranchNugetPackageVersion'
   condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/master'),ne(variables['Build.SourceBranch'], 'refs/heads/develop'))
 
@@ -27,11 +27,11 @@ steps:
 # Windows script setting up $(fileversion) used to stamp AssemblyFileVersions. 
 # By convention we use 'Major.Minor.BuildNo.0' on Master and 'Major.Minor.0.BuildNo' on other branches
 - script: | 
-    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).$(patch).0
+    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).$(buildNo).0
   name: 'SettingFileVersionMaster'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 - script: | 
-    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).0.$(patch)
+    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).0.$(buildNo)
   name: 'SettingFileVersionNonMaster'
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
 
@@ -67,16 +67,6 @@ steps:
      FilenamePattern: AssemblyInfo.cs
      OutputVersion: OutputedVersion
 
-# Version Nuspec package
-# Description - Applies a version to a Nuspec manifest based on the build number. For Plugins
-#- task: VersionNuspec@2
-#  displayName: 'Version *.nuspec'
-#  inputs: 
-#     Path: $(Build.SourcesDirectory)
-#     VersionNumber: $(packageversion)
-#     VersionRegex: \d+\.\d+\.\d+\.\d+
-#     OutputVersion: OutputedVersion
-
 # nuget restore sln
 - task: NuGetCommand@2
   displayName: 'NuGet restore Xbim.WindowsUI.Nuget.sln'
@@ -95,7 +85,6 @@ steps:
     configuration: '$(BuildConfiguration)'
 
 # Delete all Package(s) including newly built - we're going to regenerate with the current build version
-# We need to msbuild pack to complete however before we can run 'dotnet pack' on Geometry Engine
 - task: DeleteFiles@1
   displayName: 'Delete old *.nupkg files from $(build.sourcesdirectory)'
   inputs:
@@ -122,12 +111,12 @@ steps:
     versioningScheme: byEnvVar
     versionEnvVar: packageversion
 
-# Test
+# Test, but don't fail
 - task: VSTest@2
   displayName: 'VsTest - testAssemblies'
   inputs:
     testAssemblyVer2: |
-     **\bin\$(BuildConfiguration)\**\Xbim.Geometry.Engine.Interop.Tests.dll
+     **\bin\$(BuildConfiguration)\**\**Tests.dll
     codeCoverageEnabled: true
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
@@ -154,4 +143,24 @@ steps:
     PathtoPublish: '$(build.artifactstagingdirectory)'
   condition: succeededOrFailed()
 
-# TODO: Publish
+
+# Publish to master or develop MyGet feed based on the source branch
+- task: NuGetCommand@2
+  name: 'MyGetPublishing_Master'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'MyGetMaster'
+    versioningScheme: byEnvVar
+    versionEnvVar: version
+
+- task: NuGetCommand@2
+  name: 'MyGetPublishing_Develop'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'MyGetDev'
+    versioningScheme: byEnvVar
+    versionEnvVar: version
