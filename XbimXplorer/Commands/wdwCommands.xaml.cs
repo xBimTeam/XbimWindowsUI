@@ -52,10 +52,10 @@ namespace XbimXplorer.Commands
         /// <summary>
         /// WindowsUI
         /// </summary>
-        public wdwCommands(ILogger logger = null)
+        public wdwCommands()
         {
             InitializeComponent();
-            Logger = logger ?? XplorerMainWindow.LoggerFactory.CreateLogger<wdwCommands>();
+            Logger = XplorerMainWindow.LoggerFactory.CreateLogger<wdwCommands>();
             DisplayHelp();
 #if DEBUG
             // loads the last commands stored

@@ -14,14 +14,14 @@
       xBIM is an Open Source Toolkit for developing IFC based applications (BuildingSmart Data model).
       It provides full support for reading and writing geometry, topology and data in accordance with the Ifc2x3, Ifc4 schema.
       xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
-      The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
-      IOS and Android versions are under development.
+      The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 
+      3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
     </description>
-    <summary>Xbim.WindowsUI contains a set of Windows controls that can be used to build Windows Xaml or forms-based applications that can display the geometry and semantic data in IFC models.</summary>
+    <summary>Xbim.WindowsUI contains a set of Windows Presentation controls that can be used to build Windows Xaml or forms-based applications that can display the geometry and semantic data in IFC models.</summary>
     <releaseNotes>
-      Minor change to xPlorer project to resolve problems with including geometry build targets
-      Support for Ifc4 and Ifc4Xml added. All Ifc geometries supported.
-      Export to Cobie and WexBim included
+      Migrated to v5 of XBIM toolkit. Many improvements to IFC loading and visualisation
+      StrongNaming disabled.
+      Migrated from log4net to Microsoft.Extensions.Logging
     </releaseNotes>
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
