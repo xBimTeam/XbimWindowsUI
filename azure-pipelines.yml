@@ -89,9 +89,9 @@ steps:
   inputs:
     solution: Xbim.Presentation/Xbim.Presentation.csproj
     msbuildVersion: 'latest'
-    platform: 'AnyCPU'
-    configuration: $(BuildConfiguration) /p:PackageVersion=$(version)
-    msbuildArguments: '/t:pack'
+    platform: AnyCPU
+    configuration: $(BuildConfiguration)
+    msbuildArguments: '/t:pack /p:PackageVersion=$(version)' 
     clean: false
 
 
