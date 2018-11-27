@@ -7,7 +7,7 @@ variables:
   minor: 0
   # creates a counter called versioncounter and seeds it at 100 and then assigns the value to a variable named patch.
   patch: $[counter('geomversioncounter', 100)]
-  
+
 steps:
 # Windows script setting up  $(version) of the nuget package based on branch
 - script: |
