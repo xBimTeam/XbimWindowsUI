@@ -48,7 +48,7 @@
     <Compile Update="**\*.xaml.cs" SubType="Designer" DependentUpon="%(Filename)" />
     <Resource Include="assets\*.*" />
     <Resource Include="xBIM.ico" />
-    <Resource Include="Commands\console.bmp"/>
+    <Resource Include="Commands\console.bmp" />
     <Resource Include="**\*.png" />
   </ItemGroup>
   <ItemGroup>
@@ -59,8 +59,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SharpZipLib" Version="0.86.0" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.177" />
-    <PackageReference Include="Xbim.Geometry" Version="5.0.134-prerelease" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.191" />
+    <PackageReference Include="Xbim.Geometry" Version="5.0.137-prerelease" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

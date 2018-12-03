@@ -43,8 +43,8 @@
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Wpf" Version="2015.1.715" />
     <PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.177" />
-	<PackageReference Include="Xbim.Geometry" Version="5.0.134-prerelease" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.191" />
+	<PackageReference Include="Xbim.Geometry" Version="5.0.137-prerelease" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
