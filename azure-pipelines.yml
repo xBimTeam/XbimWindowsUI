@@ -1,4 +1,10 @@
 # Yaml Pipeline Tasks for reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/index?view=vsts
+trigger:
+- master
+- develop
+
+pool:
+  vmImage: 'VS2017-Win2016'
 
 variables:
   BuildConfiguration: 'Release'

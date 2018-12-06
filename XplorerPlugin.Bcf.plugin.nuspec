@@ -11,13 +11,13 @@
     <iconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;s=240</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>Integration with Xplorer UI for BuildingSmart's BCF (Building Collaboration Format) files.</description>
-    <summary>.</summary>
+    <summary>Xbim Xplorer Plugin to work with BCF (BIM Collaboration Format) files</summary>
     <language>en-GB</language>
     <!-- the XplorerPlugin tag is used to identify plugins available for donwload from XbimXplorer-->
     <tags>BCF, Building Collaboration Format, BuildingSmart, XplorerPlugin</tags>
     <!-- dependencies need to be worked out, at this stage they will be ignored during install -->
     <dependencies>
-      <dependency id="Xbim.WindowsUI" version="5.0.0-V0001" />
+      <dependency id="Xbim.WindowsUI" version="5.0.101-prerelease" />
     </dependencies>
   </metadata>
   <files>
