@@ -80,6 +80,10 @@ namespace XbimXplorer.Commands
 
         private static void WritePointCoord(TextHighliter sb, double x, double y, double z, bool relative = false)
         {
+            //x = Convert.ToSingle(x);
+            //y = Convert.ToSingle(y);
+            //z = Convert.ToSingle(z);
+
             var rel = relative ? "@" : "";
             if (!double.IsNaN(z))
                 sb.Append($"{rel}{x},{y},{z}", Brushes.Black);
@@ -120,6 +124,53 @@ namespace XbimXplorer.Commands
         private static void Report(IIfcFaceBound ifcFaceBound, TextHighliter sb)
         {
             Report(ifcFaceBound.Bound, sb);
+        }
+
+        private static void Report(IIfcProductDefinitionShape ifcProductDefinitionShape, TextHighliter sb)
+        {
+            foreach (var item in ifcProductDefinitionShape.Representations)
+            {
+                Report(item, sb);
+            }
+        }
+
+        private static void Report(IIfcRepresentation ifcRepresentation, TextHighliter sb)
+        {
+            foreach (var item in ifcRepresentation.Items)
+            {
+                Report(item, sb);
+            }
+        }
+
+
+        private static void Report(IIfcConnectedFaceSet item, TextHighliter sb)
+        {
+            foreach (var face in item.CfsFaces)
+            {
+                Report(face, sb);
+            }
+        }
+
+        private static void Report(IIfcFaceBasedSurfaceModel item, TextHighliter sb)
+        {
+            foreach (var face in item.FbsmFaces)
+            {
+                Report(face, sb);
+            }
+        }
+
+       
+
+        private static void Report(IIfcRepresentationItem item, TextHighliter sb)
+        {
+            if (item is IIfcFaceBasedSurfaceModel)
+            {
+                Report((IIfcFaceBasedSurfaceModel)item, sb);
+            }
+            else
+            {
+
+            }
         }
 
         private static void Report(IIfcCompositeCurve curve, TextHighliter sb)
@@ -226,9 +277,11 @@ namespace XbimXplorer.Commands
                 Report((IIfcCurve)obj, sb);
             if (obj is IIfcSweptDiskSolid)
                 Report((IIfcSweptDiskSolid)obj, sb);
+            if (obj is IIfcProductDefinitionShape)
+                Report((IIfcProductDefinitionShape)obj, sb);
             else
             {
-                sb.Append("No information", Brushes.Black);
+                sb.Append($"No information for {obj.GetType()}", Brushes.Black);
                 return sb;
             }
             sb.Append("3DORBIT", Brushes.Black);
@@ -236,5 +289,7 @@ namespace XbimXplorer.Commands
             sb.Append("===", Brushes.Black);
             return  sb;
         }
+
+        
     }
 }
