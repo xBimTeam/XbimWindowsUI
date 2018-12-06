@@ -74,13 +74,14 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto"/>
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                
+
 
                                 <TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" >
                                     On file load
@@ -90,39 +91,47 @@
                                 </CheckBox>
 
                                 <TextBlock Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" >
-                                    Threading configuration 
+                                    Threading configuration
                                 </TextBlock>
                                 <CheckBox Name="MultiThreading" IsChecked="True" Grid.Column="1" Grid.Row="1" Margin="3" >
                                     Use multiple threads
                                 </CheckBox>
-                                
+
                                 <TextBlock Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" >
-                                    Linear deflection 
+                                    Meshing of IIfcSweptDiskSolid 
                                 </TextBlock>
-                                <TextBox Name="Deflection" Grid.Column="1" Grid.Row="2" Margin="3" Width="200" 
+                                <CheckBox Name="SimpleFastExtrusion" IsChecked="False" Grid.Column="1" Grid.Row="2" Margin="3" >
+                                    Use simplified but faster algorithm
+                                </CheckBox>
+
+
+                                <TextBlock Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" >
+                                    Linear deflection
+                                </TextBlock>
+                                <TextBox Name="Deflection" Grid.Column="1" Grid.Row="3" Margin="3" Width="200" 
                                          HorizontalAlignment="Left" VerticalAlignment="Center"
                                          />
-                                <TextBlock Grid.Column="1" Grid.Row="2" Margin="210,3,10,3" >
+                                <TextBlock Grid.Column="1" Grid.Row="3" Margin="210,3,10,3" >
                                     (empty for default = 5, measure in mm)
                                 </TextBlock>
 
-                                <TextBlock Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" >
-                                    Angular deflection 
-                                </TextBlock>
-                                <TextBox Name="AngularDeflection" Grid.Column="1" Grid.Row="3" Margin="3" 
-                                         HorizontalAlignment="Left"
-                                         Width="200"  />
-                                <TextBlock Grid.Column="1" Grid.Row="3" Margin="210,3,10,3" >
-                                    (empty for default = 0.5)
-                                </TextBlock>
-
                                 <TextBlock Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" >
-                                    Boolean operations timeout
+                                    Angular deflection
                                 </TextBlock>
-                                <TextBox Name="BooleanTimeout" Grid.Column="1" Grid.Row="4" Margin="3" 
+                                <TextBox Name="AngularDeflection" Grid.Column="1" Grid.Row="4" Margin="3" 
                                          HorizontalAlignment="Left"
                                          Width="200"  />
                                 <TextBlock Grid.Column="1" Grid.Row="4" Margin="210,3,10,3" >
+                                    (empty for default = 0.5)
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="5" VerticalAlignment="Center" >
+                                    Boolean operations timeout
+                                </TextBlock>
+                                <TextBox Name="BooleanTimeout" Grid.Column="1" Grid.Row="5" Margin="3" 
+                                         HorizontalAlignment="Left"
+                                         Width="200"  />
+                                <TextBlock Grid.Column="1" Grid.Row="5" Margin="210,3,10,3" >
                                     in sec (empty for default = 60 sec)
                                 </TextBlock>
 
