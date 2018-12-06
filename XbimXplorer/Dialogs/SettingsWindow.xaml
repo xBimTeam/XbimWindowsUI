@@ -27,7 +27,7 @@
 
                             </Grid>
                         </GroupBox>
-                        <GroupBox Header="UI Configuration" Margin="10,5"  DockPanel.Dock="Top">
+                        <GroupBox Header="Advanced Configuration" Margin="10,5"  DockPanel.Dock="Top">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*" />
@@ -39,6 +39,9 @@
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Column="0" Margin="5" Grid.Row="0" Text="Developer mode" VerticalAlignment="Center" />
                                 <CheckBox Grid.Column="1" Margin="5" Grid.Row="0" Content="Enabled" IsChecked="{Binding DeveloperMode}"  />
+                                
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="1" Text="Logging Level" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1" Grid.Row="1" Margin="3" SelectedItem="{Binding LoggingLevel}" ItemsSource="{Binding Path=LoggingLevels}"/>
                             </Grid>
                         </GroupBox>
                         <GroupBox Header="Plugin Management" Margin="10,5"  DockPanel.Dock="Top">

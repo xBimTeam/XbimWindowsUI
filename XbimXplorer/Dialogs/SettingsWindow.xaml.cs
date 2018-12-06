@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Serilog.Events;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Xbim.IO.Esent;
@@ -22,6 +24,7 @@ namespace XbimXplorer.Dialogs
                 NumberRecentFiles = Settings.Default.MRUFilesCount.ToString();
                 PluginStartupLoad = Settings.Default.PluginStartupLoad;
                 DeveloperMode = Settings.Default.DeveloperMode;
+                LoggingLevel = Settings.Default.LoggingLevel;
                 PluginMessage = "Enabled";
 
                 var mainApp = Application.Current.MainWindow as XplorerMainWindow;
@@ -65,7 +68,7 @@ namespace XbimXplorer.Dialogs
                 Settings.Default.MRUFilesCount = iNumber;
                 Settings.Default.PluginStartupLoad = PluginStartupLoad;
                 Settings.Default.DeveloperMode = DeveloperMode;
-
+                Settings.Default.LoggingLevel = LoggingLevel;
                 Settings.Default.Save();
             }
 
@@ -80,6 +83,17 @@ namespace XbimXplorer.Dialogs
             /// Defines whether to enable extra UI elements aimed at developers.
             /// </summary>
             public bool DeveloperMode { get; set; }
+
+            public LogEventLevel LoggingLevel { get; set; }
+
+            private Lazy<IEnumerable<LogEventLevel>> loggingLevels = new Lazy<IEnumerable<LogEventLevel>>(
+                () => Enum.GetValues(typeof(LogEventLevel)).Cast<LogEventLevel>().OrderBy(e => (int)e) );
+
+            public IEnumerable<LogEventLevel> LoggingLevels
+            {
+                get => loggingLevels.Value;
+                
+            }
 
             public event PropertyChangedEventHandler PropertyChanged // Not currently used
             {

@@ -35,6 +35,7 @@
             <ListBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy" Click="DoCopy"/>
+                    <MenuItem Header="Clear 'Verbose' entries" Click="ClearVerbose"/>
                     <MenuItem Header="Clear 'Debug' entries" Click="ClearDebug"/>
                     <MenuItem Header="Clear 'Information' entries" Click="ClearInformation"/>
                     <MenuItem Header="Clear 'Warning' entries" Click="ClearWarning"/>
@@ -46,6 +47,7 @@
                     <GridViewColumn Header="Message" Width="200" DisplayMemberBinding="{Binding Message}" />
                     <GridViewColumn Header="Level" Width="75" DisplayMemberBinding="{Binding Level}" />
                     <GridViewColumn Header="Logger" Width="200" DisplayMemberBinding="{Binding Logger}" />
+                    <GridViewColumn Header="Thread" Width="60" DisplayMemberBinding="{Binding ThreadId}" />
                     <GridViewColumn Header="Error" Width="200" DisplayMemberBinding="{Binding ErrorMessage}" />
                 </GridView>
             </ListView.View>

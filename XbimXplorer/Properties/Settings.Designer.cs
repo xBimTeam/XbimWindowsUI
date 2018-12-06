@@ -104,5 +104,17 @@ namespace XbimXplorer.Properties {
                 this["SettingsUpdateRequired"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
+        public global::Serilog.Events.LogEventLevel LoggingLevel {
+            get {
+                return ((global::Serilog.Events.LogEventLevel)(this["LoggingLevel"]));
+            }
+            set {
+                this["LoggingLevel"] = value;
+            }
+        }
     }
 }

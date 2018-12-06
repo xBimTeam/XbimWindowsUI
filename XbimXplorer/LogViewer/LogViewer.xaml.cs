@@ -17,6 +17,7 @@ namespace XbimXplorer.LogViewer
         "View/Developer/Information Log", "LogViewer/LogViewer.png")]
     public partial class LogViewer : IXbimXplorerPluginWindow
     {
+        private const string VerboseString = "Verbose";
         private const string DebugString = "Debug";
         private const string InfoString = "Information";
         private const string WarningString = "Warning";
@@ -83,8 +84,9 @@ namespace XbimXplorer.LogViewer
         {
             if (Verbose.IsChecked != null && Verbose.IsChecked.Value)
             {
-                sb.AppendFormat("==== {0}\t{1}\t{2}\r\n{3}\r\n{4}\r\n\r\n",
+                sb.AppendFormat("==== {0}\t{1}\t{2}\r\n{3}\r\n{4}\r\n{5}\r\n\r\n",
                     eventViewModel.TimeStamp,
+                    eventViewModel.ThreadId,
                     eventViewModel.Level,
                     eventViewModel.Logger,
                     eventViewModel.Message,
@@ -101,9 +103,17 @@ namespace XbimXplorer.LogViewer
             }
         }
 
+        private void ClearVerbose(object sender, RoutedEventArgs e)
+        {
+            LoggedEvents.RemoveAll(x => x.Level == VerboseString);
+            if (_mw == null)
+                return;
+            _mw.UpdateLoggerCounts();
+        }
+
         private void ClearDebug(object sender, RoutedEventArgs e)
         {
-            LoggedEvents.RemoveAll(x => x.Level == DebugString);
+            LoggedEvents.RemoveAll(x => x.Level == DebugString || x.Level == VerboseString);
             if (_mw == null)
                 return;
             _mw.UpdateLoggerCounts();
@@ -112,7 +122,8 @@ namespace XbimXplorer.LogViewer
         private void ClearWarning(object sender, RoutedEventArgs e)
         {
             LoggedEvents.RemoveAll(x =>
-                x.Level == DebugString
+                x.Level == VerboseString
+                || x.Level == DebugString
                 || x.Level == InfoString
                 || x.Level == WarningString
                 );
@@ -128,8 +139,9 @@ namespace XbimXplorer.LogViewer
 
         private void ClearInformation(object sender, RoutedEventArgs e)
         {
-            LoggedEvents.RemoveAll(x => 
-                x.Level == DebugString
+            LoggedEvents.RemoveAll(x =>
+                x.Level == VerboseString
+                || x.Level == DebugString
                 || x.Level == InfoString
                 );
             if (_mw == null)

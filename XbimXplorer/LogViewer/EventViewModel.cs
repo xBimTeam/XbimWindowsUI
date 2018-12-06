@@ -20,6 +20,16 @@ namespace XbimXplorer.LogViewer
                     : "<Global>"; }
         }
 
+        public int ThreadId
+        {
+            get
+            {
+                return loggingEvent.Properties.TryGetValue("ThreadId", out LogEventPropertyValue value)
+                  ? GetIntValue(value)
+                  : 0;
+            }
+        }
+
         private string GetTextValue(LogEventPropertyValue value)
         {
             if (value is ScalarValue scalar)
@@ -27,6 +37,15 @@ namespace XbimXplorer.LogViewer
                 return scalar.Value.ToString();
             }
             return "";
+        }
+
+        private int GetIntValue(LogEventPropertyValue value)
+        {
+            if (value is ScalarValue scalar)
+            {
+                return (int)scalar.Value;
+            }
+            return 0;
         }
 
         public string Message

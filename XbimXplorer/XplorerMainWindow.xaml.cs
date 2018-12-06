@@ -43,6 +43,8 @@ using XbimXplorer.Dialogs.ExcludedTypes;
 using XbimXplorer.LogViewer;
 using XbimXplorer.Properties;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 
 #endregion
 
@@ -98,6 +100,12 @@ namespace XbimXplorer
             }));
         }
 
+        public const string LogOutputTemplate =
+            "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} ({ThreadId}){NewLine}{Exception}";
+
+        private LogEventLevel LoggingLevel { get => Settings.Default.LoggingLevel; }
+        private LoggingLevelSwitch loggingLevelSwitch = new LoggingLevelSwitch(LogEventLevel.Debug);
+
 
         public XplorerMainWindow(bool preventPluginLoad = false)
         {
@@ -108,11 +116,15 @@ namespace XbimXplorer
             // Use the standard ME.LoggerFactory, but add Serilog as a provider. 
             // This provides a richer configuration and allows us to create a custom Sink for the disply of 'in app' logs
             LoggerFactory = new LoggerFactory();
+            
+            //loggingLevelSwitch.
             LoggerFactory.AddSerilog();
             Serilog.Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.File("XbimXplorer.txt", rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true)
+                .MinimumLevel.ControlledBy(loggingLevelSwitch)
+                .WriteTo.File("XbimXplorer.txt", rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true, 
+                    outputTemplate: LogOutputTemplate)
                 .WriteTo.Sink(LogSink)
+                .Enrich.WithThreadId()
                 .Enrich.FromLogContext()
                 .CreateLogger();
             // Set XBIM Essentials/Geometries's LoggerFactory - so Serilog drives everything.
@@ -157,7 +169,9 @@ namespace XbimXplorer
         private void InitFromSettings()
         {
             FileAccessMode = Settings.Default.FileAccessMode;
-            OnPropertyChanged("DeveloperVisible");           
+            OnPropertyChanged("DeveloperVisible");
+            OnPropertyChanged(nameof(LoggingLevel));
+            loggingLevelSwitch.MinimumLevel = Settings.Default.LoggingLevel;
         }
 
         private ObservableMruList<string> _mruFiles = new ObservableMruList<string>();

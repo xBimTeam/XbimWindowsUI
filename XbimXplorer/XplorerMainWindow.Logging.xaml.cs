@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using XbimXplorer.LogViewer;
