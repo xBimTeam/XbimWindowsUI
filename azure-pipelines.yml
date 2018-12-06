@@ -13,32 +13,34 @@ variables:
   minor: 0
   # creates a named counter and seeds it at 100 and then assigns the value to a variable named buildNo.
   buildNo: $[counter('winversioncounter', 100)]
+  
+name: $(BuildDefinitionName)_$(SourceBranchName)_$(major).$(minor).$(buildNo)
 
 steps:
-# Windows script setting up $(packageversion) of the nuget package based on branch
+# Windows script setting up  $(packageversion) of the nuget package based on branch
+# Master branch
 - script: |
-    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)-prerelease
-  name: 'SettingPrereleaseNugetPackageVersion'
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-- script: | 
     echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)
-  name: 'SettingNugetPackageVersion'
+  displayName: 'Setting Nuget PackageVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-- script: | 
-    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)-ignore
-  name: 'SettingOtherBranchNugetPackageVersion'
-  condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/master'),ne(variables['Build.SourceBranch'], 'refs/heads/develop'))
+# Any other branch
+- script: |
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)-$(Build.SourceBranchName)
+  displayName: 'Setting Prerelease Nuget PackageVersion'
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
 
 
 # Windows script setting up $(fileversion) used to stamp AssemblyFileVersions. 
 # By convention we use 'Major.Minor.BuildNo.0' on Master and 'Major.Minor.0.BuildNo' on other branches
+# Master branch
 - script: | 
     echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).$(buildNo).0
-  name: 'SettingFileVersionMaster'
+  displayName: 'Setting FileVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+# Any other branch
 - script: | 
     echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).0.$(buildNo)
-  name: 'SettingFileVersionNonMaster'
+  displayName: 'Setting Prerelease FileVersion'
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
 
 #Task group has not been exported, task groups are not supported yet
@@ -65,12 +67,13 @@ steps:
 # Description - Applies a version to a .NET assembly via the assemblyinfo.cs or .vb files based on the build number.
 # For the Plugin project(s) which are ClickOnce
 - task: VersionAssemblies@2
-  displayName: 'Version AssemblyInfo.cs'
+  displayName: 'Set AssemblyFileVersion in AssemblyInfo.cs - $(fileversion)'
   inputs: 
      Path: $(Build.SourcesDirectory)
      VersionNumber: $(fileversion)
      VersionRegex: \d+\.\d+\.\d+\.\d+
      FilenamePattern: AssemblyInfo.cs
+     Field: AssemblyFileVersion
      OutputVersion: OutputedVersion
 
 # nuget restore sln
