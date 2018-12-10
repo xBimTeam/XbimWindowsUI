@@ -45,6 +45,7 @@ using XbimXplorer.Properties;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Xbim.IO;
 
 #endregion
 

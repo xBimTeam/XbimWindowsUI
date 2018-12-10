@@ -15,7 +15,6 @@
     <RepositoryUrl>https://github.com/xBimTeam/XbimGeometry</RepositoryUrl>
     <PackageTags>BIM IFC IfcXml IfcZip Ifc4 COBie BuildingSmart</PackageTags>
     <PackageReleaseNotes>Migrated to v5 of XBIM toolkit.
-    StrongNaming disabled.
     Migrated from log4net to Microsoft.Extensions.Logging
     </PackageReleaseNotes>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
@@ -24,6 +23,8 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Xbim.WindowsUI</PackageId>
     <Product>Xbim.WindowsUI</Product>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -43,8 +44,8 @@
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Wpf" Version="2015.1.715" />
     <PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.191" />
-	<PackageReference Include="Xbim.Geometry" Version="5.0.144-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.200" />
+	<PackageReference Include="Xbim.Geometry" Version="5.0.146-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

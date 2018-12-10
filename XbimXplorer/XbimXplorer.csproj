@@ -27,6 +27,8 @@
     <FileVersion>5.0.0.0</FileVersion>
     <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -69,8 +71,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SharpZipLib" Version="0.86.0" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.191" />
-    <PackageReference Include="Xbim.Geometry" Version="5.0.144-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.200" />
+    <PackageReference Include="Xbim.Geometry" Version="5.0.146-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

@@ -26,9 +26,9 @@ namespace XbimXplorer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Read")]
-        public global::Xbim.IO.Esent.XbimDBAccess FileAccessMode {
+        public global::Xbim.IO.XbimDBAccess FileAccessMode {
             get {
-                return ((global::Xbim.IO.Esent.XbimDBAccess)(this["FileAccessMode"]));
+                return ((global::Xbim.IO.XbimDBAccess)(this["FileAccessMode"]));
             }
             set {
                 this["FileAccessMode"] = value;

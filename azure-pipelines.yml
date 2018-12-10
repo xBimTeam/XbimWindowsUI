@@ -46,7 +46,7 @@ steps:
 #Task group has not been exported, task groups are not supported yet
 
 - task: NuGetToolInstaller@0
-  displayName: 'Use NuGet 4.3.0'
+  displayName: 'Use NuGet 4.6.2'
   inputs:
     versionSpec: '4.6.2'
 
