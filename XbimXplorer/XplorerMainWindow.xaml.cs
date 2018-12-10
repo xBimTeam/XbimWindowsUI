@@ -110,6 +110,9 @@ namespace XbimXplorer
 
         public XplorerMainWindow(bool preventPluginLoad = false)
         {
+            // So we can use *.xbim files.
+            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
+
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
             LogSink.EventsLimit = 1000; // log event's minute
