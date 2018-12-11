@@ -7,7 +7,7 @@ pool:
   vmImage: 'VS2017-Win2016'
 
 variables:
-  solution: '**/.sln'
+  solution: '*.sln'
   BuildConfiguration: 'Release'
   BuildPlatform: 'Any CPU'
   major: 5
