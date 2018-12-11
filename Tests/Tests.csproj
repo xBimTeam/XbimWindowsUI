@@ -2,27 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net47</TargetFrameworks>
-    <Title>Tests</Title>
-    <Version>5.0.0.0</Version>
-    <Copyright>Copyright Xbim Ltd.</Copyright>
-    <Description>
-      Unit Tests for Xbim.Presentation
-    </Description>
-    <Authors>xBIM team</Authors>
-    <Company>Xbim Ltd.</Company>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/xBimTeam/XbimEssentials/master/LICENCE.md</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/xBimTeam/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/xBimTeam/XbimGeometry</RepositoryUrl>
-    <PackageTags>BIM IFC IfcXml IfcZip Ifc4 COBie BuildingSmart</PackageTags>
-    <PackageReleaseNotes>
-      Migrated to v5 of XBIM toolkit.
-    </PackageReleaseNotes>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
-    <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
+    <Title>Xbim Presentation Tests</Title>
+    <Description>Unit Tests for Xbim.Presentation</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />

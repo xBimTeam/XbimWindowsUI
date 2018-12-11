@@ -56,12 +56,13 @@ namespace Xbim.Presentation
         }
 
         private readonly IModel _model;
-        
+
 
         /// <summary>
         /// Sets the region specified by name as selected.
         /// </summary>
         /// <param name="name">the region name to match</param>
+        /// <param name="add"></param>
         /// <returns>true if the region has ben found and set, false otherwise</returns>
         public bool SetSelectedRegionByName(string name, bool add)
         {

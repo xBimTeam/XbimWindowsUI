@@ -4,27 +4,9 @@
     <LanguageTargets>$(MSBuildExtensionsPath)\$(VisualStudioVersion)\Bin\Microsoft.CSharp.targets</LanguageTargets>
     <TargetFrameworks>net47</TargetFrameworks>
     <Title>Xbim.Presentation</Title>
-    <Version>5.0.0.0</Version>
-    <Copyright>Copyright Xbim Ltd.</Copyright>
     <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
     or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
-    <Authors>xBIM team</Authors>
-    <Company>Xbim Ltd.</Company>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/xBimTeam/XbimEssentials/master/LICENCE.md</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/xBimTeam/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/xBimTeam/XbimGeometry</RepositoryUrl>
-    <PackageTags>BIM IFC IfcXml IfcZip Ifc4 COBie BuildingSmart</PackageTags>
-    <PackageReleaseNotes>Migrated to v5 of XBIM toolkit.
-    Migrated from log4net to Microsoft.Extensions.Logging
-    </PackageReleaseNotes>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
-    <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Xbim.WindowsUI</PackageId>
-    <Product>Xbim.WindowsUI</Product>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -44,8 +26,8 @@
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Wpf" Version="2015.1.715" />
     <PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.200" />
-	<PackageReference Include="Xbim.Geometry" Version="5.0.146-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.204" />
+	<PackageReference Include="Xbim.Geometry" Version="5.0.154-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

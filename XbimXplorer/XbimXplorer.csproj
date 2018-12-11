@@ -5,30 +5,11 @@
     <TargetFrameworks>net47</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <StartupObject />
-    <Title>XbimXplorer</Title>
-    <Version>5.0.0.0</Version>
-    <Copyright>Copyright Xbim Ltd.</Copyright>
+    <Title>Xbim Xplorer</Title>
     <Description>
       XbimXplorer is a fully feature demonstration Windows application for the XBIM Toolkit. It allows IFC BIM files to be opened
       visualised both sematically and graphically, and supports a range of plugins to perform actions such as BCF exchange, and COBie export
     </Description>
-    <Authors>xBIM team</Authors>
-    <Company>Xbim Ltd.</Company>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/xBimTeam/XbimEssentials/master/LICENCE.md</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/xBimTeam/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/xBimTeam/XbimGeometry</RepositoryUrl>
-    <PackageTags>BIM IFC IfcXml IfcZip Ifc4 COBie BuildingSmart</PackageTags>
-    <PackageReleaseNotes>
-      Migrated to v5 of XBIM toolkit.
-      StrongNaming disabled.
-      Migrated from log4net to Microsoft.Extensions.Logging, backed by Serilog
-    </PackageReleaseNotes>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
-    <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -71,8 +52,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SharpZipLib" Version="0.86.0" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.200" />
-    <PackageReference Include="Xbim.Geometry" Version="5.0.146-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.204" />
+    <PackageReference Include="Xbim.Geometry" Version="5.0.154-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
