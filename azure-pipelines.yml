@@ -7,6 +7,7 @@ pool:
   vmImage: 'VS2017-Win2016'
 
 variables:
+  solution: '**/.sln'
   BuildConfiguration: 'Release'
   BuildPlatform: 'Any CPU'
   major: 5
@@ -78,17 +79,17 @@ steps:
 
 # nuget restore sln
 - task: NuGetCommand@2
-  displayName: 'NuGet restore Xbim.WindowsUI.Nuget.sln'
+  displayName: 'NuGet restore solution'
   inputs:
-    restoreSolution: 'Xbim.WindowsUI.Nuget.sln'
+    restoreSolution: '$(solution)'
     feedsToUse: config
     nugetConfigPath: 'nuget.config'
 
 # vs2017 build
 - task: VSBuild@1
-  displayName: 'Build solution Xbim.WindowsUI.Nuget.sln'
+  displayName: 'Build solution'
   inputs:
-    solution: 'Xbim.WindowsUI.Nuget.sln'
+    solution: '$(solution)'
     msbuildArgs: '/t:build'
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
