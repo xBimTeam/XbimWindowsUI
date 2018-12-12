@@ -1,8 +1,8 @@
 
 Branch | Status
 ------ | -------
-Master | [ ![Build Status](http://xbimbuilds.cloudapp.net/app/rest/builds/buildType:(id:Xbim_XbimWindowsUi_XbimWindowsUi),branch:(name:master)/statusIcon "Build Status") ](http://xbimbuilds.cloudapp.net/project.html?projectId=Xbim_XbimWindowsUi&tab=projectOverview "Build Status")
-Develop | [ ![Build Status](http://xbimbuilds.cloudapp.net/app/rest/builds/buildType:(id:Xbim_XbimWindowsUi_XbimWindowsUi),branch:(name:develop)/statusIcon "Build Status") ](http://xbimbuilds.cloudapp.net/project.html?projectId=Xbim_XbimWindowsUi&tab=projectOverview "Build Status")
+Master | [![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=master)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=master)
+Develop |[![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=develop)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=develop)
 
 # XbimWindowsUI
 
