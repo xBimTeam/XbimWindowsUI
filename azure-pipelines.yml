@@ -1,4 +1,5 @@
 # Yaml Pipeline Tasks for reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/index?view=vsts
+
 trigger:
 - master
 - develop
@@ -12,6 +13,7 @@ variables:
   BuildPlatform: 'Any CPU'
   major: 5
   minor: 0
+
   # creates a named counter and seeds it at 100 and then assigns the value to a variable named buildNo.
   buildNo: $[counter('winversioncounter', 100)]
   
@@ -31,6 +33,7 @@ steps:
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
 
 
+
 # Windows script setting up $(fileversion) used to stamp AssemblyFileVersions. 
 # By convention we use 'Major.Minor.BuildNo.0' on Master and 'Major.Minor.0.BuildNo' on other branches
 # Master branch
@@ -47,9 +50,11 @@ steps:
 #Task group has not been exported, task groups are not supported yet
 
 - task: NuGetToolInstaller@0
+
   displayName: 'Use NuGet 4.6.2'
   inputs:
     versionSpec: '4.6.2'
+
 
 # Version .NET Core project files
 # Description - Applies a version to a .NET Core assembly via the .csproj files based on the build number. 
@@ -90,6 +95,7 @@ steps:
   displayName: 'Build solution'
   inputs:
     solution: '$(solution)'
+
     msbuildArgs: '/t:build'
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
@@ -122,6 +128,7 @@ steps:
     versionEnvVar: packageversion
 
 # Test, but don't fail
+
 - task: VSTest@2
   displayName: 'VsTest - testAssemblies'
   inputs:
@@ -153,7 +160,6 @@ steps:
     PathtoPublish: '$(build.artifactstagingdirectory)'
   condition: succeededOrFailed()
 
-
 # Publish to master or develop MyGet feed based on the source branch
 - task: NuGetCommand@2
   name: 'MyGetPublishing_Master'
@@ -174,3 +180,4 @@ steps:
     publishFeedCredentials: 'MyGetDev'
     versioningScheme: byEnvVar
     versionEnvVar: version
+

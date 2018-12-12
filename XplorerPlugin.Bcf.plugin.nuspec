@@ -2,7 +2,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>XplorerPlugin.Bcf</id>
-    <version>5.0.0-V0001</version>
+
+    <version>5.0.0</version>
     <title>XplorerPlugin.Bcf</title>
     <authors>xBIM team</authors>
     <owners>xBIM team</owners>
@@ -17,7 +18,7 @@
     <tags>BCF, Building Collaboration Format, BuildingSmart, XplorerPlugin</tags>
     <!-- dependencies need to be worked out, at this stage they will be ignored during install -->
     <dependencies>
-      <dependency id="Xbim.WindowsUI" version="5.0.101-prerelease" />
+      <dependency id="Xbim.WindowsUI" version="5.0.110" />
     </dependencies>
   </metadata>
   <files>

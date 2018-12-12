@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>Xbim.WindowsUI</id>
-    <version>5.0.0-V0001</version>
+    <version>5.0.0</version>
     <title>xBIM WindowsUI</title>
     <authors>xBIM team</authors>
     <owners>xBIM team</owners>
@@ -26,8 +26,8 @@
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <dependency id="Xbim.Geometry" version="5.0.131-prerelease" />
-      <dependency id="Xbim.Essentials" version="5.0.172" />
+      <dependency id="Xbim.Geometry" version="5.0.156" />
+      <dependency id="Xbim.Essentials" version="5.0.204" />
       <dependency id="HelixToolkit.Wpf" version="2015.1.715" />
       <dependency id="PropertyTools.Wpf" version="2015.1.66" />
     </dependencies>
