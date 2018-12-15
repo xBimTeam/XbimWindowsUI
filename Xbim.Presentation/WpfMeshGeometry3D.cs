@@ -72,28 +72,73 @@ namespace Xbim.Presentation
             }}
         }
 
-        public static WpfMeshGeometry3D GetGeometry(IPersistEntity selection, XbimMatrix3D modelTransform, Material mat)
+        public static WpfMeshGeometry3D GetGeometry(IPersistEntity entity, XbimMatrix3D modelTransform, Material mat)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
-            using (var geomstore = selection.Model.GeometryStore)
+            using (var geomstore = entity.Model.GeometryStore)
+            using (var geomReader = geomstore.BeginRead())
             {
-                using (var geomReader = geomstore.BeginRead())
+                foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(entity).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
                 {
-                    foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(selection).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                    IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                        continue;
+                    var transform = shapeInstance.Transformation * modelTransform;
+                    tgt.Add(
+                        shapegeom.ShapeData,
+                        shapeInstance.IfcTypeId,
+                        shapeInstance.IfcProductLabel,
+                        shapeInstance.InstanceLabel,
+                        transform,
+                        (short)entity.Model.UserDefinedId
+                        );
+                }
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
+        // attempting to load the shapeGeometry from the database; 
+        // 
+        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat, bool wcsAdjust)
+        {
+            var productContexts = rep.OfProductRepresentation?.OfType<IIfcProductDefinitionShape>().SelectMany(x => x.ShapeOfProduct);
+            var representationLabels = rep.Items.Select(x => x.EntityLabel);
+            var selModel = rep.Model;
+            var modelTransform = positions[selModel].Transform;
+
+            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, wcsAdjust);
+        }
+
+        // attempting to load the shapeGeometry from the database; 
+        // 
+        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust)
+        {
+            var placementTree = new XbimPlacementTree(selModel, wcsAdjust);
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            using (var geomstore = selModel.GeometryStore)
+            using (var geomReader = geomstore.BeginRead())
+            {
+                var matchingGeometries = geomReader.ShapeGeometries.Where(x => representationLabels.Contains(x.IfcShapeLabel));
+                foreach (var contextualProduct in productContexts)
+                {
+                    var trsf = placementTree[contextualProduct.ObjectPlacement.EntityLabel];
+                    foreach (IXbimShapeGeometryData shapegeom in matchingGeometries)
                     {
-                        IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
-                        if(shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
-                                    continue;
-                        var transform = shapeInstance.Transformation * modelTransform;
+                        if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                            continue;
+                        // Debug.WriteLine($"adding {shapegeom.ShapeLabel} at {DateTime.Now.ToLongTimeString()}");
+                        var transform = trsf * modelTransform;
                         tgt.Add(
                             shapegeom.ShapeData,
-                            shapeInstance.IfcTypeId,
-                            shapeInstance.IfcProductLabel,
-                            shapeInstance.InstanceLabel,
+                            453, // shapeInstance.IfcTypeId,
+                            contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
+                            -1, // shapeInstance.InstanceLabel,
                             transform,
-                            (short)selection.Model.UserDefinedId
-                            );
+                            (short)contextualProduct.Model.UserDefinedId
+                        );
                     }
                 }
             }
@@ -108,14 +153,15 @@ namespace Xbim.Presentation
             foreach (var modelgroup in selection.GroupBy(i => i.Model))
             {
                 var model = modelgroup.Key;
-                var modelTransform = positions[model].Transform;
-                using (var geomstore = model.GeometryStore)
+                var modelTransform = positions[model]?.Transform;
+                if (modelTransform != null)
                 {
+                    using (var geomstore = model.GeometryStore)
                     using (var geomReader = geomstore.BeginRead())
                     {
                         foreach (var item in modelgroup)
                         {
-                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x=>x.RepresentationType==XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded))
+                            foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded))
                             {
                                 IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
                                 if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
@@ -130,7 +176,7 @@ namespace Xbim.Presentation
                                     (short)model.UserDefinedId
                                     );
                             }
-                        }                        
+                        }
                     }
                 }
             }
@@ -259,8 +305,7 @@ namespace Xbim.Presentation
                 toMesh.Meshes = new XbimMeshFragmentCollection(Meshes); 
                 
                 _meshes.Clear();
-                WpfModel.Geometry = new MeshGeometry3D();
-               
+                WpfModel.Geometry = new MeshGeometry3D();  
             }
         }
 
@@ -333,7 +378,6 @@ namespace Xbim.Presentation
                 }
                 else
                     boundingBox.Union(pos);
-
             }
             return boundingBox;
         }
@@ -491,8 +535,8 @@ namespace Xbim.Presentation
             throw new NotImplementedException();
         }
 
-
-
+        // this is legacy code from previous versions.
+        // 
         public bool Read(string data, XbimMatrix3D? tr = null)
         {
             int version = 1;
@@ -523,19 +567,18 @@ namespace Xbim.Presentation
                     {
                         case "P":
                             var pointCount = 512;
-// ReSharper disable once NotAccessedVariable
+
                             var faceCount = 128;
-// ReSharper disable once NotAccessedVariable
+
                             var triangleCount = 256;
                             var normalCount = 512;
                             if (tokens.Length > 0)
                                 version = Int32.Parse(tokens[1]);
                             if (tokens.Length > 1)
                                 pointCount = Int32.Parse(tokens[2]);
-                            // ReSharper disable once RedundantAssignment
                             if (tokens.Length > 2) 
                                 faceCount = Int32.Parse(tokens[3]);
-// ReSharper disable once RedundantAssignment
+
                             if (tokens.Length > 3) 
                                 triangleCount = Int32.Parse(tokens[4]);
                             if (tokens.Length > 4) 
@@ -697,96 +740,37 @@ namespace Xbim.Presentation
             {
                 using (var br = new BinaryReader(ms))
                 {
-                    // ReSharper disable once UnusedVariable
-                    var version = br.ReadByte(); //stream format version
-                    var numVertices = br.ReadInt32();
-                    var numTriangles = br.ReadInt32();
+                    var t = br.ReadShapeTriangulation();
+                    List<float[]> pts;
+                    List<int> idx;
+                    t.ToPointsWithNormalsAndIndices(out pts, out idx);
 
-                    var uniqueVertices = new List<Point3D>(numVertices);
-                    var vertices = new List<Point3D>(numVertices * 4); //approx the size
-                    var triangleIndices = new List<Int32>(numTriangles * 3);
-                    var normals = new List<Vector3D>(numVertices * 4);
-                    for (var i = 0; i < numVertices; i++)
+
+                    // add to unfrozen list
+                    //
+                    _unfrozenPositions.Capacity += pts.Count;
+                    _unfrozenNormals.Capacity += pts.Count;
+                    _unfrozenIndices.Capacity += idx.Count;
+                    foreach (var floatsArray in pts)
                     {
-                        double x = br.ReadSingle();
-                        double y = br.ReadSingle();
-                        double z = br.ReadSingle();
-                        var p = new Point3D(x, y, z);
+                        var wpfPosition = new Point3D(floatsArray[0], floatsArray[1], floatsArray[2]);
                         if (matrix3D.HasValue)
-                            p = matrix3D.Value.Transform(p);
-                        uniqueVertices.Add(p);
-                    }
-                    var numFaces = br.ReadInt32();
+                            wpfPosition = matrix3D.Value.Transform(wpfPosition);
+                        _unfrozenPositions.Add(wpfPosition);
 
-                    for (var i = 0; i < numFaces; i++)
+                        var wpfNormal = new Vector3D(floatsArray[3], floatsArray[4], floatsArray[5]);
+                        if (qrd != null) //transform the normal if we have to
+                            wpfNormal = qrd.Transform(wpfNormal);
+                        _unfrozenNormals.Add(wpfNormal);
+                    }
+                    foreach (var index in idx)
                     {
-                        var numTrianglesInFace = br.ReadInt32();
-                        if (numTrianglesInFace == 0) continue;
-                        var isPlanar = numTrianglesInFace > 0;
-                        numTrianglesInFace = Math.Abs(numTrianglesInFace);
-                        if (isPlanar)
-                        {
-                            var normal = br.ReadPackedNormal().Normal;
-                            var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                            if (qrd != null) //transform the normal if we have to
-                                wpfNormal = qrd.Transform(wpfNormal);
-                            var uniqueIndices = new Dictionary<int, int>();
-                            for (var j = 0; j < numTrianglesInFace; j++)
-                            {
-                                for (int k = 0; k < 3; k++)
-                                {
-                                    int idx = ReadIndex(br, numVertices);
-                                    int writtenIdx;
-                                    if (!uniqueIndices.TryGetValue(idx, out writtenIdx)) //we haven't got it, so add it
-                                    {
-                                        writtenIdx = vertices.Count;
-                                        vertices.Add(uniqueVertices[idx]);
-                                        uniqueIndices.Add(idx, writtenIdx);
-                                        //add a matching normal
-                                        normals.Add(wpfNormal);
-                                    }
-                                    triangleIndices.Add(indexBase + writtenIdx);
-                                }
-                            }
-                        }
-                        else
-                        {     
-                            for (var j = 0; j < numTrianglesInFace; j++)
-                            {
-                                for (var k = 0; k < 3; k++)
-                                {
-                                    var idx = ReadIndex(br, numVertices);
-                                    var normal = br.ReadPackedNormal().Normal;
-
-                                    triangleIndices.Add(indexBase + vertices.Count);
-                                    vertices.Add(uniqueVertices[idx]);
-
-                                    var wpfNormal = new Vector3D(normal.X, normal.Y, normal.Z);
-                                    if (qrd != null) //transform the normal if we have to
-                                        wpfNormal = qrd.Transform(wpfNormal);
-                                    normals.Add(wpfNormal);
-
-                                }
-                            }
-                        }
-                       
+                        _unfrozenIndices.Add(index + indexBase);
                     }
-
-                    _unfrozenPositions.AddRange(vertices);
-                    _unfrozenIndices.AddRange(triangleIndices);
-                    _unfrozenNormals.AddRange(normals);
                 }
-                // if(m3D.CanFreeze) m3D.Freeze(); //freeze the mesh to improve performance
             }
         }
-        private static int ReadIndex(BinaryReader br, int maxVertexCount)
-        {
-            if (maxVertexCount <= 0xFF)
-                return br.ReadByte();
-            if (maxVertexCount <= 0xFFFF)
-                return br.ReadUInt16();
-            return (int)br.ReadUInt32(); //this should never go over int32
-        }
+        
         /// <summary>
         /// Ends an update and freezes the geometry
         /// </summary>
@@ -808,10 +792,6 @@ namespace Xbim.Presentation
             _unfrozenNormals = new List<Vector3D>(Mesh.Normals);
             WpfModel.Geometry = null;
         }
-
-
-
-
 
         public void Add(string mesh, Type productType, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
         {

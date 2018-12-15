@@ -1,51 +1,67 @@
 # Yaml Pipeline Tasks for reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/index?view=vsts
 
+trigger:
+- master
+- develop
+
+pool:
+  vmImage: 'VS2017-Win2016'
+
 variables:
+  solution: '*.sln'
   BuildConfiguration: 'Release'
   BuildPlatform: 'Any CPU'
   major: 5
   minor: 0
-  # creates a counter called versioncounter and seeds it at 100 and then assigns the value to a variable named patch.
-  patch: $[counter('geomversioncounter', 100)]
+
+  # creates a named counter and seeds it at 100 and then assigns the value to a variable named buildNo.
+  buildNo: $[counter('winversioncounter', 100)]
   
+name: $(BuildDefinitionName)_$(SourceBranchName)_$(major).$(minor).$(buildNo)
+
 steps:
-# Windows script setting up  $(version) of the nuget package based on branch
+# Windows script setting up  $(packageversion) of the nuget package based on branch
+# Master branch
 - script: |
-    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)-prerelease
-  name: 'SettingPrereleaseNugetPackageVersion'
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-- script: | 
-    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)
-  name: 'SettingNugetPackageVersion'
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)
+  displayName: 'Setting Nuget PackageVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-- script: | 
-    echo ##vso[task.setvariable variable=version]$(major).$(minor).$(patch)-ignore
-  name: 'SettingOtherBranchNugetPackageVersion'
-  condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/master'),ne(variables['Build.SourceBranch'], 'refs/heads/develop'))
+# Any other branch
+- script: |
+    echo ##vso[task.setvariable variable=packageversion]$(major).$(minor).$(buildNo)-$(Build.SourceBranchName)
+  displayName: 'Setting Prerelease Nuget PackageVersion'
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+
 
 
 # Windows script setting up $(fileversion) used to stamp AssemblyFileVersions. 
 # By convention we use 'Major.Minor.BuildNo.0' on Master and 'Major.Minor.0.BuildNo' on other branches
+# Master branch
 - script: | 
-    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).$(patch).0
-  name: 'SettingFileVersionMaster'
+    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).$(buildNo).0
+  displayName: 'Setting FileVersion'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+# Any other branch
 - script: | 
-    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).0.$(patch)
-  name: 'SettingFileVersionNonMaster'
+    echo ##vso[task.setvariable variable=fileversion]$(major).$(minor).0.$(buildNo)
+  displayName: 'Setting Prerelease FileVersion'
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
 
 #Task group has not been exported, task groups are not supported yet
 
 - task: NuGetToolInstaller@0
-  displayName: 'Use NuGet 4.3.0'
+
+  displayName: 'Use NuGet 4.6.2'
+  inputs:
+    versionSpec: '4.6.2'
+
 
 # Version .NET Core project files
 # Description - Applies a version to a .NET Core assembly via the .csproj files based on the build number. 
 # Based on https://github.com/rfennell/AzurePipelines/wiki/Version-Assemblies-and-Packages-Tasks-YAML#versiondotnetcoreassembliestask
 - task: VersionDotNetCoreAssemblies@2
+  displayName: 'Version *.csproj (netcore)'
   inputs: 
-    # Required arguments
     Path: $(Build.SourcesDirectory)
     VersionNumber: $(fileversion)
     VersionRegex: \d+\.\d+\.\d+\.\d+
@@ -53,34 +69,43 @@ steps:
     Field: FileVersion
     OutputVersion: OutputedVersion
 
+# Version 'classic' .NET Assemblies
+# Description - Applies a version to a .NET assembly via the assemblyinfo.cs or .vb files based on the build number.
+# For the Plugin project(s) which are ClickOnce
+- task: VersionAssemblies@2
+  displayName: 'Set AssemblyFileVersion in AssemblyInfo.cs - $(fileversion)'
+  inputs: 
+     Path: $(Build.SourcesDirectory)
+     VersionNumber: $(fileversion)
+     VersionRegex: \d+\.\d+\.\d+\.\d+
+     FilenamePattern: AssemblyInfo.cs
+     Field: AssemblyFileVersion
+     OutputVersion: OutputedVersion
+
+# nuget restore sln
 - task: NuGetCommand@2
-  displayName: 'NuGet restore Xbim.WindowsUI.Nuget.sln'
+  displayName: 'NuGet restore solution'
   inputs:
-    restoreSolution: 'Xbim.WindowsUI.Nuget.sln'
+    restoreSolution: '$(solution)'
     feedsToUse: config
-    nugetConfigPath: nuget.config
+    nugetConfigPath: 'nuget.config'
 
-
+# vs2017 build
 - task: VSBuild@1
-  displayName: 'Build solution Xbim.WindowsUI.Nuget.sln'
+  displayName: 'Build solution'
   inputs:
-    solution: 'Xbim.WindowsUI.Nuget.sln'
+    solution: '$(solution)'
+
     msbuildArgs: '/t:build'
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
 
 # Delete all Package(s) including newly built - we're going to regenerate with the current build version
-# We need to msbuild pack to complete however before we can run 'dotnet pack' on Geometry Engine
 - task: DeleteFiles@1
   displayName: 'Delete old *.nupkg files from $(build.sourcesdirectory)'
   inputs:
     SourceFolder: '$(build.sourcesdirectory)'
     Contents: '**\bin\$(BuildConfiguration)\**\*.nupkg'
-
-
-# Pack XBIM.Presentation/WindowsUI
-#- script: dotnet pack Xbim.Presentation/Xbim.Presentation.csproj -c $(BuildConfiguration) /p:PackageVersion=$(version)
-#  name: 'Presentation_Pack'
 
 # Pack with MSBuild since dotnet pack can't do WPF
 - task: MSBuild@1
@@ -88,20 +113,27 @@ steps:
     solution: Xbim.Presentation/Xbim.Presentation.csproj
     msbuildVersion: 'latest'
     platform: AnyCPU
-    configuration: $(BuildConfiguration) /p:PackageVersion=$(version)
-    msbuildArguments: /t:pack
+    configuration: $(BuildConfiguration)
+    msbuildArguments: '/t:pack /p:PackageVersion=$(packageversion)' 
     clean: false
 
+# Pack XplorerPlugin.Bcf with nuget and nuspec. Because nothing else works with ClickOnce
+- task: NuGetCommand@2
+  displayName: 'NuGet pack BCF_Plugin'
+  inputs:
+    command: pack
+    packagesToPack: 'XplorerPlugin.Bcf.plugin.nuspec'
+    configuration: $(BuildConfiguration)
+    versioningScheme: byEnvVar
+    versionEnvVar: packageversion
 
-# Pack XplorerPlugin.Bcf
-- script: dotnet pack XplorerPlugin.Bcf/XplorerPlugin.Bcf.csproj -c $(BuildConfiguration) /p:PackageVersion=$(version)
-  name: 'BCF_Plugin_Pack'
+# Test, but don't fail
 
 - task: VSTest@2
   displayName: 'VsTest - testAssemblies'
   inputs:
     testAssemblyVer2: |
-     **\bin\$(BuildConfiguration)\**\Xbim.Geometry.Engine.Interop.Tests.dll
+     **\bin\$(BuildConfiguration)\**\**Tests.dll
     codeCoverageEnabled: true
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
@@ -128,4 +160,24 @@ steps:
     PathtoPublish: '$(build.artifactstagingdirectory)'
   condition: succeededOrFailed()
 
-# TODO: Publish
+# Publish to master or develop MyGet feed based on the source branch
+- task: NuGetCommand@2
+  name: 'MyGetPublishing_Master'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'MyGetMaster'
+    versioningScheme: byEnvVar
+    versionEnvVar: version
+
+- task: NuGetCommand@2
+  name: 'MyGetPublishing_Develop'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'MyGetDev'
+    versioningScheme: byEnvVar
+    versionEnvVar: version
+

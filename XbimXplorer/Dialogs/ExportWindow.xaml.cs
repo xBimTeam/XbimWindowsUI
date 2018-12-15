@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Windows;
-using System.Windows.Input;
+using Xbim.Ifc;
 
 namespace XbimXplorer.Dialogs
 {
@@ -10,18 +10,11 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     public partial class ExportWindow
     {
-        /// <summary>
-        /// 
-        /// </summary>
         public ExportWindow()
         {
             InitializeComponent();
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="callingWindow"></param>
+        
         public ExportWindow(XplorerMainWindow callingWindow) : this()
         {
             _mainWindow = callingWindow;
@@ -29,7 +22,6 @@ namespace XbimXplorer.Dialogs
                 new FileInfo(_mainWindow.GetOpenedModelFileName()).DirectoryName, 
                 "Export" 
                 );
-
         }
 
         private XplorerMainWindow _mainWindow;
@@ -52,8 +44,7 @@ namespace XbimXplorer.Dialogs
                     return;
                 }
             }
-
-            Cursor = Cursors.Wait;
+            
             if (ChkWexbim.IsChecked.HasValue && ChkWexbim.IsChecked.Value)
             {
                 // file preparation
@@ -61,24 +52,19 @@ namespace XbimXplorer.Dialogs
                 var wexbimFileName = GetExportName("wexbim");
                 try
                 {
-                    using (var wexBimFile = new FileStream(wexbimFileName, FileMode.Create))
+                    using (var c = new Xbim.Presentation.WaitCursor())
+                    using (var fs = new FileStream(wexbimFileName, FileMode.Create))
+                    using (var bw = new BinaryWriter(fs))
                     {
-                        using (var binaryWriter = new BinaryWriter(wexBimFile))
+                        try
                         {
-                            try
-                            {
-                                // todo: restore wexbim writer
-
-                                //var geomContext = new Xbim3DModelContext(_mainWindow.Model);
-                                //geomContext. Write(binaryWriter);
-
-                                MessageBox.Show("wexbim writer temporary disabled.");
-                            }
-                            finally
-                            {
-                                binaryWriter.Flush();
-                                wexBimFile.Close();
-                            }
+                            _mainWindow.Model.SaveAsWexBim(bw);
+                        }
+                        finally
+                        {
+                            bw.Flush();
+                            bw.Close();
+                            fs.Close();
                         }
                     }
                 }
@@ -86,13 +72,13 @@ namespace XbimXplorer.Dialogs
                 {
                     if (CancelAfterNotification("Error exporting Wexbim file.", ce, totExports))
                     {
-                        Cursor = Cursors.Arrow;
                         return;
                     }
                 }
+
+                // this makes sense to keep if there will be more export formats again in the future
                 totExports--;
             }
-            Cursor = Cursors.Arrow;
             Close();
         }
                 
@@ -111,13 +97,10 @@ namespace XbimXplorer.Dialogs
         {
             var tasksLeft = totExports - 1;
             var message = errorZoneMessage + "\r\n" + ce.Message + "\r\n";
-
             if (tasksLeft > 0)
             {
                 message += "\r\n" +
-                           string.Format(
-                               "Do you wish to continue exporting other formats?", tasksLeft
-                               );
+                           $"Do you wish to continue exporting other {tasksLeft} formats?";
                 var ret = MessageBox.Show(message, "Error", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
                 return ret != MessageBoxResult.Yes;
             }

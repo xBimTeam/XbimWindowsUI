@@ -12,7 +12,7 @@ namespace XbimXplorer.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -26,9 +26,9 @@ namespace XbimXplorer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Read")]
-        public global::Xbim.IO.Esent.XbimDBAccess FileAccessMode {
+        public global::Xbim.IO.XbimDBAccess FileAccessMode {
             get {
-                return ((global::Xbim.IO.Esent.XbimDBAccess)(this["FileAccessMode"]));
+                return ((global::Xbim.IO.XbimDBAccess)(this["FileAccessMode"]));
             }
             set {
                 this["FileAccessMode"] = value;
@@ -72,7 +72,7 @@ namespace XbimXplorer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool DeveloperMode {
             get {
                 return ((bool)(this["DeveloperMode"]));
@@ -90,6 +90,30 @@ namespace XbimXplorer.Properties {
             }
             set {
                 this["PluginSettings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SettingsUpdateRequired {
+            get {
+                return ((bool)(this["SettingsUpdateRequired"]));
+            }
+            set {
+                this["SettingsUpdateRequired"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
+        public global::Serilog.Events.LogEventLevel LoggingLevel {
+            get {
+                return ((global::Serilog.Events.LogEventLevel)(this["LoggingLevel"]));
+            }
+            set {
+                this["LoggingLevel"] = value;
             }
         }
     }

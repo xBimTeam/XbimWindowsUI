@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows;
-using log4net;
 using XbimXplorer.LogViewer;
 
 namespace XbimXplorer
 {
     public partial class XplorerMainWindow
     {
-        private static readonly ILog Log = LogManager.GetLogger("Xbim.WinUI");
-        
+        public InMemoryLogSink LogSink { get; private set; }
+
         public Visibility AnyErrors
         {
             get
@@ -34,12 +33,9 @@ namespace XbimXplorer
 
         public int NumWarnings { get; private set; }
 
-        private EventAppender _appender;
-
-
         public ObservableCollection<EventViewModel> LoggedEvents { get; private set; }
 
-        internal void appender_Logged(object sender, LogEventArgs e)
+        internal void LogEvent_Added(object sender, LogEventArgs e)
         {
             foreach (var loggingEvent in e.LoggingEvents)
             {

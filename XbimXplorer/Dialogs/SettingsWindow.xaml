@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:PluginSystem="clr-namespace:XbimXplorer.PluginSystem" x:Class="XbimXplorer.Dialogs.SettingsWindow"
-        Title="SettingsWindow" Height="395.033" Width="751.926">
+        Title="SettingsWindow" Height="450" Width="850">
     <Grid>
         <TabControl x:Name="tabControl" Margin="10,5,10,40">
             <TabItem Header="General">
@@ -27,7 +27,7 @@
 
                             </Grid>
                         </GroupBox>
-                        <GroupBox Header="UI Configuration" Margin="10,5"  DockPanel.Dock="Top">
+                        <GroupBox Header="Advanced Configuration" Margin="10,5"  DockPanel.Dock="Top">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*" />
@@ -39,6 +39,9 @@
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Column="0" Margin="5" Grid.Row="0" Text="Developer mode" VerticalAlignment="Center" />
                                 <CheckBox Grid.Column="1" Margin="5" Grid.Row="0" Content="Enabled" IsChecked="{Binding DeveloperMode}"  />
+                                
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="1" Text="Logging Level" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1" Grid.Row="1" Margin="3" SelectedItem="{Binding LoggingLevel}" ItemsSource="{Binding Path=LoggingLevels}"/>
                             </Grid>
                         </GroupBox>
                         <GroupBox Header="Plugin Management" Margin="10,5"  DockPanel.Dock="Top">
@@ -57,6 +60,110 @@
                             </Grid>
                         </GroupBox>
                     </DockPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Geometry">
+                <Grid Background="#FFE5E5E5">
+                    <DockPanel>
+                        <TextBlock Margin="10,5" VerticalAlignment="Bottom" Foreground="OrangeRed" DockPanel.Dock="Top" >
+                            Geometry settings are not saved when XbimXplorer is closed.
+                        </TextBlock>
+                        <GroupBox Header="Geometry engine" Margin="10,5"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+
+
+                                <TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" >
+                                    On file load
+                                </TextBlock>
+                                <CheckBox Name="ComputeGeometry" IsChecked="True" Grid.Column="1" Grid.Row="0" Margin="3" >
+                                    Perform meshing
+                                </CheckBox>
+
+                                <TextBlock Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" >
+                                    Threading configuration
+                                </TextBlock>
+                                <CheckBox Name="MultiThreading" IsChecked="True" Grid.Column="1" Grid.Row="1" Margin="3" >
+                                    Use multiple threads
+                                </CheckBox>
+
+                                <TextBlock Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" >
+                                    Meshing of IIfcSweptDiskSolid 
+                                </TextBlock>
+                                <CheckBox Name="SimpleFastExtrusion" IsChecked="False" Grid.Column="1" Grid.Row="2" Margin="3" >
+                                    Use simplified but faster algorithm
+                                </CheckBox>
+
+
+                                <TextBlock Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" >
+                                    Linear deflection
+                                </TextBlock>
+                                <TextBox Name="Deflection" Grid.Column="1" Grid.Row="3" Margin="3" Width="200" 
+                                         HorizontalAlignment="Left" VerticalAlignment="Center"
+                                         />
+                                <TextBlock Grid.Column="1" Grid.Row="3" Margin="210,3,10,3" >
+                                    (empty for default = 5, measure in mm)
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" >
+                                    Angular deflection
+                                </TextBlock>
+                                <TextBox Name="AngularDeflection" Grid.Column="1" Grid.Row="4" Margin="3" 
+                                         HorizontalAlignment="Left"
+                                         Width="200"  />
+                                <TextBlock Grid.Column="1" Grid.Row="4" Margin="210,3,10,3" >
+                                    (empty for default = 0.5)
+                                </TextBlock>
+
+                                <TextBlock Grid.Column="0" Grid.Row="5" VerticalAlignment="Center" >
+                                    Boolean operations timeout
+                                </TextBlock>
+                                <TextBox Name="BooleanTimeout" Grid.Column="1" Grid.Row="5" Margin="3" 
+                                         HorizontalAlignment="Left"
+                                         Width="200"  />
+                                <TextBlock Grid.Column="1" Grid.Row="5" Margin="210,3,10,3" >
+                                    in sec (empty for default = 60 sec)
+                                </TextBlock>
+
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox Header="3D viewer" Margin="10,5"  DockPanel.Dock="Top">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="0" Text="Simplified rendering" VerticalAlignment="Center" />
+                                <CheckBox x:Name="SimplifiedRendering" Grid.Column="1" Margin="5" Grid.Row="0" Content="Enabled" />
+
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="1" VerticalAlignment="Center">Use maps</TextBlock>
+                                <CheckBox x:Name="UseMaps" Grid.Column="1" Margin="5" Grid.Row="1">Enabled (known issue on cutting planes)</CheckBox>
+
+                                <TextBlock Grid.Column="0" Margin="5" Grid.Row="2" VerticalAlignment="Center">Display FPS</TextBlock>
+                                <CheckBox x:Name="ShowFps" Grid.Column="1" Margin="5" Grid.Row="2">Enabled</CheckBox>
+
+                            </Grid>
+                        </GroupBox>
+                    </DockPanel>
+
                 </Grid>
             </TabItem>
             <TabItem Header="Plugins">

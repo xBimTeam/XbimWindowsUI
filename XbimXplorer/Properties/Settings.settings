@@ -2,7 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="XbimXplorer.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="FileAccessMode" Type="Xbim.IO.Esent.XbimDBAccess" Scope="User">
+    <Setting Name="FileAccessMode" Type="Xbim.IO.XbimDBAccess" Scope="User">
       <Value Profile="(Default)">Read</Value>
     </Setting>
     <Setting Name="MRUFiles" Type="System.Collections.Specialized.StringCollection" Scope="User">
@@ -15,10 +15,16 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="DeveloperMode" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="PluginSettings" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SettingsUpdateRequired" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="LoggingLevel" Type="Serilog.Events.LogEventLevel" Scope="User">
+      <Value Profile="(Default)">Debug</Value>
     </Setting>
   </Settings>
 </SettingsFile>

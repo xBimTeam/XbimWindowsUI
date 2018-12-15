@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
+             PreviewKeyDown="WindowKeyDown"
              >
     <Grid>
         <Grid.RowDefinitions>
@@ -11,29 +12,33 @@
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="Auto" ></RowDefinition>
+            <RowDefinition Height="Auto" ></RowDefinition>
         </Grid.RowDefinitions>
 
-        <ListView Grid.Row="0" x:Name="View" Margin="5" ItemsSource="{Binding LoggedEvents}" >
+        <ListView Grid.Row="0" x:Name="View" Margin="5" ItemsSource="{Binding LoggedEvents}" MouseDoubleClick="AttemptOpenSelection" >
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding Level}" Value="DEBUG">
+                        <DataTrigger Binding="{Binding Level}" Value="Debug">
                             <Setter Property="Foreground" Value="Gray" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Level}" Value="WARN">
+                        <DataTrigger Binding="{Binding Level}" Value="Warning">
                             <Setter Property="Foreground" Value="Orange" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Level}" Value="ERROR">
+                        <DataTrigger Binding="{Binding Level}" Value="Error">
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
                     </Style.Triggers>
+                    <Setter Property="ToolTip" Value="{Binding Path=Summary}" />
                 </Style>
             </ListView.Resources>
             <ListBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy" Click="DoCopy"/>
+                    <MenuItem Header="Clear 'Verbose' entries" Click="ClearVerbose"/>
                     <MenuItem Header="Clear 'Debug' entries" Click="ClearDebug"/>
                     <MenuItem Header="Clear 'Information' entries" Click="ClearInformation"/>
+                    <MenuItem Header="Clear 'Warning' entries" Click="ClearWarning"/>
                 </ContextMenu>
             </ListBox.ContextMenu>
             <ListView.View>
@@ -42,13 +47,14 @@
                     <GridViewColumn Header="Message" Width="200" DisplayMemberBinding="{Binding Message}" />
                     <GridViewColumn Header="Level" Width="75" DisplayMemberBinding="{Binding Level}" />
                     <GridViewColumn Header="Logger" Width="200" DisplayMemberBinding="{Binding Logger}" />
+                    <GridViewColumn Header="Thread" Width="60" DisplayMemberBinding="{Binding ThreadId}" />
                     <GridViewColumn Header="Error" Width="200" DisplayMemberBinding="{Binding ErrorMessage}" />
                 </GridView>
             </ListView.View>
         </ListView>
-
         <TextBox Grid.Row="1" x:Name="Report" TextWrapping="Wrap" Visibility="Collapsed" Text=""/>
-        <Button Grid.Row="2" Click="Test" Visibility="Collapsed" Margin="5" >Test</Button>
-        <Button Grid.Row="3" Click="Clear" Margin="5" >Clear All</Button>
+        <CheckBox HorizontalAlignment="Right" Grid.Row="2" Name="Verbose"  IsChecked="True">Verbose</CheckBox>
+        <Button Grid.Row="3" Click="Test" Visibility="Collapsed" Margin="5" >Test</Button>
+        <Button Grid.Row="4" Click="Clear" Margin="5" >Clear All</Button>
     </Grid>
 </UserControl>

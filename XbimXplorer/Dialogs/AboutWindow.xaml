@@ -1,7 +1,7 @@
 ﻿<Window x:Class="XbimXplorer.Dialogs.AboutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AboutWindow" Height="340" Width="500" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" WindowStyle="None"
+        Title="AboutWindow" Height="340" Width="600" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" WindowStyle="None"
         Deactivated="AboutWindow_OnDeactivated"
         MouseLeftButtonDown="UserControl_MouseLeftButtonDown"
         >
@@ -12,7 +12,7 @@
 
             <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="xBIM Xplorer" VerticalAlignment="Top" FontSize="24" />
             <TextBlock Margin="10,42,0,0" TextWrapping="Wrap">This application is a demonstrator of the xBIM toolkit.</TextBlock>
-            <TabControl Margin="10,65,10,10" >
+            <TabControl Margin="10,65,10,10">
                 <TabItem Header="Application">
                     <StackPanel Margin="10" >
                         <TextBlock Margin="0,3" TextWrapping="Wrap" >
@@ -34,8 +34,8 @@
                         </TextBlock>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="Assemblies">
-                    <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding AssembliesInfo, Mode=OneWay}" />
+                <TabItem Header="Assemblies"  GotFocus="LoadAssemblies" >
+                    <TextBox x:Name="AssembliesText" VerticalScrollBarVisibility="Auto" Margin="10" Text="" />
                 </TabItem>
                 <TabItem Header="Model">
                     <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding ModelInfo, Mode=OneWay}" />

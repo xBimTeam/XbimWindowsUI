@@ -1,14 +1,13 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Reflection;
-using log4net;
 using Xbim.Presentation.XplorerPluginSystem;
 
 namespace XbimXplorer.PluginSystem
 {
     internal static class XbimXplorerPluginWindowExtensions
     {
-        private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.XbimXplorerPluginWindowExtensions");
 
         internal static PluginWindowUiContainerEnum GetUiContainerMode(this Type pluginType)
         {
@@ -56,7 +55,8 @@ namespace XbimXplorer.PluginSystem
             var attribute = info.GetCustomAttributes(true).OfType<XplorerUiElement>().FirstOrDefault();
             if (attribute == null)
             {
-                Log.InfoFormat("XplorerUiElement attribute is null on type: {0}", info.Name);
+                var log = XplorerMainWindow.LoggerFactory.CreateLogger(nameof(XbimXplorerPluginWindowExtensions));
+                log.LogInformation("XplorerUiElement attribute is null on type: {attributeName}", info.Name);
             }
             return attribute;
         }

@@ -1,16 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Windows;
-using log4net;
+﻿using Microsoft.Extensions.Logging;
 using NuGet;
+using System;
+using System.IO;
+using System.Windows;
 
 namespace XbimXplorer.PluginSystem
 {
-    internal class PluginInformation
+    public class PluginInformation
     {
-        private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.PluginConfiguration");
-       
+
+        protected Microsoft.Extensions.Logging.ILogger Logger { get; private set; }
+
         public string PluginId { get; set; }
 
         internal PluginConfiguration Startup { get; set; }
@@ -23,9 +23,9 @@ namespace XbimXplorer.PluginSystem
         private ManifestMetadata _diskManifest;
         private DirectoryInfo _directory;
         
-        public PluginInformation()
+        public PluginInformation(Microsoft.Extensions.Logging.ILogger logger = null)
         {
-            
+            Logger = logger ?? XplorerMainWindow.LoggerFactory.CreateLogger<PluginInformation>();
         }
 
         public PluginInformation(DirectoryInfo directoryInfo)
@@ -72,7 +72,12 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
-        public void ExtractPlugin(DirectoryInfo pluginDirectory)
+        /// <summary>
+        /// Extract files and creates manifest
+        /// </summary>
+        /// <param name="pluginDirectory">Destination folder, a subdir will be created.</param>
+        /// <returns>false on error</returns>
+        public bool ExtractPlugin(DirectoryInfo pluginDirectory)
         {
             // ensure top leved plugin directory exists
             try
@@ -80,10 +85,10 @@ namespace XbimXplorer.PluginSystem
                 if (!pluginDirectory.Exists)
                     pluginDirectory.Create();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Error($"Could not create directory {pluginDirectory.FullName}");
-                return;
+                Logger.LogError(0, ex, "Could not create directory {directory}", pluginDirectory.FullName);
+                return false;
             }
 
             // ensure specific plugin directory exists
@@ -94,10 +99,10 @@ namespace XbimXplorer.PluginSystem
                 if (!subdir.Exists)
                     subdir.Create();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Error($"Could not create directory {subdir.FullName}");
-                return;
+                Logger.LogError(0, ex, "Could not create directory {directory}", subdir.FullName);
+                return false;
             }
 
             // now extract files
@@ -107,14 +112,13 @@ namespace XbimXplorer.PluginSystem
                 var destname = Path.Combine(subdir.FullName, file.EffectivePath);
                 try
                 {
-
                     if (File.Exists(destname))
                         File.Delete(destname);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error trying to delete: {destname}", ex);
-                    return;
+                    Logger.LogError(0, ex, "Error trying to delete: {destname}", destname);
+                    return false;
                 }
 
                 try
@@ -127,8 +131,8 @@ namespace XbimXplorer.PluginSystem
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error trying to extract: {destname}", ex);
-                    return;
+                    Logger.LogError(0, ex, "Error trying to extract: {destname}", destname);
+                    return false;
                 }
             }
 
@@ -137,16 +141,22 @@ namespace XbimXplorer.PluginSystem
             var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Id}.manifest");
             try
             {
-                if (_onlinePackage.ExtractManifestFile(packageName))
-                    return;
-                Log.Error($"Error trying to create manifest file for {packageName}");                
+                if (!_onlinePackage.ExtractManifestFile(packageName))
+                {
+                    Logger.LogError("Error trying to create manifest file for {packageName}", packageName);
+                    return false;
+                }
+                SetDirectoryInfo(subdir);
             }
             catch (Exception ex)
             {
-                Log.Error($"Error trying to create manifest file for: {packageName}", ex);
+                Logger.LogError(0, ex, "Error trying to create manifest file for: {packageName}", packageName);
+                return false;
             }
+            return true;
         }
 
+        /// <returns>True if plugin is completely loaded. False if not, for any reason.</returns>
         public bool Load()
         {
             return _directory != null && MainWindow.LoadPlugin(_directory, true);

@@ -1,0 +1,12 @@
+﻿<UserControl x:Class="XbimXplorer.IfcValidation.ValidationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+        >
+    <Grid Margin="0">
+        <TextBox Name="Results" FontFamily="Lucida Console" AcceptsReturn="True" Margin="0,0,0,26" MouseDoubleClick="Results_MouseDoubleClick" />
+        <Button  Name="Commands" Height="22" VerticalAlignment="Bottom" Click="ValidateModel">Validate model</Button>
+    </Grid>
+</UserControl>

@@ -16,7 +16,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Xbim.IO;
 using Xbim.IO.Esent;
+using XbimXplorer.Properties;
 
 #endregion
 
@@ -27,6 +29,14 @@ namespace XbimXplorer
     /// </summary>
     public partial class App
     {
+        // todo: the whole concept of ContextWcsAdjustment need to be reviewed in the geometry engine.
+
+        /// <summary>
+        /// Todo, this feature has to do with the transformation of the model to 0,0,0 point of coordinate system
+        /// Its use has to be consistent across the call to the XbimPlacementTree class
+        /// </summary>
+        public static bool ContextWcsAdjustment = true;
+
         /// <summary>
         /// Raises the <see cref="E:System.Windows.Application.Startup"/> event.
         /// </summary>
@@ -41,6 +51,16 @@ namespace XbimXplorer
                 {
                     blockPlugin = true;
                 }
+            }
+
+            // see if an update of settings is required from a previous version of the app.
+            // this will allow to retain the configuration across versions, it is useful for the squirrel installer
+            //
+            if (Settings.Default.SettingsUpdateRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.SettingsUpdateRequired = false;
+                Settings.Default.Save();
             }
 
             var mainView = new XplorerMainWindow(blockPlugin);

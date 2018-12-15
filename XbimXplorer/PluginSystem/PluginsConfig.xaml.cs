@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using log4net;
+using System.Windows.Controls;
+using Microsoft.Extensions.Logging;
 using NuGet;
 using Xbim.Presentation;
 
@@ -14,110 +15,83 @@ namespace XbimXplorer.PluginSystem
     /// </summary>
     public partial class PluginsConfig
     {
-        private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.PluginsConfig");
+
+        protected Microsoft.Extensions.Logging.ILogger Logger { get; private set; }
 
         private XplorerMainWindow _mainWindow;
 
         public PluginsConfig()
         {
             InitializeComponent();
+            Logger = XplorerMainWindow.LoggerFactory.CreateLogger<PluginsConfig>();
             RefreshPluginList();
             _mainWindow = Application.Current.MainWindow as XplorerMainWindow;
+            DataContext = this;
+            SelectedPlugin = new PluginInformationVm(null);
         }
-
-        internal string SelectedRepoUrl => RepoSource.Text;
 
         private void ShowRepository()
         {
-            RefreshLocalPlugins();
-
+            
             var plugins = new List<PluginInformationVm>();
-            var repo = PackageRepositoryFactory.Default.CreateRepository(SelectedRepoUrl);
-
             try
             {
-                var fnd = repo.Search("XplorerPlugin", true);
-                foreach (var package in fnd)
+                var option = (PluginChannelOption)Enum.Parse(typeof(PluginChannelOption), DisplayOptionText);
+                foreach (var plugin in _xplorerPlugins.GetPlugins(option))
                 {
-                    if (LatestOnly.IsChecked.HasValue && LatestOnly.IsChecked.Value && !package.IsAbsoluteLatestVersion)
-                        continue;
-                    var pv = new PluginInformation(package);
-                    if (_diskPlugins.ContainsKey(package.Id))
-                    {
-                        pv.SetDirectoryInfo(_diskPlugins[package.Id]);
-                    }
-                    plugins.Add(new PluginInformationVm(pv));
+                    plugins.Add(new PluginInformationVm(plugin));
                 }
             }
             catch (Exception ex)
             {
-                Log.Error("An error occurred getting repository information.", ex);
+                Logger.LogError(0, ex, "An error occurred getting repository information.");
             }
-
             PluginList.ItemsSource = plugins;
         }
 
-        private readonly Dictionary<string, PluginInformation> _diskPlugins =
-            new Dictionary<string, PluginInformation>();
+        private PluginManagement _xplorerPlugins = new PluginManagement();
 
-        private void RefreshLocalPlugins()
+        private PluginInformationVm _selectedPlugin;
+        
+        private string DisplayOptionText
         {
-            _diskPlugins.Clear();
-            var dirs = PluginManagement.GetPluginDirectories();
-            foreach (var directoryInfo in dirs)
+            get
             {
-                var pc = new PluginInformation(directoryInfo);
-                _diskPlugins.Add(pc.PluginId, pc);
+                var ci = DisplayOption.SelectedItem as ComboBoxItem;
+                return ci.Content as string;
             }
         }
-
-        PluginInformationVm SelectedPlugin => PluginList.SelectedItem as PluginInformationVm;
-
-        private void Download(object sender, RoutedEventArgs e)
-        {
-            SelectedPlugin?.ExtractPlugin(PluginManagement.GetPluginsDirectory());
-            RefreshPluginList();
-        }
-
-        private void RefreshPluginList(object sender, RoutedEventArgs e)
-        {
-            RefreshPluginList();
-        }
-
+        
         private void RefreshPluginList()
         {
             using (new WaitCursor())
             {
-                if (SelectedRepoUrl.StartsWith("http://") || SelectedRepoUrl.StartsWith("https://"))
-                    ShowRepository();
+                if (DisplayOptionText == "Installed")
+                    ShowDiskPlugins();
                 else
                 {
-                    ShowDiskPlugins();
+                    ShowRepository();
                 }
             }
         }
 
         private void ShowDiskPlugins()
         {
-            RefreshLocalPlugins();
-            var plugins =
-                _diskPlugins.Values.Where(x => x != null)
+            _xplorerPlugins.RefreshLocalPlugins();
+            var plugins = _xplorerPlugins.DiskPlugins.Where(x => x != null)
                     .Select(pluginConfig => new PluginInformationVm(pluginConfig))
                     .ToList();
             PluginList.ItemsSource = plugins;
         }
 
-        private void Load(object sender, RoutedEventArgs e)
+        public PluginInformationVm SelectedPlugin
         {
-            var v = SelectedPlugin;
-            v?.Load();
-            RefreshPluginList();
-        }
-
-        private void ToggleEnabled(object sender, RoutedEventArgs e)
-        {
-            var v = SelectedPlugin;
-            v?.ToggleEnabled();
+            get { return _selectedPlugin; }
+            set
+            {
+                _selectedPlugin = value;
+                CurrentPlugin.DataContext = _selectedPlugin;
+            }
         }
 
         private void PluginList_OnDrop(object sender, DragEventArgs e)
@@ -143,9 +117,14 @@ namespace XbimXplorer.PluginSystem
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error processing package file [{fname}].", ex);
+                    Logger.LogError(0, ex, "Error processing package file {filename}.", fname);
                 }
             }
+            RefreshPluginList();
+        }
+
+        private void DisplayOption_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
             RefreshPluginList();
         }
     }

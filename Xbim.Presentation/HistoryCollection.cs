@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Xbim.Presentation
 {
+    /// <summary>
+    /// A generic collection that keeps a limited amount of items in the list.
+    /// When the number of elements exceeds Size the oldest items are dropped.
+    /// </summary>
+    /// <typeparam name="T">The type of item to colelct</typeparam>
     public class HistoryCollection<T>
     {
         private readonly List<T> _items = new List<T>();
@@ -42,6 +44,11 @@ namespace Xbim.Presentation
         public void Remove(int itemAtPosition)
         {
             _items.RemoveAt(itemAtPosition);
+        }
+
+        public void Clear()
+        {
+            _items.Clear();
         }
     }
 }
