@@ -33,6 +33,7 @@ using Microsoft.CSharp;
 using System.CodeDom;
 using XbimXplorer.PluginSystem;
 using Microsoft.Extensions.Logging;
+using Xbim.Common.ExpressValidation;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -727,7 +728,7 @@ namespace XbimXplorer.Commands
                     {
                         // validation report
 
-                        var validator = new IfcValidator()
+                        var validator = new Validator()
                         {
                             CreateEntityHierarchy = true,
                             ValidateLevel = ValidationFlags.All
