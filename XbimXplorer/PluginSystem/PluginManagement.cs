@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using NuGet;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using log4net;
-using NuGet;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -21,7 +21,12 @@ namespace XbimXplorer.PluginSystem
         private readonly Dictionary<string, PluginInformation> _diskPlugins =
            new Dictionary<string, PluginInformation>();
 
-        private static readonly ILog Log = LogManager.GetLogger("XbimXplorer.PluginSystem.PluginManagement");
+        public PluginManagement(Microsoft.Extensions.Logging.ILogger logger = null)
+        {
+            Logger = logger ?? XplorerMainWindow.LoggerFactory.CreateLogger<PluginManagement>();
+        }
+
+        protected static Microsoft.Extensions.Logging.ILogger Logger { get; private set; }
 
         internal static IEnumerable<DirectoryInfo> GetPluginDirectories()
         {
@@ -73,7 +78,7 @@ namespace XbimXplorer.PluginSystem
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error loading plugin manifest from [{path}]", ex);
+                    Logger.LogError(0, ex, "Error loading plugin manifest from {path}", path);
                 }
             }
             return tmp;

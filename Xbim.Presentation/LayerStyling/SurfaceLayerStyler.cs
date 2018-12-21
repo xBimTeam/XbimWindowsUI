@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
-using log4net;
 using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
@@ -16,13 +16,20 @@ namespace Xbim.Presentation.LayerStyling
 {
     public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
     {
-        protected static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.LayerStyling.SurfaceLayerStyler");
+       
 
         public event ProgressChangedEventHandler ProgressChanged;
 
         readonly XbimColourMap _colourMap = new XbimColourMap();
 
         public bool UseMaps = false;
+
+        protected ILogger Logger { get; private set; }
+
+        public SurfaceLayerStyler(ILogger logger = null)
+        {
+            Logger = logger ?? new LoggerFactory().CreateLogger<SurfaceLayerStyler>();
+        }
 
         /// <summary>
         /// This version uses the new Geometry representation
@@ -192,7 +199,7 @@ namespace Xbim.Presentation.LayerStyling
                     }
                 }
             }
-            Log.DebugFormat("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
+            Logger.LogDebug("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
 
             ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(0, "Ready"));
             return scene;
@@ -222,10 +229,19 @@ namespace Xbim.Presentation.LayerStyling
             return mg;
         }
 
-        protected static WpfMaterial GetWpfMaterial(IModel model, int styleId)
+        protected WpfMaterial GetWpfMaterial(IModel model, int styleId)
         {
             var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
             var texture = XbimTexture.Create(sStyle);
+            if(texture.ColourMap.Count > 0)
+            { 
+                if (texture.ColourMap[0].Alpha <= 0)
+                {
+                    texture.ColourMap[0].Alpha = 0.5f;
+                    Logger.LogWarning("Fully transparent style #{styleId} forced to 50% opacity.", styleId);
+                }
+            }
+
             texture.DefinedObjectId = styleId;
             var wpfMaterial = new WpfMaterial();
             wpfMaterial.CreateMaterial(texture);

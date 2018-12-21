@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Xbim.IO;
 using Xbim.IO.Esent;
 using XbimXplorer.Properties;
 

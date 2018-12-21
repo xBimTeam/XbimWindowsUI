@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.Ifc;
 
@@ -31,7 +32,7 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
             {
                 if (Model == null || Model.FileName == null)
                     return "";
-                if (!ExpressType.Type.FullName.ToLowerInvariant().Contains(Model.IfcSchemaVersion.ToString().ToLowerInvariant()))
+                if (!ExpressType.Type.FullName.ToLowerInvariant().Contains(((IModel)Model).SchemaVersion.ToString().ToLowerInvariant()))
                     return "";
                 if (Model.GeometryStore == null)
                     return "";

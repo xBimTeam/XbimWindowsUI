@@ -3,15 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xbim.Presentation", "Xbim.Presentation\Xbim.Presentation.csproj", "{89F98E53-DE4E-4427-8244-D5934AD08849}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.Presentation", "Xbim.Presentation\Xbim.Presentation.csproj", "{89F98E53-DE4E-4427-8244-D5934AD08849}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XbimXplorer", "XbimXplorer\XbimXplorer.csproj", "{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XbimXplorer", "XbimXplorer\XbimXplorer.csproj", "{D6CED5D7-BE37-4A32-90A5-1444C9FFDD91}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E199F75-F5E2-4B21-9DDA-85AF017F9445}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		azure-pipelines.yml = azure-pipelines.yml
+		Directory.Build.props = Directory.Build.props
 		LICENCE.md = LICENCE.md
 		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
-		Xbim.WindowsUI.package.nuspec = Xbim.WindowsUI.package.nuspec
 		XplorerPlugin.Bcf.plugin.nuspec = XplorerPlugin.Bcf.plugin.nuspec
 	EndProjectSection
 EndProject
@@ -19,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XplorerPlugins", "XplorerPl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XplorerPlugin.Bcf", "XplorerPlugin.Bcf\XplorerPlugin.Bcf.csproj", "{935963BB-7EE9-4C8F-BC60-DE43961F2E98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{645DE1B1-90B9-4B04-8F65-F6C81B046B23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{645DE1B1-90B9-4B04-8F65-F6C81B046B23}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xbim.WinformsSample", "Xbim.WinformsSample\Xbim.WinformsSample.csproj", "{6ED232C8-1056-4FB5-9B72-18D045DB833B}"
 EndProject

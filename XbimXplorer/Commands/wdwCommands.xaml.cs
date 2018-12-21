@@ -29,10 +29,11 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.LayerStyling;
 using Binding = System.Windows.Data.Binding;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using log4net;
 using Microsoft.CSharp;
 using System.CodeDom;
 using XbimXplorer.PluginSystem;
+using Microsoft.Extensions.Logging;
+using Xbim.Common.ExpressValidation;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -47,12 +48,15 @@ namespace XbimXplorer.Commands
          "View/Developer/Commands", "Commands/console.bmp")]
     public partial class wdwCommands : IXbimXplorerPluginWindow
     {
+        protected ILogger Logger { get; private set; }
+
         /// <summary>
         /// WindowsUI
         /// </summary>
         public wdwCommands()
         {
             InitializeComponent();
+            Logger = XplorerMainWindow.LoggerFactory.CreateLogger<wdwCommands>();
             DisplayHelp();
 #if DEBUG
             // loads the last commands stored
@@ -140,7 +144,6 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^Log *(?<count>[\d]+)? *(?<message>.+)?$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    ILog Log = LogManager.GetLogger("XbimXplorer.CommandWindow");
                     int iCnt;
                     if (!Int32.TryParse(mdbclosed.Groups["count"].Value, out iCnt))
                         iCnt = 1;
@@ -150,7 +153,7 @@ namespace XbimXplorer.Commands
 
                     for (int iLoop = 0; iLoop < iCnt; iLoop++)
                     {
-                        Log.Info(iLoop+1 + " " + msg);
+                        Logger.LogInformation(iLoop+1 + " " + msg);
                     }
                     continue;
                 }
@@ -289,7 +292,7 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
-                mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
+                mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     var commandString = mdbclosed.Groups["command"].Value;
@@ -312,27 +315,42 @@ namespace XbimXplorer.Commands
                         });
                         continue;
                     }
-                    else if (commandString.ToLower() == "install")
+                    else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
                     {
-
-                        PluginManagement pm = new PluginManagement();
-
+                        var pm = new PluginManagement();
                         var plugin = pm.GetPlugins(PluginChannelOption.Development).FirstOrDefault(x => x.PluginId == pluginName);
                         if (plugin == null)
                         {
                             ReportAdd("Plugin not found.", Brushes.Red);
                             continue;
                         }
+                        
+                        // test for the right command string
+                        if (plugin.InstalledVersion != "" 
+                            && commandString.ToLower() == "install")
+                        {
+                            ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);
+                            continue;
+                        }
 
                         // try installing
                         ReportAdd("Plugin found; installing...", Brushes.Blue);
-                        plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                        var extracted = plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                        if (!extracted)
+                        {
+                            ReportAdd("Plugin extraction failed.", Brushes.Red);
+                        }
                         if (plugin.Startup.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
                         {
                             plugin.ToggleEnabled();
                         }
-                        plugin.Load();
-                        ReportAdd("Installed.", Brushes.Blue);
+
+                        // try loading
+                        var loaded = plugin.Load();
+                        if (loaded)
+                            ReportAdd("Installed and loaded.", Brushes.Blue);
+                        else
+                            ReportAdd("Plugin installed, but a restart is required.", Brushes.Red);
                         continue;
                     }
                     else if (commandString.ToLower() == "load")
@@ -710,7 +728,7 @@ namespace XbimXplorer.Commands
                     {
                         // validation report
 
-                        var validator = new IfcValidator()
+                        var validator = new Validator()
                         {
                             CreateEntityHierarchy = true,
                             ValidateLevel = ValidationFlags.All
@@ -1082,9 +1100,9 @@ namespace XbimXplorer.Commands
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
-                    _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler();
+                    _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler(this.Logger);
                     _parentWindow.DrawingControl.ReloadModel();
-                    continue;
+                    //continue;
 
                     ReportAdd($"Testing Xbim3DModelContext creation.");
                     var w = new Stopwatch();
@@ -1303,7 +1321,7 @@ namespace XbimXplorer.Commands
             }
 
             ReportAdd($"Saving.");
-            model.SaveAs(newFile, IfcStorageType.IfcZip);
+            model.SaveAs(newFile, StorageType.IfcZip);
             model.Close();
 
             var fBefore = new FileInfo(fileName);
@@ -1314,7 +1332,7 @@ namespace XbimXplorer.Commands
             {
                 File.Delete(fileName);
             }
-            catch (Exception e)
+            catch (SystemException)
             {
                 ReportAdd($"Error deleting source file.", Brushes.Red);
             }

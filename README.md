@@ -1,31 +1,36 @@
+
+Branch | Status
+------ | -------
+Master | [![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=master)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=master)
+Develop |[![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=develop)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=develop)
+
 # XbimWindowsUI
 
-Build Status (master branch): [ ![Build Status](http://xbimbuilds.cloudapp.net/app/rest/builds/buildType:(id:Xbim_XbimWindowsUi_XbimWindowsUi),branch:(name:master)/statusIcon "Build Status") ](http://xbimbuilds.cloudapp.net/project.html?projectId=Xbim_XbimWindowsUi&tab=projectOverview "Build Status")
+XbimWindowsUI is part of the [Xbim Toolkit](https://github.com/xBimTeam/XbimEssentials).
+It contains libraries and applications that you can use to build applications on Windows desktops. 
 
-Build Status (develop branch): [ ![Build Status](http://xbimbuilds.cloudapp.net/app/rest/builds/buildType:(id:Xbim_XbimWindowsUi_XbimWindowsUi),branch:(name:develop)/statusIcon "Build Status") ](http://xbimbuilds.cloudapp.net/project.html?projectId=Xbim_XbimWindowsUi&tab=projectOverview "Build Status")
-
-## Compilation
-The toolkit uses the Nuget technology for the management of several packages.
-We have custom nuget feeds for the master and develop branches of the solution.
-Nuget can download all the required dependencies for you if you have the correct package source configuration.
-
-if you use Visual Studio 2015+ add the following package sources:
-https://www.myget.org/F/xbim-develop/api/v3/index.json
-https://www.myget.org/F/xbim-master/api/v3/index.json
-
-if you use Visual Studio 2012+ add the following package sources:
-https://www.myget.org/F/xbim-develop/api/v2
-https://www.myget.org/F/xbim-master/api/v2
-
-the resulting configuration pages looks like this in VS2015:
-![example of VS2015 configuration](ReadmeResources/NugetCongfigurationVS2015.png)
-
-## Solution Content
-Xbim.Presentation is the home of the XbimXplorer application and of a number of WPF components for your desktop BIM applications.
+This is the home of the XbimXplorer application [XBIM Xplorer](http://docs.xbim.net/downloads/xbimxplorer.html)
+which you can use for reference to see how the XBIM technology can be used in a Windows desktop environment.
 
 ![XbimXplorer UI](ReadmeResources/XbimXplorerUI.png)
 
+This repo also contains the source for *Xbim.Presentation*, which is re-usable set of WPF and Windows Forms components 
+that make up XbimXplorer. You can include this package in your own applications, to make use of the XBIM toolkit.
+
+## Compilation
+
+**Visual Studio 2017 is recommended.**
+Prior versions of Visual Studio may work, but we'd recomments 2017 where possible.
+The [free VS 2017 Community Edition](https://visualstudio.microsoft.com/downloads/) will be fine. 
+All projects target .NET Framework 4.7
+
+The XBIM toolkit uses the NuGet technology for the management of several packages.
+We have custom NuGet feeds for the *master* and *develop* branches of the solution, and use
+Myget for CI builds. The [nuget.config](nuget.config) file should automatically add these feeds for you
+
+
 ## Acknowledgements
-The XbimTeam wishes to thank [JetBrains](https://www.jetbrains.com/) for supporting the XbimToolkit project with free open source [Resharper](https://www.jetbrains.com/resharper/) licenses.
+The XbimTeam wishes to thank [JetBrains](https://www.jetbrains.com/) for supporting the XbimToolkit project 
+with free open source [Resharper](https://www.jetbrains.com/resharper/) licenses.
 
 ![ReSharper Logo](ReadmeResources/icon_ReSharper.png)

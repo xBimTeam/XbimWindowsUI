@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xbim.Common.Geometry;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.IO;
 using Xbim.Presentation;
 
 namespace Tests

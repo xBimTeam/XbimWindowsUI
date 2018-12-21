@@ -50,6 +50,7 @@ namespace Xbim.Presentation
         /// <summary>
         /// Constructs a scene, using the specfified colourmap
         /// </summary>
+        /// <param name="model"></param>
         /// <param name="colourMap"></param>
         public XbimScene(IModel model, XbimColourMap colourMap)
         {
@@ -143,6 +144,7 @@ namespace Xbim.Presentation
         /// Gets the geometry of an entity building it up from layers.
         /// </summary>
         /// <param name="entity">The entity instance</param>
+        /// <param name="modelId"></param>
         public IXbimMeshGeometry3D GetMeshGeometry3D(IPersistEntity entity, short modelId)
         {
             var geometry = new XbimMeshGeometry3D();

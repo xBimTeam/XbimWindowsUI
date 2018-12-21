@@ -14,6 +14,7 @@ using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.PluginSystem;
 using Xceed.Wpf.AvalonDock.Layout;
 using Image = System.Windows.Controls.Image;
+using Microsoft.Extensions.Logging;
 
 namespace XbimXplorer
 {
@@ -66,7 +67,7 @@ namespace XbimXplorer
             var mfst = PluginManagement.GetManifestMetadata(dir);
             if (_loadedPlugins.ContainsKey(mfst.Id))
             {
-                Log.Warn($"Re-load of previousely loaded plugin {mfst.Id} cancelled.");
+                Logger.LogWarning("Re-load of previously loaded plugin {pluginId} cancelled.", mfst.Id);
                 return false;
             }
             if (!forceLoad) // if don't have to load forcedly
@@ -80,10 +81,10 @@ namespace XbimXplorer
             var fullAssemblyFileName = PluginManagement.GetEntryFile(dir, fileName);
             if (!File.Exists(fullAssemblyFileName))
             {
-                Log.Error($"Plugin loading error: Assembly file not found [{fullAssemblyFileName}].");
+                Logger.LogError("Plugin loading error: Assembly file not found {pluginName}", fullAssemblyFileName);
                 return false;
             }
-            Log.InfoFormat("Attempting to load plugin: {0}", fullAssemblyFileName);
+            Logger.LogInformation("Attempting to load plugin: {pluginName}", fullAssemblyFileName);
             _assemblyLoadFolder = dir.FullName;
 
             var assembly = LoadAssembly(fullAssemblyFileName);
@@ -110,9 +111,9 @@ namespace XbimXplorer
                     }
                     if (asmName.Name.Equals(refReq.Name))
                     {
-                        Log.DebugFormat("Versioning issues:\r\n" +
-                                        "Required -> {0}\r\n" +
-                                        "Loaded   -> {1}", refReq.FullName, asmName.FullName);
+                        Logger.LogWarning("Incompatible plugin components identified:" +
+                                        "Plugin requires -> {required}. " +
+                                        "But currently loaded -> {loaded}", refReq.FullName, asmName.FullName);
                     }
                 }
                 if (reqFound)
@@ -124,7 +125,7 @@ namespace XbimXplorer
                     var reqAss = Assembly.Load(refReq);
                     if (!_pluginAssemblies.Contains(reqAss))
                         _pluginAssemblies.Add(reqAss);
-                    Log.DebugFormat("Loaded assembly: {0}", refReq.FullName);
+                    Logger.LogDebug("Loaded assembly: {assembly}", refReq.FullName);
                     foreach (var referenced in reqAss.GetReferencedAssemblies())
                     {
                         loadQueue.Enqueue(referenced);
@@ -132,9 +133,9 @@ namespace XbimXplorer
                 }
                 catch (Exception ex)
                 {
+                    Logger.LogError(0, ex, "Problem loading assembly {required} for {assembly}", refReq, fullAssemblyFileName);
                     var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyFileName;
-                    Log.ErrorFormat(msg, ex);
-                    MessageBox.Show(msg + ", " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(msg + "\r\n\r\n" + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 AppDomain.CurrentDomain.AssemblyResolve -= PluginAssemblyResolvingFunction;
             }
@@ -162,7 +163,7 @@ namespace XbimXplorer
                     // you find for failure to parse a single assembly
                     catch (BadImageFormatException bfe)
                     {
-                        Log.Error("Plugin error, bad format exception.", bfe);
+                        Logger.LogError(0, bfe, "Plugin error, bad format exception.");
                     }
                 }
             }
@@ -176,7 +177,7 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
-                Log.Error($"Error activating plugin {mfst.Id}; startup mode set to 'Disabled'.", ex);
+                Logger.LogError(0, ex, "Error activating plugin {plugin}; startup mode set to 'Disabled'.", mfst.Id);
                 PluginManagement.SetStartup(dir, PluginConfiguration.StartupBehaviour.Disabled);
                 PluginMenu.Visibility = PluginMenuVisibility;
                 return false;
@@ -264,7 +265,7 @@ namespace XbimXplorer
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Path {att.IconPath} not found when loading icon.", ex);
+                    Logger.LogError(0, ex, "Path {iconPath} not found when loading icon.", att.IconPath);
                 }                
             }
             if (InsertAtTopOfMenu)
@@ -317,7 +318,8 @@ namespace XbimXplorer
                 }
                 else
                 {
-                    Log.ErrorFormat("Plugin type {0} has unsuitable containermode ({1}).", aswindow.GetType().Name, cmode);
+                    Logger.LogError("Plugin type {pluginType} has unsuitable containermode {containerMode}.", 
+                        aswindow.GetType().Name, cmode);
                 }
                 return null;
             }
@@ -364,11 +366,11 @@ namespace XbimXplorer
                         return ld;
                     }
                     default:
-                        Log.ErrorFormat("Plugin type {0} has unsuitable containermode.", asControl.GetType().Name);
+                        Logger.LogError("Plugin type {pluginType} has unsuitable containermode.", asControl.GetType().Name);
                         break;
                 }
             }
-            Log.ErrorFormat("{0} does not inherit from UserControl as expected", pluginWindow.GetType());
+            Logger.LogError("{pluginWindow} does not inherit from UserControl as expected", pluginWindow.GetType());
             return null;
         }
         
@@ -430,7 +432,7 @@ namespace XbimXplorer
                     catch (Exception ex)
                     {
                         var msg = $"Error creating instance of type '{tp}'";
-                        Log.Error(msg, ex);
+                        Logger.LogError(0, ex, "Error creating instance of type '{type}'", tp);
                         return null;
                     }
                 }

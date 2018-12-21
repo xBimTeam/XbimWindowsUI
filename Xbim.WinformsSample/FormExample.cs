@@ -1,4 +1,4 @@
-﻿using log4net;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Windows.Forms;
@@ -13,13 +13,16 @@ namespace Xbim.WinformsSample
     {
         private WinformsAccessibleControl _wpfControl;
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(FormExample));
-
         int starting = -1;
 
-        public FormExample()
+        protected ILogger Logger { get; private set; }
+
+
+        public FormExample(ILogger logger = null)
         {
             InitializeComponent();
+            Logger = logger ?? new LoggerFactory().CreateLogger<FormExample>();
+            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
             _wpfControl = new WinformsAccessibleControl();
             _wpfControl.SelectionChanged += _wpfControl_SelectionChanged;
             
@@ -67,7 +70,7 @@ namespace Xbim.WinformsSample
                 }
                 catch (Exception geomEx)
                 {
-                    Log.Error($"Failed to create geometry for ${dlgFileName}", geomEx);
+                    Logger.LogError(0, geomEx, "Failed to create geometry for {filename}", dlgFileName );
                 }
             }
             _wpfControl.ModelProvider.ObjectInstance = model;

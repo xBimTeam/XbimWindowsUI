@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using log4net.Core;
+using Serilog.Events;
 
 namespace XbimXplorer.LogViewer
 {
     public class LogEventArgs : EventArgs
     {
-        public LogEventArgs(IEnumerable<LoggingEvent> loggingEvents)
+        public LogEventArgs(IEnumerable<LogEvent> loggingEvents)
         {
             // Validate parameters.
             if (loggingEvents == null)
@@ -17,6 +17,7 @@ namespace XbimXplorer.LogViewer
         }
 
         // Poor-man's immutability.
-        public IEnumerable<LoggingEvent> LoggingEvents { get; private set; }
+        public IEnumerable<LogEvent> LoggingEvents { get; private set; }
+       
     }
 }

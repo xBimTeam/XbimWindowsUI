@@ -1808,6 +1808,7 @@ namespace Xbim.Presentation
         /// Sets the reguion to be displayed to the relevant area.
         /// </summary>
         /// <param name="rName"></param>
+        /// <param name="add"></param>
         /// <returns>true if the region has ben found and set, false otherwise</returns>
         public bool SetRegion(string rName, bool add)
         {
