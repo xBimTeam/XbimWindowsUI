@@ -219,7 +219,6 @@ namespace XbimXplorer
         {
             var worker = s as BackgroundWorker;
             var selectedFilename = args.Argument as string;
-
             try
             {
                 if (worker == null)

@@ -144,17 +144,17 @@ namespace XbimXplorer.Commands
                     int iCnt;
                     if (!Int32.TryParse(mdbclosed.Groups["count"].Value, out iCnt))
                         iCnt = 1;
-                    var msg = (string.IsNullOrEmpty(mdbclosed.Groups["message"].Value)) 
+                    var msg = (string.IsNullOrEmpty(mdbclosed.Groups["message"].Value))
                         ? "Message"
                         : mdbclosed.Groups["message"].Value;
 
                     for (int iLoop = 0; iLoop < iCnt; iLoop++)
                     {
-                        Log.Info(iLoop+1 + " " + msg);
+                        Log.Info(iLoop + 1 + " " + msg);
                     }
                     continue;
                 }
-                
+
                 mdbclosed = Regex.Match(cmd, @"^IfcZip (?<source>[^/]+) *(?<subFolders>/s)?$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -171,7 +171,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                
+
                 mdbclosed = Regex.Match(cmd, @"^xplorer$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -321,9 +321,9 @@ namespace XbimXplorer.Commands
                             ReportAdd("Plugin not found.", Brushes.Red);
                             continue;
                         }
-                        
+
                         // test for the right command string
-                        if (plugin.InstalledVersion != "" 
+                        if (plugin.InstalledVersion != ""
                             && commandString.ToLower() == "install")
                         {
                             ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);
@@ -390,7 +390,7 @@ namespace XbimXplorer.Commands
 
                 // above here functions that do not need an opened model
                 // #####################################################
-                
+
 
 
                 // all commands here
@@ -455,7 +455,7 @@ namespace XbimXplorer.Commands
                             b = Brushes.ForestGreen;
                         else if (typeof(IIfcRelationship).IsAssignableFrom(key.Type))
                             b = Brushes.DarkOrange;
-                        
+
                         ReportAdd($"{td[key]}\t\t{key.Name}", b);
                     }
                     continue;
@@ -487,7 +487,7 @@ namespace XbimXplorer.Commands
                         ReportAdd($"- PreprocessorVersion: {Model.Header.FileName.PreprocessorVersion}");
                         foreach (var item in Model.Header.FileName.AuthorName)
                             ReportAdd($"- AuthorName: {item}");
-                        
+
                         ReportAdd($"- AuthorizationName: {Model.Header.FileName.AuthorizationName}");
                         foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
                             ReportAdd($"- AuthorizationMailingAddress: {item}");
@@ -499,7 +499,7 @@ namespace XbimXplorer.Commands
 
                     ReportAdd($"Modelfactors:");
                     ReportAdd($"- OneMeter: {Model.ModelFactors.OneMetre}");
-                    
+
                     continue;
                 }
 
@@ -560,7 +560,7 @@ namespace XbimXplorer.Commands
                                 var prod = (IIfcProduct)entity;
                                 trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
                                 entities.Clear();
-                                entities.AddRange(prod.Representation?.Representations.SelectMany(x=>x.Items));
+                                entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
                             }
                             else if (entity is IIfcRelVoidsElement)
                             {
@@ -600,7 +600,7 @@ namespace XbimXplorer.Commands
                                         }
                                     }
                                 }
-                            }                           
+                            }
                         }
                     }
                     continue;
@@ -820,10 +820,10 @@ namespace XbimXplorer.Commands
                 {
                     if (ModelIsUnavailable) continue;
                     var entityIds = m.Groups["EntityIds"].Value;
-                    var v = entityIds.Split(new[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
+                    var v = entityIds.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                     var sb = new TextHighliter();
-                    
+
                     foreach (var entityIdString in v)
                     {
                         var entityId = Convert.ToInt32(entityIdString);
@@ -834,11 +834,23 @@ namespace XbimXplorer.Commands
                             continue;
                         }
                         ReportTransformGraph(sb, ent as IIfcProduct, 0);
-                    }  
+                    }
                     ReportAdd(sb);
                     continue;
                 }
-                
+
+
+                m = Regex.Match(cmd, @"^meshed *(?<ent>\d+)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var e = m.Groups["ent"].Value;
+                    var ent = Convert.ToInt32(e);
+                    var t = Model.Instances[ent];
+                    var rep = GeometryView.Meshed(t);
+                    ReportAdd(rep);
+                    continue;
+                }
+
                 m = Regex.Match(cmd, @"^region ?(?<mode>list|set|add|\?)? *(?<RegionName>.+)*$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Windows.Media;
 using Xbim.Common;
+using Xbim.Common.Geometry;
+using Xbim.Common.XbimExtensions;
 using Xbim.Ifc4.Interfaces;
 
 namespace XbimXplorer.Commands
@@ -11,6 +14,8 @@ namespace XbimXplorer.Commands
     /// </summary>
     internal static class GeometryView
     {
+        // private static IXbimShapeGeometryData geometry;
+
         private static void Report(IIfcClosedShell shell, TextHighliter sb)
         {
             foreach (var face in shell.CfsFaces)
@@ -208,6 +213,33 @@ namespace XbimXplorer.Commands
             {
                 sb.Append($"{obj.GetType().Name} not implemented in IIfcCurve.", Brushes.Red);
             }
+        }
+
+        internal static TextHighliter Meshed(IPersistEntity item)
+        {
+            var model = item.Model;
+            TextHighliter t = new TextHighliter();
+            using (var geomstore = model.GeometryStore)
+            using (var geomReader = geomstore.BeginRead())
+            {
+
+                foreach (var shapeInstance in geomReader.ShapeInstancesOfEntity(item).Where(x => x.RepresentationType != XbimGeometryRepresentationType.OpeningsAndAdditionsExcluded))
+                {
+                    IXbimShapeGeometryData shapegeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
+                    if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                        continue;
+                    var ms = new MemoryStream(shapegeom.ShapeData);
+                    var br = new BinaryReader(ms);
+                    var tr = br.ReadShapeTriangulation();
+
+                    t.Append("Verices:", Brushes.Black);
+                    foreach (var vertex in tr.Vertices)
+                    {
+                        t.Append($"{vertex.X}, {vertex.Y}, {vertex.Z}", Brushes.Black);
+                    }
+                }
+            }
+            return t;
         }
 
         private static void Report(IIfcSweptDiskSolid obj, TextHighliter sb)
