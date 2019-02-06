@@ -47,6 +47,13 @@ namespace Xbim.Presentation.ModelGeomInfo
             if (_geomPoints.Count == 1)
                 return
                     $"Selected point coords: {_geomPoints[0].Point.X:0.##}, {_geomPoints[0].Point.Y:0.##}, {_geomPoints[0].Point.Z:0.##})";
+
+            if (_geomPoints.Count == 2)
+            {
+                return
+                    $"Lenght: {GetLenght():0.##} [Dx:  {(_geomPoints[1].Point.X - _geomPoints[0].Point.X):0.##}, Dy: {(_geomPoints[1].Point.Y - _geomPoints[0].Point.Y):0.##}, Dz: {(_geomPoints[1].Point.Z - _geomPoints[0].Point.Z):0.##})";
+            }
+
             var d = GetArea();
             return !double.IsNaN(d) 
                 ? $"Lenght: {GetLenght():0.##}m Area: {d:0.##}sqm"

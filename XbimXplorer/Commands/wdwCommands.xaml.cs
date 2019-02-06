@@ -605,7 +605,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                m = Regex.Match(cmd, @"^(opacity|op) *(?<opac>[\d\.]+)", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^(opacity|opc) *(?<opac>[\d\.]+)", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
@@ -821,26 +821,57 @@ namespace XbimXplorer.Commands
                     if (ModelIsUnavailable) continue;
                     var entityIds = m.Groups["EntityIds"].Value;
                     var v = entityIds.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
-
+                    PlacementReporter prep = new PlacementReporter(Model);
                     var sb = new TextHighliter();
-
                     foreach (var entityIdString in v)
                     {
                         var entityId = Convert.ToInt32(entityIdString);
+                        prep.Add(entityId);
                         var ent = Model.Instances[entityId];
-                        if (!(ent is IIfcProduct))
+                        if (ent is IIfcProduct)
                         {
-                            ReportAdd($"Entity not found #{entityId}");
+                            ReportTransformGraph(sb, ent as IIfcProduct, 0);    
+                        }
+                        else
+                        {
+                            // ReportAdd($"Entity not found #{entityId}");
                             continue;
                         }
-                        ReportTransformGraph(sb, ent as IIfcProduct, 0);
                     }
                     ReportAdd(sb);
+                    ReportAdd(prep.ToReporter());
+                    continue;
+                }
+                m = Regex.Match(cmd, @"^(Boundingboxes|TG) " +
+                                  @"(?<EntityIds>[\d ,]+)"
+                                  , RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    using (var geomstore = Model.GeometryStore)
+                    using (var geomReader = geomstore.BeginRead())
+                    {
+                        foreach (var inst in geomReader.ShapeInstances)
+                        {
+                            var sb = new TextHighliter();
+                            sb.Append($"#{inst.IfcProductLabel}", Brushes.Blue);
+
+                            // Debug.WriteLine(inst.IfcProductLabel + " " + inst.BoundingBox);
+                            var b = inst.BoundingBox;
+                            sb.Append($"- BBox: {inst.BoundingBox}", Brushes.Black);
+
+                            sb.Append($"- Matrix: {inst.Transformation}", Brushes.Black);
+
+                            var tf = b.Transform(inst.Transformation);
+                            sb.Append($"- Transformed: {tf}", Brushes.Black);
+                            ReportAdd(sb);
+                        }
+                    }
                     continue;
                 }
 
 
-                m = Regex.Match(cmd, @"^meshed *(?<ent>\d+)$", RegexOptions.IgnoreCase);
+
+                    m = Regex.Match(cmd, @"^meshed *(?<ent>\d+)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     var e = m.Groups["ent"].Value;
@@ -901,7 +932,8 @@ namespace XbimXplorer.Commands
                         if (setOk)
                         {
                             ReportAdd("Region set.");
-                            ReportAdd(_parentWindow.DrawingControl.ModelPositions.Report());
+                            // todo: restore
+                            // ReportAdd(_parentWindow.DrawingControl.ModelPositions.Report());
                         }
                         else
                         {
@@ -967,7 +999,9 @@ namespace XbimXplorer.Commands
                             var off = trsf.OffsetZ;
                             var pt = new XbimPoint3D(0, 0, off);
 
-                            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
+                            // todo: restore
+                            // var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
+                            var mcp = XbimMatrix3D.Identity;
                            
                             var transformed = mcp.Transform(pt);
                             msg = $"Clip 1m above storey elevation {pt.Z} (View space height: {transformed.Z + 1})";

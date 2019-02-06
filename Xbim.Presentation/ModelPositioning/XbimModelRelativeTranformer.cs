@@ -48,7 +48,6 @@ namespace Xbim.Presentation.Modelpositioning
                 _firstModelCentralCoordinates.Z / model.ModelFactors.OneMeter
                 );
             
-
             // centralCoordinats works to center the first model, but then subsequent models need to be 
             // centered in consideration of the the conceptual location of such model in absolute World coordinates
             // If all models have adjustedWcs = false then the same matrix should work, but otherwise we need to know how to adapt
@@ -59,20 +58,25 @@ namespace Xbim.Presentation.Modelpositioning
             _firstModelWcsAdjustment.OffsetX /= model.ModelFactors.OneMeter;
             _firstModelWcsAdjustment.OffsetY /= model.ModelFactors.OneMeter;
             _firstModelWcsAdjustment.OffsetZ /= model.ModelFactors.OneMeter;
+            _firstModelWcsAdjustment.Invert();
             //Debug.WriteLine("_firstModelWcsAdjustment: " + _firstModelWcsAdjustment);
 
 
-            var modelAdjusment =  XbimMatrix3D.CreateTranslation(
+            var modelTranslation =  XbimMatrix3D.CreateTranslation(
                 -_firstModelCentralCoordinates.X,
                 -_firstModelCentralCoordinates.Y,
                 -_firstModelCentralCoordinates.Z
                 );
 
+            var modelScale = XbimMatrix3D.CreateScale(1 / model.ModelFactors.OneMeter);
+
             //Debug.WriteLine("_firstModelCentralCoordinates: " + _firstModelCentralCoordinates);
+            var ret = XbimMatrix3D.Multiply(modelScale, modelTranslation);
+            // ret = XbimMatrix3D.Multiply(modelTranslation, modelScale);
 
-
-
-            return modelAdjusment;
+            //Debug.WriteLine($"BaseModelWorld: {_firstModelWcsAdjustment}");
+            //Debug.WriteLine($"BaseModelMatrix: {ret}");
+            return ret;
         }
 
         public XbimMatrix3D GetRelativeMatrix(IModel forModel)
@@ -80,26 +84,29 @@ namespace Xbim.Presentation.Modelpositioning
             // get the absolute of this model against the world
             // then compute the relative
             //
+            var thisScale = XbimMatrix3D.CreateScale(1 / forModel.ModelFactors.OneMeter);
             var dtctor = new StoreMeshingModeDetector(forModel);
 
-            var modelAdjusment = XbimMatrix3D.CreateTranslation(
-               -_firstModelCentralCoordinates.X,
-               -_firstModelCentralCoordinates.Y,
-               -_firstModelCentralCoordinates.Z
+            var w = dtctor.WcsMatrix;
+            w.OffsetX /= forModel.ModelFactors.OneMeter;
+            w.OffsetY /= forModel.ModelFactors.OneMeter;
+            w.OffsetZ /= forModel.ModelFactors.OneMeter;
+
+            var tmp = XbimMatrix3D.Multiply(thisScale, w);
+
+            var transAdj = XbimMatrix3D.CreateTranslation(
+               _firstModelCentralCoordinates.X,
+               _firstModelCentralCoordinates.Y,
+               _firstModelCentralCoordinates.Z
                );
+            transAdj.Invert();
+   
+            tmp = XbimMatrix3D.Multiply(tmp, _firstModelWcsAdjustment);
+            tmp = XbimMatrix3D.Multiply(tmp, transAdj);
 
-            var m = dtctor.WcsMatrix;
-            m.OffsetX /= forModel.ModelFactors.OneMeter; // meter adjustment
-            m.OffsetY /= forModel.ModelFactors.OneMeter;
-            m.OffsetZ /= forModel.ModelFactors.OneMeter;
-
-            m = XbimMatrix3D.Multiply(modelAdjusment, m);
-
-            var t = XbimMatrix3D.Copy(_firstModelWcsAdjustment);
-            t.Invert();
-            t = XbimMatrix3D.Multiply(t, m);
-
-            return t;
+            //Debug.WriteLine($"RelativelWorld: {dtctor.WcsMatrix}");
+            //Debug.WriteLine($"BaseModelMatrix: {tmp}");
+            return tmp;
         }
 
         static private double GetDistance(XbimPoint3D point1, XbimPoint3D point2)
