@@ -1333,10 +1333,9 @@ namespace Xbim.Presentation
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
         /// </summary>
-        /// <param name="model"></param>
-        /// <param name="entityLabels">If null loads the whole model, otherwise only elements listed in the enumerable</param>
-        /// <param name="options"></param>
-        public void LoadGeometry(IfcStore model, IEnumerable<int> entityLabels = null, ModelRefreshOptions options = ModelRefreshOptions.None)
+        /// <param name="model">The model</param>
+        /// <param name="options">The options (None by default)</param>
+        public void LoadGeometry(IfcStore model, ModelRefreshOptions options = ModelRefreshOptions.None)
         {
             // AddLayerToDrawingControl is the function that actually populates the geometry in the viewer.
             // AddLayerToDrawingControl is triggered by BuildRefModelScene and BuildScene below here when layers get ready.
