@@ -521,8 +521,7 @@ namespace XbimXplorer
         {
             CloseAndDeleteTemporaryFiles();
         }
-
-
+        
         private void CommandBinding_Open(object sender, ExecutedRoutedEventArgs e)
         {
             var corefilters = new[] {
@@ -1103,7 +1102,8 @@ namespace XbimXplorer
             {
                 using (var mod = IfcStore.Open(file))
                 {
-                    DrawingControl.AddModel(mod);
+                    // AddModel is not implemented yet.
+                    // DrawingControl.AddModel(mod);
                 }
             }
         }

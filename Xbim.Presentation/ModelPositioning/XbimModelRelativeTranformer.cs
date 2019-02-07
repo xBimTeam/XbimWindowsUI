@@ -24,12 +24,11 @@ namespace Xbim.Presentation.Modelpositioning
         // The initial region can be determined by different modes.
         // then each other model relative to that.
 
-        public XbimMatrix3D SetBaseModel(IModel model, double thresholdFromMostPopulated = double.PositiveInfinity)
+        public XbimMatrix3D SetBaseModel(IModel model, XbimRegion startRegion)
         {
             _baseModel = model;
             _firstModelCentralCoordinates = new XbimPoint3D(0, 0, 0);
 
-            var startRegion = GetExpandedMostPopulated(model, thresholdFromMostPopulated);
             if (startRegion != null)
             {
                 _firstModelCentralCoordinates = new XbimPoint3D(
@@ -118,7 +117,7 @@ namespace Xbim.Presentation.Modelpositioning
             );
         }
 
-        static private XbimRegion GetExpandedMostPopulated(IModel model, double thresholdFromMostPopulated)
+        static public XbimRegion GetExpandedMostPopulated(IModel model, double thresholdFromMostPopulated)
         {
             var _model = model;
             var geomStore = model.GeometryStore;

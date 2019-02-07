@@ -101,21 +101,20 @@ namespace Xbim.Presentation
 
         // attempting to load the shapeGeometry from the database; 
         // 
-        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat, bool wcsAdjust)
+        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, Dictionary<IModel, XbimMatrix3D> positions, Material mat)
         {
             var productContexts = rep.OfProductRepresentation?.OfType<IIfcProductDefinitionShape>().SelectMany(x => x.ShapeOfProduct);
             var representationLabels = rep.Items.Select(x => x.EntityLabel);
             var selModel = rep.Model;
-            var modelTransform = positions[selModel].Transform;
+            var modelTransform = positions[selModel];
 
-            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, wcsAdjust);
+            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
         }
 
         // attempting to load the shapeGeometry from the database; 
         // 
-        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust)
+        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform)
         {
-            var placementTree = new XbimPlacementTree(selModel, wcsAdjust);
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             using (var geomstore = selModel.GeometryStore)
@@ -124,7 +123,8 @@ namespace Xbim.Presentation
                 var matchingGeometries = geomReader.ShapeGeometries.Where(x => representationLabels.Contains(x.IfcShapeLabel));
                 foreach (var contextualProduct in productContexts)
                 {
-                    var trsf = placementTree[contextualProduct.ObjectPlacement.EntityLabel];
+                    var t = geomReader.ShapeInstancesOfEntity(contextualProduct).FirstOrDefault();
+                    var trsf = t.Transformation;
                     foreach (IXbimShapeGeometryData shapegeom in matchingGeometries)
                     {
                         if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
