@@ -6,6 +6,7 @@ using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.MeasureResource;
 
 namespace XbimXplorer.Commands
 {
@@ -72,7 +73,7 @@ namespace XbimXplorer.Commands
                 WritePointCoord(sb, ifcCartesianPoint);
                 last = ifcCartesianPoint;
             }
-            if ( false && last != null)
+            if (false && last != null)
             {
                 if (!last.Equals(first))
                     sb.Append($";open polyloop", Brushes.Black);
@@ -102,11 +103,16 @@ namespace XbimXplorer.Commands
             WritePointCoord(sb, ifcCartesianPoint.X, ifcCartesianPoint.Y, ifcCartesianPoint.Z, relative);
         }
 
+        private static void WritePointCoord(TextHighliter sb, IItemSet<IfcLengthMeasure> pt)
+        {
+            WritePointCoord(sb, pt[0], pt[1], pt[2], false);
+        }
+
         private static void WritePointCoord(TextHighliter sb, IIfcVector p, bool relative = false)
         {
             double val = Convert.ToDouble(p.Magnitude.Value);
-            WritePointCoord(sb, p.Orientation.X * val, 
-                                p.Orientation.Y * val, 
+            WritePointCoord(sb, p.Orientation.X * val,
+                                p.Orientation.Y * val,
                                 p.Orientation.Z * val, relative);
         }
 
@@ -147,7 +153,7 @@ namespace XbimXplorer.Commands
 
         private static void Report(IIfcCircle cr, TextHighliter sb)
         {
-            SetUcs(sb, cr.Position);           
+            SetUcs(sb, cr.Position);
             sb.Append("CIRCLE", Brushes.Black);
             WritePointCoord(sb, 0, 0, 0);
             sb.Append(cr.Radius.ToString(), Brushes.Black);
@@ -161,7 +167,7 @@ namespace XbimXplorer.Commands
             WritePointCoord(sb, line.Dir, true);
             sb.Append("", Brushes.Black);
         }
-        
+
         private static void SetUcs(TextHighliter sb, IIfcAxis2Placement pos = null)
         {
             if (pos == null)
@@ -185,7 +191,7 @@ namespace XbimXplorer.Commands
             }
         }
 
-       
+
 
         private static void Report(IIfcCurve obj, TextHighliter sb)
         {
@@ -195,7 +201,7 @@ namespace XbimXplorer.Commands
             }
             else if (obj is IIfcTrimmedCurve)
             {
-                Report((IIfcTrimmedCurve) obj, sb);
+                Report((IIfcTrimmedCurve)obj, sb);
             }
             else if (obj is IIfcCircle)
             {
@@ -251,13 +257,15 @@ namespace XbimXplorer.Commands
         {
             var sb = new TextHighliter();
             if (obj is IIfcClosedShell)
-                Report((IIfcClosedShell) obj, sb);
+                Report((IIfcClosedShell)obj, sb);
             if (obj is IIfcPolyLoop)
                 Report((IIfcPolyLoop)obj, sb);
             if (obj is IIfcCurve)
                 Report((IIfcCurve)obj, sb);
             if (obj is IIfcSweptDiskSolid)
                 Report((IIfcSweptDiskSolid)obj, sb);
+            if (obj is IIfcTessellatedFaceSet)
+                Report((IIfcTessellatedFaceSet)obj, sb);
             else
             {
                 sb.Append("No information", Brushes.Black);
@@ -266,7 +274,53 @@ namespace XbimXplorer.Commands
             sb.Append("3DORBIT", Brushes.Black);
             sb.Append("", Brushes.Black);
             sb.Append("===", Brushes.Black);
-            return  sb;
+            return sb;
+        }
+
+        private static void Report(IIfcTessellatedFaceSet obj, TextHighliter sb)
+        {
+            if (obj is IIfcPolygonalFaceSet)
+            {
+                Report((IIfcPolygonalFaceSet)obj, sb);
+            }
+            else
+            {
+                sb.Append($"{obj.GetType().Name} not implemented in IIfcTessellatedFaceSet.", Brushes.Red);
+            }
+        }
+        private static void Report(IIfcPolygonalFaceSet obj, TextHighliter sb)
+        {
+            // - Coordinates    Ifc4.GeometricModelResource.IfcCartesianPointList3D from: IfcTessellatedFaceSet
+            // - Closed         Ifc4.MeasureResource.IfcBoolean(Nullable)
+            // - Faces          Ifc4.GeometricModelResource.IfcIndexedPolygonalFace(IItemSet)
+            // - PnIndex        Ifc4.MeasureResource.IfcPositiveInteger(IOptionalItemSet)
+
+            // sb.Append($"-LAYER M {bound.Points.Count} ", Brushes.Black);
+            if (obj.PnIndex != null && obj.PnIndex.Any())
+            {
+                // todo: implement PnIndex behaviour
+                sb.Append("; Warning: PnIndex not implemented in mesher yet.", Brushes.Red);
+            }
+
+            foreach (var face in obj.Faces)
+            {
+                sb.Append("3DPOLY", Brushes.Black);
+                foreach (var index in face.CoordIndex)
+                {
+                    if (index > int.MaxValue)
+                    {
+                        sb.Append($";value too long for int in face", Brushes.Black);
+                        continue;
+                    }
+                    int asInt = (int)index;
+                    var pt = obj.Coordinates.CoordList[asInt - 1];
+                    WritePointCoord(sb, pt);
+                }
+                sb.Append($"", Brushes.Black);
+                sb.Append($"-HYPERLINK I O l  #{face.EntityLabel}", Brushes.Black);
+                sb.Append($"", Brushes.Black);
+                sb.Append($"", Brushes.Black);
+            }
         }
     }
 }
