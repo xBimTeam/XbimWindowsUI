@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,7 @@ using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
+using Xbim.Geometry.Engine.Interop;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
@@ -1316,7 +1318,7 @@ namespace Xbim.Presentation
             XbimMatrix3D modelmatrix = XbimMatrix3D.Identity;
             if (!_currentModelPositions.Any())
             {
-                var initialRegion = XbimModelRelativeTranformer.GetExpandedMostPopulated(model, double.PositiveInfinity);
+                var initialRegion = XbimModelRelativeTranformer.GetExpandedMostPopulated(model, ModelRegionTolerance);
                 if (initialRegion != null)
                 {
                     _modelPositioner = new XbimModelRelativeTranformer();
@@ -1360,7 +1362,7 @@ namespace Xbim.Presentation
         //        return;
         //    var r = new Random();
         //    model.UserDefinedId = Convert.ToInt16(r.Next(Int16.MaxValue));
-           
+
         //    DefaultLayerStyler.SetFederationEnvironment(null);
 
         //    var pos = _modelPositioner.GetRelativeMatrix(model);
@@ -1372,6 +1374,8 @@ namespace Xbim.Presentation
         //        Scenes.Add(scene);
         //    }
         //}
+
+        public double ModelRegionTolerance { get; set; } = 5;
         
         private void LoadReferencedModel(IReferencedModel refModel)
         {
@@ -1383,7 +1387,7 @@ namespace Xbim.Presentation
             if (mod == null)
                 return;
 
-            var initialRegion = XbimModelRelativeTranformer.GetExpandedMostPopulated(mod.ReferencingModel, double.PositiveInfinity);
+            var initialRegion = XbimModelRelativeTranformer.GetExpandedMostPopulated(mod.ReferencingModel, ModelRegionTolerance);
             XbimMatrix3D pos = XbimMatrix3D.Identity;
             if (_modelPositioner == null)
             {
@@ -1395,9 +1399,15 @@ namespace Xbim.Presentation
             {
                 pos = _modelPositioner.GetRelativeMatrix(mod.ReferencingModel);
                 // see if we need to expand the view bounds
-                _viewBounds.Union(initialRegion.ToXbimRect3D().Transform(pos));
+                
+                var newRegion = initialRegion.ToXbimRect3D().Transform(pos);
+
+                Debug.WriteLine($"ths Region    :{newRegion}");
+                Debug.WriteLine($"Was ViewBounds:{_viewBounds}");
+                _viewBounds = _viewBounds.Union(newRegion);
+                Debug.WriteLine($"Now ViewBounds:{_viewBounds}");
             }
-            
+
             _currentModelPositions.Add(mod.ReferencingModel, pos);
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
             if (!mod.GeometryStore.IsEmpty)
@@ -1780,6 +1790,22 @@ namespace Xbim.Presentation
                 }
             }
         }
+
+        public void SetStandardCutPlane(IIfcBuildingStorey storey, double cutOffset = 1)
+        {
+            if (storey == null)
+                return;
+            // find the cutting plane in absolute world coordinates
+            //
+            var v = new TransformGraph(storey.Model);
+            v.AddProduct(storey);
+            var v2 = v[storey].WorldMatrix();
+            var off = v2.OffsetZ / storey.Model.ModelFactors.OneMeter;
+            var ptHere = new XbimPoint3D(0, 0, off + cutOffset);
+            var adjusted = ptHere * _modelPositioner.GetAbsoluteMatrix();
+            SetCutPlane(0, 0, adjusted.Z, 0, 0, -1);
+        }
+
         /// <summary>
         /// Sets the reguion to be displayed to the relevant area.
         /// </summary>
@@ -1807,7 +1833,6 @@ namespace Xbim.Presentation
                         // region found, compute due transform then set or expand current
                         //
                         var transformed = reg.ToXbimRect3D().Transform(_currentModelPositions[model]);
-
                         if (!add)
                         {
                             _viewBounds = transformed;
@@ -1821,8 +1846,6 @@ namespace Xbim.Presentation
                 }
                 return false;
             }
-
-
             return false;
         }
     }

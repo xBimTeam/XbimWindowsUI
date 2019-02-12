@@ -108,6 +108,21 @@ namespace Xbim.Presentation.Modelpositioning
             return tmp;
         }
 
+        public XbimMatrix3D GetAbsoluteMatrix()
+        {
+            XbimMatrix3D tmp = XbimMatrix3D.Identity;
+            var transAdj = XbimMatrix3D.CreateTranslation(
+               _firstModelCentralCoordinates.X,
+               _firstModelCentralCoordinates.Y,
+               _firstModelCentralCoordinates.Z
+               );
+            transAdj.Invert();
+            tmp = XbimMatrix3D.Multiply(tmp, _firstModelWcsAdjustment);
+            tmp = XbimMatrix3D.Multiply(tmp, transAdj);
+            return tmp;
+        }
+
+
         static private double GetDistance(XbimPoint3D point1, XbimPoint3D point2)
         {
             return Math.Sqrt(

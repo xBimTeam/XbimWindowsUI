@@ -8,6 +8,7 @@ using Xbim.Common.Geometry;
 using Xbim.Geometry.Engine.Interop;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
+using Xbim.Tessellator;
 
 namespace Xbim.Presentation.Modelpositioning
 {
@@ -83,8 +84,24 @@ namespace Xbim.Presentation.Modelpositioning
                     IIfcGeometricRepresentationItem repItem = _model.Instances[shapeEntityLabel] as IIfcGeometricRepresentationItem;
                     if (repItem == null)
                         continue;
-                    var recreated = Engine.Create(repItem);
-                    var shapeGeom = Engine.CreateShapeGeometry(recreated, _model.ModelFactors.Precision, _model.ModelFactors.DeflectionTolerance, _model.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary);
+
+
+                    // some geometries are not meshed by engine, but by essential's tessellator; 
+                    // todo: there should be a simplified entry for this, in geometry
+                    //
+                    var xbimTessellator = new XbimTessellator(_model, XbimGeometryType.PolyhedronBinary);
+                    xbimTessellator.MoveMinToOrigin = true;
+                    XbimShapeGeometry shapeGeom = null;
+                    if (xbimTessellator.CanMesh(repItem))
+                    {
+                        shapeGeom = xbimTessellator.Mesh(repItem);
+                    }
+                    else
+                    {
+                        var recreated = Engine.Create(repItem);
+                        shapeGeom = Engine.CreateShapeGeometry(recreated, _model.ModelFactors.Precision, _model.ModelFactors.DeflectionTolerance, _model.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary);
+                    }
+
                     var shapeOffset = shapeGeom.TempOriginDisplacement;
                     var adjustedForShape = XbimMatrix3D.Multiply(
                                XbimMatrix3D.CreateTranslation((XbimVector3D)shapeOffset),

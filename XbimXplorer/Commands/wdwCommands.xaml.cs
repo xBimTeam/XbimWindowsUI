@@ -990,22 +990,11 @@ namespace XbimXplorer.Commands
                         if (ModelIsUnavailable) continue;
                         var msg = "";
                         var storName = m.Groups["StoreyName"].Value;
-                        var storey =
-                            Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
+                        var storey = Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
                         if (storey != null)
                         {
-                            var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
-                            var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
-                            var off = trsf.OffsetZ;
-                            var pt = new XbimPoint3D(0, 0, off);
-
-                            // todo: restore
-                            // var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
-                            var mcp = XbimMatrix3D.Identity;
-                           
-                            var transformed = mcp.Transform(pt);
-                            msg = $"Clip 1m above storey elevation {pt.Z} (View space height: {transformed.Z + 1})";
-                            pz = transformed.Z + 1;
+                            _parentWindow.DrawingControl.SetStandardCutPlane(storey, 1);
+                            continue;
                             
                         }
                         if (msg == "")
