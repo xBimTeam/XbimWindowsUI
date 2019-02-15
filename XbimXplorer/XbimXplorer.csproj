@@ -67,8 +67,10 @@
     <Prefer32Bit>true</Prefer32Bit>
     <DocumentationFile>
     </DocumentationFile>
-    <CodeAnalysisRuleSet>..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <LangVersion>6</LangVersion>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>..\Output\Release\</OutputPath>
@@ -250,37 +252,37 @@
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="Xbim.CobieExpress, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.CobieExpress.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.CobieExpress.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Common.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Common.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Geometry.Engine.Interop, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.4.0.15-V0043\lib\net40\Xbim.Geometry.Engine.Interop.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.4.0.15-V0053\lib\net40\Xbim.Geometry.Engine.Interop.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Ifc.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Ifc.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Ifc.Extensions.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Ifc.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc2x3, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Ifc2x3.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Ifc2x3.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc2x3.IO, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Ifc2x3.IO.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Ifc2x3.IO.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Ifc4, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Ifc4.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Ifc4.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.IO, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.IO.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.IO.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.ModelGeometry.Scene, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Geometry.4.0.15-V0043\lib\net40\Xbim.ModelGeometry.Scene.dll</HintPath>
+      <HintPath>..\packages\Xbim.Geometry.4.0.15-V0053\lib\net40\Xbim.ModelGeometry.Scene.dll</HintPath>
     </Reference>
     <Reference Include="Xbim.Tessellator, Version=4.0.0.0, Culture=neutral, PublicKeyToken=11e3655e576ec5a9, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xbim.Essentials.4.0.30-V043\lib\net40\Xbim.Tessellator.dll</HintPath>
+      <HintPath>..\packages\Xbim.Essentials.4.0.30-V053\lib\net40\Xbim.Tessellator.dll</HintPath>
     </Reference>
     <Reference Include="Xceed.Wpf.AvalonDock, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonDock.2.0.2000\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
@@ -313,6 +315,7 @@
     <Compile Include="Commands\Fix.cs" />
     <Compile Include="Commands\FixExtensions.cs" />
     <Compile Include="Commands\GeometryView.cs" />
+    <Compile Include="Commands\PlacementReporter.cs" />
     <Compile Include="Dialogs\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
@@ -553,12 +556,12 @@
     <HalfMinuteOfDay>$([System.Convert]::ToInt16($([MSBuild]::Divide($(MinuteOfDay), 2))))</HalfMinuteOfDay>
     <AssemblyFileVersionAttribute>[assembly:System.Reflection.AssemblyFileVersion("4.0.$(Year)$(Month).$(Day)$(HalfMinuteOfDay)")];</AssemblyFileVersionAttribute>
   </PropertyGroup>
-  <Import Project="..\packages\Xbim.Geometry.4.0.15-V0043\build\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.4.0.15-V0043\build\Xbim.Geometry.targets')" />
+  <Import Project="..\packages\Xbim.Geometry.4.0.15-V0053\build\Xbim.Geometry.targets" Condition="Exists('..\packages\Xbim.Geometry.4.0.15-V0053\build\Xbim.Geometry.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xbim.Geometry.4.0.15-V0043\build\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.4.0.15-V0043\build\Xbim.Geometry.targets'))" />
+    <Error Condition="!Exists('..\packages\Xbim.Geometry.4.0.15-V0053\build\Xbim.Geometry.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xbim.Geometry.4.0.15-V0053\build\Xbim.Geometry.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using Xbim.Common.Geometry;
 
 namespace Xbim.Presentation
 {
+    [Obsolete("XbimModelPositioningCollection is deprecated, please see XbimModelRelativeTranformer instead.")]
     public class XbimModelPositioningCollection
     {
         public XbimModelPositioning this[IModel modelKey]

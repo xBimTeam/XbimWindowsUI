@@ -221,7 +221,6 @@ namespace XbimXplorer
         {
             var worker = s as BackgroundWorker;
             var selectedFilename = args.Argument as string;
-
             try
             {
                 if (worker == null)
@@ -524,7 +523,7 @@ namespace XbimXplorer
         {
             CloseAndDeleteTemporaryFiles();
         }
-
+        
         private void CommandBinding_Open(object sender, ExecutedRoutedEventArgs e)
         {
             var corefilters = new[] {
@@ -1098,6 +1097,23 @@ namespace XbimXplorer
         {
             CommandBox.Visibility = Visibility.Visible;
             CommandPrompt.Focus();
+        }
+
+        private void AddModel(object sender, RoutedEventArgs e)
+        {
+            var file = "";
+            var o = new OpenFileDialog();
+            o.Filter = "Meshed files|*.xbim";
+            o.ShowDialog();
+            file = o.FileName;
+            if (File.Exists(file))
+            {
+                using (var mod = IfcStore.Open(file))
+                {
+                    // AddModel is not implemented yet.
+                    // DrawingControl.AddModel(mod);
+                }
+            }
         }
     }
 }

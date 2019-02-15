@@ -155,11 +155,17 @@ namespace XbimXplorer.LogViewer
                 int eLabel;
                 if (!int.TryParse(mEntityLabel.Groups[1].Value, out eLabel))
                     return;
-
-                var ipers = _mw.Model.Instances[eLabel];
-                if (ipers == null)
-                    return;
-                _mw.SelectedItem = ipers;
+                try
+                {
+                    var ipers = _mw.Model.Instances[eLabel];
+                    if (ipers == null)
+                        return;
+                    _mw.SelectedItem = ipers;
+                }
+                catch (Exception)
+                {
+                    // ignored exception   
+                }
             }
 
             var reUrl = new Regex(@"(http([^ ]+))", RegexOptions.IgnoreCase);

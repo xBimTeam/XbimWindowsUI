@@ -769,8 +769,7 @@ namespace Xbim.Presentation
         public static readonly DependencyProperty ModelProperty =
             DependencyProperty.Register("Model", typeof (IfcStore), typeof (IfcMetaDataControl),
                 new PropertyMetadata(null, OnModelChanged));
-
-
+        
         private static void OnModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = d as IfcMetaDataControl;
@@ -782,8 +781,7 @@ namespace Xbim.Presentation
             }
             ctrl.DataRebind(null);
         }
-
-
+        
         private void Clear(bool clearHistory = true)
         {
             _objectProperties.Clear();
@@ -816,11 +814,17 @@ namespace Xbim.Presentation
                 throw new ArgumentNullException();
             if (e.Uri.Host == "entitylabel")
             {
+                IModel selModel = Model;
+                if (_entity != null)
+                {
+                    // if an entity is selected then start the navigation from the same model.
+                    selModel = _entity.Model;
+                }
                 var lab = e.Uri.AbsolutePath.Substring(1);
                 int iLabel;
                 if (int.TryParse(lab, out iLabel))
                 {
-                    SelectedEntity = Model.Instances[iLabel];
+                    SelectedEntity = selModel.Instances[iLabel];
                 }
             }
         }

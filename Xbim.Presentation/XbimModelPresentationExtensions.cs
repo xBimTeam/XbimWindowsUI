@@ -9,8 +9,6 @@ namespace Xbim.Presentation
 {
     public static class XbimModelPresentationExtensions
     {
-       
-
         // adapted from http://stackoverflow.com/questions/713341/comparing-arrays-in-c-sharp
         //
         private static bool ArraysEqual<T>(T[] a1, T[] a2, EqualityComparer<T> comparer = null)

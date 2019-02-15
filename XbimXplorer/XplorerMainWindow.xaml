@@ -84,6 +84,7 @@
                 <MenuItem Header="_Reload model" Command="Refresh"/>
                 <MenuItem Header="_SaveAs" Command="SaveAs"/>
                 <MenuItem Header="_Close" Command="Close" />
+                <!--<MenuItem Header="_Add model" Click="AddModel" />-->
                 <MenuItem Header="_Federation">
                     <MenuItem Header="_Create" Command="{x:Static local:XplorerMainWindow.CreateFederationCmd}" ToolTip="Loads a set of existing Ifc, Xbim, IfcZip or IfcXML files." />
                     <MenuItem Header="_Edit" Command="{x:Static local:XplorerMainWindow.EditFederationCmd}" ToolTip="Load or unluad federated files and changes their properties." />
@@ -207,7 +208,6 @@
                                    Width="Auto" 
                                    Height="Auto" 
                                    MouseDoubleClick="SpatialControl_MouseDoubleClick"
-                                   WcsAdjusted="{x:Static local:App.ContextWcsAdjustment}"
                                    >
                                 <xbim:DrawingControl3D.Background>
                                     <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -22,12 +23,14 @@ using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
+using Xbim.Geometry.Engine.Interop;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.Extensions;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
+using Xbim.Presentation.Modelpositioning;
 
 #endregion
 
@@ -342,22 +345,12 @@ namespace Xbim.Presentation
 
         #region Fields
 
-        public List<XbimScene<WpfMeshGeometry3D, WpfMaterial>> Scenes =
-            new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
+        public List<XbimScene<WpfMeshGeometry3D, WpfMaterial>> Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
         
         /// <summary>
-        /// Represent the extents of what is considered model. This depends on the selected region.
-        /// _viewBounds is transformed depending on ModelBounds and _modelTranslation. 
+        /// Represent the extents of what is considered model. This can be changed via the selected region.
         /// </summary>
-        private XbimRect3D _viewBounds
-        {
-            get
-            {
-                return ModelPositions.ViewSpaceBounds;
-            }
-        }
-
-       
+        private XbimRect3D _viewBounds { get; set; }
 
         /// <summary>
         /// Gets or sets the model.
@@ -475,11 +468,11 @@ namespace Xbim.Presentation
                     modelHit = Model;
                 else
                 {
-                    foreach (var refModel in Model.ReferencedModels)
+                    foreach (var refModel in _currentModelPositions.Keys)
                     {
-                        if (refModel.Model.UserDefinedId != modelId)
+                        if (refModel.UserDefinedId != modelId)
                             continue;
-                        modelHit = refModel.Model;
+                        modelHit = refModel;
                         break;
                     }
                 }
@@ -793,7 +786,7 @@ namespace Xbim.Presentation
 
         public IfcStore Model
         {
-            get { return  (IfcStore) GetValue(ModelProperty); }
+            get { return (IfcStore)GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
@@ -1049,9 +1042,7 @@ namespace Xbim.Presentation
         }
 
         IIfcProduct _lastSelectedProduct = null;
-
-        public bool WcsAdjusted { get; set; } = true;
-
+       
         private WpfMeshGeometry3D GetSelectionGeometry(IPersistEntity newVal, WpfMaterial mat)
         {
             if (newVal is IIfcProduct)
@@ -1069,14 +1060,14 @@ namespace Xbim.Presentation
                     var productContexts = new List<IIfcProduct>() { _lastSelectedProduct } ;
                     var representationLabels = new List<int>() { newVal.EntityLabel };
                     var selModel = _lastSelectedProduct.Model;
-                    var modelTransform = ModelPositions[selModel].Transform;
+                    var modelTransform = _currentModelPositions[selModel];
                     
-                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
+                    m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
                 }
             }
             else if (newVal is IIfcShapeRepresentation)
             {
-                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, ModelPositions, mat, WcsAdjusted);
+                m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) newVal, _currentModelPositions, mat);   
             }
             else if (newVal is IIfcRelVoidsElement)
             {
@@ -1084,7 +1075,7 @@ namespace Xbim.Presentation
                 var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
                     .FirstOrDefault();
                 if (rep != null)
-                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation) rep, ModelPositions, mat, WcsAdjusted);
+                    m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)rep, _currentModelPositions[rep.Model], mat);
                 else
                 {
                     m = new WpfMeshGeometry3D();
@@ -1094,11 +1085,11 @@ namespace Xbim.Presentation
             {
                 if (SelectionBehaviour == SelectionBehaviours.MultipleSelection)
                 {
-                    m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);
+                    m = WpfMeshGeometry3D.GetGeometry(Selection, _currentModelPositions, mat);
                 }
                 else if (newVal != null) // single element selection, requires the newval to get the model
                 {
-                    m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
+                    m = WpfMeshGeometry3D.GetGeometry(newVal, _currentModelPositions[newVal.Model], mat);
                 }
                 else // otherwise we create an empty mesh
                 {
@@ -1109,31 +1100,7 @@ namespace Xbim.Presentation
         }
 
         public ComponentSelectionMode ComponentSelectionDisplay = ComponentSelectionMode.All;
-
-        // todo: remove after having restored the ComponentSelectionDisplay function
-
-/*
-        private void AddElement(MeshGeometry3D m, IPersistEntity item)
-        {
-            var mod = ModelPositions[item.Model];
-            if (mod != null)
-                m.AddElements(item, mod.Transform);
-            if (ComponentSelectionDisplay == ComponentSelectionMode.None)
-                return;
-            if ((ComponentSelectionDisplay & ComponentSelectionMode.IsDecomposedBy) ==
-                ComponentSelectionMode.IsDecomposedBy && item is IIfcObjectDefinition)
-            {
-                foreach (var relation in ((IIfcObjectDefinition)item).IsDecomposedBy)
-                {
-                    foreach (var relObject in relation.RelatedObjects)
-                    {
-                        AddElement(m, relObject);
-                    }
-                }
-            }
-        }
-*/
-
+        
         #endregion
 
         public bool ShowGridLines
@@ -1275,9 +1242,18 @@ namespace Xbim.Presentation
             if (!options.HasFlag(ModelRefreshOptions.ViewPreserveCuttingPlane))
                 ClearCutPlane();
 
+            _currentModelPositions.Clear();
+            _modelPositioner = null;
+            // default at the center
+            var halfSize = 5;
+            _viewBounds = new XbimRect3D(-halfSize, -halfSize, 0, 2 * halfSize, 2 * halfSize, 2 * halfSize);
+
             if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelectedRegion))
-                ModelPositions = new XbimModelPositioningCollection();
-           
+            { 
+                // todo: this has to be reimplemented
+                // ModelPositions = new XbimModelPositioningCollection();
+            }
+
             Scenes = new List<XbimScene<WpfMeshGeometry3D, WpfMaterial>>();
             //if ((options & ModelRefreshOptions.ViewPreserveCameraPosition) != ModelRefreshOptions.ViewPreserveCameraPosition)
             //    Viewport.ResetCamera();
@@ -1294,36 +1270,10 @@ namespace Xbim.Presentation
             ViewPreserveAll = ~None
         }
 
-        public XbimModelPositioningCollection ModelPositions = new XbimModelPositioningCollection();
-
         public ILayerStyler DefaultLayerStyler { get; set; }
 
-        //TODO resolve issues with reference models
-        
-        private void ReferencedModels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems.Count <= 0)
-                return;
-            var refModel = e.NewItems[0] as XbimReferencedModel;
-            if (refModel != null)
-            {
-                // adding and updating the model to positioning database
-                ModelPositions.AddModel(refModel.Model);
-                // _modelTranslation is not recalculated unless there are no models in the scene 
-                // becayse it's burnt into the other models already
-                if (Scenes.Count == 0)
-                {
-                    //can recalculate extents and _modelTranslation
-                    // DefineModelTranslation();
-                }
-                //ModelPositions.SetCenterInMeters(_modelTranslation);
-                //ModelBounds = ModelPositions.GetEnvelopeInMeters();
-
-                // actually load the model geometry
-                LoadReferencedModel(refModel);
-            }
-            RecalculateView();
-        }
+        XbimModelRelativeTranformer _modelPositioner = new XbimModelRelativeTranformer();
+        Dictionary<IModel, XbimMatrix3D> _currentModelPositions = new Dictionary<IModel, XbimMatrix3D>();
         
 
         /// <summary>
@@ -1358,48 +1308,43 @@ namespace Xbim.Presentation
                 {
                     refModel.Model.UserDefinedId = ++userDefinedId;
                 }
-                // todo: model federation needs to be enabled back
-                // fedModel.ReferencedModels.CollectionChanged += ReferencedModels_CollectionChanged;
             }
-
-            // model positioning routine
-            if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelectedRegion))
-            {
-                // model scaling is determined on all federated models
-                ModelPositions.AddModel(model.ReferencingModel); //add in the model that holds the main entities
-                //now add in any referenced models
-                if (model.IsFederation)
-                {
-                    foreach (var refModel in model.ReferencedModels)
-                    {
-
-                        var v = refModel.Model as IfcStore;
-                        if (v != null)
-                            ModelPositions.AddModel(v.ReferencingModel); //add in the referenced models
-                    }
-                }
-            }
-            ModelPositions.ComputeViewBoundsTransform();
-
             if (DefaultLayerStyler == null)
                 DefaultLayerStyler = new SurfaceLayerStyler();
-
-
             // build the geometric scene and render as we go
             // loading the main model
             DefaultLayerStyler.SetFederationEnvironment(null);
 
-
+            XbimMatrix3D modelmatrix = XbimMatrix3D.Identity;
+            if (!_currentModelPositions.Any())
+            {
+                var initialRegion = XbimModelRelativeTranformer.GetExpandedMostPopulated(model, ModelRegionTolerance);
+                if (initialRegion != null)
+                {
+                    _modelPositioner = new XbimModelRelativeTranformer();
+                    modelmatrix = _modelPositioner.SetBaseModel(model, initialRegion);
+                    _viewBounds = initialRegion.ToXbimRect3D().Transform(modelmatrix);
+                }
+            }
+            else
+            {
+                // currently never enters here, but kept for future developments
+                modelmatrix = _modelPositioner.GetRelativeMatrix(model);
+                throw new NotImplementedException("LoadGeometry with existing model present.");
+            }
+            _currentModelPositions.Add(model, modelmatrix);
+            
             // load the geometry in the direct model
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
+
+            // opaques and transparents in the viewer are directly populated by the BuildScene function
             if (! Model.GeometryStore.IsEmpty)
-                scene = DefaultLayerStyler.BuildScene(model.ReferencingModel, ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
+                scene = DefaultLayerStyler.BuildScene(model.ReferencingModel, modelmatrix, Opaques, Transparents, ExcludedTypes);
 
             if (scene != null && scene.Layers.Any())
             {
                 Scenes.Add(scene);
             }
-
             if (model.IsFederation)
             {
                 // loading all referenced models.
@@ -1408,9 +1353,29 @@ namespace Xbim.Presentation
                     LoadReferencedModel(refModel);
                 }
             }
-
             RecalculateView(options);
         }
+
+        //public void AddModel(IModel model)
+        //{
+        //    if (_modelPositioner == null)
+        //        return;
+        //    var r = new Random();
+        //    model.UserDefinedId = Convert.ToInt16(r.Next(Int16.MaxValue));
+
+        //    DefaultLayerStyler.SetFederationEnvironment(null);
+
+        //    var pos = _modelPositioner.GetRelativeMatrix(model);
+        //    _currentModelPositions.Add(model, pos);
+        //    XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
+        //    scene = DefaultLayerStyler.BuildScene(model, pos, Opaques, Transparents, ExcludedTypes);
+        //    if (scene != null && scene.Layers.Any())
+        //    {
+        //        Scenes.Add(scene);
+        //    }
+        //}
+
+        public double ModelRegionTolerance { get; set; } = 5;
         
         private void LoadReferencedModel(IReferencedModel refModel)
         {
@@ -1421,8 +1386,29 @@ namespace Xbim.Presentation
             var mod = refModel.Model as IfcStore;
             if (mod == null)
                 return;
-            var pos = ModelPositions[mod.ReferencingModel].Transform;
 
+            var initialRegion = XbimModelRelativeTranformer.GetExpandedMostPopulated(mod.ReferencingModel, ModelRegionTolerance);
+            XbimMatrix3D pos = XbimMatrix3D.Identity;
+            if (_modelPositioner == null)
+            {
+                _modelPositioner = new XbimModelRelativeTranformer();
+                pos = _modelPositioner.SetBaseModel(mod.ReferencingModel, initialRegion);
+                _viewBounds = initialRegion.ToXbimRect3D().Transform(pos);
+            }
+            else
+            {
+                pos = _modelPositioner.GetRelativeMatrix(mod.ReferencingModel);
+                // see if we need to expand the view bounds
+                
+                var newRegion = initialRegion.ToXbimRect3D().Transform(pos);
+
+                Debug.WriteLine($"ths Region    :{newRegion}");
+                Debug.WriteLine($"Was ViewBounds:{_viewBounds}");
+                _viewBounds = _viewBounds.Union(newRegion);
+                Debug.WriteLine($"Now ViewBounds:{_viewBounds}");
+            }
+
+            _currentModelPositions.Add(mod.ReferencingModel, pos);
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
             if (!mod.GeometryStore.IsEmpty)
                 scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, ExcludedTypes);
@@ -1804,6 +1790,22 @@ namespace Xbim.Presentation
                 }
             }
         }
+
+        public void SetStandardCutPlane(IIfcBuildingStorey storey, double cutOffset = 1)
+        {
+            if (storey == null)
+                return;
+            // find the cutting plane in absolute world coordinates
+            //
+            var v = new TransformGraph(storey.Model);
+            v.AddProduct(storey);
+            var v2 = v[storey].WorldMatrix();
+            var off = v2.OffsetZ / storey.Model.ModelFactors.OneMeter;
+            var ptHere = new XbimPoint3D(0, 0, off + cutOffset);
+            var adjusted = ptHere * _modelPositioner.GetAbsoluteMatrix();
+            SetCutPlane(0, 0, adjusted.Z, 0, 0, -1);
+        }
+
         /// <summary>
         /// Sets the reguion to be displayed to the relevant area.
         /// </summary>
@@ -1811,9 +1813,40 @@ namespace Xbim.Presentation
         /// <returns>true if the region has ben found and set, false otherwise</returns>
         public bool SetRegion(string rName, bool add)
         {
-            var ret = ModelPositions.SetSelectedRegionByName(rName, add);
-            ReloadModel(ModelRefreshOptions.ViewPreserveSelectedRegion);
-            return ret;
+            foreach (var model in _currentModelPositions.Keys)
+            {
+                var geomStore = model.GeometryStore;
+                if (geomStore == null)
+                    continue;
+                if (geomStore.IsEmpty)
+                    continue;
+                using (var reader = geomStore.BeginRead())
+                {
+                    foreach (var readerContextRegion in reader.ContextRegions)
+                    {
+                        if (!readerContextRegion.Any())
+                            continue;
+                        var reg = readerContextRegion.FirstOrDefault(x => x.Name == rName);
+                        if (reg == null)
+                            continue;
+
+                        // region found, compute due transform then set or expand current
+                        //
+                        var transformed = reg.ToXbimRect3D().Transform(_currentModelPositions[model]);
+                        if (!add)
+                        {
+                            _viewBounds = transformed;
+                        }
+                        else
+                        {
+                            _viewBounds.Union(transformed);
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return false;
         }
     }
 }
