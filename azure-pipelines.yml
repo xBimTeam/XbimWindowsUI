@@ -5,6 +5,7 @@ trigger:
     include:
     - master
     - develop
+    - ifcRail
   paths:
     exclude:
     - README.md
@@ -185,6 +186,16 @@ steps:
     command: push
     nuGetFeedType: external
     publishFeedCredentials: 'MyGetDev'
+    versioningScheme: byEnvVar
+    versionEnvVar: version
+
+- task: NuGetCommand@2
+  name: 'MyGetPublishing_IfcRail'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/ifcRail')
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'MyGetIfcRail'
     versioningScheme: byEnvVar
     versionEnvVar: version
 

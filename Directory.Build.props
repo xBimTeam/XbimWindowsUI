@@ -8,9 +8,9 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <Version>5.0.0.0</Version>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
+    <Version>5.9999.0.0</Version>
+    <AssemblyVersion>5.9999.0.0</AssemblyVersion>
+    <FileVersion>5.9999.0.0</FileVersion>
     <Copyright>Copyright © XBIM Ltd</Copyright>
     <Company>Xbim Ltd.</Company>
     <Authors>Steve Lockley, Martin Cerny and XBIMTeam Contributors</Authors>
@@ -19,7 +19,7 @@
     <PackageProjectUrl>https://github.com/xBimTeam/XbimCobieExpress</PackageProjectUrl>
     <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
     <PackageReleaseNotes>
-      Now built on XBIM v5. Migrated from log4net to Microsoft.Extensions.Logging.
+      With Experimental support for IfcRail schema extensions. Unofficial release.
     </PackageReleaseNotes>
     <PackageTags>BIM, IFC, IfcXml, IfcZip, Ifc4, COBie, BuildingSmart</PackageTags>
     <RepositoryUrl>https://github.com/xBimTeam/XbimEssentials/tree/master</RepositoryUrl>
