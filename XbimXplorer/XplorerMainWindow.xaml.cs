@@ -279,7 +279,8 @@ namespace XbimXplorer
 #endif
                             SetDeflection(model);
                             //upgrade to new geometry representation, uses the default 3D model
-                            context.CreateContext(worker.ReportProgress, App.ContextWcsAdjustment);
+                            bool adjust = App.ContextWcsAdjustment;
+                            context.CreateContext(null,true);
                         }
                         catch (Exception geomEx)
                         {
