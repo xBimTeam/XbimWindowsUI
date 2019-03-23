@@ -832,10 +832,11 @@ namespace Xbim.Presentation
         {
             WholeMesh,
             Normals,
-            WireFrame
+            WireFrame,
+            AllSpatiallyContained
         }
 
-        public SelectionHighlightModes SelectionHighlightMode = SelectionHighlightModes.WholeMesh;
+        public SelectionHighlightModes SelectionHighlightMode = SelectionHighlightModes.AllSpatiallyContained;
 
         public enum SelectionBehaviours
         {
@@ -981,7 +982,7 @@ namespace Xbim.Presentation
                 var axesMeshBuilder = new MeshBuilder();
                 var pos = m.Positions.ToArray();
                 var nor = m.Normals.ToArray();
-                
+
                 for (var i = 0; i < m.TriangleIndices.Count; i += 3)
                 {
                     var p1 = m.TriangleIndices[i];
@@ -1022,7 +1023,7 @@ namespace Xbim.Presentation
                     }
 
                     var bl = box.Length();
-                    var lineThickness = bl/1000; // 0.01;
+                    var lineThickness = bl / 1000; // 0.01;
 
                     for (var i = 0; i < m.TriangleIndices.Count; i += 3)
                     {
@@ -1045,6 +1046,37 @@ namespace Xbim.Presentation
                     ShowAll();
                 }
                 Highlighted.Content = new GeometryModel3D(axesMeshBuilder.ToMesh(), HelixToolkit.Wpf.Materials.Yellow);
+            }
+            else if (SelectionHighlightMode == SelectionHighlightModes.AllSpatiallyContained)
+            {
+                var entitySelection = new EntitySelection();
+                //get all the children of the node
+                var s = newVal as IIfcSpatialElement;
+                if (s != null )
+                {
+                    GetSpatiallyContained(entitySelection, s);
+                    m = WpfMeshGeometry3D.GetGeometry(entitySelection, ModelPositions, mat);
+                }                
+                Highlighted.Content = m;
+            }
+        }
+
+        private void GetSpatiallyContained(EntitySelection entitySelection, IIfcSpatialElement spatial)
+        {
+            foreach (var rel in spatial.ContainsElements)
+            {
+                entitySelection.AddRange(rel.RelatedElements);
+
+                var decomposes = spatial.IsDecomposedBy ?? Enumerable.Empty<IIfcRelAggregates>();
+                foreach (var subSpaceRel in decomposes)
+                {
+                    var subSpaces = subSpaceRel.RelatedObjects.OfType<IIfcSpatialElement>();
+                    foreach (var subSpace in subSpaces)
+                    {
+                        GetSpatiallyContained(entitySelection, subSpace);
+                    }
+                }
+                
             }
         }
 
