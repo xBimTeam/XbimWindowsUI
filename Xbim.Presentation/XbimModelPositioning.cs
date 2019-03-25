@@ -151,27 +151,27 @@ namespace Xbim.Presentation
                 //
                 var threshold = 5;
                 var selectedRad = rect.Radius() * threshold;
-                var testOtherRegions = true;
-                while (testOtherRegions)
-                {
-                    testOtherRegions = false;
-                    foreach (var contextRegion in reader.ContextRegions)
-                    {
-                        foreach (var otherRegion in contextRegion.Where(x => !mergedRegions.Contains(x)))
-                        {
-                            var otherRad = otherRegion.Size.Length/2;
-                            var centreDistance = GetDistance(otherRegion.Centre, rect.Centroid());
-                            if (otherRad + selectedRad > centreDistance)
-                            {
-                                mergedRegions.Add(otherRegion);
-                                pop += otherRegion.Population;
-                                rect.Union(otherRegion.ToXbimRect3D());
-                                testOtherRegions = true;
-                                selectedRad = rect.Radius() * threshold;
-                            }
-                        }
-                    }
-                }
+               // var testOtherRegions = true;
+                //while (testOtherRegions)
+                //{
+                //    testOtherRegions = false;
+                //    foreach (var contextRegion in reader.ContextRegions)
+                //    {
+                //        foreach (var otherRegion in contextRegion.Where(x => !mergedRegions.Contains(x)))
+                //        {
+                //            var otherRad = otherRegion.Size.Length/2;
+                //            var centreDistance = GetDistance(otherRegion.Centre, rect.Centroid());
+                //            if (otherRad + selectedRad > centreDistance)
+                //            {
+                //                mergedRegions.Add(otherRegion);
+                //                pop += otherRegion.Population;
+                //                rect.Union(otherRegion.ToXbimRect3D());
+                //                testOtherRegions = true;
+                //                selectedRad = rect.Radius() * threshold;
+                //            }
+                //        }
+                //    }
+                //}
                 // todo: the identity matrix should be replaced with a correct model matrix.
                 //
                 SelectedRegion = new XbimRegion(name, rect, pop, XbimMatrix3D.Identity);
