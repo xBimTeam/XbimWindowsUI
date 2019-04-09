@@ -81,7 +81,7 @@ namespace Xbim.Presentation
             foreach (var item in allGroups)
             {
                 if (!childGroups.Contains(item))
-                    _children.Add(new GroupViewModel(item, this)); //add only root groups/systems
+                    _children.Add(new GroupViewModel(item, this)); // add only root groups/systems
             }
         }
 
