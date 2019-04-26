@@ -1046,7 +1046,7 @@ namespace XbimXplorer
 
         private void HideSelected(object sender, RoutedEventArgs e)
         {
-            if (null != DrawingControl.IsolateInstances)
+            if (null != DrawingControl.HiddenInstances)
                 DrawingControl.HiddenInstances.AddRange(DrawingControl.Selection);
             else
                 DrawingControl.HiddenInstances = DrawingControl.Selection.ToList();
@@ -1056,11 +1056,7 @@ namespace XbimXplorer
 
         private void IsolateSelected(object sender, RoutedEventArgs e)
         {
-            if (null != DrawingControl.IsolateInstances)
-                DrawingControl.IsolateInstances.AddRange(DrawingControl.Selection);
-            else
-                DrawingControl.IsolateInstances = DrawingControl.Selection.ToList();
-
+            DrawingControl.IsolateInstances = DrawingControl.Selection.ToList();
             DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
         }
 
