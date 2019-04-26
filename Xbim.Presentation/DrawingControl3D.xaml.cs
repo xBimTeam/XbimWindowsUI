@@ -1449,29 +1449,41 @@ namespace Xbim.Presentation
         /// </summary>
         private void UpdateGrid()
         {
-            GridLines.Visible = !_hasModelGrid;
-            var gridSizeX = Math.Ceiling(_viewBounds.SizeX/10)*10;
-            var gridSizeY = Math.Ceiling(_viewBounds.SizeY/10)*10;
+            // Disable while updating
+            GridLines.Visible = false;
 
-            GridLines.Length = gridSizeX;
-            GridLines.Width = gridSizeY;
+            var gridSizeX = Math.Ceiling(_viewBounds.SizeX / 10) * 10;
+            var gridSizeY = Math.Ceiling(_viewBounds.SizeY / 10) * 10;
+
+            GridLines.Length = 1;
+            double gridLevel = Math.Ceiling(Math.Max(gridSizeX, gridSizeY) / 1000);
 
             if (gridSizeX > 10 || gridSizeY > 10)
             {
-                GridLines.MinorDistance = 5;
-                GridLines.MajorDistance = 50;
-                GridLines.Thickness = 0.05;
+                // Being adaptive beyond 10x10
+                GridLines.MinorDistance = gridLevel * 5;
+                GridLines.MajorDistance = gridLevel * 50;
+                GridLines.Thickness = gridLevel * 0.05;
             }
             else
             {
+                // Otherwise static
                 GridLines.MinorDistance = 1;
                 GridLines.MajorDistance = 10;
                 GridLines.Thickness = 0.01;
             }
 
+            // Set extent finally
+            GridLines.Length = gridSizeX;
+            GridLines.Width = gridSizeY;
+
             var p3D = _viewBounds.Centroid();
             var t3D = new TranslateTransform3D(p3D.X, p3D.Y, _viewBounds.Z);
+
             GridLines.Transform = t3D;
+
+            // Show if needed
+            GridLines.Visible = !_hasModelGrid;
         }
 
         public void ReportData(StringBuilder sb, IModel model, int entityLabel)
