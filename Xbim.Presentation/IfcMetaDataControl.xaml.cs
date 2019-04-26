@@ -489,7 +489,7 @@ namespace Xbim.Presentation
                 var repItemsLabels = ifcprod.Representation?.Representations?.SelectMany(rep => rep.Items).Select(i => i.EntityLabel).ToList();
 
                 // is there style information too?
-                var styles = ifcprod.Model.Instances.OfType<IIfcStyledItem>().Where(x => x.Item != null && repItemsLabels.Contains(x.Item.EntityLabel));
+                var styles = ifcprod.Model.Instances.OfType<IIfcStyledItem>().Where(x => repItemsLabels != null && (x.Item != null && repItemsLabels.Contains(x.Item.EntityLabel)));
                 foreach (var style in styles)
                 {
                     int i = 0;

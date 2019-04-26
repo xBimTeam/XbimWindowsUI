@@ -1,8 +1,8 @@
 
-Branch | Status
------- | -------
-Master | [![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=master)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=master)
-Develop |[![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=develop)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=develop)
+Branch | Build Status  | MyGet | NuGet
+------ | ------- | --- | --- |
+Master | [![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=master)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=master) | ![master](https://img.shields.io/myget/xbim-master/v/Xbim.WindowsUI.svg) | ![](https://img.shields.io/nuget/v/Xbim.WindowsUI.svg)
+Develop |[![Build Status](https://dev.azure.com/xBIMTeam/xBIMToolkit/_apis/build/status/XbimWindowsUI?branchName=develop)](https://dev.azure.com/xBIMTeam/xBIMToolkit/_build/latest?definitionId=4?branchName=develop) | ![](https://img.shields.io/myget/xbim-develop/vpre/Xbim.WindowsUI.svg) | -
 
 # XbimWindowsUI
 

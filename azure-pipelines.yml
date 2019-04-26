@@ -1,9 +1,16 @@
 # Yaml Pipeline Tasks for reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/index?view=vsts
 
 trigger:
-- master
-- develop
-
+  branches:
+    include:
+    - master
+    - develop
+  paths:
+    exclude:
+    - README.md
+    - CHANGELOG.md
+    - CONTRIBUTING.md
+    
 pool:
   vmImage: 'VS2017-Win2016'
 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LanguageTargets>$(MSBuildExtensionsPath)\$(VisualStudioVersion)\Bin\Microsoft.CSharp.targets</LanguageTargets>
+    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
     <TargetFrameworks>net47</TargetFrameworks>
     <Title>Xbim.Presentation</Title>
     <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
@@ -26,8 +26,8 @@
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Wpf" Version="2015.1.715" />
     <PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.213" />
-	<PackageReference Include="Xbim.Geometry" Version="5.0.163" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.241-develop" />
+	<PackageReference Include="Xbim.Geometry" Version="5.0.203-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

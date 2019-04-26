@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LanguageTargets>$(MSBuildExtensionsPath)\$(VisualStudioVersion)\Bin\Microsoft.CSharp.targets</LanguageTargets>
+    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
     <TargetFrameworks>net47</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <StartupObject />
@@ -52,8 +52,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SharpZipLib" Version="0.86.0" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.213" />
-    <PackageReference Include="Xbim.Geometry" Version="5.0.163" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.241-develop" />
+    <PackageReference Include="Xbim.Geometry" Version="5.0.203-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
