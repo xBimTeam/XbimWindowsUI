@@ -16,8 +16,6 @@ namespace Xbim.Presentation.LayerStyling
 {
     public class SurfaceLayerStyler : ILayerStyler, IProgressiveLayerStyler
     {
-       
-
         public event ProgressChangedEventHandler ProgressChanged;
 
         readonly XbimColourMap _colourMap = new XbimColourMap();
@@ -38,12 +36,16 @@ namespace Xbim.Presentation.LayerStyling
         /// <param name="modelTransform">The transform to place the models geometry in the right place</param>
         /// <param name="opaqueShapes"></param>
         /// <param name="transparentShapes"></param>
-        /// <param name="exclude">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
+        /// <param name="isolateInstances">List of instances to be isolated</param>
+        /// <param name="hideInstances">List of instances to be hidden</param>
+        /// <param name="excludeTypes">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
         /// <returns></returns>
-        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes,
-            List<Type> exclude = null)
+        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, 
+            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null)
         {
-            var excludedTypes = model.DefaultExclusions(exclude);
+            var excludedTypes = model.DefaultExclusions(excludeTypes);
+            var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
+            var hiddenInstances = hideInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             var timer = new Stopwatch();
@@ -81,7 +83,9 @@ namespace Xbim.Presentation.LayerStyling
                     
                     // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
-                    foreach (var shapeInstance in shapeInstances)
+                    foreach (var shapeInstance in shapeInstances
+                        .Where(s => null == onlyInstances || onlyInstances.Count == 0 || onlyInstances.Keys.Contains(s.IfcProductLabel) )
+                        .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel) ))
                     {
                         // logging 
                         var currentProgress = 100 * prog++ / tot;

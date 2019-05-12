@@ -112,7 +112,7 @@ namespace XbimXplorer
         {
             // So we can use *.xbim files.
             IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
-
+            
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
             LogSink.EventsLimit = 1000; // log event's minute
@@ -1041,6 +1041,29 @@ namespace XbimXplorer
             if (!c.MustUpdate) 
                 return;
             DrawingControl.ExcludedTypes = c.ExcludedTypes;
+            DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
+        }
+
+        private void HideSelected(object sender, RoutedEventArgs e)
+        {
+            if (null != DrawingControl.HiddenInstances)
+                DrawingControl.HiddenInstances.AddRange(DrawingControl.Selection);
+            else
+                DrawingControl.HiddenInstances = DrawingControl.Selection.ToList();
+
+            DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
+        }
+
+        private void IsolateSelected(object sender, RoutedEventArgs e)
+        {
+            DrawingControl.IsolateInstances = DrawingControl.Selection.ToList();
+            DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
+        }
+
+        private void RestoreView(object sender, RoutedEventArgs e)
+        {
+            DrawingControl.IsolateInstances = null;
+            DrawingControl.HiddenInstances = null;
             DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
         }
 

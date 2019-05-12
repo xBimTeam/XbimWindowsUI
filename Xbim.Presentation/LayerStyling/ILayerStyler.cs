@@ -9,7 +9,8 @@ namespace Xbim.Presentation.LayerStyling
 {
     public interface ILayerStyler
     {
-        XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes ,List<Type> exclude = null);
+        XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, 
+            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null);
         void SetFederationEnvironment(IReferencedModel refModel);
     }
 
