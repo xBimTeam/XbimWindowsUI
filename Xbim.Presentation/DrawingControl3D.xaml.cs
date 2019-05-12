@@ -612,6 +612,7 @@ namespace Xbim.Presentation
             var pRet = new PointGeomInfo
             {
                 Entity = pHit.Entity,
+                ModelReferencePoint = -1 * ModelPositions[pHit.Entity?.Model ?? Model.Model].Transform.Translation,
                 Point = hit.MeshHit.Positions[iClosest]
             };
 
