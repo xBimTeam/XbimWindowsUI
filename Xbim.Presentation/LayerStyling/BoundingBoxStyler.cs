@@ -28,7 +28,7 @@ namespace Xbim.Presentation.LayerStyling
 
         public BoundingBoxStyler(ILogger logger = null)
         {
-            Logger = logger ?? new LoggerFactory().CreateLogger<BoundingBoxStyler>();
+            Logger = logger ?? XbimLogging.CreateLogger<BoundingBoxStyler>();
         }
 
         /// <summary>
