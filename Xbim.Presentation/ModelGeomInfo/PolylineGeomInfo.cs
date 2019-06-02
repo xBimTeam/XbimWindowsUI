@@ -28,6 +28,8 @@ namespace Xbim.Presentation.ModelGeomInfo
 
         private readonly List<PointGeomInfo> _geomPoints;
 
+        public IEnumerable<PointGeomInfo> Points => _geomPoints;
+
         public EntitySelection ParticipatingEntities
         {
             get
@@ -45,12 +47,17 @@ namespace Xbim.Presentation.ModelGeomInfo
         public override string ToString()
         {
             if (_geomPoints.Count == 1)
-                return
-                    $"Selected point coords: {_geomPoints[0].Point.X:0.##}, {_geomPoints[0].Point.Y:0.##}, {_geomPoints[0].Point.Z:0.##})";
-            var d = GetArea();
-            return !double.IsNaN(d) 
-                ? $"Lenght: {GetLenght():0.##}m Area: {d:0.##}sqm"
-                : $"Lenght: {GetLenght():0.##}m";
+            {
+                var p = _geomPoints[0].ModelPoint;
+                return $"Selected point coords: {p.X:0.##}, {p.Y:0.##}, {p.Z:0.##})";
+            }
+            else
+            {
+                var d = GetArea();
+                return !double.IsNaN(d)
+                    ? $"Lenght: {GetLenght():0.##}m Area: {d:0.##}sqm"
+                    : $"Lenght: {GetLenght():0.##}m";
+            }
         }
 
         public PolylineGeomInfo()

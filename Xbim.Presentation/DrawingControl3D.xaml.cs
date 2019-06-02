@@ -236,7 +236,11 @@ namespace Xbim.Presentation
         /// configued ILayerStyler for the exclusion to work.
         /// </summary>
         public List<Type> ExcludedTypes = new List<Type>(DefaultExcludedTypes);
-        
+
+        public List<IPersistEntity> IsolateInstances = null;
+
+        public List<IPersistEntity> HiddenInstances = null;
+
         private LinesVisual3D _userModeledDimLines;
         private PointsVisual3D _userModeledDimPoints;
         public PolylineGeomInfo UserModeledDimension = new PolylineGeomInfo();
@@ -445,7 +449,7 @@ namespace Xbim.Presentation
         {
             var pos = e.GetPosition(Canvas);
             var hit = FindHit(pos);
-
+            
             var hitObject = hit?.ModelHit?.GetValue(TagProperty);           
             if (hitObject == null)
             {
@@ -462,7 +466,7 @@ namespace Xbim.Presentation
             IPersistEntity thisSelectedEntity = null;
             if (hitObject is XbimInstanceHandle)
             {
-                var selhandle = (XbimInstanceHandle) hitObject;
+                var selhandle = (XbimInstanceHandle) hitObject;                
                 thisSelectedEntity = selhandle.GetEntity();
             }
             else if (hitObject is WpfMeshGeometry3D)
@@ -608,6 +612,7 @@ namespace Xbim.Presentation
             var pRet = new PointGeomInfo
             {
                 Entity = pHit.Entity,
+                ModelReferencePoint = -1 * ModelPositions[pHit.Entity?.Model ?? Model.Model].Transform.Translation,
                 Point = hit.MeshHit.Positions[iClosest]
             };
 
@@ -1329,10 +1334,9 @@ namespace Xbim.Presentation
         /// <summary>
         /// Clears the current graphics and initiates the cascade of events that result in viewing the scene.
         /// </summary>
-        /// <param name="model"></param>
-        /// <param name="entityLabels">If null loads the whole model, otherwise only elements listed in the enumerable</param>
-        /// <param name="options"></param>
-        public void LoadGeometry(IfcStore model, IEnumerable<int> entityLabels = null, ModelRefreshOptions options = ModelRefreshOptions.None)
+        /// <param name="model">The model</param>
+        /// <param name="options">The options (None by default)</param>
+        public void LoadGeometry(IfcStore model, ModelRefreshOptions options = ModelRefreshOptions.None)
         {
             // AddLayerToDrawingControl is the function that actually populates the geometry in the viewer.
             // AddLayerToDrawingControl is triggered by BuildRefModelScene and BuildScene below here when layers get ready.
@@ -1393,7 +1397,8 @@ namespace Xbim.Presentation
             // load the geometry in the direct model
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
             if (! Model.GeometryStore.IsEmpty)
-                scene = DefaultLayerStyler.BuildScene(model.ReferencingModel, ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, ExcludedTypes);
+                scene = DefaultLayerStyler.BuildScene(model.ReferencingModel, ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents, 
+                    IsolateInstances, HiddenInstances, ExcludedTypes);
 
             if (scene != null && scene.Layers.Any())
             {
@@ -1425,7 +1430,7 @@ namespace Xbim.Presentation
 
             XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
             if (!mod.GeometryStore.IsEmpty)
-                scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, ExcludedTypes);
+                scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes);
             if (scene != null && scene.Layers.Any())
             {
                 Scenes.Add(scene);
@@ -1449,29 +1454,41 @@ namespace Xbim.Presentation
         /// </summary>
         private void UpdateGrid()
         {
-            GridLines.Visible = !_hasModelGrid;
-            var gridSizeX = Math.Ceiling(_viewBounds.SizeX/10)*10;
-            var gridSizeY = Math.Ceiling(_viewBounds.SizeY/10)*10;
+            // Disable while updating
+            GridLines.Visible = false;
 
-            GridLines.Length = gridSizeX;
-            GridLines.Width = gridSizeY;
+            var gridSizeX = Math.Ceiling(_viewBounds.SizeX / 10) * 10;
+            var gridSizeY = Math.Ceiling(_viewBounds.SizeY / 10) * 10;
+
+            GridLines.Length = 1;
+            double gridLevel = Math.Ceiling(Math.Max(gridSizeX, gridSizeY) / 1000);
 
             if (gridSizeX > 10 || gridSizeY > 10)
             {
-                GridLines.MinorDistance = 5;
-                GridLines.MajorDistance = 50;
-                GridLines.Thickness = 0.05;
+                // Being adaptive beyond 10x10
+                GridLines.MinorDistance = gridLevel * 5;
+                GridLines.MajorDistance = gridLevel * 50;
+                GridLines.Thickness = gridLevel * 0.05;
             }
             else
             {
+                // Otherwise static
                 GridLines.MinorDistance = 1;
                 GridLines.MajorDistance = 10;
                 GridLines.Thickness = 0.01;
             }
 
+            // Set extent finally
+            GridLines.Length = gridSizeX;
+            GridLines.Width = gridSizeY;
+
             var p3D = _viewBounds.Centroid();
             var t3D = new TranslateTransform3D(p3D.X, p3D.Y, _viewBounds.Z);
+
             GridLines.Transform = t3D;
+
+            // Show if needed
+            GridLines.Visible = !_hasModelGrid;
         }
 
         public void ReportData(StringBuilder sb, IModel model, int entityLabel)

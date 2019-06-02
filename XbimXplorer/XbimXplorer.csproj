@@ -52,8 +52,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SharpZipLib" Version="0.86.0" />
-    <PackageReference Include="Xbim.Essentials" Version="5.0.225" />
-    <PackageReference Include="Xbim.Geometry" Version="5.0.204" />
+    <PackageReference Include="Xbim.Essentials" Version="5.0.255" />
+    <PackageReference Include="Xbim.Geometry" Version="5.0.226" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
