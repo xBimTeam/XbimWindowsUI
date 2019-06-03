@@ -19,7 +19,7 @@ variables:
   BuildConfiguration: 'Release'
   BuildPlatform: 'Any CPU'
   major: 5
-  minor: 0
+  minor: 1
 
   # creates a named counter and seeds it at 100 and then assigns the value to a variable named buildNo.
   buildNo: $[counter('winversioncounter', 100)]

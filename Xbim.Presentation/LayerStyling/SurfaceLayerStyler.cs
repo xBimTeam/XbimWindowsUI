@@ -26,7 +26,7 @@ namespace Xbim.Presentation.LayerStyling
 
         public SurfaceLayerStyler(ILogger logger = null)
         {
-            Logger = logger ?? new LoggerFactory().CreateLogger<SurfaceLayerStyler>();
+            Logger = logger ?? XbimLogging.CreateLogger<SurfaceLayerStyler>();
         }
 
         /// <summary>
