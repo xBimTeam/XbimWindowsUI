@@ -488,18 +488,21 @@ namespace Xbim.Presentation
                 //
                 var repItemsLabels = ifcprod.Representation?.Representations?.SelectMany(rep => rep.Items).Select(i => i.EntityLabel).ToList();
 
-                // is there style information too?
-                var styles = ifcprod.Model.Instances.OfType<IIfcStyledItem>().Where(x => x.Item != null && repItemsLabels.Contains(x.Item.EntityLabel));
-                foreach (var style in styles)
+                if (repItemsLabels != null)
                 {
-                    int i = 0;
-                    _materials.Add(new PropertyItem
+                    // is there style information too?
+                    var styles = ifcprod.Model.Instances.OfType<IIfcStyledItem>().Where(x => x.Item != null && repItemsLabels.Contains(x.Item.EntityLabel));
+                    foreach (var style in styles)
                     {
-                        PropertySetName = "Connected Style Items",
-                        Name = $"Connected Style Items[{i++}]",
-                        Value = $"{style.EntityLabel}",
-                        IfcLabel = style.EntityLabel
-                    });
+                        int i = 0;
+                        _materials.Add(new PropertyItem
+                        {
+                            PropertySetName = "Connected Style Items",
+                            Name = $"Connected Style Items[{i++}]",
+                            Value = $"{style.EntityLabel}",
+                            IfcLabel = style.EntityLabel
+                        });
+                    }
                 }
             }
         }
