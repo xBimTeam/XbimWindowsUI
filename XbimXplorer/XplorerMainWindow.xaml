@@ -9,7 +9,7 @@
     xmlns:viewModels="clr-namespace:Xbim.Ifc.ViewModels;assembly=Xbim.Ifc"
     Title="Xbim Xplorer" Height="600" Width="800" 
     x:Name="MainWindow"
-        Icon="xBIM.ico" ContentRendered="RenderedEvents" >
+         ContentRendered="RenderedEvents" Icon="pack://siteoforigin:,,,/xBIM.ico" >
     <Window.Resources>
         <ObjectDataProvider x:Key="ModelProvider"  IsInitialLoadEnabled="False" ></ObjectDataProvider>
         <DataTemplate DataType="{x:Type viewModels:XbimModelViewModel}">

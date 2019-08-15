@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AboutWindow" Height="340" Width="600" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" WindowStyle="None"
         Deactivated="AboutWindow_OnDeactivated"
-        MouseLeftButtonDown="UserControl_MouseLeftButtonDown"
+        MouseLeftButtonDown="UserControl_MouseLeftButtonDown" Icon="pack://siteoforigin:,,,/xBIM.ico"
         >
     <Border Padding="5" BorderBrush="Black" BorderThickness="1">
         <Grid >
