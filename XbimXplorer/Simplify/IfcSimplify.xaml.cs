@@ -184,22 +184,25 @@ namespace XbimXplorer.Simplify
                 : "Not found";
         }
 
+        Regex reGetEntityLabel = new Regex(
+                "#(\\d+)" + // hash and integer index
+                "", RegexOptions.Compiled
+                );
+
+        Regex reStripStrings = new Regex("'[^']+'", RegexOptions.Compiled);
+
         private void RecursiveAdd(int ifcIndex, bool includeProperties = false)
         {
             if (_elementsToExport.Contains(ifcIndex))
                 return; // been exported already;
-
             _elementsToExport.Add(ifcIndex);
 
             System.Diagnostics.Debug.WriteLine($"Exporting {ifcIndex} {_ifcType[ifcIndex]} ({_elementsToExport.Count})");
-
-            var re = new Regex(
-                "#(\\d+)" + // hash and integer index
-                ""
-                );
             try
             {
-                var mc = re.Matches(_ifcContents[ifcIndex]);
+                var val = _ifcContents[ifcIndex];
+                var strippedText = reStripStrings.Replace(val, "");
+                var mc = reGetEntityLabel.Matches(strippedText);
                 foreach (Match mtch in mc)
                 {
                     var thisIndex = Convert.ToInt32(mtch.Groups[1].ToString());
