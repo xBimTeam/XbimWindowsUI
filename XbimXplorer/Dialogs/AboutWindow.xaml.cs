@@ -29,8 +29,21 @@ namespace XbimXplorer.Dialogs
         {
             InitializeComponent();
             DataContext = this;
-            Logo.Source = new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute));
+            // Logo.Source = new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute));
             _assembly = Assembly.GetEntryAssembly();
+            using (var res = _assembly.GetManifestResourceStream("XbimXplorer.xBIM.ico"))
+            {
+                var imageSource = new BitmapImage();
+                imageSource.BeginInit();
+                imageSource.StreamSource = res;
+                imageSource.EndInit();
+                
+                // Assign the Source property of your image
+                Logo.Source = imageSource;
+            }
+            
+            // Logo.Source = new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute));
+            
         }
 
         private void AboutWindow_OnDeactivated(object sender, EventArgs e)
@@ -59,7 +72,7 @@ namespace XbimXplorer.Dialogs
             get
             {
                 var sb = new StringBuilder();
-                sb.AppendFormat("Name\tAssembly version\tFile version:\tCompile date signature:\r\n");
+                sb.AppendFormat("Name\tAssembly version\tFile version:\r\n");
                 var baseAssembly = Assembly.GetEntryAssembly();
                 DocumentAssembly(baseAssembly, sb);
                 
@@ -85,7 +98,7 @@ namespace XbimXplorer.Dialogs
                 DocumentSingleAssembly(a, sb);
             }
         }
-        
+
         private void DocumentSingleAssembly(Assembly a, StringBuilder sb)
         {
             if (!a.GetName().Name.ToLowerInvariant().Contains(@"xbim"))
@@ -93,8 +106,7 @@ namespace XbimXplorer.Dialogs
             var xa = new XbimAssemblyInfo(a);
             if (string.IsNullOrEmpty(a.Location))
                 xa.OverrideLocation = MainWindow.GetAssemblyLocation(a);
-            var assemblyDescription = string.Format("{0}\t{1}\t{2}\t{3}\r\n", a.GetName().Name, xa.AssemblyVersion,
-                xa.FileVersion, xa.CompilationTime);
+            var assemblyDescription = $"{a.GetName().Name}\t{xa.AssemblyVersion}\t{xa.FileVersion}\r\n";
             sb.Append(assemblyDescription);
         }
 

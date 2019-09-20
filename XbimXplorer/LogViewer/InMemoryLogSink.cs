@@ -24,8 +24,7 @@ namespace XbimXplorer.LogViewer
 
         private int _eventsTally = 0;
         private DateTime _lastEvent = DateTime.Now;
-
-
+        
         public string Tag;
 
         // The lock for the event.
@@ -50,8 +49,7 @@ namespace XbimXplorer.LogViewer
                 }
             }
         }
-
-
+        
         public void Emit(LogEvent logEvent)
         {
             if (DateTime.Now.Subtract(_lastEvent).TotalSeconds > EventsResetInterval)
@@ -90,9 +88,6 @@ namespace XbimXplorer.LogViewer
                 handlers?.Invoke(this, new LogEventArgs(new[] { overLimit }));
             }
         }
-
-        
     }
-
 }
 

@@ -391,15 +391,25 @@ namespace XbimXplorer.Commands
                     }
                 }
 
+                mdbclosed = Regex.Match(cmd, @"^(convert) *(?<folderName>.+)?", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    var folderName = mdbclosed.Groups["folderName"].Value;
+                    if (!Directory.Exists(folderName))
+                    {
+                        continue;
+                    }
+                    ConvertFolder(folderName);
+                    continue;
+                }
+
                 // above here functions that do not need an opened model
                 // #####################################################
-                
-
 
                 // all commands here
                 //
                 var m = Regex.Match(cmd, @"^(entitylabel|el) (?<el>\d+)(?<recursion> -*\d+)*",
-                    RegexOptions.IgnoreCase);
+                RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
@@ -1129,6 +1139,25 @@ namespace XbimXplorer.Commands
                     continue;
                 }
                 ReportAdd($"Command not understood: {cmd}.");
+            }
+        }
+
+        private void ConvertFolder(string folderName)
+        {
+            DirectoryInfo d = new DirectoryInfo(folderName);
+            var fls = d.GetFiles("*.ifc");
+            foreach (var f in fls)
+            {
+                var xbimFileName = f.FullName + ".xbim";
+                if (File.Exists(xbimFileName))
+                    File.Delete(xbimFileName);
+                using (var ret = IfcStore.Open(f.FullName, null, 0))
+                {
+                    var context = new Xbim3DModelContext(ret, null);
+                    context.CreateContext();
+                    ret.SaveAs(xbimFileName, Xbim.IO.StorageType.Xbim);
+                    ret.Close();
+                }
             }
         }
 
