@@ -3,13 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AboutWindow" Height="340" Width="600" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" WindowStyle="None"
         Deactivated="AboutWindow_OnDeactivated"
-        MouseLeftButtonDown="UserControl_MouseLeftButtonDown"
+        MouseLeftButtonDown="UserControl_MouseLeftButtonDown" Icon="pack://siteoforigin:,,,/xBIM.ico"
         >
     <Border Padding="5" BorderBrush="Black" BorderThickness="1">
         <Grid >
 
-            <Image x:Name="Logo" HorizontalAlignment="Left" Height="50" Margin="424,10,10,10" VerticalAlignment="Top" Width="50" Stretch="None"/>
-
+            
             <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="xBIM Xplorer" VerticalAlignment="Top" FontSize="24" />
             <TextBlock Margin="10,42,0,0" TextWrapping="Wrap">This application is a demonstrator of the xBIM toolkit.</TextBlock>
             <TabControl Margin="10,65,10,10">
@@ -41,6 +40,10 @@
                     <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding ModelInfo, Mode=OneWay}" />
                 </TabItem>
             </TabControl>
+
+            <Image x:Name="Logo" HorizontalAlignment="right" Height="64" Margin="441,10,10,0" VerticalAlignment="Top" Width="64" Stretch="Fill"/>
+
+
         </Grid>
     </Border>
 

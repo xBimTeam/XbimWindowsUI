@@ -10,6 +10,7 @@
       XbimXplorer is a fully feature demonstration Windows application for the XBIM Toolkit. It allows IFC BIM files to be opened
       visualised both sematically and graphically, and supports a range of plugins to perform actions such as BCF exchange, and COBie export
     </Description>
+    <ApplicationIcon />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -39,9 +40,16 @@
     <Page Include="**\*.xaml" SubType="Designer" Generator="MSBuild:UpdateDesignTimeXaml" Exclude="App.xaml" />
     <Compile Update="**\*.xaml.cs" SubType="Designer" DependentUpon="%(Filename)" />
     <Resource Include="assets\*.*" />
-    <Resource Include="xBIM.ico" />
     <Resource Include="Commands\console.bmp" />
     <Resource Include="**\*.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="xBIM.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="xBIM.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AvalonDock" Version="2.0.2000" />
@@ -52,8 +60,8 @@
     <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.4" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
-    <PackageReference Include="Xbim.Essentials" Version="5.1.267" />
-    <PackageReference Include="Xbim.Geometry" Version="5.1.254" />
+    <PackageReference Include="Xbim.Geometry" Version="5.1.283" />
+    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.283" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

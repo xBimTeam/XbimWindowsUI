@@ -6,7 +6,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Xbim.IO;
-using Xbim.IO.Esent;
 using XbimXplorer.Properties;
 
 namespace XbimXplorer.Dialogs

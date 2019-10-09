@@ -12,7 +12,6 @@ namespace XbimXplorer.LogViewer
             this.loggingEvent = loggingEvent;
         }
 
-
         public string Logger
         {
             get { return loggingEvent.Properties.TryGetValue("SourceContext", out LogEventPropertyValue value) 
@@ -93,6 +92,11 @@ namespace XbimXplorer.LogViewer
                     ErrorMessage
                     );
             }
+        }
+
+        public override string ToString()
+        {
+            return Summary;
         }
     }
 }
