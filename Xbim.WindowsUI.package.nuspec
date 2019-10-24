@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>Xbim.WindowsUI</id>
-    <version>4.0.13-V014</version>
+    <version>4.0.14-V001</version>
     <title>xBIM WindowsUI</title>
     <authors>xBIM team</authors>
     <owners>xBIM team</owners>
@@ -11,6 +11,8 @@
     <iconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;s=240</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>
+      First release on Occ7.4
+      
       xBIM is an Open Source Toolkit for developing IFC based applications (BuildingSmart Data model).
       It provides full support for reading and writing geometry, topology and data in accordance with the Ifc2x3, Ifc4 schema.
       xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
@@ -26,7 +28,7 @@
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <dependency id="Xbim.Geometry" version="4.0.16-V0004" />
+      <dependency id="Xbim.Geometry" version="4.0.17-V001" />
       <dependency id="Xbim.Essentials" version="4.0.30-V057" />
       <dependency id="HelixToolkit.Wpf" version="2015.1.715" />
       <dependency id="PropertyTools.Wpf" version="2015.1.66" />
