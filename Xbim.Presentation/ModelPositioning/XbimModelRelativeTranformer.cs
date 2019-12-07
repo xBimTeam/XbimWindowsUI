@@ -179,6 +179,8 @@ namespace Xbim.Presentation.Modelpositioning
                         {
                             var otherRad = otherRegion.Size.Length / 2;
                             var centreDistance = GetDistance(otherRegion.Centre, rect.Centroid());
+                            if (otherRegion.Population > 50)
+                                otherRad *= otherRegion.Population / 50;
                             if (otherRad + selectedRad > centreDistance)
                             {
                                 mergedRegions.Add(otherRegion);

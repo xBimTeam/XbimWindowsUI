@@ -1839,7 +1839,7 @@ namespace Xbim.Presentation
                         }
                         else
                         {
-                            _viewBounds.Union(transformed);
+                            _viewBounds = _viewBounds.Union(transformed);
                         }
                         return true;
                     }
