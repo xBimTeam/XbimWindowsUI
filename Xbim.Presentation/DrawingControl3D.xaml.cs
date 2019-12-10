@@ -19,6 +19,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using HelixToolkit.Wpf;
+using log4net;
 using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
@@ -50,6 +51,8 @@ namespace Xbim.Presentation
     [TemplatePart(Name = TemplateGridLines, Type = typeof (GridLinesVisual3D))]
     public class DrawingControl3D : UserControl
     {
+        protected static readonly ILog Log = LogManager.GetLogger("Xbim.Presentation.DrawingControl3D");
+
         #region Template defined variables
 
         private const string TemplateCanvas = "Canvas";
@@ -1799,8 +1802,26 @@ namespace Xbim.Presentation
             //
             var v = new TransformGraph(storey.Model);
             v.AddProduct(storey);
-            var v2 = v[storey].WorldMatrix();
-            var off = v2.OffsetZ / storey.Model.ModelFactors.OneMeter;
+            var node = v[storey];
+            XbimMatrix3D objectMatrix = XbimMatrix3D.Identity;
+            if (node != null)
+            {
+                objectMatrix = v[storey].WorldMatrix();
+            }
+            else
+            {
+                Log.Error($"Storey '{storey.Name}' (#{storey.EntityLabel}) is not defined in transformgraph. The IFC file is not compliant.");
+                if (storey?.Elevation?.Value != null)
+                {
+                    double elev;
+                    if (double.TryParse(storey?.Elevation?.Value.ToString(), out elev))
+                    {
+                        Log.Warn($"Attempting to set virtual transformgraph for #{storey.EntityLabel} as {elev}.");
+                        objectMatrix.OffsetZ = storey.Elevation.Value;
+                    }
+                }
+            }
+            var off = objectMatrix.OffsetZ / storey.Model.ModelFactors.OneMeter;
             var ptHere = new XbimPoint3D(0, 0, off + cutOffset);
             var adjusted = ptHere * _modelPositioner.GetAbsoluteMatrix();
             SetCutPlane(0, 0, adjusted.Z, 0, 0, -1);
