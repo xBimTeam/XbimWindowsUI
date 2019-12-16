@@ -45,6 +45,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Xbim.IO;
+using Xbim.Geometry.Engine.Interop;
 
 #endregion
 
@@ -264,6 +265,7 @@ namespace XbimXplorer
                 var model = IfcStore.Open(selectedFilename, null, null, worker.ReportProgress, FileAccessMode);
                 if (_meshModel)
                 {
+                    ApplyWorkarounds(model);
                     // mesh direct model
                     if (model.GeometryStore.IsEmpty)
                     {
@@ -340,6 +342,12 @@ namespace XbimXplorer
                 Logger.LogError(0, ex, "Error opening {filename}", selectedFilename);
                 args.Result = newexception;
             }
+        }
+
+        private void ApplyWorkarounds(IfcStore model)
+        {
+            model.AddWorkAroundSurfaceofLinearExtrusionForRevit();
+            model.AddWorkAroundTrimForPolylinesIncorrectlySetToOneForEntireCurve();
         }
 
         private void SetDeflection(IModel model)
