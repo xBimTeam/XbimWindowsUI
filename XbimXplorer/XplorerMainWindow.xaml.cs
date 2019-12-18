@@ -114,7 +114,7 @@ namespace XbimXplorer
             
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
-            LogSink.EventsLimit = 1000; // log event's minute
+            LogSink.EventsLimit = 5000; // log event's minute
 
             // Use the standard ME.LoggerFactory, but add Serilog as a provider. 
             // This provides a richer configuration and allows us to create a custom Sink for the disply of 'in app' logs
