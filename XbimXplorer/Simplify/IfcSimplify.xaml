@@ -59,7 +59,7 @@
                     </TabItem>
 
                 </TabControl>
-                <CheckBox x:Name="PreserveVoids" Content="Preserve Voids (walls only)" HorizontalAlignment="Left" Margin="0,0,0,5" Height="15" VerticalAlignment="Bottom"/>
+                <CheckBox x:Name="PreserveVoids" Content="Preserve Voids" HorizontalAlignment="Left" Margin="0,0,0,5" Height="15" VerticalAlignment="Bottom"/>
                 <CheckBox x:Name="PreserveProps" Content="Preserve properties" HorizontalAlignment="Left" Margin="200,0,0,5" Height="15" VerticalAlignment="Bottom"/>
             </Grid>
         </GroupBox>

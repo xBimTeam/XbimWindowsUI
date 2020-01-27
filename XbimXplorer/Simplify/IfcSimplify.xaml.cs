@@ -99,7 +99,7 @@ namespace XbimXplorer.Simplify
                     if (!m.Success)
                         continue;
                     var iId = Convert.ToInt32(m.Groups[1].ToString());
-                    var type = m.Groups[2].ToString();
+                    var type = m.Groups[2].ToString().ToUpperInvariant();
 
                     var content = m.Groups[3].Value;
                     _ifcLines.Add(iId, lineBuffer);
@@ -186,6 +186,140 @@ namespace XbimXplorer.Simplify
 
         private void RecursiveAdd(int ifcIndex, bool includeProperties = false)
         {
+            HashSet<string> voidTypes = new HashSet<string>()
+            {
+                "IFCBEAM",
+                "IFCBEAMSTANDARDCASE",
+                "IFCBUILDINGELEMENTPROXY",
+                "IFCCHIMNEY",
+                "IFCCOLUMN",
+                "IFCCOLUMNSTANDARDCASE",
+                "IFCCOVERING",
+                "IFCCURTAINWALL",
+                "IFCDOOR",
+                "IFCDOORSTANDARDCASE",
+                "IFCFOOTING",
+                "IFCMEMBER",
+                "IFCMEMBERSTANDARDCASE",
+                "IFCPILE",
+                "IFCPLATE",
+                "IFCPLATESTANDARDCASE",
+                "IFCRAILING",
+                "IFCRAMP",
+                "IFCRAMPFLIGHT",
+                "IFCROOF",
+                "IFCSHADINGDEVICE",
+                "IFCSLAB",
+                "IFCSLABELEMENTEDCASE",
+                "IFCSLABSTANDARDCASE",
+                "IFCSTAIR",
+                "IFCSTAIRFLIGHT",
+                "IFCWALL",
+                "IFCWALLELEMENTEDCASE",
+                "IFCWALLSTANDARDCASE",
+                "IFCWINDOW",
+                "IFCWINDOWSTANDARDCASE",
+                "IFCCIVILELEMENT",
+                "IFCDISTRIBUTIONELEMENT",
+                "IFCDISTRIBUTIONCONTROLELEMENT",
+                "IFCACTUATOR",
+                "IFCALARM",
+                "IFCCONTROLLER",
+                "IFCFLOWINSTRUMENT",
+                "IFCPROTECTIVEDEVICETRIPPINGUNIT",
+                "IFCSENSOR",
+                "IFCUNITARYCONTROLELEMENT",
+                "IFCDISTRIBUTIONFLOWELEMENT",
+                "IFCDISTRIBUTIONCHAMBERELEMENT",
+                "IFCENERGYCONVERSIONDEVICE",
+                "IFCAIRTOAIRHEATRECOVERY",
+                "IFCBOILER",
+                "IFCBURNER",
+                "IFCCHILLER",
+                "IFCCOIL",
+                "IFCCONDENSER",
+                "IFCCOOLEDBEAM",
+                "IFCCOOLINGTOWER",
+                "IFCELECTRICGENERATOR",
+                "IFCELECTRICMOTOR",
+                "IFCENGINE",
+                "IFCEVAPORATIVECOOLER",
+                "IFCEVAPORATOR",
+                "IFCHEATEXCHANGER",
+                "IFCHUMIDIFIER",
+                "IFCMOTORCONNECTION",
+                "IFCSOLARDEVICE",
+                "IFCTRANSFORMER",
+                "IFCTUBEBUNDLE",
+                "IFCUNITARYEQUIPMENT",
+                "IFCFLOWCONTROLLER",
+                "IFCAIRTERMINALBOX",
+                "IFCDAMPER",
+                "IFCELECTRICDISTRIBUTIONBOARD",
+                "IFCELECTRICTIMECONTROL",
+                "IFCFLOWMETER",
+                "IFCPROTECTIVEDEVICE",
+                "IFCSWITCHINGDEVICE",
+                "IFCVALVE",
+                "IFCFLOWFITTING",
+                "IFCCABLECARRIERFITTING",
+                "IFCCABLEFITTING",
+                "IFCDUCTFITTING",
+                "IFCJUNCTIONBOX",
+                "IFCPIPEFITTING",
+                "IFCFLOWMOVINGDEVICE",
+                "IFCCOMPRESSOR",
+                "IFCFAN",
+                "IFCPUMP",
+                "IFCFLOWSEGMENT",
+                "IFCCABLECARRIERSEGMENT",
+                "IFCCABLESEGMENT",
+                "IFCDUCTSEGMENT",
+                "IFCPIPESEGMENT",
+                "IFCFLOWSTORAGEDEVICE",
+                "IFCELECTRICFLOWSTORAGEDEVICE",
+                "IFCTANK",
+                "IFCFLOWTERMINAL",
+                "IFCAIRTERMINAL",
+                "IFCAUDIOVISUALAPPLIANCE",
+                "IFCCOMMUNICATIONSAPPLIANCE",
+                "IFCELECTRICAPPLIANCE",
+                "IFCFIRESUPPRESSIONTERMINAL",
+                "IFCLAMP",
+                "IFCLIGHTFIXTURE",
+                "IFCMEDICALDEVICE",
+                "IFCOUTLET",
+                "IFCSANITARYTERMINAL",
+                "IFCSPACEHEATER",
+                "IFCSTACKTERMINAL",
+                "IFCWASTETERMINAL",
+                "IFCFLOWTREATMENTDEVICE",
+                "IFCDUCTSILENCER",
+                "IFCFILTER",
+                "IFCINTERCEPTOR",
+                "IFCELEMENTASSEMBLY",
+                "IFCBUILDINGELEMENTPART",
+                "IFCDISCRETEACCESSORY",
+                "IFCFASTENER",
+                "IFCMECHANICALFASTENER",
+                "IFCREINFORCINGBAR",
+                "IFCREINFORCINGMESH",
+                "IFCTENDON",
+                "IFCTENDONANCHOR",
+                "IFCVIBRATIONISOLATOR",
+                "IFCPROJECTIONELEMENT",
+                "IFCOPENINGELEMENT",
+                "IFCOPENINGSTANDARDCASE",
+                "IFCVOIDINGFEATURE",
+                "IFCSURFACEFEATURE",
+                "IFCFURNISHINGELEMENT",
+                "IFCFURNITURE",
+                "IFCSYSTEMFURNITUREELEMENT",
+                "IFCGEOGRAPHICELEMENT",
+                "IFCTRANSPORTELEMENT",
+                "IFCVIRTUALELEMENT"
+            };
+
             if (_elementsToExport.Contains(ifcIndex))
                 return; // been exported already;
 
@@ -218,7 +352,7 @@ namespace XbimXplorer.Simplify
             if (PreserveVoids.IsChecked.HasValue && PreserveVoids.IsChecked.Value)
             {
                 var tp = _ifcType[ifcIndex];
-                if (tp.StartsWith("IFCWALL")) // todo expand to others?
+                if (voidTypes.Contains(tp)) 
                 {
                     var str = $@"#{ifcIndex} *, *#(\d+) *";
                     Regex re2 = new Regex(str);
@@ -377,7 +511,8 @@ namespace XbimXplorer.Simplify
             {
                 if (item.Value == txtClassName.Text)
                 {
-                    RecursiveAdd(item.Key, PreserveProps.IsChecked.HasValue && PreserveProps.IsChecked.Value);
+                    TxtHandPicked.Text += $"{item.Key}\r\n";
+                    // RecursiveAdd(item.Key, PreserveProps.IsChecked.HasValue && PreserveProps.IsChecked.Value);
                     if (iLimit > 0 && ++iCount >= iLimit)
                         return;
                 }
