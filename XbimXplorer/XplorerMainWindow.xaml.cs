@@ -870,15 +870,21 @@ namespace XbimXplorer
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
+            ShowAboutDialog();
+        }
+
+        private void ShowAboutDialog()
+        {
             var w = new AboutWindow
             {
                 Model = Model,
                 Assemblies = _pluginAssemblies,
-                MainWindow = this
+                MainWindow = this,
+                UpdateAvailable = _updateAvailable
             };
             w.Show();
         }
-        
+
         private void DisplaySettingsPage(object sender, RoutedEventArgs e)
         {
             var sett = new SettingsWindow();

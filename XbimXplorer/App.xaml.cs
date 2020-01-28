@@ -12,6 +12,7 @@
 
 #region Directives
 
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -43,6 +44,25 @@ namespace XbimXplorer
         protected override void OnStartup(StartupEventArgs e)
         {
             // evaluate special parameters before loading MainWindow
+            var blockUpdate = false;
+            foreach (var thisArg in e.Args)
+            {
+                if (string.Compare("/noupdate", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    blockUpdate = true;
+                }
+            }
+            if (!blockUpdate)
+                Update();
+
+            /* todo: Squirrel
+            var firstRun = PortPlugins();
+            if (firstRun)
+            {
+                RestoreSettings();
+            }
+            */
+
             var blockPlugin = false;
             foreach (var thisArg in e.Args)
             {

@@ -11,7 +11,7 @@
             
             <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="xBIM Xplorer" VerticalAlignment="Top" FontSize="24" />
             <TextBlock Margin="10,42,0,0" TextWrapping="Wrap">This application is a demonstrator of the xBIM toolkit.</TextBlock>
-            <TabControl Margin="10,65,10,10">
+            <TabControl x:Name="Tabs"  Margin="10,65,10,10">
                 <TabItem Header="Application">
                     <StackPanel Margin="10" >
                         <TextBlock Margin="0,3" TextWrapping="Wrap" >
@@ -26,6 +26,7 @@
                         </TextBlock>
                         <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding AppVersion}" />
                         <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding FileVersion}" />
+                        <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding SquirrelVersion}" />
                         <TextBlock Margin="0,3" >
                             <Hyperlink RequestNavigate="Link_RequestNavigate" NavigateUri="https://github.com/xbimteam">
 					            <TextBlock Text="https://github.com/xbimteam"/>
@@ -38,6 +39,29 @@
                 </TabItem>
                 <TabItem Header="Model">
                     <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding ModelInfo, Mode=OneWay}" />
+                </TabItem>
+                <TabItem x:Name="UpdateTab" Header="Update available">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+                        <Image Width="60"  Source="/XbimXplorer;component/Squirrel-Logo-Square.png" Margin="10" VerticalAlignment="Top" />
+                        <StackPanel Margin="10" Grid.Column="1">
+                            <TextBlock TextWrapping="Wrap" >
+                                Using the open source code provided by the good people at Squirrel.Windows we have just performed an update of XbimXplorer.</TextBlock>
+                            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" >
+                                The new version will be launched next time you start XbimXplorer.
+                            </TextBlock>
+                            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" >
+                                We will make an attempt to retain your plugins and settings.
+                            </TextBlock>
+                            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" >
+                                You can use the application normally and close it when you have finished your work or press the following button to restart immediately.
+                            </TextBlock>
+                            <Button Margin="0,10,0,0" Width="200" HorizontalAlignment="Left" Click="Restart" >Restart now</Button>
+                        </StackPanel>
+                    </Grid>
                 </TabItem>
             </TabControl>
 

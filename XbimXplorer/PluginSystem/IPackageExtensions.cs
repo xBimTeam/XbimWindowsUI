@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using NuGet;
 using Ionic.Zip;
 
 namespace XbimXplorer.PluginSystem
@@ -12,7 +11,7 @@ namespace XbimXplorer.PluginSystem
         /// <param name="package"></param>
         /// <param name="targetFileName"></param>
         /// <returns>true if successful, false if fail.</returns>
-        internal static bool ExtractManifestFile(this IPackage package, string targetFileName)
+        internal static bool ExtractManifestFile(this NuGet.IPackage package, string targetFileName)
         {
 
             using (var fs = package.GetStream())

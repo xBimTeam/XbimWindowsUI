@@ -257,11 +257,20 @@
                     <TextBlock> warnings</TextBlock>
                 </WrapPanel>
             </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right" Name="ProgressStatusBar" Visibility="Hidden">
-                <Grid>
-                    <ProgressBar Name="ProgressBar"  Height="20" Maximum="100" Minimum="0" Width="150"  HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressBar>
-                    <TextBlock Name="StatusMsg" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">Parsing</TextBlock>
-                </Grid>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal" Margin="0">
+                    <StatusBarItem Name="ProgressStatusBar" Visibility="Hidden">
+                        <Grid>
+                            <ProgressBar  Name="ProgressBar"  Height="20" Maximum="100" Minimum="0" Width="150"  HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressBar>
+                            <TextBlock Name="StatusMsg" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">Parsing</TextBlock>
+                        </Grid>
+                    </StatusBarItem>
+                    <StatusBarItem x:Name="StatusBarUpdateNotification" Height="40" Margin="5,-20,5,0" Visibility="Collapsed" >
+                        <Grid Margin="0,-5">
+                            <Image  MouseDown="ShowUpdate" ToolTip="An update has been installed, click for more info." Margin="0" Width="40" Height="40" Source="/XbimXplorer;component/Squirrel-Logo-Square.png" />
+                        </Grid>
+                    </StatusBarItem>
+                </StackPanel>
             </StatusBarItem>
         </StatusBar>
     </Grid>

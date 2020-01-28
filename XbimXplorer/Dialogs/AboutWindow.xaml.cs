@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Squirrel;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -44,6 +45,47 @@ namespace XbimXplorer.Dialogs
             
             // Logo.Source = new BitmapImage(new Uri(@"pack://application:,,/xBIM.ico", UriKind.RelativeOrAbsolute));
             
+        }
+
+        public bool UpdateAvailable
+        {
+            set
+            {
+                UpdateTab.Visibility = value
+                    ? System.Windows.Visibility.Visible
+                    : System.Windows.Visibility.Collapsed;
+
+                if (value)
+                {
+                    Dispatcher.BeginInvoke((Action)(() => Tabs.SelectedItem = UpdateTab));
+                }
+            }
+        }
+
+
+        private void Restart(object sender, System.Windows.RoutedEventArgs e)
+        {
+            UpdateManager.RestartApp();
+        }
+
+        public string SquirrelVersion
+        {
+            get
+            {
+                if (!App.IsSquirrelInstall)
+                    return "";
+                try
+                {
+                    using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
+                    {
+                        return "Squirrel version: " + mgr.CurrentlyInstalledVersion();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+            }
         }
 
         private void AboutWindow_OnDeactivated(object sender, EventArgs e)
