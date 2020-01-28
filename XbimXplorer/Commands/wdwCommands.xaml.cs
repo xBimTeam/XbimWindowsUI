@@ -315,7 +315,7 @@ namespace XbimXplorer.Commands
                     else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
                     {
                         var pm = new PluginManagement();
-                        var plugin = pm.GetPlugins(PluginChannelOption.Development).FirstOrDefault(x => x.PluginId == pluginName);
+                        var plugin = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).FirstOrDefault(x => x.PluginId == pluginName);
                         if (plugin == null)
                         {
                             ReportAdd("Plugin not found.", Brushes.Red);
@@ -366,7 +366,7 @@ namespace XbimXplorer.Commands
                     else if (commandString.ToLower() == "list")
                     {
                         PluginManagement pm = new PluginManagement();
-                        var plugins = pm.GetPlugins(PluginChannelOption.Development).ToList();
+                        var plugins = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).ToList();
                         if (plugins.Any())
                         {
                             ReportAdd("Beta versions in the development channel:");
@@ -375,7 +375,7 @@ namespace XbimXplorer.Commands
                                 ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
                             }
                         }
-                        plugins = pm.GetPlugins(PluginChannelOption.Stable).ToList();
+                        plugins = pm.GetPlugins(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion).ToList();
                         if (plugins.Any())
                         {
                             ReportAdd("Versions in the stable channel:");

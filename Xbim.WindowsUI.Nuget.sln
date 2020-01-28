@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E199F75-F5E2-4B21-9DDA-85AF017F9445}"
 	ProjectSection(SolutionItems) = preProject
 		LICENCE.md = LICENCE.md
+		XbimXplorer\PluginSystem\PluginsConfig.xaml.version.cs = XbimXplorer\PluginSystem\PluginsConfig.xaml.version.cs
 		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
 		Xbim.WindowsUI.package.nuspec = Xbim.WindowsUI.package.nuspec
 		XplorerPlugin.Bcf.plugin.nuspec = XplorerPlugin.Bcf.plugin.nuspec
