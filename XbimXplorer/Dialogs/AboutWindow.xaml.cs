@@ -76,7 +76,7 @@ namespace XbimXplorer.Dialogs
                     return "";
                 try
                 {
-                    using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer"))
+                    using (var mgr = new UpdateManager("http://www.overarching.it/dload/XbimXplorer5"))
                     {
                         return "Squirrel version: " + mgr.CurrentlyInstalledVersion();
                     }

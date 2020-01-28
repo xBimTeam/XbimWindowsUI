@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+    <metadata>
+        <id>Xbim.Xplorer</id>
+		    <!-- version file is overridden in nuget makepackage command in batch file -->
+        <version>0.0.0.0</version>
+        <authors>xBIM team</authors>
+        <owners>xBIM team</owners>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>XbimXplorer</description>
+    </metadata>
+    <files>
+        <file src="Output\Release\net47\**\*.*" target="lib\net45\" exclude="**\*.pdb;**\*.nupkg;**\*.vshost.*" />
+    </files>
+</package>

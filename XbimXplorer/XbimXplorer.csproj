@@ -11,6 +11,7 @@
       visualised both sematically and graphically, and supports a range of plugins to perform actions such as BCF exchange, and COBie export
     </Description>
     <ApplicationIcon />
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
