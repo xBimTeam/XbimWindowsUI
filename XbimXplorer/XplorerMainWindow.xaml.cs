@@ -45,6 +45,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Xbim.IO;
+using Xbim.Geometry.Engine.Interop;
 
 #endregion
 
@@ -114,7 +115,7 @@ namespace XbimXplorer
             
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
-            LogSink.EventsLimit = 1000; // log event's minute
+            LogSink.EventsLimit = 5000; // log event's minute
 
             // Use the standard ME.LoggerFactory, but add Serilog as a provider. 
             // This provides a richer configuration and allows us to create a custom Sink for the disply of 'in app' logs
@@ -264,6 +265,7 @@ namespace XbimXplorer
                 var model = IfcStore.Open(selectedFilename, null, null, worker.ReportProgress, FileAccessMode);
                 if (_meshModel)
                 {
+                    ApplyWorkarounds(model);
                     // mesh direct model
                     if (model.GeometryStore.IsEmpty)
                     {
@@ -340,6 +342,12 @@ namespace XbimXplorer
                 Logger.LogError(0, ex, "Error opening {filename}", selectedFilename);
                 args.Result = newexception;
             }
+        }
+
+        private void ApplyWorkarounds(IfcStore model)
+        {
+            model.AddWorkAroundSurfaceofLinearExtrusionForRevit();
+            model.AddWorkAroundTrimForPolylinesIncorrectlySetToOneForEntireCurve();
         }
 
         private void SetDeflection(IModel model)
