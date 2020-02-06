@@ -5,6 +5,6 @@
     /// </summary>
     public partial class PluginsConfig
     {
-        public const string NugetVersion = "5.1.172-develop";
+        public const string NugetVersion = "5.1.178-develop";
     }
 }
