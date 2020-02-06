@@ -188,3 +188,14 @@ steps:
     versioningScheme: byEnvVar
     versionEnvVar: version
 
+# Publish plugin to custom myget service connection.
+- task: NuGetCommand@2
+  name: 'MyGetPublishing_Plugin'
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'MyGetPlugins'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/XplorerPlugin.*.nupkg;' # Required when command == Push
+    versioningScheme: byEnvVar
+    versionEnvVar: version
+
