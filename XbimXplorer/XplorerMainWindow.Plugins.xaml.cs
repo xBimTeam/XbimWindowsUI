@@ -133,7 +133,7 @@ namespace XbimXplorer
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(0, ex, "Problem loading assembly {required} for {assembly}", refReq, fullAssemblyFileName);
+                    Logger.LogError(0, ex, "Exception loading assembly {required} for {assembly}", refReq, fullAssemblyFileName);
                     var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyFileName;
                     MessageBox.Show(msg + "\r\n\r\n" + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
@@ -212,6 +212,7 @@ namespace XbimXplorer
 
         private void EvaluateXbimUiType(Type type, bool InsertAtTopOfMenu)
         {
+            Logger.LogInformation(0, $"Evaluating UI for '{type.FullName}'.");
             if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
             {
                 return;
@@ -235,6 +236,7 @@ namespace XbimXplorer
             var att = type.GetUiAttribute();
             if (string.IsNullOrEmpty(att?.MenuText))
                 return;
+            Logger.LogDebug($"Menu: {att.MenuText}");
             var destMenu = PluginMenu;
             var menuHeader = type.Name;
             if (!string.IsNullOrEmpty(att.MenuText))
@@ -276,8 +278,8 @@ namespace XbimXplorer
             {
                 destMenu.Items.Add(v);
             }
-            
             v.Click += OpenPluginWindow;
+            
         }
 
         private void OpenPluginWindow(object sender, RoutedEventArgs e)
