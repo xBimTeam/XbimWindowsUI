@@ -8,12 +8,11 @@ namespace XbimXplorer.PluginSystem
 {
     public class PluginInformation
     {
-
         protected Microsoft.Extensions.Logging.ILogger Logger { get; private set; }
 
         public string PluginId { get; set; }
 
-        internal PluginConfiguration Startup { get; set; }
+        internal PluginConfiguration Config { get; set; }
         
         public string AvailableVersion => _onlinePackage?.Version.ToString() ?? "";
         public string InstalledVersion => _diskManifest?.Version ?? "";
@@ -46,13 +45,23 @@ namespace XbimXplorer.PluginSystem
         internal void SetDirectoryInfo(DirectoryInfo directoryInfo)
         {
             _directory = directoryInfo;
-            SetDiskManifest(PluginManagement.GetManifestMetadata(directoryInfo));
-            Startup = PluginManagement.GetConfiguration(directoryInfo) ?? new PluginConfiguration();
+            if (directoryInfo != null)
+                SetDiskManifest(PluginManagement.GetManifestMetadata(directoryInfo));
+            else
+                SetDiskManifest(null);
+            Config = PluginManagement.GetConfiguration(directoryInfo) ?? new PluginConfiguration();
         }
 
         public XplorerMainWindow MainWindow => Application.Current.MainWindow as XplorerMainWindow;
 
         public ManifestMetadata Manifest => _diskManifest;
+
+        internal void DeleteFromDisk()
+        {
+            _directory.Delete(true);
+            _directory = null;
+            SetDirectoryInfo(_directory);
+        }
 
         public void SetPackage(IPackage package)
         {
@@ -164,11 +173,11 @@ namespace XbimXplorer.PluginSystem
 
         public void ToggleEnabled()
         {
-            if (Startup == null)
+            if (Config == null)
                 return;
-            Startup.ToggleEnabled();
+            Config.ToggleEnabled();
             if (_directory != null)
-                Startup.WriteXml(PluginManagement.GetStartupFileConfig(_directory));
+                Config.WriteXml(PluginManagement.GetStartupFileConfig(_directory));
         }
     }
 }

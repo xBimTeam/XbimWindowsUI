@@ -98,6 +98,7 @@ namespace XbimXplorer.PluginSystem
             foreach (var package in fnd)
             {
                 // drop develop if latest stable
+                System.Diagnostics.Debug.WriteLine($"Evaluating {package}");
                 if (option == PluginChannelOption.LatestStable && !string.IsNullOrEmpty(package.Version.SpecialVersion))
                 {
                     continue;
@@ -145,6 +146,8 @@ namespace XbimXplorer.PluginSystem
 
         internal static string GetStartupFileConfig(DirectoryInfo dir)
         {
+            if (dir == null)
+                return "";
             return Path.Combine(dir.FullName, "PluginConfig.xml");
         }
 

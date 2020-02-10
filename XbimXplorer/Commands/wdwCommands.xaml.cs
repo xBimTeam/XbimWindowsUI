@@ -340,7 +340,7 @@ namespace XbimXplorer.Commands
                         {
                             ReportAdd("Plugin extraction failed.", Brushes.Red);
                         }
-                        if (plugin.Startup.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
+                        if (plugin.Config.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
                         {
                             plugin.ToggleEnabled();
                         }

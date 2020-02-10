@@ -35,14 +35,15 @@ namespace XbimXplorer.PluginSystem
         {
             get
             {
-                // when grayed 
+                // when button is grayed 
                 if (!CanDownload)
                     return "Download";
 
+                // if can download and not installed 
                 if (string.IsNullOrWhiteSpace(InstalledVersion))
                     return "Download";
 
-
+                // if installed
                 var remoteVersion = new SemanticVersion(AvailableVersion);
                 var localVersion = new SemanticVersion(InstalledVersion);
 
@@ -54,15 +55,25 @@ namespace XbimXplorer.PluginSystem
 
         public bool IsInstalled => !string.IsNullOrWhiteSpace(InstalledVersion);
 
+        public bool IsInstalledAndNotLoaded => !string.IsNullOrWhiteSpace(InstalledVersion) && string.IsNullOrWhiteSpace(LoadedVersion);
+
         public string PluginId => _model?.PluginId;
+
+        internal void RemoveInstallation()
+        {
+            if (_model == null)
+                return;
+            _model.DeleteFromDisk();
+            OnPropertyChanged("");
+        }
 
         public bool CanLoad => IsInstalled && string.IsNullOrEmpty(LoadedVersion);
 
-        public Visibility ShowEnableToggle => IsInstalled 
+        public Visibility VisibleWhenInstalled => IsInstalled 
             ? Visibility.Visible 
             : Visibility.Hidden;
 
-        public string EnableToggleCaption => _model?.Startup?.OnStartup == PluginConfiguration.StartupBehaviour.Enabled 
+        public string EnableToggleCaption => _model?.Config?.OnStartup == PluginConfiguration.StartupBehaviour.Enabled 
             ? "Disable" 
             : "Enable";
 
@@ -72,7 +83,7 @@ namespace XbimXplorer.PluginSystem
 
         public string LoadedVersion => _model?.LoadedVersion;
 
-        public string Startup => _model?.Startup?.OnStartup.ToString();
+        public string Startup => _model?.Config?.OnStartup.ToString();
 
         public void ExtractPlugin(DirectoryInfo pluginsDirectory)
         {

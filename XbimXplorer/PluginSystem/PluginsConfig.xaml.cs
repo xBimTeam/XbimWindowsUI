@@ -73,6 +73,7 @@ namespace XbimXplorer.PluginSystem
                 {
                     ShowRepository();
                 }
+                SelectedPlugin = new PluginInformationVm(null);
             }
         }
 
