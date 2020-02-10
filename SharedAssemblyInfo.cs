@@ -10,7 +10,7 @@
 
 [assembly: AssemblyCompany("Xbim Team")]
 
-[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2018")]
+[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2020")]
 [assembly: AssemblyTrademark("Xbim Team")]
 [assembly: AssemblyCulture("")]
  

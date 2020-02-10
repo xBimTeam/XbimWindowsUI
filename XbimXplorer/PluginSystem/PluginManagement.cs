@@ -99,6 +99,10 @@ namespace XbimXplorer.PluginSystem
                 }
                 // check it is compatible
                 var sel = package.DependencySets.SelectMany(x => x.Dependencies.Where(y => y.Id.StartsWith("Xbim.WindowsUI"))).FirstOrDefault();
+                if (sel.VersionSpec.MinVersion == sel.VersionSpec.MaxVersion || sel.VersionSpec.MaxVersion == null)
+                {
+                    Log.Warn($"Fix plugin requirements for {package.Id} {package.Version}. Requirement is : '{sel.VersionSpec}'; the system needs a version range.");
+                }
                 if (sel != null && sel.VersionSpec.Satisfies(invokingVerion))
                 {
                     tmpPackages.Add(package);
