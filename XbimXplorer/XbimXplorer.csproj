@@ -3,6 +3,7 @@
   <PropertyGroup>
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
     <TargetFrameworks>net47</TargetFrameworks>
+    <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     <OutputType>WinExe</OutputType>
     <StartupObject />
     <Title>Xbim Xplorer</Title>
@@ -15,6 +16,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net47|AnyCPU'">
     <OutputPath>..\Output\Release</OutputPath>
@@ -62,8 +64,8 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.4" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="squirrel.windows" Version="1.9.2-cb001" />
-    <PackageReference Include="Xbim.Geometry" Version="5.1.283" />
-    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.283" />
+    <PackageReference Include="Xbim.Geometry" Version="5.1.312-develop" />
+    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.312-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

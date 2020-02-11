@@ -67,7 +67,7 @@ namespace XbimXplorer
             var mfst = PluginManagement.GetManifestMetadata(dir);
             if (_loadedPlugins.ContainsKey(mfst.Id))
             {
-                Logger.LogWarning("Re-load of previously loaded plugin {pluginId} cancelled.", mfst.Id);
+                Logger.LogWarning("Re-load of previously loaded plugin {pluginId} aborted.", mfst.Id);
                 return false;
             }
             if (!forceLoad) // if don't have to load forcedly
@@ -78,42 +78,48 @@ namespace XbimXplorer
                 if (conf?.OnStartup != PluginConfiguration.StartupBehaviour.Enabled)
                     return false;
             }
-            var fullAssemblyFileName = PluginManagement.GetEntryFile(dir, fileName);
-            if (!File.Exists(fullAssemblyFileName))
+            var pluginAssemblyFullFileName = PluginManagement.GetEntryFile(dir, fileName);
+            if (!File.Exists(pluginAssemblyFullFileName))
             {
-                Logger.LogError("Plugin loading error: Assembly file not found {pluginName}", fullAssemblyFileName);
+                Logger.LogError("Plugin loading error: Assembly file not found {pluginName}", pluginAssemblyFullFileName);
                 return false;
             }
-            Logger.LogInformation("Attempting to load plugin: {pluginName}", fullAssemblyFileName);
+            Logger.LogInformation("Attempting to load plugin: {pluginName}", pluginAssemblyFullFileName);
             _assemblyLoadFolder = dir.FullName;
 
-            var assembly = LoadAssembly(fullAssemblyFileName);
+            var assembly = LoadAssembly(pluginAssemblyFullFileName);
             if (assembly == null)
                 return false;
             _loadedPlugins.Add(mfst.Id, mfst);
             _pluginAssemblies.Add(assembly);
 
-            var loadQueue = new Queue<AssemblyName>(assembly.GetReferencedAssemblies());
-
+            var requiringAssemblies = new Dictionary<AssemblyName, List<Assembly>>(); // this helps debug invalid dependencies
+            var init = assembly.GetReferencedAssemblies().ToList();
+            foreach (var item in init)
+            {
+                var pluginList = new List<Assembly>(new[] { assembly });
+                requiringAssemblies.Add(item, pluginList);
+            }
+            var loadQueue = new Queue<AssemblyName>(init);
             while (loadQueue.Any())
             {
-                var refReq = loadQueue.Dequeue();
+                var referencedRequirement = loadQueue.Dequeue();
 
                 //check if the assembly is loaded
-                var asms = AppDomain.CurrentDomain.GetAssemblies();
+                var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
                 var reqFound = false;
-                foreach (var asmName in asms.Select(asm => asm.GetName()))
+                foreach (var currentDomainAssemblyName in currentDomainAssemblies.Select(asm => asm.GetName()))
                 {
-                    if (asmName.FullName.Equals(refReq.FullName))
+                    if (currentDomainAssemblyName.FullName.Equals(referencedRequirement.FullName))
                     {
                         reqFound = true;
                         break;
                     }
-                    if (asmName.Name.Equals(refReq.Name))
+                    if (currentDomainAssemblyName.Name.Equals(referencedRequirement.Name))
                     {
-                        Logger.LogWarning("Incompatible plugin components identified:" +
+                        Logger.LogWarning($"Incompatible plugin components identified:" +
                                         "Plugin requires -> {required}. " +
-                                        "But currently loaded -> {loaded}", refReq.FullName, asmName.FullName);
+                                        "But currently loaded -> {loaded}", referencedRequirement.FullName, currentDomainAssemblyName.FullName);
                     }
                 }
                 if (reqFound)
@@ -122,20 +128,34 @@ namespace XbimXplorer
                 AppDomain.CurrentDomain.AssemblyResolve += PluginAssemblyResolvingFunction;
                 try
                 {
-                    var reqAss = Assembly.Load(refReq);
-                    if (!_pluginAssemblies.Contains(reqAss))
-                        _pluginAssemblies.Add(reqAss);
-                    Logger.LogDebug("Loaded assembly: {assembly}", refReq.FullName);
-                    foreach (var referenced in reqAss.GetReferencedAssemblies())
+                    var loadedReqAss = Assembly.Load(referencedRequirement);
+                    if (!_pluginAssemblies.Contains(loadedReqAss))
+                        _pluginAssemblies.Add(loadedReqAss);
+                    Logger.LogDebug("Loaded assembly: {assembly}", referencedRequirement.FullName);
+                    foreach (var referenced in loadedReqAss.GetReferencedAssemblies())
                     {
+                        if (requiringAssemblies.ContainsKey(referenced))
+                        {
+                            requiringAssemblies[referenced].Add(loadedReqAss);
+                        }
+                        else
+                        {
+                            requiringAssemblies.Add(
+                                referenced,
+                                new List<Assembly>(new[] { loadedReqAss })
+                                );
+                        }
+
                         loadQueue.Enqueue(referenced);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(0, ex, "Problem loading assembly {required} for {assembly}", refReq, fullAssemblyFileName);
-                    var msg = "Problem loading assembly " + refReq + " for " + fullAssemblyFileName;
+                    var referencingAssemblies = string.Join(", ", requiringAssemblies[referencedRequirement].Select(x => x.FullName).ToArray());
+                    Logger.LogError(0, ex, "Exception loading assembly {required} required by {assembly}", referencedRequirement, referencingAssemblies);
+                    var msg = "Problem loading assembly " + referencedRequirement + " required by " + referencingAssemblies;
                     MessageBox.Show(msg + "\r\n\r\n" + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    
                 }
                 AppDomain.CurrentDomain.AssemblyResolve -= PluginAssemblyResolvingFunction;
             }
@@ -212,6 +232,7 @@ namespace XbimXplorer
 
         private void EvaluateXbimUiType(Type type, bool InsertAtTopOfMenu)
         {
+            Logger.LogInformation(0, $"Evaluating UI for '{type.FullName}'.");
             if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
             {
                 return;
@@ -235,6 +256,7 @@ namespace XbimXplorer
             var att = type.GetUiAttribute();
             if (string.IsNullOrEmpty(att?.MenuText))
                 return;
+            Logger.LogDebug($"Menu: {att.MenuText}");
             var destMenu = PluginMenu;
             var menuHeader = type.Name;
             if (!string.IsNullOrEmpty(att.MenuText))
@@ -276,8 +298,8 @@ namespace XbimXplorer
             {
                 destMenu.Items.Add(v);
             }
-            
             v.Click += OpenPluginWindow;
+            
         }
 
         private void OpenPluginWindow(object sender, RoutedEventArgs e)

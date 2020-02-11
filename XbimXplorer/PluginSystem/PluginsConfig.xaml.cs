@@ -32,12 +32,11 @@ namespace XbimXplorer.PluginSystem
 
         private void ShowRepository()
         {
-            
             var plugins = new List<PluginInformationVm>();
             try
             {
                 var option = (PluginChannelOption)Enum.Parse(typeof(PluginChannelOption), DisplayOptionText);
-                foreach (var plugin in _xplorerPlugins.GetPlugins(option))
+                foreach (var plugin in _xplorerPlugins.GetPlugins(option, NugetVersion))
                 {
                     plugins.Add(new PluginInformationVm(plugin));
                 }
@@ -58,7 +57,9 @@ namespace XbimXplorer.PluginSystem
             get
             {
                 var ci = DisplayOption.SelectedItem as ComboBoxItem;
-                return ci.Content as string;
+                var NoSpace = ci.Content as string;
+                NoSpace = NoSpace.Replace(" ", "");
+                return NoSpace ;
             }
         }
         
@@ -72,6 +73,7 @@ namespace XbimXplorer.PluginSystem
                 {
                     ShowRepository();
                 }
+                SelectedPlugin = new PluginInformationVm(null);
             }
         }
 

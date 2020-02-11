@@ -6,10 +6,18 @@
              xmlns:local="clr-namespace:XbimXplorer.PluginSystem"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=local:PluginInformationVm}"
-             d:DesignHeight="50" d:DesignWidth="400">
+             d:DesignHeight="50" d:DesignWidth="500">
     <Grid>
-        <Button Margin="0,0,0,0" IsEnabled="{Binding CanDownload}" Click="Download" Content="{Binding DownloadCaption}" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" />
-        <Button IsEnabled="{Binding CanLoad}" Margin="0,0,100,0" Click="Load" Content="Load" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" />
-        <Button Visibility="{Binding ShowEnableToggle}"  IsEnabled="{Binding IsInstalled}" Margin="0,0,200,0" Click="ToggleEnabled" Content="{Binding EnableToggleCaption}" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Center" />
+        <Button IsEnabled="{Binding IsInstalled}" Content="{Binding EnableToggleCaption}" Visibility="{Binding VisibleWhenInstalled}" Click="ToggleEnabled" 
+                Margin="0,0,200,0" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Center" />
+        <Button IsEnabled="{Binding IsInstalledAndNotLoaded}" Visibility="{Binding VisibleWhenInstalled}" Click="RemovePlugin" 
+                Margin="100,0,200,0" Content="Remove" HorizontalAlignment="Left" Width="90" Height="22" VerticalAlignment="Center" 
+                ToolTipService.ShowOnDisabled="true" ToolTip="Remove is only possible when a plugin is not loaded"
+                />
+        <Button IsEnabled="{Binding CanLoad}"  Content="Load" Click="Load" 
+                Margin="0,0,100,0" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" />
+        <Button IsEnabled="{Binding CanDownload}" Content="{Binding DownloadCaption}" Click="Download"
+                Margin="0,0,0,0" HorizontalAlignment="Right" Width="90" Height="22" VerticalAlignment="Center" />
+
     </Grid>
 </UserControl>

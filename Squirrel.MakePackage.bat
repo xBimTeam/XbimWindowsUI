@@ -1,4 +1,4 @@
-@set "version=5.1.0"
+@set "version=5.1.179"
 @echo Ensure an updated version of the squirrel repo in XplorerReleases
 @rmdir OutPut\Release /s /q
 @echo Build the solution in release mode now (it's just been deleted).

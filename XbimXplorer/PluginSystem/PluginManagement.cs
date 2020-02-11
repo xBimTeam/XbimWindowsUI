@@ -11,9 +11,9 @@ namespace XbimXplorer.PluginSystem
     public enum PluginChannelOption
     {
         Installed,
-        Stable,
-        Development,
-        Versions
+        LatestStable,
+        LatestIncludingDevelopment,
+        AllCompatibleVersions
     }
 
     internal class PluginManagement
@@ -86,22 +86,47 @@ namespace XbimXplorer.PluginSystem
 
         internal static string SelectedRepoUrl => "https://www.myget.org/F/xbim-plugins/api/v2";
 
-        internal IEnumerable<PluginInformation> GetPlugins(PluginChannelOption option)
+        internal IEnumerable<PluginInformation> GetPlugins(PluginChannelOption option, string winUiNugetVersion)
         {
             RefreshLocalPlugins();
             var repo = PackageRepositoryFactory.Default.CreateRepository(SelectedRepoUrl);
-            var allowDevelop = option != PluginChannelOption.Stable;
+            var allowDevelop = option != PluginChannelOption.LatestStable;
+            var invokingVerion = new SemanticVersion(winUiNugetVersion);
 
             var fnd = repo.Search("XplorerPlugin", allowDevelop);
+            var tmpPackages = new List<IPackage>();
             foreach (var package in fnd)
             {
-                if (option != PluginChannelOption.Versions)
+                // drop develop if latest stable
+                System.Diagnostics.Debug.WriteLine($"Evaluating {package}");
+                if (option == PluginChannelOption.LatestStable && !string.IsNullOrEmpty(package.Version.SpecialVersion))
                 {
-                    if (allowDevelop && !package.IsAbsoluteLatestVersion)
-                        continue;
-                    if (!allowDevelop && !package.IsLatestVersion)
-                        continue;
+                    continue;
                 }
+                // check it is compatible
+                var sel = package.DependencySets.SelectMany(x => x.Dependencies.Where(y => y.Id.StartsWith("Xbim.WindowsUI"))).FirstOrDefault();
+                if (sel != null && sel.VersionSpec.Satisfies(invokingVerion))
+                {
+                    tmpPackages.Add(package);
+                }
+            }
+
+            if (option == PluginChannelOption.LatestStable || option ==  PluginChannelOption.LatestIncludingDevelopment)
+            {
+                // only one per ID
+                var selPackages = new List<IPackage>();
+                var grouped = tmpPackages.GroupBy(x => x.Id);
+                foreach (var element in grouped)
+                {
+                    var maxVersion = element.Max(x => x.Version);
+                    selPackages.Add(element.FirstOrDefault(x=>x.Version == maxVersion));
+                }
+                tmpPackages = selPackages;
+            }
+            
+            
+            foreach (var package in tmpPackages)
+            {
                 var pv = new PluginInformation(package);
                 if (_diskPlugins.ContainsKey(package.Id))
                 {
@@ -121,6 +146,8 @@ namespace XbimXplorer.PluginSystem
 
         internal static string GetStartupFileConfig(DirectoryInfo dir)
         {
+            if (dir == null)
+                return "";
             return Path.Combine(dir.FullName, "PluginConfig.xml");
         }
 
