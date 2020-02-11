@@ -55,13 +55,13 @@ namespace XbimXplorer
             if (!blockUpdate)
                 Update();
 
-            /* todo: Squirrel
+            
             var firstRun = PortPlugins();
             if (firstRun)
             {
                 RestoreSettings();
             }
-            */
+            
 
             var blockPlugin = false;
             foreach (var thisArg in e.Args)
