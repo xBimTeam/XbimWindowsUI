@@ -9,12 +9,11 @@
 #endif
 
 [assembly: AssemblyCompany("Xbim Team")]
-[assembly: AssemblyProduct("Xbim Library")]
-[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2018")]
+[assembly: AssemblyCopyright("Copyright © Xbim Team 2007-2020")]
 [assembly: AssemblyTrademark("Xbim Team")]
 [assembly: AssemblyCulture("")]
  
 // AssemblyVersion is the CLR version. Change this only when making breaking changes
 // Whenever breaking changes happen update this.
-[assembly: AssemblyVersion("5.0")]
-[assembly: AssemblyInformationalVersion("5.0.0.0")]
+[assembly: AssemblyVersion("5.1")]
+[assembly: AssemblyInformationalVersion("5.1.0.0")]

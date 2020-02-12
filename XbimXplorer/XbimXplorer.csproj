@@ -5,13 +5,14 @@
     <TargetFrameworks>net47</TargetFrameworks>
     <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     <OutputType>WinExe</OutputType>
+    <Product>Xbim Xplorer 5.1</Product>
     <StartupObject />
     <Title>Xbim Xplorer</Title>
     <Description>
       XbimXplorer is a fully feature demonstration Windows application for the XBIM Toolkit. It allows IFC BIM files to be opened
       visualised both sematically and graphically, and supports a range of plugins to perform actions such as BCF exchange, and COBie export
     </Description>
-    <ApplicationIcon />
+    <ApplicationIcon>xBIM.ico</ApplicationIcon>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
