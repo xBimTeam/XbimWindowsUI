@@ -240,10 +240,8 @@ namespace XbimXplorer
                 var updateSource = "http://www.overarching.it/dload/XbimXplorer5";
                 var ext = ".php";
                 Debug.WriteLine(ext);
-                using (var mgr = new UpdateManager(updateSource))
+                using (var mgr = new UpdateManager(updateSource, releasesFileExtension: ext))
                 {
-                    // todo: Squirrel
-                    // var t = await mgr.UpdateApp(releasesExtension: ext);
                     var t = await mgr.UpdateApp();
                     mgr.Dispose();
                     if (EqualityComparer<ReleaseEntry>.Default.Equals(t, default(ReleaseEntry)))
