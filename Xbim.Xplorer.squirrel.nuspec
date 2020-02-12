@@ -8,8 +8,12 @@
         <owners>xBIM team</owners>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>XbimXplorer</description>
+        <title>Xbim Xplorer 5.1</title>
+        <icon>xbim.ico</icon>
+        <iconUrl>https://raw.githubusercontent.com/xBimTeam/XbimWindowsUI/master/XbimXplorer/xBIM.ico</iconUrl>
     </metadata>
     <files>
+        <file src="XbimXplorer\xbim.ico" target="" />
         <file src="Output\Release\net47\**\*.*" target="lib\net45\" exclude="**\*.pdb;**\*.nupkg;**\*.vshost.*" />
     </files>
 </package>
