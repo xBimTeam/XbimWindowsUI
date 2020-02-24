@@ -892,7 +892,14 @@ namespace Xbim.Presentation
             {
                 SelectionDrivenSelectedEntityChange(newVal.FirstOrDefault());
             }
-            // HighlighSelected(null);
+            else
+            {
+                HighlighSelected(null);
+                foreach (var item in newVal)
+                {
+                    HighlighSelected(item);
+                }
+            }
         }
 
         public static readonly RoutedEvent SelectedEntityChangedEvent =

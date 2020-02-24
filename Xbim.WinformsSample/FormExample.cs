@@ -26,6 +26,7 @@ namespace Xbim.WinformsSample
             _wpfControl = new WinformsAccessibleControl();
             _wpfControl.SelectionChanged += _wpfControl_SelectionChanged;
             
+            
             controlHost.Child = _wpfControl;
         }
 
@@ -94,6 +95,20 @@ namespace Xbim.WinformsSample
                 starting = found.EntityLabel;
             else
                 starting = -1;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            _wpfControl.SelectionBehaviour = Presentation.DrawingControl3D.SelectionBehaviours.MultipleSelection;
+
+            var mod = _wpfControl.ModelProvider.ObjectInstance as IfcStore;
+            if (mod == null)
+                return;
+            var found = mod.Instances.OfType<IIfcWallStandardCase>();
+            
+            var sel = new Presentation.EntitySelection(false);
+            sel.AddRange(found);
+            _wpfControl.Selection = sel;
         }
     }
 }
