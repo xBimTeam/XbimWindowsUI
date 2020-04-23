@@ -652,15 +652,40 @@ namespace XbimXplorer.Commands
                 }
 
                 m = Regex.Match(cmd,
-                    @"^(GeometryEngine|ge) " +
-                    @"(top (?<top>\d+) )*" +
-                    // @"(?<mode>(count|list|typelist|short|full) )*" +
-                    @"(?<tt>(transverse|tt) )*" +
-                    @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
+                    @"^(mesh) " +
+                    @"(?<format>(obj|stl)) *" +                  
                     @"(?<start>([\d,-]+|[^ ]+)) *" +
-                    @"(?<props>.*)" +
                     "",
                     RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var labels = GetSelection(m).ToArray();
+                    int startIndex = 1;
+                    foreach (var label in labels)
+                    {
+                        var entity = Model.Instances[label];
+                        if (m.Groups["format"].Value.ToLowerInvariant() == "obj")
+                        {
+                            startIndex = ReportAsObj(entity, startIndex);
+                        }
+                        else
+                        {
+                            ReportAdd($"=== Entity {m.Groups["format"].Value.ToLowerInvariant()} not implemented.", Brushes.Red);
+                        }
+                    }
+                    continue;
+                }
+
+                m = Regex.Match(cmd,
+                @"^(GeometryEngine|ge) " +
+                @"(top (?<top>\d+) )*" +
+                // @"(?<mode>(count|list|typelist|short|full) )*" +
+                @"(?<tt>(transverse|tt) )*" +
+                @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
+                @"(?<start>([\d,-]+|[^ ]+)) *" +
+                @"(?<props>.*)" +
+                "",
+                RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
@@ -676,7 +701,7 @@ namespace XbimXplorer.Commands
                                 continue;
                             }
                             ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
-                            ReportAdd($"=== Geometry functions", Brushes.Blue);
+                            ReportAdd($"=== Geometry Engine Functions - Solids", Brushes.Blue);
 
                             var sols = GetSolids(entity);
                             foreach (var item in sols)
@@ -1140,6 +1165,36 @@ namespace XbimXplorer.Commands
                 }
                 ReportAdd($"Command not understood: {cmd}.");
             }
+        }
+
+        private int ReportAsObj(IPersistEntity entity, int startIndex = 1)
+        {
+            // dirty (but quick) export of mesh to obj
+            //
+            var dummyMaterial = new WpfMaterial(new XbimColour("dummy", 1, 1, 1, 1));
+            ReportAdd($"# ##########################################");
+            ReportAdd($"# start obj format for entity {entity.EntityLabel}");
+            ReportAdd($"o Entity{entity.EntityLabel}");
+            var geom = WpfMeshGeometry3D.GetGeometry(entity, XbimMatrix3D.Identity, dummyMaterial);
+            ReportAdd($"# ##### start positions");
+            foreach (var pos in geom.Positions)
+            {
+                ReportAdd($"v {pos.X} {pos.Y} {pos.Z}");
+            }
+            ReportAdd($"# ##### start indices");
+            int facesCount = geom.TriangleIndices.Count / 3;
+            int face = 0;
+            while (face < facesCount)
+            {
+                int iStart = face++ * 3;
+                int i1 = geom.TriangleIndices[iStart++] + startIndex;
+                int i2 = geom.TriangleIndices[iStart++] + startIndex;
+                int i3 = geom.TriangleIndices[iStart++] + startIndex;
+                ReportAdd($"f {i1} {i2} {i3}");
+            }
+            ReportAdd($"# end obj format for entity {entity.EntityLabel}");
+            ReportAdd($"# ##########################################");
+            return startIndex + geom.Positions.Count();
         }
 
         private void ConvertFolder(string folderName)
