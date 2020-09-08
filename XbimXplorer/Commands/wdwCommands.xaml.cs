@@ -34,6 +34,7 @@ using System.CodeDom;
 using XbimXplorer.PluginSystem;
 using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
+using Xbim.Ifc2x3.Kernel;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -741,7 +742,7 @@ namespace XbimXplorer.Commands
                     @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
                     @"(?<hi>(highlight|hi) )*" +
                     @"(?<svt>(showvaluetype|svt) )*" +
-                    @"(?<start>([\d,-]+|[^ ]+)) *" +
+                    @"(?<start>([\da-zA-Z$_,-]+|[^ ]+)) *" +
                     @"(?<props>.*)" +
                     "",
                     RegexOptions.IgnoreCase);
@@ -1732,6 +1733,13 @@ namespace XbimXplorer.Commands
             TxtOut.Document.Blocks.Add(newP);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value">12-32 -> range; #12 = 12; 
+        /// </param>
+        /// <param name="sep"></param>
+        /// <returns></returns>
         private int[] ToIntarray(string value, char sep)
         {
             var sa = value.Split(new[] {sep}, StringSplitOptions.RemoveEmptyEntries);
@@ -1757,17 +1765,33 @@ namespace XbimXplorer.Commands
                 {
                     int j;
                     var thisText = sa[i];
-                    if (thisText.StartsWith("#"))
-                        thisText = thisText.Substring(1);
-                    if (int.TryParse(thisText, out j))
+                    if (IsGuid(thisText))
                     {
-                        ia.Add(j);
+                        var t = _parentWindow.Model.Instances.OfType<IfcRoot>().Where(x => x.GlobalId == thisText).FirstOrDefault();
+                        if (t!= null)
+                        {
+                            ia.Add(t.EntityLabel);
+                        }
+                    }
+                    else
+                    {
+                        if (thisText.StartsWith("#"))
+                            thisText = thisText.Substring(1);
+                        if (int.TryParse(thisText, out j))
+                        {
+                            ia.Add(j);
+                        }
                     }
                 }
             }
             return ia.ToArray();
         }
-        
+
+        private bool IsGuid(string thisText)
+        {
+            return thisText.Length == 22;
+        }
+
         private void DisplayHelp()
         {
             var t = new TextHighliter();
