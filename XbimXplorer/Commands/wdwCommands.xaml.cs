@@ -34,7 +34,6 @@ using System.CodeDom;
 using XbimXplorer.PluginSystem;
 using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
-using Xbim.Ifc2x3.Kernel;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -1767,7 +1766,7 @@ namespace XbimXplorer.Commands
                     var thisText = sa[i];
                     if (IsGuid(thisText))
                     {
-                        var t = _parentWindow.Model.Instances.OfType<IfcRoot>().Where(x => x.GlobalId == thisText).FirstOrDefault();
+                        var t = _parentWindow.Model.Instances.OfType<IIfcRoot>().Where(x => x.GlobalId == thisText).FirstOrDefault();
                         if (t!= null)
                         {
                             ia.Add(t.EntityLabel);
