@@ -844,5 +844,19 @@ namespace Xbim.Presentation
         }
 
         private readonly HistoryCollection<IPersistEntity> _history = new HistoryCollection<IPersistEntity>(20);
+
+        /// <summary>
+        /// Event for clicking on external hyperlink
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenExternalLink(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+        {
+            string path = e.Parameter as string;
+            System.Diagnostics.Process uriApp = new System.Diagnostics.Process();
+            uriApp.StartInfo.FileName = path;
+            uriApp.Start();
+        }
+        
     }
 }

@@ -3,6 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Xbim.Presentation"           
              >
+
+    <UserControl.CommandBindings>
+        <CommandBinding Command="Open" Executed="OpenExternalLink"/> 
+    </UserControl.CommandBindings>
+    
     <UserControl.Resources>
         <Style TargetType="{x:Type Hyperlink}" x:Key="HyperlinkStyle">
             <EventSetter Event="RequestNavigate" Handler="Hyperlink_RequestNavigate"/>
@@ -19,7 +24,7 @@
 				          Unchecked="CheckBoxChanged">Verbose
                 </CheckBox>
                 <Button x:Name="BtnBack" IsEnabled="False" FontSize="8" Click="Back" Content="&lt;-" HorizontalAlignment="Right" Width="20" VerticalAlignment="Top" Height="15" Margin="3" />
-                <DataGrid ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=ObjectGroups}"
+                <DataGrid x:Name="dataGridObject" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:IfcMetaDataControl}}, Path=ObjectGroups}"
 				          Margin="0,22,0,0"
 				          ToolTip="Attributes of the Object"
 				          AutoGenerateColumns="False"
@@ -84,6 +89,23 @@
 																			</Hyperlink>
 																		</TextBlock>
                                                                     </Grid>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Path=IsLink}"
+													             Value="true">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate>
+                                                                    <TextBlock Margin="2,0">
+																		<Hyperlink NavigateUri="{Binding Path=Value}"
+																			        Style="{Binding Source={StaticResource HyperlinkStyle}}" 
+                                                                                    Command="Open" 
+                                                                                    CommandParameter="{Binding Path=Value}">
+																			<TextBlock Text="{Binding Path=Value}"/>
+																		</Hyperlink>
+																	</TextBlock>
                                                                 </ControlTemplate>
                                                             </Setter.Value>
                                                         </Setter>
