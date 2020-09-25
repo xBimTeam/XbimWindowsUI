@@ -30,7 +30,7 @@
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
-        <Button Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" FontSize="20" Margin="5" Command="ApplicationCommands.Stop">Cancel</Button>
-        <Button Grid.Column="1" Grid.Row="2" HorizontalAlignment="Right" FontSize="20" Margin="5" Command="ApplicationCommands.Close">OK</Button>
+        <Button Grid.Column="0" Grid.Row="2" Height="25" Width="80" HorizontalAlignment="Left" Margin="5" Command="ApplicationCommands.Stop">Cancel</Button>
+        <Button Grid.Column="1" Grid.Row="2" Height="25" Width="80" HorizontalAlignment="Right" Margin="5" Command="ApplicationCommands.Close">OK</Button>
     </Grid>
 </Window>
