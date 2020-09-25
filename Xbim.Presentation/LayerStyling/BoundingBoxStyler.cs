@@ -40,10 +40,13 @@ namespace Xbim.Presentation.LayerStyling
         /// <param name="transparentShapes"></param>
         /// <param name="isolateInstances">List of instances to be isolated</param>
         /// <param name="hideInstances">List of instances to be hidden</param>
+        /// <param name="selectContexts">Selected Contexts</param>
         /// <param name="excludeTypes">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
         /// <returns></returns>
         public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, 
-            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null)
+            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, 
+            List<IPersistEntity> hideInstances = null, List<IIfcGeometricRepresentationContext> selectContexts = null,
+            List<Type> excludeTypes = null)
         {
             var excludedTypes = model.DefaultExclusions(excludeTypes);
             var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
