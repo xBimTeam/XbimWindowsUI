@@ -346,7 +346,7 @@ namespace XbimXplorer
 
         private void ApplyWorkarounds(IfcStore model)
         {
-            model.AddWorkAroundSurfaceofLinearExtrusionForRevit();
+            model.AddRevitWorkArounds();
             model.AddWorkAroundTrimForPolylinesIncorrectlySetToOneForEntireCurve();
         }
 
