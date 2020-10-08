@@ -20,6 +20,10 @@
                             researchers to support the next generation of BIM tools. Unlike other open source application
                             xBIM license is compatible with commercial environments.
                         </TextBlock>
+                        <TextBlock Foreground="Red" Margin="0,3" TextWrapping="Wrap" >
+                            <Bold>This version is obsolete</Bold>, you can continue to use it for legacy purposes, otherwise  
+                            <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://www.overarching.it/dload/XbimXplorer5/Setup.exe">download the current version</Hyperlink>.
+                        </TextBlock>
                         <TextBlock Margin="0,3" >
                             <Hyperlink RequestNavigate="Link_RequestNavigate" NavigateUri="https://github.com/xBimTeam/XbimEssentials/blob/master/LICENCE.md">
 					            <TextBlock Text="https://github.com/xBimTeam/XbimEssentials/blob/master/LICENCE.md"/>
