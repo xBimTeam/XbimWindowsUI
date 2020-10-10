@@ -555,18 +555,34 @@ namespace Xbim.Presentation
 
         private void ReportProp(IPersistEntity entity, ExpressMetaProperty prop, bool verbose)
         {
-            var propVal = prop.PropertyInfo.GetValue(entity, null);
-            if (propVal == null)
+            object propVal = null;
+            try
             {
-                if (!verbose)
-                    return;
-                propVal = "<null>";
+                propVal = prop.PropertyInfo.GetValue(entity, null);
+                if (propVal == null)
+                {
+                    if (!verbose)
+                        return;
+                    propVal = "<null>";
+                }
+            }
+            catch (Exception ex)
+            {
+                var tmpVal = "Error:";
+                while (ex != null)
+                {
+                    tmpVal += " " + ex.Message;
+                    ex = ex.InnerException;
+                }
+                if (prop.EntityAttribute.IsEnumerable)
+                    propVal = new[] { tmpVal };
+                else
+                    propVal = tmpVal;
             }
             
             if (prop.EntityAttribute.IsEnumerable)
             {
                 var propCollection = propVal as System.Collections.IEnumerable;
-
                 if (propCollection != null)
                 {
                     var propVals = propCollection.Cast<object>().ToArray();
