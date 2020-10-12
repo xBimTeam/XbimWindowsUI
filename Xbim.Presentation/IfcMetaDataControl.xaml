@@ -326,10 +326,70 @@
 					                        IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Path=Value}"
-								         Margin="5,0"
-								         IsReadOnly="True"
-								         BorderThickness="0" />
+                                <ContentControl>
+                                    <ContentControl.Style>
+                                        <Style TargetType="{x:Type ContentControl}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Path=IsLabel}"
+													             Value="false">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <TextBox Text="{Binding Path=Value}"
+																	         Margin="2,0"
+																	         IsReadOnly="True"
+																	         BorderThickness="0" />
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Path=IsLabel}"
+													             Value="true">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBox Text="{Binding Path=Value}"
+																		         Margin="2,0"
+																		         IsReadOnly="True"
+																		         BorderThickness="0" />
+                                                                    <TextBlock Grid.Column="1">
+																			<Hyperlink NavigateUri="{Binding Path=IfcUri}"
+																			           Style="{Binding Source={StaticResource HyperlinkStyle}}">
+																				<TextBlock Text=" #" />
+																				<TextBlock Text="{Binding Path=IfcLabel}"/>
+																			</Hyperlink>
+																		</TextBlock>
+                                                                </Grid>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Path=IsLink}"
+													             Value="true">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate>
+                                                                <TextBlock Margin="2,0">
+																		<Hyperlink NavigateUri="{Binding Path=Value}"
+																			        Style="{Binding Source={StaticResource HyperlinkStyle}}" 
+                                                                                    Command="Open" 
+                                                                                    CommandParameter="{Binding Path=Value}">
+																			<TextBlock Text="{Binding Path=Value}"/>
+																		</Hyperlink>
+																	</TextBlock>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
