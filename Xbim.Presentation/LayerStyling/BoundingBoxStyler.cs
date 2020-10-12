@@ -51,6 +51,7 @@ namespace Xbim.Presentation.LayerStyling
             var excludedTypes = model.DefaultExclusions(excludeTypes);
             var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
             var hiddenInstances = hideInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
+            var selectedContexts = selectContexts?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             var timer = new Stopwatch();
@@ -89,7 +90,8 @@ namespace Xbim.Presentation.LayerStyling
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
                     foreach (var shapeInstance in shapeInstances
                         .Where(s => null == onlyInstances || onlyInstances.Count == 0 || onlyInstances.Keys.Contains(s.IfcProductLabel))
-                        .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel)))
+                        .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel))
+                        .Where(s => null == selectedContexts || selectedContexts.Count == 0 || selectedContexts.Keys.Contains(s.RepresentationContext)))
                     {
                         // logging 
                         var currentProgress = 100 * prog++ / tot;
