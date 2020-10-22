@@ -20,7 +20,7 @@ namespace Xbim.Presentation.Texturing
         {
             //Spherical uv mapping
             //calculate mid point of the shape
-            List<Point> textureCoordinates = new List<Point>();
+            Point[] textureCoordinates = new Point[vertices.Count()];
             double minX, minY, minZ, maxX, maxY, maxZ;
             minX = vertices.Select(x => x.X).Min();
             maxX = vertices.Select(x => x.X).Max();
@@ -30,8 +30,10 @@ namespace Xbim.Presentation.Texturing
             maxZ = vertices.Select(x => x.Z).Max();
             Vector3D midPoint = new Vector3D((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
 
-            foreach (Point3D meshPoint in vertices)
+            //for (int verticeIndex = 0; verticeIndex < textureCoordinates.Length; verticeIndex++)
+            Parallel.For(0, textureCoordinates.Length, (verticeIndex) =>
             {
+                Point3D meshPoint = vertices.ElementAt(verticeIndex);
                 Vector3D direction = (Vector3D)(meshPoint - midPoint);
                 double theta = Math.Acos(direction.Z / direction.Length);
                 if (direction.Z < 0)
@@ -60,8 +62,8 @@ namespace Xbim.Presentation.Texturing
                 double u = Math.Sin(theta) * Math.Cos(phi);
                 double v = Math.Sin(theta) * Math.Sin(phi);
 
-                textureCoordinates.Add(new Point(u, v));
-            }
+                textureCoordinates[verticeIndex] = new Point(u, v);
+            });
             return textureCoordinates;
         }
     }
