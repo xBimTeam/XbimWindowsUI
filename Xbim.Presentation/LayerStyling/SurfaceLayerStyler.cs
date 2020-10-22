@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
@@ -241,19 +242,52 @@ namespace Xbim.Presentation.LayerStyling
         protected WpfMaterial GetWpfMaterial(IModel model, int styleId)
         {
             var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
-            var texture = XbimTexture.Create(sStyle);
-            if(texture.ColourMap.Count > 0)
-            { 
-                if (texture.ColourMap[0].Alpha <= 0)
+            var wpfMaterial = new WpfMaterial();
+            
+            //The style contains a texture
+            bool isTexture = false;
+            if (sStyle.Styles.Any(x => x is IIfcSurfaceStyleWithTextures))
+            {
+                IIfcSurfaceStyleWithTextures surfaceStyleWithTexture = (IIfcSurfaceStyleWithTextures)sStyle.Styles.First(x => x is IIfcSurfaceStyleWithTextures);
+                if (surfaceStyleWithTexture.Textures.Any(x => x is IIfcImageTexture))
                 {
-                    texture.ColourMap[0].Alpha = 0.5f;
-                    Logger.LogWarning("Fully transparent style #{styleId} forced to 50% opacity.", styleId);
+                    IIfcImageTexture imageTexture = surfaceStyleWithTexture.Textures.First(x => x is IIfcImageTexture) as IIfcImageTexture;
+                    //generate the correct path
+                    Uri imageUri;
+                    if (Uri.TryCreate(imageTexture.URLReference, UriKind.Absolute, out imageUri))
+                    {
+                        wpfMaterial.WpfMaterialFromImageTexture(imageUri);
+                    }
+                    else if (Uri.TryCreate(imageTexture.URLReference, UriKind.Relative, out imageUri))
+                    {
+                        Uri modelFileUri = new Uri(model.Header.FileName.Name);
+                        Uri absolutFileUri = new Uri(modelFileUri, imageTexture.URLReference);
+                        wpfMaterial.WpfMaterialFromImageTexture(absolutFileUri);
+                    }
+                    else
+                    {
+                        Logger.LogWarning(0, "Invalid Uri " + imageTexture.URLReference + " (bad formatted or file not found).", imageTexture);
+                    }
+                    isTexture = true;
                 }
             }
+            
+            //The style doesn't contain a texture
+            if (isTexture == false)
+            {
+                var texture = XbimTexture.Create(sStyle);
+                if (texture.ColourMap.Count > 0)
+                {
+                    if (texture.ColourMap[0].Alpha <= 0)
+                    {
+                        texture.ColourMap[0].Alpha = 0.5f;
+                        Logger.LogWarning("Fully transparent style #{styleId} forced to 50% opacity.", styleId);
+                    }
+                }
 
-            texture.DefinedObjectId = styleId;
-            var wpfMaterial = new WpfMaterial();
-            wpfMaterial.CreateMaterial(texture);
+                texture.DefinedObjectId = styleId;
+                wpfMaterial.CreateMaterial(texture);
+            }
             return wpfMaterial;
         }
 

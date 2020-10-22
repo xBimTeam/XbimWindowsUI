@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using Xbim.Ifc;
 using Xbim.ModelGeometry.Scene;
@@ -56,6 +58,10 @@ namespace Xbim.Presentation
                 _description = "Texture " + colour;
                 IsTransparent = colour.IsTransparent;
             }
+            else
+            {
+                _material = new MaterialGroup();
+            }
             _material.Freeze();
         }
 
@@ -93,5 +99,23 @@ namespace Xbim.Presentation
         public string Description => _description;
         
         public bool IsCreated => _material != null;
+
+        /// <summary>
+        /// Create a Material from an image
+        /// </summary>
+        /// <param name="imageUri">Absolut path to the image file</param>
+        /// <returns></returns>
+        public void WpfMaterialFromImageTexture(Uri imageUri)
+        {
+            BitmapImage imgSource = new BitmapImage();
+            Stream imgStream = File.OpenRead(imageUri.LocalPath);
+            imgSource.BeginInit();
+            imgSource.StreamSource = imgStream;
+            imgSource.EndInit();
+
+            Brush brush = new ImageBrush(imgSource);
+            _material = new DiffuseMaterial(brush);
+            _material.Freeze();
+        }
     }
 }
