@@ -57,7 +57,10 @@ namespace Xbim.Presentation.Texturing
                     phi = Math.Atan(direction.Y / direction.X) - Math.PI;
                 }
 
-                textureCoordinates.Add(new Point(phi, theta));
+                double u = Math.Sin(theta) * Math.Cos(phi);
+                double v = Math.Sin(theta) * Math.Sin(phi);
+
+                textureCoordinates.Add(new Point(u, v));
             }
             return textureCoordinates;
         }
