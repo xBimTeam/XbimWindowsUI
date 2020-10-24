@@ -582,34 +582,58 @@ namespace XbimXplorer.Commands
                                 entities.Clear();
                                 entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
                             }
+                            var engine = new XbimGeometryEngine();
+                            var ifcFile = ((IfcStore)Model).FileName;
                             foreach (var solEntity in entities)
                             {
-                                var sols = GetSolids(solEntity);
-                                foreach (var item in sols)
+                                if (solEntity is IIfcGeometricRepresentationItem geomRep)
                                 {
-                                    int iCnt = 0;
-                                    foreach (var solid in item.Item2)
+                                    try
                                     {
-                                        if (solid != null && solid.IsValid)
+                                        var created = engine.Create(geomRep, null);
+                                        var brep = engine.ToBrep(created);
+                                        var brepFileName = Path.ChangeExtension(ifcFile, $".{solEntity.EntityLabel}.v50.brep");
+                                        using (var tw = File.CreateText(brepFileName))
                                         {
-                                            var trsfSolid = (IXbimSolid)solid.Transform(trsf);
-                                            var thisSol = trsfSolid.ToBRep;
-                                            if (thisSol == prevSol)
-                                                continue;
-                                            var fileName = $"{label}.{item.Item1}.{iCnt++}.brep";
-                                            if (firstWrite)
+                                            tw.WriteLine("DBRep_DrawableShape");
+                                            tw.WriteLine(brep);
+                                        }
+                                        ReportAdd($"Brep saved to '{brepFileName}'");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.LogError(ex, $"Error writing brep {solEntity.EntityLabel}.");
+                                    }
+                                }
+                                else
+                                {
+                                    var namesAndSolids = GetSolidsByAvailableMethods(solEntity, engine);
+                                    foreach (var nameAndSolids in namesAndSolids)
+                                    {
+                                        int iCnt = 0;
+                                        foreach (var solid in nameAndSolids.solids)
+                                        {
+                                            if (solid != null && solid.IsValid)
                                             {
-                                                fileName = $"{label}.brep";
-                                                firstWrite = false;
+                                                var trsfSolid = (IXbimSolid)solid.Transform(trsf);
+                                                var thisSol = trsfSolid.ToBRep;
+                                                if (thisSol == prevSol)
+                                                    continue;
+                                                var fileName = $"{label}.{nameAndSolids.methodName}.{iCnt++}.brep";
+                                                if (firstWrite)
+                                                {
+                                                    fileName = $"{label}.brep";
+                                                    firstWrite = false;
+                                                }
+                                                FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
+                                                using (var tw = fBrep.CreateText())
+                                                {
+                                                    tw.WriteLine("DBRep_DrawableShape");
+                                                    tw.WriteLine(thisSol);
+                                                }
+                                                ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
+                                                prevSol = thisSol;
                                             }
-                                            FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
-                                            using (var tw = fBrep.CreateText())
-                                            {
-                                                tw.WriteLine("DBRep_DrawableShape");
-                                                tw.WriteLine(thisSol);
-                                            }
-                                            ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
-                                            prevSol = thisSol;
                                         }
                                     }
                                 }
@@ -676,6 +700,8 @@ namespace XbimXplorer.Commands
                     continue;
                 }
 
+
+
                 m = Regex.Match(cmd,
                 @"^(GeometryEngine|ge) " +
                 @"(top (?<top>\d+) )*" +
@@ -692,6 +718,7 @@ namespace XbimXplorer.Commands
                     var labels = GetSelection(m).ToArray();
                     if (labels.Any())
                     {
+                        var engine = new XbimGeometryEngine();
                         foreach (var label in labels)
                         {
                             var entity = Model.Instances[label];
@@ -703,17 +730,18 @@ namespace XbimXplorer.Commands
                             ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
                             ReportAdd($"=== Geometry Engine Functions - Solids", Brushes.Blue);
 
-                            var sols = GetSolids(entity);
-                            foreach (var item in sols)
+                            var methodsAndSolids = GetSolidsByAvailableMethods(entity, engine);
+                            foreach (var methodAndSolids in methodsAndSolids)
                             {
-                                ReportAdd($"- {item.Item1}");
-                                foreach (var solid in item.Item2)
+                                ReportAdd($"- {methodAndSolids.methodName}");
+                                foreach (var solid in methodAndSolids.solids)
                                 {
                                     if (solid != null)
                                     {
                                         if (solid.IsValid)
                                         {
                                             ReportAdd($"  Ok, returned {solid.GetType().Name} - Volume: {solid.Volume}", Brushes.Green);
+                                            var shape = engine.CreateShapeGeometry(solid, entity.Model.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, null);
                                         }
                                         else
                                             ReportAdd($"  Err, returned {solid.GetType().Name} (not valid)", Brushes.Red);
@@ -1222,10 +1250,9 @@ namespace XbimXplorer.Commands
             Execute();
         }
 
-        private IEnumerable<Tuple<string, List<IXbimSolid>>> GetSolids(IPersistEntity entity)
+        private IEnumerable<(string methodName, List<IXbimSolid> solids)> GetSolidsByAvailableMethods(IPersistEntity entity, XbimGeometryEngine engine)
         {
             // todo: cache methods by type
-            var engine = new XbimGeometryEngine();
             var methods = typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
             foreach (var methodInfo in methods)
             {
@@ -1241,11 +1268,7 @@ namespace XbimXplorer.Commands
                 if (!firstParam.ParameterType.IsInstanceOfType(entity))
                     continue;
                 var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name.Replace("IIfc", "Ifc")})";
-                
-                var getSolidRet = new Tuple<string, List<IXbimSolid>>( 
-                    functionShort, new List<IXbimSolid>()
-                    );
-
+                var vals = new List<IXbimSolid>();
                 try
                 {
                     var ret = methodInfo.Invoke(engine, new object[] { entity });
@@ -1255,29 +1278,29 @@ namespace XbimXplorer.Commands
                         var solset = ret as IXbimSolidSet;
                         if (sol != null)
                         {
-                            getSolidRet.Item2.Add(sol);
+                            vals.Add(sol);
                         }
                         else if (solset != null)
                         {
                             foreach (var subSol in solset)
                             {
-                                getSolidRet.Item2.Add(subSol);
+                                vals.Add(subSol);
                                 // ReportAdd($"    [{iCnt++}]: {subSol.GetType().Name} - Volume: {subSol.Volume}", Brushes.Green);
                             }
                         }
                     }
                     else
                     {
-                        getSolidRet.Item2.Add(null);
+                        vals.Add(null);
                     }
                 }
                 catch (Exception ex)
                 {
-                    getSolidRet.Item2.Add(null);
+                    vals.Add(null);
                     var msg = $"  Failed on {functionShort} for #{entity.EntityLabel}. {ex.Message}";
                     ReportAdd(msg, Brushes.Red);
                 }
-                yield return getSolidRet;
+                yield return (functionShort, vals);
             }
         }
 

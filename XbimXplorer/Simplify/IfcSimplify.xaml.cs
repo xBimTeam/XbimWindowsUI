@@ -34,9 +34,12 @@ namespace XbimXplorer.Simplify
         private List<int> _relProps = new List<int>();
         private List<int> _relAggregates = new List<int>();
         private List<int> _ifcelements = new List<int>(); // some viewers ignore elements if they are not connected to the project/site/storey
+        private List<int> _ifcSites = new List<int>();
 
         private int _ownerhistoryEntityLabel = -1;
         private int _projectEntityLabel = -1;
+        private int _mainPlacement = -1;
+
 
         private string _header;
         private string _footer;
@@ -64,8 +67,10 @@ namespace XbimXplorer.Simplify
             _relProps = new List<int>();
             _relAggregates = new List<int>();
             _ifcelements = new List<int>();
+            _ifcSites = new List<int>();
             _ownerhistoryEntityLabel = -1;
             _projectEntityLabel = -1;
+            _mainPlacement = -1;
             _header = "";
             _footer = "";
 
@@ -88,7 +93,8 @@ namespace XbimXplorer.Simplify
                 "\\) *;" // the closing bracket escaped and the semicolon
                 );
 
-            var reGuid = new Regex(@"^ *'([^']*)' *,");
+            var reGuid = new Regex(@"^ *'([^']*)' *,", RegexOptions.Compiled);
+            var reMainPlacement = new Regex(@"IFCLOCALPLACEMENT[ \t\r\n]*\(\$", RegexOptions.Compiled);
 
             while ((readLine = fp.NextLine()) != null)
             {
@@ -129,15 +135,25 @@ namespace XbimXplorer.Simplify
                         if (!_guids.ContainsKey(val))
                             _guids.Add(val, iEntityLabel);
                     }
-
                     if (type == "IFCPROJECT")
                     {
                         requiredLines.Add(iEntityLabel);
                         _projectEntityLabel = iEntityLabel;
                     }
+                    else if (type == "IFCSITES")
+                    {
+                        _ifcSites.Add(iEntityLabel);
+                    }
                     else if (type == "IFCOWNERHISTORY")
                     {
                         _ownerhistoryEntityLabel = iEntityLabel;
+                    }
+                    else if (type == "IFCLOCALPLACEMENT" && _mainPlacement == -1)
+                    {
+                        if (reMainPlacement.IsMatch(lineBuffer))
+						{
+                            _mainPlacement = iEntityLabel;
+						}
                     }
                     lineBuffer = "";
                 }
@@ -465,10 +481,24 @@ namespace XbimXplorer.Simplify
             var max = _exportList.Max();
             if (ExportContainment.IsChecked.Value)
             {
+                var newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                // we need to ensure that the site is exported.
+                var exportedSite = _exportList.Intersect(_ifcSites).FirstOrDefault();
+                if (exportedSite == 0)
+				{
+                    exportedSite = ++max;
+                    newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                    tex.WriteLine($"#{exportedSite}= IFCSITE('{newid.Value}',#{_ownerhistoryEntityLabel},'XbimCreated','Created with the stripping method of Xbim Simplify','',#{_mainPlacement},$,$,.ELEMENT.,$,$,0.,$,$);");                   
+                }
+
+                newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                tex.WriteLine($"#{++max}= IFCRELAGGREGATES('{newid.Value}',#{_ownerhistoryEntityLabel},$,$,#{_projectEntityLabel},(#{exportedSite}));");
+
+
                 foreach (var element in _ifcelements)
                 {
-                    var newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
-                    tex.WriteLine($"#{++max}= IFCRELCONTAINEDINSPATIALSTRUCTURE('{newid.Value}',#{_ownerhistoryEntityLabel},$,$,(#{element}),#{_projectEntityLabel});");
+                    newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                    tex.WriteLine($"#{++max}= IFCRELCONTAINEDINSPATIALSTRUCTURE('{newid.Value}',#{_ownerhistoryEntityLabel},$,$,(#{element}),#{exportedSite});");
                 }
             }
             tex.Write(_footer);
