@@ -46,6 +46,7 @@
     <Resource Include="**\*.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Dialogs\RepresentationContextSelection.xaml" />
     <None Remove="xBIM.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -79,5 +80,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Dialogs\RepresentationContextSelection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>

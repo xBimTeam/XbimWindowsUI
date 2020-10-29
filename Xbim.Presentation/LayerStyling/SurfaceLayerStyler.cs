@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
@@ -11,6 +12,7 @@ using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Presentation.Texturing;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -39,13 +41,17 @@ namespace Xbim.Presentation.LayerStyling
         /// <param name="isolateInstances">List of instances to be isolated</param>
         /// <param name="hideInstances">List of instances to be hidden</param>
         /// <param name="excludeTypes">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
+        /// <param name="selectContexts">Contexts for displaying</param>
         /// <returns></returns>
         public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, 
-            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null)
+            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, 
+            List<IPersistEntity> hideInstances = null, List<IIfcGeometricRepresentationContext> selectContexts = null,
+            List <Type> excludeTypes = null)
         {
             var excludedTypes = model.DefaultExclusions(excludeTypes);
             var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
             var hiddenInstances = hideInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
+            var selectedContexts = selectContexts?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             var timer = new Stopwatch();
@@ -85,7 +91,8 @@ namespace Xbim.Presentation.LayerStyling
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
                     foreach (var shapeInstance in shapeInstances
                         .Where(s => null == onlyInstances || onlyInstances.Count == 0 || onlyInstances.Keys.Contains(s.IfcProductLabel) )
-                        .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel) ))
+                        .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel)) 
+                        .Where(s => null == selectedContexts || selectedContexts.Count == 0 || selectedContexts.Keys.Contains(s.RepresentationContext)))
                     {
                         // logging 
                         var currentProgress = 100 * prog++ / tot;
@@ -144,12 +151,31 @@ namespace Xbim.Presentation.LayerStyling
                                         wpfMesh.Read(((XbimShapeGeometry) shapeGeom).ShapeData);
                                         break;
                                 }
+                                
                                 repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                                 var mg = new GeometryModel3D(wpfMesh, materialsByStyleId[styleId]);
                                 mg.SetValue(FrameworkElement.TagProperty,
                                     new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                                 mg.BackMaterial = mg.Material;
                                 mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform).ToMatrixTransform3D();
+
+                                //manual Texturemapping
+                                if (materialsByStyleId[styleId].HasTexture
+                                    && mg.Geometry is MeshGeometry3D mesh3D)
+                                {
+                                    ITextureMapping tMapping;
+                                    if (materialsByStyleId[styleId].IfcTextureCoordinate != null)
+                                    {
+                                        tMapping = TextureMappingFactory.CreateTextureMapping(materialsByStyleId[styleId].IfcTextureCoordinate);
+                                    }
+                                    else
+                                    {
+                                        Logger.LogWarning(0, "No IfcTextureCoordinate is defined for style " + styleId + ". Spherical mapping is used.");
+                                        tMapping = new SphericalTextureMap();
+                                    }
+                                    mesh3D.TextureCoordinates.Concat(tMapping.GetTextureMap(mesh3D.Positions, mesh3D.Normals, mesh3D.TriangleIndices));
+                                }
+
                                 if (materialsByStyleId[styleId].IsTransparent)
                                     tmpTransparentsGroup.Children.Add(mg);
                                 else
@@ -177,12 +203,27 @@ namespace Xbim.Presentation.LayerStyling
                                 if (shapeGeom.Format != (byte) XbimGeometryType.PolyhedronBinary) 
                                     continue;
                                 var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
+                                ITextureMapping textureMethod = null;
+                                if (materialsByStyleId[styleId].HasTexture)
+                                {
+                                    if (materialsByStyleId[styleId].IfcTextureCoordinate != null)
+                                    {
+                                        textureMethod = TextureMappingFactory.CreateTextureMapping(materialsByStyleId[styleId].IfcTextureCoordinate);
+                                    }
+                                    else
+                                    {
+                                        Logger.LogWarning(0, "No texture mapping method defined for style " + styleId + ". Spherical mapping is used.");
+                                        textureMethod = new SphericalTextureMap();
+                                    }
+                                }
                                 targetMergeMeshByStyle.Add(
                                     shapeGeom.ShapeData,
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
                                     shapeInstance.InstanceLabel, transform,
-                                    (short) model.UserDefinedId);
+                                    (short) model.UserDefinedId,
+                                    textureMethod);
+
                             }
                         }
                     }
@@ -222,7 +263,7 @@ namespace Xbim.Presentation.LayerStyling
         protected static WpfMeshGeometry3D GetNewStyleMesh(WpfMaterial wpfMaterial, Model3DGroup tmpTransparentsGroup,
             Model3DGroup tmpOpaquesGroup)
         {
-            var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
+            var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial, wpfMaterial.IfcTextureCoordinate);
             
             mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
             mg.BeginUpdate();
@@ -236,19 +277,57 @@ namespace Xbim.Presentation.LayerStyling
         protected WpfMaterial GetWpfMaterial(IModel model, int styleId)
         {
             var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
-            var texture = XbimTexture.Create(sStyle);
-            if(texture.ColourMap.Count > 0)
-            { 
-                if (texture.ColourMap[0].Alpha <= 0)
+            var wpfMaterial = new WpfMaterial();
+            
+            //The style contains a texture
+            bool isTexture = false;
+            if (sStyle.Styles.Any(x => x is IIfcSurfaceStyleWithTextures))
+            {
+                IIfcSurfaceStyleWithTextures surfaceStyleWithTexture = (IIfcSurfaceStyleWithTextures)sStyle.Styles.First(x => x is IIfcSurfaceStyleWithTextures);
+                if (surfaceStyleWithTexture.Textures.Any(x => x is IIfcImageTexture))
                 {
-                    texture.ColourMap[0].Alpha = 0.5f;
-                    Logger.LogWarning("Fully transparent style #{styleId} forced to 50% opacity.", styleId);
+                    IIfcImageTexture imageTexture = surfaceStyleWithTexture.Textures.First(x => x is IIfcImageTexture) as IIfcImageTexture;
+                    //generate the correct path
+                    Uri imageUri;
+                    if (Uri.TryCreate(imageTexture.URLReference, UriKind.Absolute, out imageUri))
+                    {
+                        wpfMaterial.WpfMaterialFromImageTexture(imageUri);
+                    }
+                    else if (Uri.TryCreate(imageTexture.URLReference, UriKind.Relative, out imageUri))
+                    {
+                        Uri modelFileUri = new Uri(model.Header.FileName.Name);
+                        Uri absolutFileUri = new Uri(modelFileUri, imageTexture.URLReference);
+                        wpfMaterial.WpfMaterialFromImageTexture(absolutFileUri);
+                    }
+                    else
+                    {
+                        Logger.LogWarning(0, "Invalid Uri " + imageTexture.URLReference + " (bad formatted or file not found).", imageTexture);
+                    }
+
+                    if (imageTexture.IsMappedBy != null)
+                    {
+                        wpfMaterial.IfcTextureCoordinate = imageTexture.IsMappedBy.FirstOrDefault();
+                    }
+                    isTexture = true;
                 }
             }
+            
+            //The style doesn't contain a texture
+            if (isTexture == false)
+            {
+                var texture = XbimTexture.Create(sStyle);
+                if (texture.ColourMap.Count > 0)
+                {
+                    if (texture.ColourMap[0].Alpha <= 0)
+                    {
+                        texture.ColourMap[0].Alpha = 0.5f;
+                        Logger.LogWarning("Fully transparent style #{styleId} forced to 50% opacity.", styleId);
+                    }
+                }
 
-            texture.DefinedObjectId = styleId;
-            var wpfMaterial = new WpfMaterial();
-            wpfMaterial.CreateMaterial(texture);
+                texture.DefinedObjectId = styleId;
+                wpfMaterial.CreateMaterial(texture);
+            }
             return wpfMaterial;
         }
 

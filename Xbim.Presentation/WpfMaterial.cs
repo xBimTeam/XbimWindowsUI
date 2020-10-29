@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -12,6 +17,12 @@ namespace Xbim.Presentation
         Material _material;
         string _description;
         public bool IsTransparent;
+        public IIfcTextureCoordinate IfcTextureCoordinate { get; set; }
+
+        /// <summary>
+        /// Has the material a texture
+        /// </summary>
+        public bool HasTexture { get; private set; } = false;
 
         // empty constructor
         public WpfMaterial()
@@ -56,6 +67,10 @@ namespace Xbim.Presentation
                 _description = "Texture " + colour;
                 IsTransparent = colour.IsTransparent;
             }
+            else
+            {
+                _material = new MaterialGroup();
+            }
             _material.Freeze();
         }
 
@@ -93,5 +108,24 @@ namespace Xbim.Presentation
         public string Description => _description;
         
         public bool IsCreated => _material != null;
+
+        /// <summary>
+        /// Create a Material from an image
+        /// </summary>
+        /// <param name="imageUri">Absolut path to the image file</param>
+        /// <returns></returns>
+        public void WpfMaterialFromImageTexture(Uri imageUri)
+        {
+            BitmapImage imgSource = new BitmapImage();
+            Stream imgStream = File.OpenRead(imageUri.LocalPath);
+            imgSource.BeginInit();
+            imgSource.StreamSource = imgStream;
+            imgSource.EndInit();
+
+            Brush brush = new ImageBrush(imgSource);
+            _material = new DiffuseMaterial(brush);
+            HasTexture = true;
+            _material.Freeze();
+        }
     }
 }

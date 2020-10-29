@@ -73,5 +73,13 @@ namespace Xbim.Presentation.Extensions.Utility
             }
             return ret;
         }
+
+        public static Vector3D VectorProduct (this Vector3D vector1, Vector3D vector2)
+        {
+            double nx = vector1.Y * vector2.Z - vector1.Z * vector2.Y;
+            double ny = vector1.Z * vector2.X - vector1.X * vector2.Z;
+            double nz = vector1.X * vector2.Y - vector1.Y * vector2.X;
+            return new Vector3D(nx, ny, nz);
+        }
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Xbim.Common;
@@ -11,6 +13,8 @@ using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
+using Xbim.Presentation.Extensions.Utility;
+using Xbim.Presentation.Texturing;
 
 namespace Xbim.Presentation
 {
@@ -18,8 +22,9 @@ namespace Xbim.Presentation
     {
         public GeometryModel3D WpfModel;
         private List<Point3D> _unfrozenPositions;
-        private List<Int32> _unfrozenIndices;
+        private List<Int32> _unfrozenTriangleIndices;
         private List<Vector3D> _unfrozenNormals;
+        private List<Point> _unfrozenTextureCoordinates;
         XbimMeshFragmentCollection _meshes = new XbimMeshFragmentCollection();
         private TriangleType _meshType;
 
@@ -184,6 +189,17 @@ namespace Xbim.Presentation
             return tgt;
         }
 
+        static WpfMeshGeometry3D()
+        {
+            _brushProperties = new List<PropertyInfo>();
+            Type emType = typeof(EmissiveMaterial);
+            _brushProperties.Add(emType.GetProperty(nameof(EmissiveMaterial.Brush)));
+            Type dfType = typeof(DiffuseMaterial);
+            _brushProperties.Add(dfType.GetProperty(nameof(DiffuseMaterial.Brush)));
+            Type spType = typeof(SpecularMaterial);
+            _brushProperties.Add(spType.GetProperty(nameof(SpecularMaterial.Brush)));
+        }
+
         public WpfMeshGeometry3D()
         {
             WpfModel = new GeometryModel3D {Geometry = new MeshGeometry3D()};
@@ -202,9 +218,10 @@ namespace Xbim.Presentation
             _meshes = new XbimMeshFragmentCollection(mesh.Meshes);
         }
 
-        public WpfMeshGeometry3D(Material material, Material backMaterial = null)
+        public WpfMeshGeometry3D(Material material, Material backMaterial = null, IIfcTextureCoordinate ifcTextureCoordinates = null)
         {
             WpfModel = new GeometryModel3D(new MeshGeometry3D(), material);
+            IfcTextureCoordinates = ifcTextureCoordinates;
             if (backMaterial != null) 
                 WpfModel.BackMaterial = backMaterial;
         }
@@ -233,6 +250,16 @@ namespace Xbim.Presentation
                 _meshes = new XbimMeshFragmentCollection(value);
             }
         }
+
+        /// <summary>
+        /// IFC texture Coordinates
+        /// </summary>
+        public IIfcTextureCoordinate IfcTextureCoordinates;
+
+        /// <summary>
+        /// for later Checking
+        /// </summary>
+        private static readonly List<PropertyInfo> _brushProperties;
 
         /// <summary>
         /// Do not use this rather create a XbimMeshGeometry3D first and construct this from it, appending WPF collections is slow
@@ -287,7 +314,7 @@ namespace Xbim.Presentation
             {
                 if (WpfModel?.Geometry == null)
                 {
-                    _unfrozenIndices = value.ToList();
+                    _unfrozenTriangleIndices = value.ToList();
                 }
                 else
                     Mesh.TriangleIndices = new Int32Collection(value);
@@ -406,7 +433,7 @@ namespace Xbim.Presentation
                 {
                     return 0;
                 }
-                return Mesh == null ? _unfrozenIndices.Count : Mesh.TriangleIndices.Count;
+                return Mesh == null ? _unfrozenTriangleIndices.Count : Mesh.TriangleIndices.Count;
             }
         }
 
@@ -678,7 +705,7 @@ namespace Xbim.Presentation
                                         //all vertices will be unique and have only one normal
                                         writtenVertices.Add(index, PositionCount);
 
-                                        _unfrozenIndices.Add(PositionCount);
+                                        _unfrozenTriangleIndices.Add(PositionCount);
                                         _unfrozenPositions.Add(vertexList[index]);
                                         _unfrozenNormals.Add(currentNormal);
 
@@ -686,10 +713,10 @@ namespace Xbim.Presentation
                                     else //just add the index reference
                                     {
                                         if (_unfrozenNormals[alreadyWrittenAt] == currentNormal)
-                                            _unfrozenIndices.Add(alreadyWrittenAt);
+                                            _unfrozenTriangleIndices.Add(alreadyWrittenAt);
                                         else //we need another
                                         {
-                                            _unfrozenIndices.Add(PositionCount);
+                                            _unfrozenTriangleIndices.Add(PositionCount);
                                             _unfrozenPositions.Add(vertexList[index]);
                                             _unfrozenNormals.Add(currentNormal);
                                         }
@@ -707,10 +734,15 @@ namespace Xbim.Presentation
             return true;
         }
 
-        public void Add(byte[] mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
+        public void Add(byte[] mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0, 
+            ITextureMapping textureMappingMethod = null)
         {
             var frag = new XbimMeshFragment(PositionCount, TriangleIndexCount, productTypeId, productLabel, geometryLabel, modelId);
             Read(mesh, transform);
+            if (textureMappingMethod != null)
+            {
+                AddTextureMapping(textureMappingMethod.GetTextureMap(this._unfrozenPositions, this._unfrozenNormals, this._unfrozenTriangleIndices));
+            }
             frag.EndPosition = PositionCount - 1;
             frag.EndTriangleIndex = TriangleIndexCount - 1;
             _meshes.Add(frag);
@@ -750,7 +782,7 @@ namespace Xbim.Presentation
                     //
                     _unfrozenPositions.Capacity += pts.Count;
                     _unfrozenNormals.Capacity += pts.Count;
-                    _unfrozenIndices.Capacity += idx.Count;
+                    _unfrozenTriangleIndices.Capacity += idx.Count;
                     foreach (var floatsArray in pts)
                     {
                         var wpfPosition = new Point3D(floatsArray[0], floatsArray[1], floatsArray[2]);
@@ -765,12 +797,17 @@ namespace Xbim.Presentation
                     }
                     foreach (var index in idx)
                     {
-                        _unfrozenIndices.Add(index + indexBase);
+                        _unfrozenTriangleIndices.Add(index + indexBase);
                     }
                 }
             }
         }
-        
+
+        public void AddTextureMapping(IEnumerable<Point> textureCoordinates)
+        {
+            this._unfrozenTextureCoordinates.AddRange(textureCoordinates);
+        }
+
         /// <summary>
         /// Ends an update and freezes the geometry
         /// </summary>
@@ -779,17 +816,20 @@ namespace Xbim.Presentation
             WpfModel.Geometry = new MeshGeometry3D();
             Mesh.Positions = new Point3DCollection(_unfrozenPositions);
             _unfrozenPositions = null;
-            Mesh.TriangleIndices = new Int32Collection(_unfrozenIndices);
-            _unfrozenIndices = null;
+            Mesh.TriangleIndices = new Int32Collection(_unfrozenTriangleIndices);
+            _unfrozenTriangleIndices = null;
             Mesh.Normals = new Vector3DCollection(_unfrozenNormals);
             _unfrozenNormals = null;
+            Mesh.TextureCoordinates = new PointCollection(_unfrozenTextureCoordinates);
+            _unfrozenTextureCoordinates = null;
             Mesh.Freeze();
         }
         public void BeginUpdate()
         {
             _unfrozenPositions = new List<Point3D>(Mesh.Positions);
-            _unfrozenIndices = new List<int>(Mesh.TriangleIndices);
+            _unfrozenTriangleIndices = new List<int>(Mesh.TriangleIndices);
             _unfrozenNormals = new List<Vector3D>(Mesh.Normals);
+            _unfrozenTextureCoordinates = new List<Point>(Mesh.TextureCoordinates);
             WpfModel.Geometry = null;
         }
 
