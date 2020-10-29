@@ -12,6 +12,7 @@ using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Presentation.Texturing;
 
 namespace Xbim.Presentation.LayerStyling
 {
@@ -150,12 +151,31 @@ namespace Xbim.Presentation.LayerStyling
                                         wpfMesh.Read(((XbimShapeGeometry) shapeGeom).ShapeData);
                                         break;
                                 }
+                                
                                 repeatedShapeGeometries.Add(shapeInstance.ShapeGeometryLabel, wpfMesh);
                                 var mg = new GeometryModel3D(wpfMesh, materialsByStyleId[styleId]);
                                 mg.SetValue(FrameworkElement.TagProperty,
                                     new XbimInstanceHandle(model, shapeInstance.IfcProductLabel, shapeInstance.IfcTypeId));
                                 mg.BackMaterial = mg.Material;
                                 mg.Transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform).ToMatrixTransform3D();
+
+                                //manual Texturemapping
+                                if (materialsByStyleId[styleId].HasTexture
+                                    && mg.Geometry is MeshGeometry3D mesh3D)
+                                {
+                                    ITextureMapping tMapping;
+                                    if (materialsByStyleId[styleId].IfcTextureCoordinate != null)
+                                    {
+                                        tMapping = TextureMappingFactory.CreateTextureMapping(materialsByStyleId[styleId].IfcTextureCoordinate);
+                                    }
+                                    else
+                                    {
+                                        Logger.LogWarning(0, "No IfcTextureCoordinate is defined for style " + styleId + ". Spherical mapping is used.");
+                                        tMapping = new SphericalTextureMap();
+                                    }
+                                    mesh3D.TextureCoordinates.Concat(tMapping.GetTextureMap(mesh3D.Positions, mesh3D.Normals, mesh3D.TriangleIndices));
+                                }
+
                                 if (materialsByStyleId[styleId].IsTransparent)
                                     tmpTransparentsGroup.Children.Add(mg);
                                 else
@@ -183,12 +203,27 @@ namespace Xbim.Presentation.LayerStyling
                                 if (shapeGeom.Format != (byte) XbimGeometryType.PolyhedronBinary) 
                                     continue;
                                 var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
+                                ITextureMapping textureMethod = null;
+                                if (materialsByStyleId[styleId].HasTexture)
+                                {
+                                    if (materialsByStyleId[styleId].IfcTextureCoordinate != null)
+                                    {
+                                        textureMethod = TextureMappingFactory.CreateTextureMapping(materialsByStyleId[styleId].IfcTextureCoordinate);
+                                    }
+                                    else
+                                    {
+                                        Logger.LogWarning(0, "No texture mapping method defined for style " + styleId + ". Spherical mapping is used.");
+                                        textureMethod = new SphericalTextureMap();
+                                    }
+                                }
                                 targetMergeMeshByStyle.Add(
                                     shapeGeom.ShapeData,
                                     shapeInstance.IfcTypeId,
                                     shapeInstance.IfcProductLabel,
                                     shapeInstance.InstanceLabel, transform,
-                                    (short) model.UserDefinedId);
+                                    (short) model.UserDefinedId,
+                                    textureMethod);
+
                             }
                         }
                     }
@@ -228,7 +263,7 @@ namespace Xbim.Presentation.LayerStyling
         protected static WpfMeshGeometry3D GetNewStyleMesh(WpfMaterial wpfMaterial, Model3DGroup tmpTransparentsGroup,
             Model3DGroup tmpOpaquesGroup)
         {
-            var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
+            var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial, wpfMaterial.IfcTextureCoordinate);
             
             mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
             mg.BeginUpdate();
@@ -267,6 +302,11 @@ namespace Xbim.Presentation.LayerStyling
                     else
                     {
                         Logger.LogWarning(0, "Invalid Uri " + imageTexture.URLReference + " (bad formatted or file not found).", imageTexture);
+                    }
+
+                    if (imageTexture.IsMappedBy != null)
+                    {
+                        wpfMaterial.IfcTextureCoordinate = imageTexture.IsMappedBy.FirstOrDefault();
                     }
                     isTexture = true;
                 }

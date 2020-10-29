@@ -25,7 +25,6 @@ namespace Xbim.Presentation
         private List<Int32> _unfrozenTriangleIndices;
         private List<Vector3D> _unfrozenNormals;
         private List<Point> _unfrozenTextureCoordinates;
-        private ITextureMapping _textureMapping = new SphericalTextureMap();
         XbimMeshFragmentCollection _meshes = new XbimMeshFragmentCollection();
         private TriangleType _meshType;
 
@@ -219,9 +218,10 @@ namespace Xbim.Presentation
             _meshes = new XbimMeshFragmentCollection(mesh.Meshes);
         }
 
-        public WpfMeshGeometry3D(Material material, Material backMaterial = null)
+        public WpfMeshGeometry3D(Material material, Material backMaterial = null, IIfcTextureCoordinate ifcTextureCoordinates = null)
         {
             WpfModel = new GeometryModel3D(new MeshGeometry3D(), material);
+            IfcTextureCoordinates = ifcTextureCoordinates;
             if (backMaterial != null) 
                 WpfModel.BackMaterial = backMaterial;
         }
@@ -252,59 +252,14 @@ namespace Xbim.Presentation
         }
 
         /// <summary>
+        /// IFC texture Coordinates
+        /// </summary>
+        public IIfcTextureCoordinate IfcTextureCoordinates;
+
+        /// <summary>
         /// for later Checking
         /// </summary>
         private static readonly List<PropertyInfo> _brushProperties;
-
-        /// <summary>
-        /// return if a texture is used for the front
-        /// </summary>
-        private bool HasFrontTexture
-        {
-            get
-            {
-                if (this.WpfModel != null
-                    && this.WpfModel.Material != null)
-                {
-                    Type aimedMatType = WpfModel.Material.GetType();
-                    PropertyInfo propInfoMaterial = _brushProperties.FirstOrDefault(x => x.ReflectedType.Equals(aimedMatType));
-                    if (propInfoMaterial != null)
-                    {
-                        Brush frontBrush = (Brush)propInfoMaterial.GetValue(WpfModel.Material);
-                        if (frontBrush != null)
-                        {
-                            return frontBrush is ImageBrush;
-                        }
-                    }
-                }
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// return if a texture is used for the front
-        /// </summary>
-        private bool HasBackTexture
-        {
-            get
-            {
-                if (this.WpfModel != null
-                    && this.WpfModel.BackMaterial != null)
-                {
-                    Type aimedMatType = WpfModel.BackMaterial.GetType();
-                    PropertyInfo propInfoMaterial = _brushProperties.FirstOrDefault(x => x.ReflectedType.Equals(aimedMatType));
-                    if (propInfoMaterial != null)
-                    {
-                        Brush backBrush = (Brush)propInfoMaterial.GetValue(WpfModel.BackMaterial);
-                        if (backBrush != null)
-                        {
-                            return backBrush is ImageBrush;
-                        }
-                    }
-                }
-                return false;
-            }
-        }
 
         /// <summary>
         /// Do not use this rather create a XbimMeshGeometry3D first and construct this from it, appending WPF collections is slow
@@ -779,11 +734,15 @@ namespace Xbim.Presentation
             return true;
         }
 
-        public void Add(byte[] mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0)
+        public void Add(byte[] mesh, short productTypeId, int productLabel, int geometryLabel, XbimMatrix3D? transform = null, short modelId = 0, 
+            ITextureMapping textureMappingMethod = null)
         {
             var frag = new XbimMeshFragment(PositionCount, TriangleIndexCount, productTypeId, productLabel, geometryLabel, modelId);
             Read(mesh, transform);
-            TextureMapping();
+            if (textureMappingMethod != null)
+            {
+                AddTextureMapping(textureMappingMethod.GetTextureMap(this._unfrozenPositions, this._unfrozenNormals, this._unfrozenTriangleIndices));
+            }
             frag.EndPosition = PositionCount - 1;
             frag.EndTriangleIndex = TriangleIndexCount - 1;
             _meshes.Add(frag);
@@ -844,15 +803,9 @@ namespace Xbim.Presentation
             }
         }
 
-        /// <summary>
-        /// Calculates and sets the texture mapping
-        /// </summary>
-        private void TextureMapping()
+        public void AddTextureMapping(IEnumerable<Point> textureCoordinates)
         {
-            if (HasFrontTexture || HasBackTexture)
-            {
-                _unfrozenTextureCoordinates.AddRange(this._textureMapping.GetTextureMap(_unfrozenPositions));
-            }
+            this._unfrozenTextureCoordinates.AddRange(textureCoordinates);
         }
 
         /// <summary>

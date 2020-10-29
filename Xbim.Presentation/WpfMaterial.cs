@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Presentation
@@ -14,6 +17,12 @@ namespace Xbim.Presentation
         Material _material;
         string _description;
         public bool IsTransparent;
+        public IIfcTextureCoordinate IfcTextureCoordinate { get; set; }
+
+        /// <summary>
+        /// Has the material a texture
+        /// </summary>
+        public bool HasTexture { get; private set; } = false;
 
         // empty constructor
         public WpfMaterial()
@@ -115,6 +124,7 @@ namespace Xbim.Presentation
 
             Brush brush = new ImageBrush(imgSource);
             _material = new DiffuseMaterial(brush);
+            HasTexture = true;
             _material.Freeze();
         }
     }

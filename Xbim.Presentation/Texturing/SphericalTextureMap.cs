@@ -1,26 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
+using Xbim.Common;
 
 namespace Xbim.Presentation.Texturing
 {
     public class SphericalTextureMap : ITextureMapping
     {
         /// <summary>
+        /// Used Method for Texturing
+        /// </summary>
+        public TextureMapGenerationMethod TexturingMethod
+        {
+            get
+            {
+                return TextureMapGenerationMethod.SPHERE;
+            }
+        }
+
+        /// <summary>
         /// Calculates the texture by using the algorithm of spherical texture mapping
         /// </summary>
-        /// <param name="vertices">vertices of the mesh which shall be textured</param>
         /// <returns>A spherical texture map. The indices of the texture map are related 
         /// to the indices of the given vertices</returns>
-        IEnumerable<Point> ITextureMapping.GetTextureMap(IEnumerable<Point3D> vertices)
+        public IEnumerable<Point> GetTextureMap(IEnumerable<Point3D> vertices, IEnumerable<Vector3D> normals, IEnumerable<int> triangles)
         {
+            Point[] textureCoordinates = new Point[vertices.Count()];
             //Spherical uv mapping
             //calculate mid point of the shape
-            Point[] textureCoordinates = new Point[vertices.Count()];
             double minX, minY, minZ, maxX, maxY, maxZ;
             minX = vertices.Select(x => x.X).Min();
             maxX = vertices.Select(x => x.X).Max();
@@ -30,7 +40,6 @@ namespace Xbim.Presentation.Texturing
             maxZ = vertices.Select(x => x.Z).Max();
             Vector3D midPoint = new Vector3D((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
 
-            //for (int verticeIndex = 0; verticeIndex < textureCoordinates.Length; verticeIndex++)
             Parallel.For(0, textureCoordinates.Length, (verticeIndex) =>
             {
                 Point3D meshPoint = vertices.ElementAt(verticeIndex);
@@ -38,7 +47,7 @@ namespace Xbim.Presentation.Texturing
                 double theta = Math.Acos(direction.Z / direction.Length);
                 if (direction.Z < 0)
                 {
-                    theta = theta * -1;
+                    theta *= -1;
                 }
 
                 double phi;
@@ -59,8 +68,10 @@ namespace Xbim.Presentation.Texturing
                     phi = Math.Atan(direction.Y / direction.X) - Math.PI;
                 }
 
-                double u = Math.Sin(theta) * Math.Cos(phi);
-                double v = Math.Sin(theta) * Math.Sin(phi);
+                //double u = Math.Sin(theta) * Math.Cos(phi);
+                //double v = Math.Sin(theta) * Math.Sin(phi);
+                double u = phi;
+                double v = theta;
 
                 textureCoordinates[verticeIndex] = new Point(u, v);
             });
