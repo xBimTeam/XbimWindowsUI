@@ -869,6 +869,8 @@ namespace Xbim.Presentation
         private void OpenExternalLink(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
         {
             string path = e.Parameter as string;
+            if (path == null)
+                return;
             System.Diagnostics.Process uriApp = new System.Diagnostics.Process();
             uriApp.StartInfo.FileName = path;
             uriApp.Start();

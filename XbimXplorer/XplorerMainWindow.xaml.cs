@@ -255,7 +255,6 @@ namespace XbimXplorer
         {
             var worker = s as BackgroundWorker;
             var selectedFilename = args.Argument as string;
-
             try
             {
                 if (worker == null)
@@ -269,25 +268,37 @@ namespace XbimXplorer
                     // mesh direct model
                     if (model.GeometryStore.IsEmpty)
                     {
-                        try
+                        var DoMesh = true;
+                        if (model.ReferencingModel is Xbim.IO.Esent.EsentModel em)
+						{
+                            if (!em.CanEdit)
+							{
+                                Logger.LogError(0, null,  "Xbim models need to be opened in write mode, if they don't have geometry. Use the View/Settings/General tab to configure.");
+                                DoMesh = false;
+                            }
+						}
+                        if (DoMesh)
                         {
-                            var context = new Xbim3DModelContext(model);
-                            
-                            if (!_multiThreading)
-                                context.MaxThreads = 1;
+                            try
+                            {
+                                var context = new Xbim3DModelContext(model);
+
+                                if (!_multiThreading)
+                                    context.MaxThreads = 1;
 #if FastExtrusion
                             context.UseSimplifiedFastExtruder = _simpleFastExtrusion;
 #endif
-                            SetDeflection(model);
-                            //upgrade to new geometry representation, uses the default 3D model
-                            context.CreateContext(worker.ReportProgress, true);
-                        }
-                        catch (Exception geomEx)
-                        {
-                            var sb = new StringBuilder();
-                            sb.AppendLine($"Error creating geometry context of '{selectedFilename}' {geomEx.StackTrace}.");
-                            var newexception = new Exception(sb.ToString(), geomEx);
-                            Logger.LogError(0, newexception, "Error creating geometry context of {filename}", selectedFilename);
+                                SetDeflection(model);
+                                //upgrade to new geometry representation, uses the default 3D model
+                                context.CreateContext(worker.ReportProgress, true);
+                            }
+                            catch (Exception geomEx)
+                            {
+                                var sb = new StringBuilder();
+                                sb.AppendLine($"Error creating geometry context of '{selectedFilename}' {geomEx.StackTrace}.");
+                                var newexception = new Exception(sb.ToString(), geomEx);
+                                Logger.LogError(0, newexception, "Error creating geometry context of {filename}", selectedFilename);
+                            }
                         }
                     }
 
