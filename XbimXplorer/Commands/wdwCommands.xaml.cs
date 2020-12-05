@@ -2228,12 +2228,15 @@ namespace XbimXplorer.Commands
         private TextHighliter ReportEntity(int entityLabel, int recursiveDepth = 0, int indentationLevel = 0,
             bool verbose = false, bool showValueType = false)
         {
+            
             // Debug.WriteLine("EL: " + EntityLabel.ToString());
             var sb = new TextHighliter();
             var indentationHeader = new string('\t', indentationLevel);
             try
             {
                 var entity = Model.Instances[entityLabel];
+                if (entity is IIfcPoint)
+                    return sb;
                 if (entity != null)
                 {
                     var ifcType = Model.Metadata.ExpressType(entity);

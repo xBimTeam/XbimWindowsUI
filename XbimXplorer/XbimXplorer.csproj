@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-    <TargetFrameworks>net47</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     <OutputType>WinExe</OutputType>
     <StartupObject />
@@ -13,11 +13,11 @@
     </Description>
     <ApplicationIcon />
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net47|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net472|AnyCPU'">
     <OutputPath>..\Output\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
@@ -62,8 +62,8 @@
     <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.4" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
-    <PackageReference Include="Xbim.Geometry" Version="5.1.371-develop" />
-    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.371-develop" />
+    <PackageReference Include="Xbim.Geometry" Version="5.1.402-develop" />
+    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.402-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

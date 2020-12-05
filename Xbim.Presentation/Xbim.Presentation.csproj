@@ -2,16 +2,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-    <TargetFrameworks>net47</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <Title>Xbim.Presentation</Title>
     <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
     or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
     <PackageId>Xbim.WindowsUI</PackageId>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net47|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net472|AnyCPU'">
     <OutputPath>..\Output\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
@@ -34,9 +34,9 @@
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Wpf" Version="2015.1.715" />
     <PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
-    <PackageReference Include="Xbim.Essentials" Version="5.1.310-develop" />
-    <PackageReference Include="Xbim.Geometry" Version="5.1.371-develop" />
-    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.371-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="5.1.322-develop" />
+    <PackageReference Include="Xbim.Geometry" Version="5.1.402-develop" />
+    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="5.1.402-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
