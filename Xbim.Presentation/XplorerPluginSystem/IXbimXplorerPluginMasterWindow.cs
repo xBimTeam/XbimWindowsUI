@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 using Xbim.Common;
 using Xbim.Ifc;
@@ -16,6 +17,10 @@ namespace Xbim.Presentation.XplorerPluginSystem
         bool Focus();
         string GetOpenedModelFileName();
         string GetAssemblyLocation(Assembly requestingAssembly);
-
+        
+        /// <summary>
+        /// Used during plugin binding to initiate the logging exchange.
+        /// </summary>
+        ILoggerFactory GetLoggerFactory();
     }
 }

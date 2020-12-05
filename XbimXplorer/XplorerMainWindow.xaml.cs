@@ -78,6 +78,11 @@ namespace XbimXplorer
 
         public static ILoggerFactory LoggerFactory { get; private set; }
 
+        public ILoggerFactory GetLoggerFactory()
+		{
+            return LoggerFactory;
+		}
+
 
         /// <summary>
         /// Deals with the user-defined model file name.
