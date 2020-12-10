@@ -1178,5 +1178,13 @@ namespace XbimXplorer
             CommandBox.Visibility = Visibility.Visible;
             CommandPrompt.Focus();
         }
-    }
+
+		private void SetRandomStyler(object sender, RoutedEventArgs e)
+		{
+            DrawingControl.DefaultLayerStyler = new RandomColorStyler(Logger);
+            ConnectStylerFeedBack();
+            DrawingControl.ReloadModel();
+
+        }
+	}
 }

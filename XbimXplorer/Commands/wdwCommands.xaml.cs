@@ -428,7 +428,23 @@ namespace XbimXplorer.Commands
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
-
+                m = Regex.Match(cmd, @"^(boolreport|bool\b) *(?<entities>([\d,]+|[^ ]+))$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    var start = m.Groups["entities"].Value;
+                    IEnumerable<int> labels = ToIntarray(start, ',');
+                    if (labels.Any())
+                    {
+                        foreach (int label in labels)
+                        {
+                            var ent = Model.Instances[label] as IIfcBooleanResult;
+                            if (ent is null)
+                                continue;
+                            ReportBoolean(ent, 0);
+                        }
+                    }
+                    continue;
+                }
                 m = Regex.Match(cmd, @"^(TypeReport|tr)$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
@@ -1195,7 +1211,22 @@ namespace XbimXplorer.Commands
             }
         }
 
-        private int ReportAsObj(IPersistEntity entity, int startIndex = 1)
+		private void ReportBoolean(IIfcBooleanResult ent, int v)
+		{
+            string ind = new string(' ', v);
+            ReportAdd($"{ind}{ent.FirstOperand.GetType().Name} {ent.FirstOperand.EntityLabel}");
+
+            if (ent.FirstOperand is IIfcBooleanResult br1)
+                ReportBoolean(br1, v + 1);
+			
+            ReportAdd($"{ind}{ent.Operator}");
+
+            ReportAdd($"{ind}{ent.SecondOperand.GetType().Name} {ent.SecondOperand.EntityLabel}");
+            if (ent.SecondOperand is IIfcBooleanResult br2)
+                ReportBoolean(br2, v + 1);
+        }
+
+		private int ReportAsObj(IPersistEntity entity, int startIndex = 1)
         {
             // dirty (but quick) export of mesh to obj
             //

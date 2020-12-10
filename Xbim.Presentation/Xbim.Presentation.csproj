@@ -8,7 +8,7 @@
     or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
     <PackageId>Xbim.WindowsUI</PackageId>
     <PackageReleaseNotes>Now built on XBIM v5. Migrated from log4net to Microsoft.Extensions.Logging.</PackageReleaseNotes>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>5.1.0.0</Version>
     <PackageIcon>XbimIcon.png</PackageIcon>
