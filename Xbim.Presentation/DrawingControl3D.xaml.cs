@@ -22,6 +22,7 @@ using Xbim.Common;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
+using Xbim.Geometry.Engine.Interop;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
@@ -1084,6 +1085,17 @@ namespace Xbim.Presentation
                     var modelTransform = ModelPositions[selModel].Transform;
                     
                     m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
+                    if (m.PositionCount == 0)
+					{
+                        var gri = newVal as IIfcGeometricRepresentationItem;
+                        if (gri != null)
+                        {
+                            var engine = new XbimGeometryEngine();
+                            var solid = engine.Create(gri, null);
+                            var shape = engine.CreateShapeGeometry(solid, selModel.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, selModel.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary, null);
+                            m = WpfMeshGeometry3D.GetRepresentationGeometry2(mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct);
+                        }
+                    }
                 }
             }
             else if (newVal is IIfcShapeRepresentation)

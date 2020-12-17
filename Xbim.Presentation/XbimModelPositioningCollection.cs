@@ -79,7 +79,7 @@ namespace Xbim.Presentation
             get
             {
                 return (ModelSpaceBounds.IsEmpty)
-                    ? new XbimRect3D(0, 0, 0, 10, 10, 5)
+                    ? new XbimRect3D(0, 0, 0, 50, 50, 5) // bigger intial box to fit empty grid
                     : ModelSpaceBounds.Transform(XbimMatrix3D.CreateTranslation(_viewSpaceTranslation));
             }
         }

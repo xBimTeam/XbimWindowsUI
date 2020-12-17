@@ -428,7 +428,7 @@ namespace XbimXplorer.Commands
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
-                m = Regex.Match(cmd, @"^(boolreport|bool\b) *(?<entities>([\d,]+|[^ ]+))$", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^(boolreport|bool\b) *(?<entities>([\d,]+|[^ ]+)) ?$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     var start = m.Groups["entities"].Value;
@@ -437,10 +437,11 @@ namespace XbimXplorer.Commands
                     {
                         foreach (int label in labels)
                         {
+                            ReportAdd($"Reporting boolean composition for #[{label}]");
                             var ent = Model.Instances[label] as IIfcBooleanResult;
                             if (ent is null)
                                 continue;
-                            ReportBoolean(ent, 0);
+                            ReportAdd(ReportBoolean(ent, 0));
                         }
                     }
                     continue;
@@ -1211,19 +1212,25 @@ namespace XbimXplorer.Commands
             }
         }
 
-		private void ReportBoolean(IIfcBooleanResult ent, int v)
+		private TextHighliter ReportBoolean(IIfcBooleanResult ent, int v)
 		{
+            var sb = new TextHighliter();
             string ind = new string(' ', v);
-            ReportAdd($"{ind}{ent.FirstOperand.GetType().Name} {ent.FirstOperand.EntityLabel}");
-
+            ind = ind.Replace(" ", "  ");
+            sb.Append($"{ind}{ent.FirstOperand.GetType().Name} [#{ent.FirstOperand.EntityLabel}]",
+                        Brushes.Blue
+                        );
             if (ent.FirstOperand is IIfcBooleanResult br1)
-                ReportBoolean(br1, v + 1);
-			
-            ReportAdd($"{ind}{ent.Operator}");
+                sb.Append(ReportBoolean(br1, v + 1));
 
-            ReportAdd($"{ind}{ent.SecondOperand.GetType().Name} {ent.SecondOperand.EntityLabel}");
+            sb.Append($"{ind}{ent.Operator}", Brushes.Black);
+
+            sb.Append($"{ind}{ent.SecondOperand.GetType().Name} [#{ent.SecondOperand.EntityLabel}]",
+                        Brushes.Blue
+                        );
             if (ent.SecondOperand is IIfcBooleanResult br2)
-                ReportBoolean(br2, v + 1);
+                sb.Append(ReportBoolean(br2, v + 1));
+            return sb;
         }
 
 		private int ReportAsObj(IPersistEntity entity, int startIndex = 1)
@@ -1377,6 +1384,9 @@ namespace XbimXplorer.Commands
         {
             var mRep = content.Material.GetType().Name;
             var mat = content.Material as DiffuseMaterial;
+
+            
+
             Brush b = null;
             if (mat != null)
             {
