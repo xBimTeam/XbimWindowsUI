@@ -1044,6 +1044,29 @@ namespace Xbim.Presentation
             }
         }
 
+        internal IXbimShapeGeometryData ComputeRepresentationGeometry(IIfcRepresentationItem item)
+		{
+            // make sure it's valide
+            var geom = item as IIfcGeometricRepresentationItem;
+            if (geom == null)
+                return null;
+
+            // init engine
+            var engine = new XbimGeometryEngine();
+
+            // compute geometry
+            var s = engine.Create(geom);
+
+            // then mesh with required precision and geometric rules
+            var precision = item.Model.ModelFactors.Precision;
+            var deflection = item.Model.ModelFactors.DeflectionTolerance;
+            var deflectionAngle = item.Model.ModelFactors.DeflectionAngle;
+            var shapeGeom = engine.CreateShapeGeometry(s, precision, deflection, deflectionAngle, XbimGeometryType.PolyhedronBinary);
+
+            // finally return
+            return shapeGeom;
+        }
+
         IIfcProduct _lastSelectedProduct = null;
        
         private WpfMeshGeometry3D GetSelectionGeometry(IPersistEntity newVal, WpfMaterial mat)
@@ -1065,7 +1088,17 @@ namespace Xbim.Presentation
                     var selModel = _lastSelectedProduct.Model;
                     var modelTransform = _currentModelPositions[selModel];
                     
+                    // this attempts to load the geometry from the database, if previosuly computed
                     m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
+                    if (m.PositionCount == 0) //  if nothing is found then try to compute it
+                    {
+                        // if previous failed we make an attempt to mesh in realtime.
+                        var meshed = ComputeRepresentationGeometry(newVal as IIfcRepresentationItem);
+                        if (meshed != null)
+						{
+                            m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, meshed, selModel, modelTransform);
+                        }
+                    }
                 }
             }
             else if (newVal is IIfcShapeRepresentation)

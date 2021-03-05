@@ -12,7 +12,7 @@
 
      Update PluginSystem\PluginsConfig.xaml.version.cs TOO
     -->
-    <version>4.0.14-V007</version>
+    <version>4.0.15</version>
     <!--
     ¯\_(ツ)_/¯
     -->
@@ -21,11 +21,9 @@
     <owners>xBIM team</owners>
     <license type="expression">CDDL-1.0</license>
     <projectUrl>https://github.com/xBimTeam/</projectUrl>
-    <iconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;s=240</iconUrl>
+    <icon>xbim.jpg</icon>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>
-      First release on Occ7.4
-      
       xBIM is an Open Source Toolkit for developing IFC based applications (BuildingSmart Data model).
       It provides full support for reading and writing geometry, topology and data in accordance with the Ifc2x3, Ifc4 schema.
       xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
@@ -41,13 +39,16 @@
     <language>en-GB</language>
     <tags>BIM, IFC, IfcXml, IfcZip, Ifc4, Cobie, .Net, C#, BuildingSmart</tags>
     <dependencies>
-      <dependency id="Xbim.Geometry" version="4.0.17-V003" />
-      <dependency id="Xbim.Essentials" version="4.0.30-V058" />
-      <dependency id="HelixToolkit.Wpf" version="2015.1.715" />
-      <dependency id="PropertyTools.Wpf" version="2015.1.66" />
+      <group targetFramework="net45">
+        <dependency id="Xbim.Geometry" version="4.0.19" />
+        <dependency id="Xbim.Essentials" version="4.0.32" />
+        <dependency id="HelixToolkit.Wpf" version="2015.1.715" />
+        <dependency id="PropertyTools.Wpf" version="2015.1.66" />
+      </group>
     </dependencies>
   </metadata>
   <files>
+    <file src="xbim.jpg" target="" />
     <file src="Output\Release\Xbim.Presentation.dll" target="lib\net45\Xbim.Presentation.dll" />
     <file src="Output\Release\Xbim.Presentation.xml" target="lib\net45\Xbim.Presentation.xml" />
     <file src="Output\Release\Xbim.Presentation.pdb" target="lib\net45\Xbim.Presentation.pdb" />

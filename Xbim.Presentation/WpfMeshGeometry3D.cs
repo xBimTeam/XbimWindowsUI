@@ -11,6 +11,7 @@ using Xbim.Common.Geometry;
 using Xbim.Common.XbimExtensions;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
+using Xbim.Presentation.Modelpositioning;
 
 namespace Xbim.Presentation
 {
@@ -99,8 +100,9 @@ namespace Xbim.Presentation
             return tgt;
         }
 
-        // attempting to load the shapeGeometry from the database; 
-        // 
+        /// <summary>
+        /// attempting to load the shapeGeometry from the database; 
+        /// </summary>
         public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, Dictionary<IModel, XbimMatrix3D> positions, Material mat)
         {
             var productContexts = rep.OfProductRepresentation?.OfType<IIfcProductDefinitionShape>().SelectMany(x => x.ShapeOfProduct);
@@ -111,8 +113,9 @@ namespace Xbim.Presentation
             return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform);
         }
 
-        // attempting to load the shapeGeometry from the database; 
-        // 
+        /// <summary>
+        /// attempting to load the shapeGeometry from the database; 
+        /// </summary>
         internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
@@ -146,6 +149,40 @@ namespace Xbim.Presentation
             return tgt;
         }
 
+        /// <summary>
+        /// attempting to load the shapeGeometry from the database; 
+        /// </summary>
+        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IXbimShapeGeometryData shapegeom, IModel selModel, XbimMatrix3D modelTransform)
+        {
+            StoreMeshingModeDetector p = new StoreMeshingModeDetector(selModel);
+            XbimPlacementTree pt = new XbimPlacementTree(selModel, p.WcsAdjustmentStatus == StoreMeshingModeDetector.WcsAdjustmentStatusEnum.Adjusted);
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            foreach (var contextualProduct in productContexts)
+            {
+                var trsf = pt[contextualProduct.ObjectPlacement.EntityLabel];
+                // var trsf = XbimMatrix3D.Identity;
+                var disp = ((XbimShapeGeometry)shapegeom).TempOriginDisplacement;
+                var mt = XbimMatrix3D.CreateTranslation(disp.X, disp.Y, disp.Z);
+                trsf = XbimMatrix3D.Multiply(mt, trsf);
+
+                if (shapegeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
+                    continue;
+                var transform = trsf * modelTransform;
+                tgt.Add(
+                    shapegeom.ShapeData,
+                    453, // shapeInstance.IfcTypeId,
+                    contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
+                    -1, // shapeInstance.InstanceLabel,
+                    transform,
+                    (short)contextualProduct.Model.UserDefinedId
+                );
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
+
         public static WpfMeshGeometry3D GetGeometry(EntitySelection selection, Dictionary<IModel, XbimMatrix3D> positions, Material mat)
         {
             var tgt = new WpfMeshGeometry3D(mat, mat);
@@ -176,7 +213,6 @@ namespace Xbim.Presentation
                         }
                     }
                 }
-                
             }
             tgt.EndUpdate();
             return tgt;

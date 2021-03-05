@@ -15,6 +15,6 @@ namespace XbimXplorer.PluginSystem
     /// </summary>
     public partial class PluginsConfig
     {
-        public const string NugetVersion = "4.0.14-V007";
+        public const string NugetVersion = "4.0.15";
     }
 }

@@ -571,7 +571,8 @@ namespace XbimXplorer.Commands
                             }
                             foreach (var solEntity in entities)
                             {
-                                var sols = GetSolids(solEntity);
+                                var sols = GetSolids(solEntity).ToList();
+                                ReportAdd($"=== Entity {solEntity.EntityLabel}. Sols count: {sols.Count}\r\n", Brushes.Blue);
                                 foreach (var item in sols)
                                 {
                                     int iCnt = 0;
@@ -580,9 +581,17 @@ namespace XbimXplorer.Commands
                                         if (solid != null && solid.IsValid)
                                         {
                                             var trsfSolid = (IXbimSolid)solid.Transform(trsf);
+                                            // try to visualize
+
+
+
+
                                             var thisSol = trsfSolid.ToBRep;
                                             if (thisSol == prevSol)
+                                            {
+                                                ReportAdd($"=== Function {item.Item1} skipped (same as previous)", Brushes.Blue);
                                                 continue;
+                                            }
                                             var fileName = $"{label}.{item.Item1}.{iCnt++}.brep";
                                             if (firstWrite)
                                             {
@@ -595,7 +604,7 @@ namespace XbimXplorer.Commands
                                                 tw.WriteLine("DBRep_DrawableShape");
                                                 tw.WriteLine(thisSol);
                                             }
-                                            ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
+                                            ReportAdd($"=== Function {item.Item1} written to '{fBrep.FullName}'", Brushes.Blue);
                                             prevSol = thisSol;
                                         }
                                     }
