@@ -2171,8 +2171,6 @@ namespace XbimXplorer.Commands
 
                 
                 sb.AppendFormat(indentationHeader + "=== {1}.{0} is an Express Select type", type, schema);
-                
-                
                 var selectSubTypes = ifcModule2.GetTypes().Where(
                     t => t.GetInterfaces().Contains(selectType)
                     ).ToList();
@@ -2236,7 +2234,7 @@ namespace XbimXplorer.Commands
                 // just list the names first
                 foreach (var item in selectSubTypes)
                 {
-                    sb.Append(ReportType(item.FullName, 0, indentationHeader + "  "));
+                    sb.Append(indentationHeader + "  " + item.FullName, Brushes.Black);
                 }
                 // only report subitmes in higher verbosity
                 if (beVerbose > 1)
