@@ -46,6 +46,7 @@ using Serilog.Core;
 using Serilog.Events;
 using Xbim.IO;
 using Xbim.Geometry.Engine.Interop;
+using System.Windows.Media;
 
 #endregion
 
@@ -616,7 +617,6 @@ namespace XbimXplorer
             {
                 if (_loadFileBackgroundWorker != null && _loadFileBackgroundWorker.IsBusy)
                     _loadFileBackgroundWorker.CancelAsync(); //tell it to stop
-                
                 SetOpenedModelFileName(null);
                 if (Model != null)
                 {
@@ -818,6 +818,7 @@ namespace XbimXplorer
             else if (mw != null) mw.EntityLabel.Text = "";
         }
 
+        // todo: 2021: should remove the modelProvider and use another backing context so that the binding does not fail when null
 
         private ObjectDataProvider ModelProvider
         {
@@ -1185,6 +1186,28 @@ namespace XbimXplorer
             ConnectStylerFeedBack();
             DrawingControl.ReloadModel();
 
+        }
+
+		private void SelectionColorCycle(object sender, RoutedEventArgs e)
+		{
+            if (DrawingControl.SelectionColor == Colors.Blue)
+            {
+                DrawingControl.SelectionColor = Colors.LightBlue;
+            }
+            else if (DrawingControl.SelectionColor == Colors.LightBlue)
+            {
+                DrawingControl.SelectionColor = Colors.Orange;
+            }
+            else if (DrawingControl.SelectionColor == Colors.Orange)
+            {
+                DrawingControl.SelectionColor = Colors.Red;
+            }
+            else if (DrawingControl.SelectionColor == Colors.Red)
+            {
+                DrawingControl.SelectionColor = Colors.Blue;
+            }
+            
+            
         }
 	}
 }
