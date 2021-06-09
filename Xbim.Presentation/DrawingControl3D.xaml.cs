@@ -1102,8 +1102,11 @@ namespace Xbim.Presentation
 						{
 							var engine = new XbimGeometryEngine();
 							var solid = engine.Create(gri, null);
-							var shape = engine.CreateShapeGeometry(solid, selModel.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, selModel.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary, null);
-							m = WpfMeshGeometry3D.GetRepresentationGeometry2(mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct);
+							if (solid != null)
+							{
+								var shape = engine.CreateShapeGeometry(solid, selModel.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, selModel.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary, null);
+								m = WpfMeshGeometry3D.GetRepresentationGeometry2(mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct);
+							}
 						}
 					}
 				}

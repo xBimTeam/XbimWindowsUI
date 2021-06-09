@@ -339,10 +339,17 @@ namespace XbimXplorer.Commands
                 sb.Append($"{obj.GetType().Name} not implemented in IIfcGeometricRepresentationItem.", Brushes.Red);
         }
 
+        private static void Report(IIfcFacetedBrep obj, TextHighliter sb)
+        {
+            Report(obj.Outer, sb);
+        }
+        
         private static void Report(IIfcSolidModel obj, TextHighliter sb)
         {
             if (obj is IIfcSweptDiskSolid swept)
                 Report(swept, sb);
+            if (obj is IIfcFacetedBrep brep)
+                Report(brep, sb);
             else
                 sb.Append($"{obj.GetType().Name} not implemented in IIfcSolidModel.", Brushes.Red);
         }

@@ -302,7 +302,7 @@ namespace XbimXplorer.Commands
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
-                m = Regex.Match(cmd, @"^(boolreport|bool\b) *(?<entities>([\d,]+|[^ ]+)) ?$", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^(boolreport|br)\b *(?<entities>([\d,]+|[^ ]+)) ?$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     var start = m.Groups["entities"].Value;
@@ -349,7 +349,7 @@ namespace XbimXplorer.Commands
 				}
 
 
-				m = Regex.Match(cmd, @"^(brep|br\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
+				m = Regex.Match(cmd, @"^(brep) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
                 if (m.Success) // we intend to offer extraction of breps here.
                 {
 					ProcessBrepCommand(m);
@@ -549,7 +549,8 @@ namespace XbimXplorer.Commands
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    if (ModelIsUnavailable) continue;
+                    if (ModelIsUnavailable) 
+                        continue;
                     _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler(this.Logger);
                     _parentWindow.DrawingControl.ReloadModel();
                     //continue;
@@ -597,34 +598,35 @@ namespace XbimXplorer.Commands
 						continue;
 					}
 					ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
-					ReportAdd($"=== Geometry Engine Functions - Solids", Brushes.Blue);
-
-					var methodsAndSolids = GetSolidsByAvailableMethods(entity, engine);
-					foreach (var methodAndSolids in methodsAndSolids)
-					{
-						ReportAdd($"- {methodAndSolids.methodName}");
-						foreach (var solid in methodAndSolids.solids)
-						{
-							if (solid != null)
-							{
-								if (solid.IsValid)
-								{
-									ReportAdd($"  Ok, returned {solid.GetType().Name} - Volume: {solid.Volume}", Brushes.Green);
-									var shape = engine.CreateShapeGeometry(solid, entity.Model.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, null);
-								}
-								else
-									ReportAdd($"  Err, returned {solid.GetType().Name} (not valid)", Brushes.Red);
-							}
-							else
-							{
-								// probably an error
-							}
-						}
-					}
 
 					ReportAdd($"=== Autocad views", Brushes.Blue);
 					var ra = GeometryView.ReportAcadScript(entity);
-					ReportAdd(ra);
+
+                    ReportAdd($"=== Geometry Engine Functions - Solids", Brushes.Blue);
+                    var methodsAndSolids = GetSolidsByAvailableMethods(entity, engine);
+                    foreach (var methodAndSolids in methodsAndSolids)
+                    {
+                        ReportAdd($"- {methodAndSolids.methodName}");
+                        foreach (var solid in methodAndSolids.solids)
+                        {
+                            if (solid != null)
+                            {
+                                if (solid.IsValid)
+                                {
+                                    ReportAdd($"  Ok, returned {solid.GetType().Name} - Volume: {solid.Volume}", Brushes.Green);
+                                    var shape = engine.CreateShapeGeometry(solid, entity.Model.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, null);
+                                }
+                                else
+                                    ReportAdd($"  Err, returned {solid.GetType().Name} (not valid)", Brushes.Red);
+                            }
+                            else
+                            {
+                                // probably an error
+                            }
+                        }
+                    }
+
+                    ReportAdd(ra);
 				}
 			}
 		}
@@ -1381,7 +1383,7 @@ namespace XbimXplorer.Commands
             foreach (var methodInfo in methods)
             {
                 var pars = methodInfo.GetParameters().ToArray();
-                if (pars.Length != 1) // only consider functinons with a single parameter
+                if (pars.Length != 2) // only consider functinons with a single parameter, and the logger
                     continue;
                 if (methodInfo.ReturnParameter.ParameterType == typeof(bool))
                     continue; // excludes the equal function
@@ -1395,7 +1397,7 @@ namespace XbimXplorer.Commands
                 var vals = new List<IXbimSolid>();
                 try
                 {
-                    var ret = methodInfo.Invoke(engine, new object[] { entity });
+                    var ret = methodInfo.Invoke(engine, new object[] { entity, null});
                     if (ret != null)
                     {
                         var sol = ret as IXbimSolid;
