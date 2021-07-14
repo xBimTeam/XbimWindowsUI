@@ -1,7 +1,4 @@
 ﻿//#define DOPARALLEL
-
-#region Directives
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -30,10 +27,10 @@ using Xbim.Presentation.Extensions;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
 
-#endregion
-
 namespace Xbim.Presentation
 {
+	// See /Themes/Generic.xaml for the definition of the style of DrawingControl3D
+
 	/// <summary>
 	///   Interaction logic for DrawingControl3D.xaml
 	/// </summary>

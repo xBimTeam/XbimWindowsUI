@@ -21,8 +21,8 @@ namespace Xbim.Presentation
                     foreach (var pt in main.Positions) pc.Add(pt);
                     foreach (var pt in toAdd.Positions)
                     {
-                        pc.Add(geometry.Transform.Transform(pt)); 
-                    }
+						pc.Add(geometry.Transform.Transform(pt));
+					}
                     main.Positions = pc;
 
                     Vector3DCollection vc = new Vector3DCollection(main.Normals.Count + toAdd.Normals.Count);

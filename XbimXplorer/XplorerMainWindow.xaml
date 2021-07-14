@@ -210,6 +210,7 @@
                                    Focusable="True" 
                                    Width="Auto" 
                                    Height="Auto" 
+
                                    MouseDoubleClick="SpatialControl_MouseDoubleClick"
                                    WcsAdjusted="{x:Static local:App.ContextWcsAdjustment}"
                                    >
