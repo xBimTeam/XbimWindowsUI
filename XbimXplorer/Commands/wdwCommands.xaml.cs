@@ -252,7 +252,15 @@ namespace XbimXplorer.Commands
 					continue;
 				}
 
-				mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
+                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|hide|show|hideT|showT|reset))",
+                   RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ProcessILSCommand(mdbclosed);
+                    continue;
+                }
+
+                mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     PluginCommand(mdbclosed);
@@ -583,7 +591,30 @@ namespace XbimXplorer.Commands
             }
         }
 
-		private void ProcessGeometryEngineCommand(Match m)
+		private void ProcessILSCommand(Match mdbclosed)
+		{
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
+            if (mode == "set")
+			{
+                _parentWindow.DrawingControl.DefaultLayerStyler = new IndividualElementStyler();
+                _parentWindow.DrawingControl.ReloadModel();
+            }
+            else if (_parentWindow.DrawingControl.DefaultLayerStyler is IndividualElementStyler ils)
+            {
+                if (mode == "hide" || mode == "show")
+                {
+                    // IFCWALLSTANDARDCASE, IfcWindow
+                    // 152, 923, 952
+                    var ent = Model.Instances[923];
+                    if (mode == "hide")
+                        ils.Hide(ent);
+                    else
+                        ils.Show(ent);
+                }
+            }
+        }
+
+        private void ProcessGeometryEngineCommand(Match m)
 		{
 			var labels = GetSelection(m).ToArray();
 			if (labels.Any())
