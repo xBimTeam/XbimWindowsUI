@@ -600,7 +600,13 @@ namespace XbimXplorer.Commands
 					ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
 
 					ReportAdd($"=== Autocad views", Brushes.Blue);
-					var ra = GeometryView.ReportAcadScript(entity);
+                    // var ra = GeometryView.ReportAcadScript(entity);
+                    // ReportAdd(ra);
+                    if (entity is IIfcClosedShell ics)
+					{
+                       var r2 = GeometryView.ReportAsObj(ics);
+                        ReportAdd(r2);
+                    }
 
                     ReportAdd($"=== Geometry Engine Functions - Solids", Brushes.Blue);
                     var methodsAndSolids = GetSolidsByAvailableMethods(entity, engine);
@@ -626,7 +632,7 @@ namespace XbimXplorer.Commands
                         }
                     }
 
-                    ReportAdd(ra);
+                    
 				}
 			}
 		}
