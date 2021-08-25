@@ -252,7 +252,8 @@ namespace XbimXplorer.Commands
 					continue;
 				}
 
-                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|hide|show|hideT|showT|reset))",
+                // this is just for demonstration purpose
+                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|reset|hide|show|blink|stop)) *(?<obj>walls|windows|ent|\d+)?$",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -593,7 +594,7 @@ namespace XbimXplorer.Commands
 
 		private void ProcessILSCommand(Match mdbclosed)
 		{
-            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant(); // set|color|reset|hide|show|blink|stop
             if (mode == "set")
 			{
                 _parentWindow.DrawingControl.DefaultLayerStyler = new IndividualElementStyler();
@@ -601,15 +602,77 @@ namespace XbimXplorer.Commands
             }
             else if (_parentWindow.DrawingControl.DefaultLayerStyler is IndividualElementStyler ils)
             {
-                if (mode == "hide" || mode == "show")
+                var obj = mdbclosed.Groups["obj"].Value.ToLowerInvariant();
+                if (obj == "walls" || obj == "windows")
+                {
+                    var t = obj == "walls" ? typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall) : typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWindow);
+                    if (mode == "color")
+                    {
+                        ils.SetColor(t, Colors.Red, true);
+                    }
+                    else if (mode == "reset")
+                    {
+                        ils.ResetColor(t);
+                    }
+                    else if (mode == "hide")
+                    {
+                        ils.Hide(t);
+                    }
+                    else if (mode == "show")
+                    {
+                        ils.Show(t);
+                    }
+                    else if (mode == "blink")
+                    {
+                        ils.SetAnimation(t, Colors.Yellow, Colors.Green);
+                        ils.SetAnimationTime(2000);
+                    }
+                    else if (mode == "stop")
+                    {
+                        ils.RemoveAnimation(t);
+                    }
+                }
+                else
                 {
                     // IFCWALLSTANDARDCASE, IfcWindow
                     // 152, 923, 952
-                    var ent = Model.Instances[923];
-                    if (mode == "hide")
-                        ils.Hide(ent);
+
+                    IPersistEntity t = null;
+                    if (Int32.TryParse(obj, out var el))
+                    {
+                        t = Model.Instances[el];
+                    }
                     else
-                        ils.Show(ent);
+                        t = Model.Instances[923];
+
+                    if (t == null)
+                        return;
+
+                    if (mode == "color")
+                    {
+                        ils.SetColor(t, Colors.Red, true);
+                    }
+                    else if (mode == "reset")
+                    {
+                        ils.ResetColor(t);
+                    }
+                    else if (mode == "hide")
+                    {
+                        ils.Hide(t);
+                    }
+                    else if (mode == "show")
+                    {
+                        ils.Show(t);
+                    }
+                    else if (mode == "blink")
+                    {
+                        ils.SetAnimation(t, Colors.Yellow, Colors.Green);
+                        ils.SetAnimationTime(2000);
+                    }
+                    else if (mode == "stop")
+                    {
+                        ils.RemoveAnimation(t);
+                    }
                 }
             }
         }
@@ -662,8 +725,6 @@ namespace XbimXplorer.Commands
                             }
                         }
                     }
-
-                    
 				}
 			}
 		}
