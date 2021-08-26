@@ -253,11 +253,20 @@ namespace XbimXplorer.Commands
 				}
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|reset|hide|show|blink|stop)) *(?<obj>walls|windows|ent|\d+)?$",
+                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|reset|hide|show|blink|stop)) *(?<obj>\w+|#\d+)?$",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     ProcessILSCommand(mdbclosed);
+                    continue;
+                }
+
+                // this is just for demonstration purpose
+                mdbclosed = Regex.Match(cmd, @"^(TextOverlay|to) (?<mode>(set))",
+                   RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ProcessTextOverlay(mdbclosed);
                     continue;
                 }
 
@@ -592,6 +601,12 @@ namespace XbimXplorer.Commands
             }
         }
 
+		private void ProcessTextOverlay(Match mdbclosed)
+		{
+            _parentWindow.DrawingControl.AddOverlay("Gatto");
+            _parentWindow.DrawingControl.AddImageOverlay(@"C:\Data\Dev\Xbim50\XbimWindowsUI\XbimIcon.png");
+        }
+
 		private void ProcessILSCommand(Match mdbclosed)
 		{
             var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant(); // set|color|reset|hide|show|blink|stop
@@ -603,9 +618,12 @@ namespace XbimXplorer.Commands
             else if (_parentWindow.DrawingControl.DefaultLayerStyler is IndividualElementStyler ils)
             {
                 var obj = mdbclosed.Groups["obj"].Value.ToLowerInvariant();
-                if (obj == "walls" || obj == "windows")
-                {
-                    var t = obj == "walls" ? typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall) : typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWindow);
+                if (obj.StartsWith("#") && Int32.TryParse(obj.Substring(1), out var el))
+				{
+                    IPersistEntity t = Model.Instances[el];
+                    if (t == null)
+                        return;
+
                     if (mode == "color")
                     {
                         ils.SetColor(t, Colors.Red, true);
@@ -633,21 +651,11 @@ namespace XbimXplorer.Commands
                     }
                 }
                 else
-                {
-                    // IFCWALLSTANDARDCASE, IfcWindow
-                    // 152, 923, 952
-
-                    IPersistEntity t = null;
-                    if (Int32.TryParse(obj, out var el))
-                    {
-                        t = Model.Instances[el];
-                    }
-                    else
-                        t = Model.Instances[923];
-
-                    if (t == null)
-                        return;
-
+				{
+                    if (!obj.StartsWith("ifc"))
+                        obj = "ifc" + obj;
+                    var et = Model.Metadata.ExpressType(obj.ToUpperInvariant());
+                    var t = et.Type;
                     if (mode == "color")
                     {
                         ils.SetColor(t, Colors.Red, true);

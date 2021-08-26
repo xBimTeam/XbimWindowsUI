@@ -42,6 +42,7 @@ namespace Xbim.Presentation
 	[TemplatePart(Name = TemplateCuttingGroupT, Type = typeof(CuttingPlaneGroup))]
 	[TemplatePart(Name = TemplateTransparents, Type = typeof(ModelVisual3D))]
 	[TemplatePart(Name = TemplateExtras, Type = typeof(ModelVisual3D))]
+	[TemplatePart(Name = TemplateOverlays, Type = typeof(ModelVisual3D))]
 	[TemplatePart(Name = TemplateGridLines, Type = typeof(GridLinesVisual3D))]
 	public class DrawingControl3D : UserControl
 	{
@@ -55,6 +56,7 @@ namespace Xbim.Presentation
 		private const string TemplateCuttingGroupT = "CuttingGroupT";
 		private const string TemplateTransparents = "Transparents";
 		private const string TemplateExtras = "Extras";
+		private const string TemplateOverlays = "Overlays";
 		private const string TemplateGridLines = "GridLines";
 
 		protected HelixViewport3D Canvas;
@@ -65,6 +67,7 @@ namespace Xbim.Presentation
 		protected CuttingPlaneGroup CuttingGroupT;
 		protected ModelVisual3D Transparents;
 		protected ModelVisual3D Extras;
+		protected ModelVisual3D Overlays;
 		protected GridLinesVisual3D GridLines;
 
 		public ModelVisual3D OpaquesVisual3D => Opaques;
@@ -99,6 +102,7 @@ namespace Xbim.Presentation
 			CuttingGroupT = (CuttingPlaneGroup)GetTemplateChild(TemplateCuttingGroupT);
 			Transparents = (ModelVisual3D)GetTemplateChild(TemplateTransparents);
 			Extras = (ModelVisual3D)GetTemplateChild(TemplateExtras);
+			Overlays = (ModelVisual3D)GetTemplateChild(TemplateOverlays);
 			GridLines = (GridLinesVisual3D)GetTemplateChild(TemplateGridLines);
 
 			if (Highlighted != null)
@@ -794,6 +798,99 @@ namespace Xbim.Presentation
 			return null;
 		}
 
+		public void AddImageOverlay(string imagePath)
+		{
+			FileInfo f = new FileInfo(imagePath);
+			if (!f.Exists)
+				return;
+			Uri fileUri = new Uri(new Uri("file://"), imagePath);
+			var p = ModelPositions.GetPoint(new XbimPoint3D(2.4, 0.62, 3));
+			var t = new BillboardVisual3D() {
+				Position = p,
+				Width = 40,
+				Height = 40,
+				Material = MaterialHelper.CreateImageMaterial(
+					fileUri.AbsoluteUri,
+					1,
+					UriKind.Absolute
+					)
+			};
+
+			t = new BillboardVisual3D()
+			{
+				Position = p,
+				Width = 40,
+				Height = 40,
+				Material = MaterialHelper.CreateEmissiveImageMaterial(
+					fileUri.AbsoluteUri,
+					Brushes.Transparent,
+					UriKind.Absolute
+					)
+			};
+
+			Overlays.Children.Add(t);
+		}
+
+		public void AddOverlay(string v)
+		{
+			var mode = 0;
+			if (mode == 0)
+			{
+				// Texts.Transform = Transform3D.
+				Overlays.Children.Clear();
+				BillboardTextGroupVisual3D b = new BillboardTextGroupVisual3D()
+				{
+					Background = Brushes.White,
+					BorderBrush = Brushes.Black,
+					Foreground = Brushes.Black,
+					BorderThickness = new Thickness(1),
+					FontSize = 12,
+					Padding = new Thickness(2),
+					Offset = new Vector(0, -20), // 2D offset from the reference point fo the billboard item
+												 // PinBrush = Brushes.Gray,
+					IsEnabled = true
+				};
+				Overlays.Children.Add(b);
+				var items = new List<BillboardTextItem>();
+				
+
+				var p = ModelPositions.GetPoint(new XbimPoint3D(2.4, 0.62, 0));
+				var bi1 = new BillboardTextItem
+				{
+					Text = "Pinned",
+					Position = p,
+					DepthOffset = 0.1, // this makes it float over the view
+					WorldDepthOffset = 0.0,
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Bottom,
+				};
+				items.Add(bi1);
+				
+
+				//var bi2 = new BillboardTextItem
+				//{
+				//	Text = "Pinned2",
+				//	Position = new Point3D(1.0, 1.0, 0.0),
+				//	DepthOffset = 0,
+				//	WorldDepthOffset = 0.0,
+				//	HorizontalAlignment = HorizontalAlignment.Center,
+				//	VerticalAlignment = VerticalAlignment.Bottom,
+				//};
+				//items.Add(bi2);
+				b.Items = items; // if items is set early it does not work.. make it observable?
+
+			}
+			else if (mode == 1)
+			{
+				var g = Overlays.Children.OfType<BillboardTextGroupVisual3D>().FirstOrDefault();
+				var i1 = g.Items[0] as BillboardTextItem;
+				i1.DepthOffset = 0;
+				i1.WorldDepthOffset += 0.2;
+
+				System.Diagnostics.Debug.WriteLine($"WorldDepthOffset: {i1.WorldDepthOffset}");
+			}
+		}
+
 		public IfcStore Model
 		{
 			get { return (IfcStore)GetValue(ModelProperty); }
@@ -1299,6 +1396,7 @@ namespace Xbim.Presentation
 			Opaques.Children.Clear();
 			Transparents.Children.Clear();
 			Extras.Children.Clear();
+			Overlays.Children.Clear();
 
 			if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelection))
 			{

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 
@@ -132,5 +134,11 @@ namespace Xbim.Presentation
             sb.AppendLine($"{_viewSpaceTranslation}");
             return sb.ToString();
         }
-    }
+
+		internal Point3D GetPoint(XbimPoint3D point3D)
+		{
+            var ret = point3D + _viewSpaceTranslation;
+            return new Point3D(ret.X, ret.Y, ret.Z);
+        }
+	}
 }

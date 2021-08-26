@@ -51,6 +51,7 @@
                         </helixToolkit:CuttingPlaneGroup>
 
                         <ModelVisual3D x:Name="Extras" />
+                        <ModelVisual3D x:Name="Overlays" />
 
                         <helixToolkit:DefaultLights ShowLights="False" />
                         <!-- You can also add elements here in the xaml -->
