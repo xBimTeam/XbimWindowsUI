@@ -831,14 +831,17 @@ namespace Xbim.Presentation
 			Overlays.Children.Add(t);
 		}
 
-		public void AddOverlay(string v)
+		public void ClearTextOverlay()
 		{
-			var mode = 0;
-			if (mode == 0)
+			Overlays.Children.Clear();
+		}
+
+		public void AddTextOverlay(string text, double x, double y, double z)
+		{
+			BillboardTextGroupVisual3D b = Overlays.Children.OfType<BillboardTextGroupVisual3D>().FirstOrDefault();
+			if (b == null)
 			{
-				// Texts.Transform = Transform3D.
-				Overlays.Children.Clear();
-				BillboardTextGroupVisual3D b = new BillboardTextGroupVisual3D()
+				b = new BillboardTextGroupVisual3D()
 				{
 					Background = Brushes.White,
 					BorderBrush = Brushes.Black,
@@ -846,49 +849,31 @@ namespace Xbim.Presentation
 					BorderThickness = new Thickness(1),
 					FontSize = 12,
 					Padding = new Thickness(2),
-					Offset = new Vector(0, -20), // 2D offset from the reference point fo the billboard item
-												 // PinBrush = Brushes.Gray,
-					IsEnabled = true
+					Offset = new Vector(+20, -20), // 2D offset from the reference point fo the billboard item
+					PinBrush = Brushes.Gray,
+					IsEnabled = true // todo: make the pin optional
 				};
 				Overlays.Children.Add(b);
-				var items = new List<BillboardTextItem>();
-				
-
-				var p = ModelPositions.GetPoint(new XbimPoint3D(2.4, 0.62, 0));
-				var bi1 = new BillboardTextItem
-				{
-					Text = "Pinned",
-					Position = p,
-					DepthOffset = 0.1, // this makes it float over the view
-					WorldDepthOffset = 0.0,
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Bottom,
-				};
-				items.Add(bi1);
-				
-
-				//var bi2 = new BillboardTextItem
-				//{
-				//	Text = "Pinned2",
-				//	Position = new Point3D(1.0, 1.0, 0.0),
-				//	DepthOffset = 0,
-				//	WorldDepthOffset = 0.0,
-				//	HorizontalAlignment = HorizontalAlignment.Center,
-				//	VerticalAlignment = VerticalAlignment.Bottom,
-				//};
-				//items.Add(bi2);
-				b.Items = items; // if items is set early it does not work.. make it observable?
-
 			}
-			else if (mode == 1)
+
+			var items = b.Items?.ToList();
+			if (items == null)
 			{
-				var g = Overlays.Children.OfType<BillboardTextGroupVisual3D>().FirstOrDefault();
-				var i1 = g.Items[0] as BillboardTextItem;
-				i1.DepthOffset = 0;
-				i1.WorldDepthOffset += 0.2;
-
-				System.Diagnostics.Debug.WriteLine($"WorldDepthOffset: {i1.WorldDepthOffset}");
+				items = new List<BillboardTextItem>();
 			}
+
+			var p = ModelPositions.GetPoint(new XbimPoint3D(x, y, z));
+			var bi1 = new BillboardTextItem
+			{
+				Text = text,
+				Position = p,
+				DepthOffset = 0.1, // this makes it visible over the model
+				WorldDepthOffset = 0.0,
+				HorizontalAlignment = HorizontalAlignment.Left,
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			items.Add(bi1);
+			b.Items = items; // if items is set early it does not work.. make it observable?
 		}
 
 		public IfcStore Model

@@ -8,6 +8,9 @@ namespace Xbim.Presentation.Overlay
 {
     public class TextOverlay
     {
+        void UpdateText(string text)
+		{
 
+		}
     }
 }

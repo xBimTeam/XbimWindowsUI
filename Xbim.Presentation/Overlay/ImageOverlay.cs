@@ -8,5 +8,10 @@ namespace Xbim.Presentation.Overlay
 {
     public class ImageOverlay
     {
+        public enum ModelRelation
+		{
+            HidesBehindModel,
+            AlwaysVisible
+		}
     }
 }

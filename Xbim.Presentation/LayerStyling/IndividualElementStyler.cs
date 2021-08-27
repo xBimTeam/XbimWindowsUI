@@ -27,6 +27,8 @@ namespace Xbim.Presentation.LayerStyling
 		{
 			if (blinkTimer == null)
 			{
+				if (milliseconds > 0)
+					animationEvent(null, null); // perform immediately, then schedule the next
 				blinkTimer = new System.Windows.Threading.DispatcherTimer();
 				blinkTimer.Tick += new EventHandler(animationEvent);
 			}
@@ -69,26 +71,65 @@ namespace Xbim.Presentation.LayerStyling
 			public Color Color { get; set; }
 		}
 
+		/// <summary>
+		/// Private class to determine toggle states of entities that we wish to blink
+		/// </summary>
 		private class BlinkStates
 		{
 			ColorState state1;
 			ColorState state2;
 
+			private int timerMultiplier = 1;
+			int TimerMultiplier
+			{
+				get => timerMultiplier;
+				set
+				{
+					// ignore negative and 0 values
+					if (timerMultiplier >= 1)
+						timerMultiplier = value;
+				}
+			}
+			// tally of ticks to determine if the event needs to be fired.
+			int multTally = 0;
+			bool toggle = false;
+			
+			/// <summary>
+			/// Increases the tick tally and determines if the state needs to be changed.
+			/// </summary>
+			/// <returns>true if the state needs to be changed</returns>
+			internal bool Tick()
+			{
+				var change = multTally++ % TimerMultiplier == 0;
+				if (change)
+					toggle = !toggle;
+				return change;
+			}
 
-			public BlinkStates(ColorState state1, ColorState state2)
+			/// <summary>
+			/// A colorsta
+			/// </summary>
+			/// <param name="state1"></param>
+			/// <param name="state2"></param>
+			/// <param name="baseTimerMultiplier"></param>
+			public BlinkStates(ColorState state1, ColorState state2, int baseTimerMultiplier = 1)
 			{
 				this.state1 = state1;
 				this.state2 = state2;
+				TimerMultiplier = baseTimerMultiplier;
 			}
 
-			public BlinkStates(Color state1, Color state2)
+			public BlinkStates(Color state1, Color state2, int baseTimerMultiplier = 1)
 			{
 				this.state1 = new ColorState(state1);
 				this.state2 = new ColorState(state2);
+				TimerMultiplier = baseTimerMultiplier;
 			}
 
-			internal ColorState Get(bool toggle)
+			internal ColorState Get()
 			{
+				// this could be done without keeping toggle state, with some math,
+				// but we are trading off memory for speed.
 				return toggle ? state1 : state2;
 			}
 		}
@@ -96,7 +137,7 @@ namespace Xbim.Presentation.LayerStyling
 		private Dictionary<IPersistEntity, BlinkStates> entityStates = new Dictionary<IPersistEntity, BlinkStates>();
 		private Dictionary<Type, BlinkStates> typeStates = new Dictionary<Type, BlinkStates>();
 		IModel model;
-		bool stateToggle = false;
+		
 
 		/// <summary>
 		/// This event is triggered every time the blinking function happens, 
@@ -112,19 +153,20 @@ namespace Xbim.Presentation.LayerStyling
 			foreach (var ts in typeStates)
 			{
 				// skip any entities which have a specific state associated
+				//
 				var ents = GetEnts(ts.Key).Except(entityStates.Keys);
 				foreach (var ent in ents)
 				{
-					SetColor(ent, ts.Value.Get(stateToggle));
+					SetColor(ent, ts.Value.Get());
 					cnt++;
 				}
 			}
 			foreach (var ts in entityStates)
 			{
-				SetColor(ts.Key, ts.Value.Get(stateToggle));
+				SetColor(ts.Key, ts.Value.Get());
 				cnt++;
 			}
-			stateToggle = !stateToggle;
+		
 			if (cnt > 0)
 				BlinkHandled?.Invoke(this, new HandledEventArgs());
 		}
@@ -415,26 +457,26 @@ namespace Xbim.Presentation.LayerStyling
 			cont.Children.Add(item);
 		}
 
-		public void SetAnimation(IPersistEntity ent, ColorState state1, ColorState state2)
+		public void SetAnimation(IPersistEntity ent, ColorState state1, ColorState state2, int BaseTimerMultiplier = 1)
 		{
-			BlinkStates bState = new BlinkStates(state1, state2);
+			BlinkStates bState = new BlinkStates(state1, state2, BaseTimerMultiplier);
 			SetBlink(ent, bState);
 		}
-		public void SetAnimation(IPersistEntity ent, Color state1, Color state2)
+		public void SetAnimation(IPersistEntity ent, Color state1, Color state2, int BaseTimerMultiplier = 1)
 		{
-			BlinkStates bState = new BlinkStates(state1, state2);
+			BlinkStates bState = new BlinkStates(state1, state2, BaseTimerMultiplier);
 			SetBlink(ent, bState);
 		}
 
-		public void SetAnimation(Type tp, ColorState state1, ColorState state2)
+		public void SetAnimation(Type tp, ColorState state1, ColorState state2, int BaseTimerMultiplier = 1)
 		{
-			BlinkStates bState = new BlinkStates(state1, state2);
+			BlinkStates bState = new BlinkStates(state1, state2, BaseTimerMultiplier);
 			SetBlink(tp, bState);
 		}
 
-		public void SetAnimation(Type tp, Color state1, Color state2)
+		public void SetAnimation(Type tp, Color state1, Color state2, int BaseTimerMultiplier = 1)
 		{
-			BlinkStates bState = new BlinkStates(state1, state2);
+			BlinkStates bState = new BlinkStates(state1, state2, BaseTimerMultiplier);
 			SetBlink(tp, bState);
 		}
 

@@ -262,11 +262,20 @@ namespace XbimXplorer.Commands
                 }
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(TextOverlay|to) (?<mode>(set))",
+                mdbclosed = Regex.Match(cmd, @"^(TextOverlay|to) (?<mode>(add|reset)) *(?<cmd>.*)",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
                     ProcessTextOverlay(mdbclosed);
+                    continue;
+                }
+
+                // this is just for demonstration purpose
+                mdbclosed = Regex.Match(cmd, @"^(ImageOverlay|io) (?<mode>(add|clear)) *(?<cmd>.?)",
+                   RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ProcessImageOverlay(mdbclosed);
                     continue;
                 }
 
@@ -601,10 +610,25 @@ namespace XbimXplorer.Commands
             }
         }
 
+		private void ProcessImageOverlay(Match mdbclosed)
+		{
+            _parentWindow.DrawingControl.AddImageOverlay(@"C:\Data\Dev\Xbim50\XbimWindowsUI\XbimIcon.png");
+        }
+
 		private void ProcessTextOverlay(Match mdbclosed)
 		{
-            _parentWindow.DrawingControl.AddOverlay("Gatto");
-            _parentWindow.DrawingControl.AddImageOverlay(@"C:\Data\Dev\Xbim50\XbimWindowsUI\XbimIcon.png");
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant(); // set|color|reset|hide|show|blink|stop
+            if (mode == "add")
+            {
+                Regex r = new Regex(@"(?<x>[\d\.]+) (?<y>[\d\.]+) (?<z>[\d\.]+)");
+
+                _parentWindow.DrawingControl.AddTextOverlay("Bottom", 2.4, 0.62, 0);
+                _parentWindow.DrawingControl.AddTextOverlay("Top", 2.4, 0.62, 3);
+            }
+            else if (mode == "reset")
+			{
+                _parentWindow.DrawingControl.ClearTextOverlay();
+            }
         }
 
 		private void ProcessILSCommand(Match mdbclosed)
@@ -642,7 +666,7 @@ namespace XbimXplorer.Commands
                     }
                     else if (mode == "blink")
                     {
-                        ils.SetAnimation(t, Colors.Yellow, Colors.Green);
+                        ils.SetAnimation(t, Colors.Yellow, Colors.Green); // todo: set multiplier in the call
                         ils.SetAnimationTime(2000);
                     }
                     else if (mode == "stop")
@@ -682,6 +706,11 @@ namespace XbimXplorer.Commands
                         ils.RemoveAnimation(t);
                     }
                 }
+            }
+            else
+			{
+                ReportAdd($"=== Layerstyler is not set IndividualElementStyler.", Brushes.Red);
+                ReportAdd($"Run 'ils set' command first.", Brushes.Black);
             }
         }
 
