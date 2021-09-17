@@ -157,13 +157,15 @@ namespace Xbim.Presentation.LayerStyling
 				var ents = GetEnts(ts.Key).Except(entityStates.Keys);
 				foreach (var ent in ents)
 				{
-					SetColor(ent, ts.Value.Get());
+					if (ts.Value.Tick())
+						SetColor(ent, ts.Value.Get());
 					cnt++;
 				}
 			}
 			foreach (var ts in entityStates)
 			{
-				SetColor(ts.Key, ts.Value.Get());
+				if (ts.Value.Tick())
+					SetColor(ts.Key, ts.Value.Get());
 				cnt++;
 			}
 		

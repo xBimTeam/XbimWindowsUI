@@ -679,6 +679,8 @@ namespace XbimXplorer.Commands
                     if (!obj.StartsWith("ifc"))
                         obj = "ifc" + obj;
                     var et = Model.Metadata.ExpressType(obj.ToUpperInvariant());
+                    if (et == null)
+                        return;
                     var t = et.Type;
                     if (mode == "color")
                     {
