@@ -25,8 +25,7 @@ namespace Xbim.WinformsSample
             IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
             _wpfControl = new WinformsAccessibleControl();
             _wpfControl.SelectionChanged += _wpfControl_SelectionChanged;
-            
-            
+           
             controlHost.Child = _wpfControl;
         }
 

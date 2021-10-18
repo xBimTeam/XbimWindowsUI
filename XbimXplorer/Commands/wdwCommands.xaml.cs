@@ -34,6 +34,7 @@ using System.CodeDom;
 using XbimXplorer.PluginSystem;
 using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
+using Xbim.Presentation.Overlay;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -253,7 +254,7 @@ namespace XbimXplorer.Commands
 				}
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|reset|hide|show|blink|stop)) *(?<obj>\w+|#\d+)?$",
+                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|fullcolor|reset|hide|show|blink|stop)) *(?<obj>\w+|#\d+)?$",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -262,7 +263,7 @@ namespace XbimXplorer.Commands
                 }
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(TextOverlay|to) (?<mode>(add|reset)) *(?<cmd>.*)",
+                mdbclosed = Regex.Match(cmd, @"^(TextOverlay|to) (?<mode>(add|remove|replace)) *(?<cmd>.*)",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -271,7 +272,7 @@ namespace XbimXplorer.Commands
                 }
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(ImageOverlay|io) (?<mode>(add|clear)) *(?<cmd>.?)",
+                mdbclosed = Regex.Match(cmd, @"^(ImageOverlay|io) (?<mode>(add|remove)) *(?<cmd>.?)",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -612,22 +613,60 @@ namespace XbimXplorer.Commands
 
 		private void ProcessImageOverlay(Match mdbclosed)
 		{
-            _parentWindow.DrawingControl.AddImageOverlay(@"C:\Data\Dev\Xbim50\XbimWindowsUI\XbimIcon.png");
-        }
-
-		private void ProcessTextOverlay(Match mdbclosed)
-		{
-            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant(); // set|color|reset|hide|show|blink|stop
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
             if (mode == "add")
             {
                 Regex r = new Regex(@"(?<x>[\d\.]+) (?<y>[\d\.]+) (?<z>[\d\.]+)");
-
-                _parentWindow.DrawingControl.AddTextOverlay("Bottom", 2.4, 0.62, 0);
-                _parentWindow.DrawingControl.AddTextOverlay("Top", 2.4, 0.62, 3);
+                ImageOverlay t = new ImageOverlay(
+                    @"C:\Data\Dev\XbimPrivate\Arcinfo\VisualDemo\VisualDemo\Image.png",
+                    new XbimPoint3D(0.27, -0.34, ioList.Count),
+                    40, 40
+                    );
+                ioList.Add(t);
+                _parentWindow.DrawingControl.AddImageOverlay(t);
             }
-            else if (mode == "reset")
+            else if (mode == "remove")
+            {
+                var last = ioList.LastOrDefault();
+                if (last != null)
+                {
+                    if (_parentWindow.DrawingControl.RemoveImageOverlay(last))
+                        ioList.Remove(last);
+                }
+            }
+        }
+
+
+        private TextOverlayStyle toStyle = new TextOverlayStyle();
+        private List<TextOverlay> toList = new List<TextOverlay>();
+        private List<ImageOverlay> ioList = new List<ImageOverlay>();
+
+        private void ProcessTextOverlay(Match mdbclosed)
+		{
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
+            if (mode == "add")
+            {
+                Regex r = new Regex(@"(?<x>[\d\.]+) (?<y>[\d\.]+) (?<z>[\d\.]+)");
+                TextOverlay t = toStyle.CreateText($"Some text #{toList.Count + 1}", new XbimPoint3D(0.27, -0.34, toList.Count));
+                toList.Add(t);
+                _parentWindow.DrawingControl.AddTextOverlay(t);
+            }
+            else if (mode == "remove")
 			{
-                _parentWindow.DrawingControl.ClearTextOverlay();
+                var last = toList.LastOrDefault();
+                if (last != null)
+                {
+                    if (_parentWindow.DrawingControl.RemoveTextOverlay(last))
+                        toList.Remove(last);
+                }
+            }
+            else if (mode == "replace")
+            {
+                var last = toList.LastOrDefault();
+                if (last != null)
+                {
+                    last.UpdateText("Updated");
+                }
             }
         }
 
@@ -647,10 +686,18 @@ namespace XbimXplorer.Commands
                     IPersistEntity t = Model.Instances[el];
                     if (t == null)
                         return;
+                    if (t is IIfcProduct ip)
+                        ReportAdd($"=== IndividualElementStyler command on #{t.EntityLabel}, {t.GetType()}: {ip.Name}", Brushes.Black);
+                    else
+                        ReportAdd($"=== IndividualElementStyler command on #{t.EntityLabel} {t.GetType()}.", Brushes.Black);
 
                     if (mode == "color")
                     {
                         ils.SetColor(t, Colors.Red, true);
+                    }
+                    else if (mode == "fullcolor")
+                    {
+                        ils.SetColor(t, Colors.Red, false);
                     }
                     else if (mode == "reset")
                     {

@@ -12,7 +12,12 @@ namespace Xbim.Presentation.LayerStyling
         XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, 
             ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null);
         void SetFederationEnvironment(IReferencedModel refModel);
-    }
+		
+        /// <summary>
+		/// Notifies the layerstyler that it need to clear any information retained on the model
+		/// </summary>
+        void Clear();
+	}
 
     public interface IProgressiveLayerStyler
     {

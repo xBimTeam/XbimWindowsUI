@@ -27,13 +27,13 @@ namespace Xbim.Presentation.LayerStyling
 		{
 			if (blinkTimer == null)
 			{
-				if (milliseconds > 0)
-					animationEvent(null, null); // perform immediately, then schedule the next
 				blinkTimer = new System.Windows.Threading.DispatcherTimer();
 				blinkTimer.Tick += new EventHandler(animationEvent);
 			}
 			if (milliseconds > 0)
 			{
+				blinkTimer.Stop();
+				animationEvent(null, null); // perform immediately, then schedule the next
 				blinkTimer.Interval = new TimeSpan(0, 0, 0, 0, milliseconds);
 				blinkTimer.Start();
 			}
@@ -137,7 +137,6 @@ namespace Xbim.Presentation.LayerStyling
 		private Dictionary<IPersistEntity, BlinkStates> entityStates = new Dictionary<IPersistEntity, BlinkStates>();
 		private Dictionary<Type, BlinkStates> typeStates = new Dictionary<Type, BlinkStates>();
 		IModel model;
-		
 
 		/// <summary>
 		/// This event is triggered every time the blinking function happens, 
@@ -168,7 +167,6 @@ namespace Xbim.Presentation.LayerStyling
 					SetColor(ts.Key, ts.Value.Get());
 				cnt++;
 			}
-		
 			if (cnt > 0)
 				BlinkHandled?.Invoke(this, new HandledEventArgs());
 		}
@@ -183,7 +181,8 @@ namespace Xbim.Presentation.LayerStyling
 		ModelVisual3D op;
 		ModelVisual3D tr;
 
-		private Dictionary<IPersistEntity, Dictionary<int, WpfMeshGeometry3D>> meshesByEntity;
+		// each dictionay by model is a dictionary by entityLabel
+		private Dictionary<IModel, Dictionary<int, Dictionary<int, WpfMeshGeometry3D>>> meshesByEntity;
 
 		/// <summary>
 		/// This version uses the new Geometry representation
@@ -211,7 +210,15 @@ namespace Xbim.Presentation.LayerStyling
 			var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 			var hiddenInstances = hideInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 
-			meshesByEntity = new Dictionary<IPersistEntity, Dictionary<int, WpfMeshGeometry3D>>();
+			if (meshesByEntity == null)
+				meshesByEntity = new Dictionary<IModel, Dictionary<int, Dictionary<int, WpfMeshGeometry3D>>>();
+
+			if (meshesByEntity.ContainsKey(model))
+			{ // this should never happen
+				meshesByEntity.Remove(model);
+			}
+			var thisMeshesByEntity = new Dictionary<int, Dictionary<int, WpfMeshGeometry3D>>();
+			meshesByEntity.Add(model, thisMeshesByEntity);
 
 			var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
 			var timer = new Stopwatch();
@@ -228,13 +235,12 @@ namespace Xbim.Presentation.LayerStyling
 				var sstyleIds = geomReader.StyleIds;
 				foreach (var styleId in sstyleIds)
 				{
-					var wpfMaterial = GetWpfMaterial(model, styleId);
+					var wpfMaterial = GetWpfMaterialFromStyle(model, styleId);
 					materialsByStyleId.Add(styleId, wpfMaterial);
-					// var mg = GetNewStyleMesh(wpfMaterial, tmpTransparentsGroup, tmpOpaquesGroup);
-					// meshesByStyleId.Add(styleId, mg);
 				}
 
-				var shapeInstances = GetShapeInstancesToRender(geomReader, excludedTypes);
+				// we are using an empty parameter so that we get all instance back, we will hide later.
+				var shapeInstances = GetShapeInstancesToRender(geomReader, new HashSet<short>());
 				var tot = 1;
 				if (ProgressChanged != null)
 				{
@@ -249,7 +255,7 @@ namespace Xbim.Presentation.LayerStyling
 					.Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel)))
 				{
 					// we can identify what entity we are working with
-					var ent = model.Instances[shapeInstance.IfcProductLabel];
+					var entLabel = shapeInstance.IfcProductLabel;
 
 					// logging 
 					var currentProgress = 100 * prog++ / tot;
@@ -258,35 +264,35 @@ namespace Xbim.Presentation.LayerStyling
 						ProgressChanged(this, new ProgressChangedEventArgs(currentProgress, "Creating visuals"));
 						lastProgress = currentProgress;
 					}
-
 					// work out style
 					var styleId = shapeInstance.StyleLabel > 0
 						? shapeInstance.StyleLabel
 						: shapeInstance.IfcTypeId * -1;
-
 					if (!materialsByStyleId.ContainsKey(styleId)) // if the style is not available we build one by ExpressType
 					{
 						var material2 = GetWpfMaterialByType(model, shapeInstance.IfcTypeId);
 						materialsByStyleId.Add(styleId, material2);
 					}
 
+					// we use the isHidden variable to determine whether to add the element ot one of the 
+					// opaque or transparent collections and also to keep the Hidden collection meaningful
+					//
+					var isHidden = excludedTypes.Contains(shapeInstance.IfcTypeId);
 					IXbimShapeGeometryData shapeGeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 					WpfMeshGeometry3D targetMesh;
-					if (!meshesByEntity.TryGetValue(ent, out var meshesByStyleId))
+					if (!thisMeshesByEntity.TryGetValue(entLabel, out var entityMeshes))
 					{
-						targetMesh = GetNewStyleMesh(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup);
-						meshesByStyleId = new Dictionary<int, WpfMeshGeometry3D>();
-						meshesByStyleId.Add(styleId, targetMesh);
-						meshesByEntity.Add(ent, meshesByStyleId);
+						targetMesh = GetNewMeshWithStyle(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup, isHidden);
+						entityMeshes = new Dictionary<int, WpfMeshGeometry3D>();
+						entityMeshes.Add(styleId, targetMesh);
+						thisMeshesByEntity.Add(entLabel, entityMeshes);
 					}
-					else if (!meshesByStyleId.TryGetValue(styleId, out targetMesh))
+					else if (!entityMeshes.TryGetValue(styleId, out targetMesh))
 					{
-						targetMesh = GetNewStyleMesh(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup);
-						meshesByStyleId.Add(styleId, targetMesh);
+						targetMesh = GetNewMeshWithStyle(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup, isHidden);
+						entityMeshes.Add(styleId, targetMesh);
 					}
 					// otherwise the targetmesh is already identified
-
-
 					if (shapeGeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
 						continue;
 					var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
@@ -296,10 +302,17 @@ namespace Xbim.Presentation.LayerStyling
 						shapeInstance.IfcProductLabel,
 						shapeInstance.InstanceLabel, transform,
 						(short)model.UserDefinedId);
+					if (isHidden)
+					{
+						var ent = model.Instances[entLabel];
+						if (!Hidden.Contains(ent)) // we might encounter more than once, just do one.
+							Hidden.Add(ent);
+					}
 
-				}
+
+				} // end entity loop
 				// now go through all the groups identified per each entity to finalise them
-				foreach (var meshdic in meshesByEntity.Values)
+				foreach (var meshdic in thisMeshesByEntity.Values)
 				{
 					foreach (var wpfMeshGeometry3D in meshdic.Values)
 					{
@@ -307,7 +320,7 @@ namespace Xbim.Presentation.LayerStyling
 					}
 				}
 
-				// now move from the tmp to the final repository
+				// now move from the tmp to the final collection
 				if (tmpOpaquesGroup.Children.Any())
 				{
 					var mv = new ModelVisual3D { Content = tmpOpaquesGroup };
@@ -319,7 +332,6 @@ namespace Xbim.Presentation.LayerStyling
 					destinationTransparents.Children.Add(mv);
 				}
 			}
-
 			Logger.LogDebug("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
 
 			ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(0, "Ready"));
@@ -336,25 +348,33 @@ namespace Xbim.Presentation.LayerStyling
 		}
 
 
-		protected static WpfMeshGeometry3D GetNewStyleMesh(WpfMaterial wpfMaterial, Model3DGroup tmpTransparentsGroup,
-			Model3DGroup tmpOpaquesGroup)
+		protected static WpfMeshGeometry3D GetNewMeshWithStyle(
+			WpfMaterial wpfMaterial, 
+			Model3DGroup tmpTransparentsGroup,
+			Model3DGroup tmpOpaquesGroup,
+			bool isHidden
+			)
 		{
 			var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
 			// set the tag of the child of mg to mg, so that it can be identified on click
 			mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
 			mg.BeginUpdate();
-			if (wpfMaterial.IsTransparent)
+			if (!isHidden)
 			{
-				tmpTransparentsGroup.Children.Add(mg);
+				if (wpfMaterial.IsTransparent)
+					tmpTransparentsGroup.Children.Add(mg);
+				else
+					tmpOpaquesGroup.Children.Add(mg);
 			}
-			else
-				tmpOpaquesGroup.Children.Add(mg);
 			return mg;
 		}
 
-		protected WpfMaterial GetWpfMaterial(IModel model, int styleId)
+		protected WpfMaterial GetWpfMaterialFromStyle(IModel model, int styleId)
 		{
+
 			var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
+			if (sStyle == null)
+				return null;
 			var texture = XbimTexture.Create(sStyle);
 			if (texture.ColourMap.Count > 0)
 			{
@@ -392,8 +412,12 @@ namespace Xbim.Presentation.LayerStyling
 		public void Show(IPersistEntity ent)
 		{
 			if (!Hidden.Contains(ent))
-				return;
-			if (meshesByEntity.TryGetValue(ent, out var dic))
+				return; // todo: should we load the geometry if it was never loaded?
+						// find the right dictionary
+			if (!meshesByEntity.TryGetValue(ent.Model, out var thisMeshesByEntity))
+				return; // model not found
+
+			if (thisMeshesByEntity.TryGetValue(ent.EntityLabel, out var dic))
 			{
 				foreach (var item in dic.Values)
 				{
@@ -429,7 +453,10 @@ namespace Xbim.Presentation.LayerStyling
 		{
 			if (Hidden.Contains(ent))
 				return;
-			if (meshesByEntity.TryGetValue(ent, out var dic))
+			if (!meshesByEntity.TryGetValue(ent.Model, out var thisMeshesByEntity))
+				return; // model not found
+			
+			if (thisMeshesByEntity.TryGetValue(ent.EntityLabel, out var dic))
 			{
 				foreach (var item in dic.Values)
 				{
@@ -528,8 +555,11 @@ namespace Xbim.Presentation.LayerStyling
 
 		public void SetColor(IPersistEntity ent, Color newColor, bool preserveAlpha = true)
 		{
-			if (!meshesByEntity.TryGetValue(ent, out var dic))
+			if (!meshesByEntity.TryGetValue(ent.Model, out var thisMeshesByEntity))
+				return; // model not found
+			if (!thisMeshesByEntity.TryGetValue(ent.EntityLabel, out var dic))
 				return; // nothing to do
+
 			newColor.Clamp();
 			if (preserveAlpha)
 			{
@@ -654,7 +684,6 @@ namespace Xbim.Presentation.LayerStyling
 			entityStates.Remove(ent);
 		}
 
-
 		public IEnumerable<IPersistEntity> GetEnts(Type tp)
 		{
 			return model.Instances.OfType(tp.Name, false);
@@ -662,15 +691,34 @@ namespace Xbim.Presentation.LayerStyling
 
 		public void ResetColor(IPersistEntity ent)
 		{
-			if (!meshesByEntity.TryGetValue(ent, out var dic))
-				return; // nothing to do			
+			if (!meshesByEntity.TryGetValue(ent.Model, out var thisMeshesByEntity))
+				return; // model not found
+
+			if (!thisMeshesByEntity.TryGetValue(ent.EntityLabel, out var dic))
+				return; // nothing to do
 			foreach (var item in dic)
 			{
 				var styleId = item.Key;
-				var material = GetWpfMaterial(ent.Model, styleId);
+				WpfMaterial material = null;
+				if (styleId < 0)
+					material = GetWpfMaterialByType(model, (short)-styleId);				
+				else
+					material = GetWpfMaterialFromStyle(ent.Model, styleId);
+				if (material == null)
+					continue;
 				var mesh = item.Value;
 				SetMaterial(mesh, material);
 			}
+		}
+
+		public void Clear()
+		{
+			blinkTimer?.Stop();
+			typeStates?.Clear();
+			entityStates?.Clear();
+			model = null;
+			meshesByEntity?.Clear();
+			Hidden?.Clear();
 		}
 	}
 }

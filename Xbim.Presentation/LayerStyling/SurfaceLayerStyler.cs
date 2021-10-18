@@ -262,10 +262,15 @@ namespace Xbim.Presentation.LayerStyling
             return material2;
         }
 
-
         public void SetFederationEnvironment(IReferencedModel refModel)
         {
             
+        }
+
+
+        public void Clear()
+        {
+            // nothing to do for clearing this style
         }
     }
 }

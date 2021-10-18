@@ -26,6 +26,7 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.Extensions;
 using Xbim.Presentation.LayerStyling;
 using Xbim.Presentation.ModelGeomInfo;
+using Xbim.Presentation.Overlay;
 
 namespace Xbim.Presentation
 {
@@ -788,7 +789,6 @@ namespace Xbim.Presentation
 					dm.Brush = b;
 				}
 				return dm;
-
 			}
 			var sm = material as SpecularMaterial;
 			if (sm != null)
@@ -798,83 +798,52 @@ namespace Xbim.Presentation
 			return null;
 		}
 
-		public void AddImageOverlay(string imagePath)
+		public void AddImageOverlay(ImageOverlay imageOverlay)
 		{
-			FileInfo f = new FileInfo(imagePath);
-			if (!f.Exists)
-				return;
-			Uri fileUri = new Uri(new Uri("file://"), imagePath);
-			var p = ModelPositions.GetPoint(new XbimPoint3D(2.4, 0.62, 3));
-			var t = new BillboardVisual3D() {
-				Position = p,
-				Width = 40,
-				Height = 40,
-				Material = MaterialHelper.CreateImageMaterial(
-					fileUri.AbsoluteUri,
-					1,
-					UriKind.Absolute
-					)
-			};
-
-			t = new BillboardVisual3D()
-			{
-				Position = p,
-				Width = 40,
-				Height = 40,
-				Material = MaterialHelper.CreateEmissiveImageMaterial(
-					fileUri.AbsoluteUri,
-					Brushes.Transparent,
-					UriKind.Absolute
-					)
-			};
-
-			Overlays.Children.Add(t);
+			imageOverlay.UpdatePosition(ModelPositions);
+			Overlays.Children.Add(imageOverlay.GraphicsItem);
+		}
+		public bool RemoveImageOverlay(ImageOverlay imageOverlay)
+		{
+			return Overlays.Children.Remove(imageOverlay.GraphicsItem);
 		}
 
-		public void ClearTextOverlay()
-		{
-			Overlays.Children.Clear();
-		}
+		
 
-		public void AddTextOverlay(string text, double x, double y, double z)
+		public void AddTextOverlay(TextOverlay text)
 		{
-			BillboardTextGroupVisual3D b = Overlays.Children.OfType<BillboardTextGroupVisual3D>().FirstOrDefault();
-			if (b == null)
+			var container = text.Style.GraphicsItem;
+			if (!Overlays.Children.Contains(container))
 			{
-				b = new BillboardTextGroupVisual3D()
-				{
-					Background = Brushes.White,
-					BorderBrush = Brushes.Black,
-					Foreground = Brushes.Black,
-					BorderThickness = new Thickness(1),
-					FontSize = 12,
-					Padding = new Thickness(2),
-					Offset = new Vector(+20, -20), // 2D offset from the reference point fo the billboard item
-					PinBrush = Brushes.Gray,
-					IsEnabled = true // todo: make the pin optional
-				};
-				Overlays.Children.Add(b);
+				Overlays.Children.Add(container);
 			}
-
-			var items = b.Items?.ToList();
+			var items = container.Items?.ToList();
 			if (items == null)
 			{
 				items = new List<BillboardTextItem>();
 			}
-
-			var p = ModelPositions.GetPoint(new XbimPoint3D(x, y, z));
-			var bi1 = new BillboardTextItem
-			{
-				Text = text,
-				Position = p,
-				DepthOffset = 0.1, // this makes it visible over the model
-				WorldDepthOffset = 0.0,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				VerticalAlignment = VerticalAlignment.Center,
-			};
-			items.Add(bi1);
-			b.Items = items; // if items is set early it does not work.. make it observable?
+			text.UpdatePosition(ModelPositions);
+			items.Add(text.GraphicsItem);
+			container.Items = items; // if items is set early it does not work.. 
 		}
+
+		public bool RemoveTextOverlay(TextOverlay toBeRemoved)
+		{
+			var conts = Overlays.Children.OfType<BillboardTextGroupVisual3D>();
+			foreach (var cont in conts)
+			{
+				var found = cont.Items.FirstOrDefault(x => x == toBeRemoved.GraphicsItem);
+				if (found == null)
+					continue;
+				var copy = cont.Items.ToList();
+				copy.Remove(toBeRemoved.GraphicsItem);
+				cont.Items = copy;
+				return true;
+			}
+			return false;
+		}
+
+		
 
 		public IfcStore Model
 		{
@@ -1373,6 +1342,8 @@ namespace Xbim.Presentation
 
 		private void ClearGraphics(ModelRefreshOptions options = ModelRefreshOptions.None)
 		{
+			if (DefaultLayerStyler != null)
+				DefaultLayerStyler.Clear();
 			PercentageLoaded = 0;
 			UserModeledDimension.Clear();
 			Materials.Clear();
@@ -1413,7 +1384,17 @@ namespace Xbim.Presentation
 
 		public XbimModelPositioningCollection ModelPositions = new XbimModelPositioningCollection();
 
-		public ILayerStyler DefaultLayerStyler { get; set; }
+		private ILayerStyler defaultLayerStyler;
+		public ILayerStyler DefaultLayerStyler
+		{
+			get => defaultLayerStyler;
+			set
+			{
+				if (defaultLayerStyler != null)
+					defaultLayerStyler.Clear();
+				defaultLayerStyler = value;
+			}
+		}
 
 		//TODO resolve issues with reference models
 
@@ -1455,6 +1436,8 @@ namespace Xbim.Presentation
 
 			// reset all the visuals
 			// - ModelPositions is emptied in here
+			if (DefaultLayerStyler == null)
+				DefaultLayerStyler = new SurfaceLayerStyler();
 			ClearGraphics(options);
 
 			if (model == null)
@@ -1496,9 +1479,6 @@ namespace Xbim.Presentation
 				}
 			}
 			ModelPositions.ComputeViewBoundsTransform();
-
-			if (DefaultLayerStyler == null)
-				DefaultLayerStyler = new SurfaceLayerStyler();
 
 
 			// build the geometric scene and render as we go

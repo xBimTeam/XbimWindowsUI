@@ -294,5 +294,10 @@ namespace Xbim.Presentation.LayerStyling
         {
             
         }
-    }
+
+		public void Clear()
+		{
+			// nothing to do for clearing this style
+		}
+	}
 }
