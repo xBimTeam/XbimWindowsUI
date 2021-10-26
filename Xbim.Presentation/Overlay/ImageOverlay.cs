@@ -18,6 +18,7 @@ namespace Xbim.Presentation.Overlay
             HidesBehindModel,
             AlwaysVisible
         }
+
         public XbimPoint3D Position { get; private set; }
 
         public double Width = 40;
@@ -26,27 +27,46 @@ namespace Xbim.Presentation.Overlay
 		public ImageOverlay(
             string imagePath,
             XbimPoint3D position,
-            double width,
-            double height
+            ModelRelation modelRelation,
+            double width = double.NaN,
+            double height = double.NaN
             )
 		{
             Position = position;
             Uri fileUri = new Uri(new Uri("file://"), imagePath);
+            if (
+                double.IsNaN(width) ||
+                double.IsNaN(width))
+            {
+                var img = System.Drawing.Image.FromFile(imagePath);
+                if (img != null)
+                {
+                    if (double.IsNaN(width))
+                        width = img.Width;
+                    if (double.IsNaN(height))
+                        height = img.Height;
+                }
+            }
+
 			GraphicsItem = new BillboardVisual3D()
 			{
 				Width = width,
 				Height = height,
 				Material = MaterialHelper.CreateEmissiveImageMaterial(
 					fileUri.AbsoluteUri,
-					Brushes.Transparent,
+					Brushes.Black,
 					UriKind.Absolute
 					)
 			};
+            if (modelRelation == ModelRelation.AlwaysVisible)
+            {
+                GraphicsItem.DepthOffset = 0.1;
+            }
 			//GraphicsItem = new BillboardVisual3D()
 			//{
-           //             Width = width,
-           //             Height = height,
-           //             Material = MaterialHelper.CreateImageMaterial(
+            //             Width = width,
+            //             Height = height,
+            //             Material = MaterialHelper.CreateImageMaterial(
 			//		fileUri.AbsoluteUri,
 			//		1,
 			//		UriKind.Absolute

@@ -272,7 +272,7 @@ namespace XbimXplorer.Commands
                 }
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(ImageOverlay|io) (?<mode>(add|remove)) *(?<cmd>.?)",
+                mdbclosed = Regex.Match(cmd, @"^(ImageOverlay|io) (?<mode>(add|remove|move)) *(?<cmd>.?)",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -611,16 +611,23 @@ namespace XbimXplorer.Commands
             }
         }
 
-		private void ProcessImageOverlay(Match mdbclosed)
-		{
+
+
+
+        private void ProcessImageOverlay(Match mdbclosed)
+        {
             var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
             if (mode == "add")
             {
+                var mr =
+                    (ioList.Count % 2 == 0)
+                    ? ImageOverlay.ModelRelation.AlwaysVisible
+                    : ImageOverlay.ModelRelation.HidesBehindModel;
                 Regex r = new Regex(@"(?<x>[\d\.]+) (?<y>[\d\.]+) (?<z>[\d\.]+)");
                 ImageOverlay t = new ImageOverlay(
                     @"C:\Data\Dev\XbimPrivate\Arcinfo\VisualDemo\VisualDemo\Image.png",
                     new XbimPoint3D(0.27, -0.34, ioList.Count),
-                    40, 40
+                    mr
                     );
                 ioList.Add(t);
                 _parentWindow.DrawingControl.AddImageOverlay(t);
@@ -632,6 +639,15 @@ namespace XbimXplorer.Commands
                 {
                     if (_parentWindow.DrawingControl.RemoveImageOverlay(last))
                         ioList.Remove(last);
+                }
+            }
+            else if (mode == "move")
+            {
+                var last = ioList.LastOrDefault();
+                if (last != null)
+                {
+                    var lp = last.Position + new XbimVector3D(1, 0, 0);
+                    last.UpdatePosition(_parentWindow.DrawingControl.ModelPositions, lp);
                 }
             }
         }
