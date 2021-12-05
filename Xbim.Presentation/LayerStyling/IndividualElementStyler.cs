@@ -231,7 +231,7 @@ namespace Xbim.Presentation.LayerStyling
 				var tmpOpaquesGroup = new Model3DGroup();
 				var tmpTransparentsGroup = new Model3DGroup();
 
-				//get a list of all the unique style ids then build their style and mesh
+				//get a list of all the unique style ids then build their style 
 				var sstyleIds = geomReader.StyleIds;
 				foreach (var styleId in sstyleIds)
 				{
@@ -264,14 +264,18 @@ namespace Xbim.Presentation.LayerStyling
 						ProgressChanged(this, new ProgressChangedEventArgs(currentProgress, "Creating visuals"));
 						lastProgress = currentProgress;
 					}
-					// work out style
+
+					// work out style identity
 					var styleId = shapeInstance.StyleLabel > 0
 						? shapeInstance.StyleLabel
 						: shapeInstance.IfcTypeId * -1;
-					if (!materialsByStyleId.ContainsKey(styleId)) // if the style is not available we build one by ExpressType
+
+					// if the style was not prepared, it means it was not defined for this entity
+					// so we create one material from the type and add it to the dictionary to keep track of it
+					if (!materialsByStyleId.TryGetValue(styleId, out var useMaterial)) // if the style is not available we build one by ExpressType
 					{
-						var material2 = GetWpfMaterialByType(model, shapeInstance.IfcTypeId);
-						materialsByStyleId.Add(styleId, material2);
+						useMaterial = GetWpfMaterialByType(model, shapeInstance.IfcTypeId);
+						materialsByStyleId.Add(styleId, useMaterial);
 					}
 
 					// we use the isHidden variable to determine whether to add the element ot one of the 
@@ -280,19 +284,21 @@ namespace Xbim.Presentation.LayerStyling
 					var isHidden = excludedTypes.Contains(shapeInstance.IfcTypeId);
 					IXbimShapeGeometryData shapeGeom = geomReader.ShapeGeometry(shapeInstance.ShapeGeometryLabel);
 					WpfMeshGeometry3D targetMesh;
+
+					// get or make entityMeshes 
+					//  - it's a dictionary, because we try to keep the mesh count small, reusing if
+					//    they have the same looks.
 					if (!thisMeshesByEntity.TryGetValue(entLabel, out var entityMeshes))
 					{
-						targetMesh = GetNewMeshWithStyle(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup, isHidden);
 						entityMeshes = new Dictionary<int, WpfMeshGeometry3D>();
-						entityMeshes.Add(styleId, targetMesh);
 						thisMeshesByEntity.Add(entLabel, entityMeshes);
 					}
-					else if (!entityMeshes.TryGetValue(styleId, out targetMesh))
+					// get or make the target mesh
+					if (!entityMeshes.TryGetValue(styleId, out targetMesh))
 					{
-						targetMesh = GetNewMeshWithStyle(materialsByStyleId[styleId], tmpTransparentsGroup, tmpOpaquesGroup, isHidden);
+						targetMesh = GetNewMeshWithStyle(useMaterial, tmpTransparentsGroup, tmpOpaquesGroup, isHidden);
 						entityMeshes.Add(styleId, targetMesh);
 					}
-					// otherwise the targetmesh is already identified
 					if (shapeGeom.Format != (byte)XbimGeometryType.PolyhedronBinary)
 						continue;
 					var transform = XbimMatrix3D.Multiply(shapeInstance.Transformation, modelTransform);
@@ -306,11 +312,13 @@ namespace Xbim.Presentation.LayerStyling
 					{
 						var ent = model.Instances[entLabel];
 						if (!Hidden.Contains(ent)) // we might encounter more than once, just do one.
-							Hidden.Add(ent);
+						{
+							_ = Hidden.Add(ent);
+						}
 					}
+				}
+				// end entity loop
 
-
-				} // end entity loop
 				// now go through all the groups identified per each entity to finalise them
 				foreach (var meshdic in thisMeshesByEntity.Values)
 				{

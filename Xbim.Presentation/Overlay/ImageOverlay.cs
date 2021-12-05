@@ -79,7 +79,8 @@ namespace Xbim.Presentation.Overlay
         {
             if (newPosition.HasValue)
                 Position = newPosition.Value;
-            Point3D computedPoint = modelPositions.GetPoint(Position);
+            var pnt = modelPositions.GetPoint(Position);
+            Point3D computedPoint = new Point3D(pnt.X, pnt.Y, pnt.Z);
             GraphicsItem.Position = computedPoint;
         }
     }

@@ -210,12 +210,26 @@ namespace XbimXplorer
         {
             if (e == null) 
                 return;
-            EntityLabel.Text = e.ToString();
-            Debug.WriteLine("Points:");
-            foreach (var pt in e.VisualPoints)
-            {
-                Debug.WriteLine("X:{0} Y:{1} Z:{2}", pt.X, pt.Y, pt.Z);
-            }
+            var text = e.ToString();
+            if (e.Points.Count() == 1)
+			{
+                var vspace = e.Points.FirstOrDefault();
+                var modelSpace = DrawingControl.ModelPositions.GetPointInverse(new Xbim.Common.Geometry.XbimPoint3D
+                    (
+                    vspace.Point.X,
+                    vspace.Point.Y,
+                    vspace.Point.Z
+                    ));
+                text += $" Model space in meters: X:{modelSpace.X:0.##}, Y:{modelSpace.Y:0.##}, Z:{modelSpace.Z:0.##}";
+
+			}
+            EntityLabel.Text = text;
+
+            //Debug.WriteLine("Points:");
+            //foreach (var pt in e.VisualPoints)
+            //{
+            //    Debug.WriteLine("X:{0} Y:{1} Z:{2}", pt.X, pt.Y, pt.Z);
+            //}
         }
         
         #region "Model File Operations"

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -559,7 +560,15 @@ namespace Xbim.Presentation
 								UserModeledDimension.Last3DPoint.Value == p.Point)
 								UserModeledDimension.RemoveLast();
 							else
+							{
+								var t = ModelPositions.GetPointInverse(new XbimPoint3D(
+									p.Point.X,
+									p.Point.Y,
+									p.Point.Z
+									));
+								Debug.WriteLine(t);
 								UserModeledDimension.Add(p);
+							}
 							FirePrevPointsChanged();
 							break;
 						case XbimMouseClickActions.SetClip:

@@ -49,7 +49,7 @@ namespace Xbim.Presentation.ModelGeomInfo
             if (_geomPoints.Count == 1)
             {
                 var p = _geomPoints[0].ModelPoint;
-                return $"Selected point coords: {p.X:0.##}, {p.Y:0.##}, {p.Z:0.##})";
+                return $"Selected point coords: {p.X}, {p.Y:0.##}, {p.Z:0.##}";
             }
             else
             {

@@ -135,10 +135,26 @@ namespace Xbim.Presentation
             return sb.ToString();
         }
 
-		internal Point3D GetPoint(XbimPoint3D point3D)
+        /// <summary>
+		/// Returns the transformed coordinates for the current positioning
+		/// </summary>
+		/// <param name="modelSpacePoint">The point in model space.</param>
+		/// <returns>the point in view space.</returns>
+		public XbimPoint3D GetPoint(XbimPoint3D modelSpacePoint)
 		{
-            var ret = point3D + _viewSpaceTranslation;
-            return new Point3D(ret.X, ret.Y, ret.Z);
+            var viewSpace = modelSpacePoint + _viewSpaceTranslation;
+            return viewSpace;
         }
-	}
+
+        /// <summary>
+        /// Returns the inverse transformed coordinates for the current positioning
+        /// </summary>
+        /// <param name="viewSpace">the point in view space</param>
+        /// <returns>the point in model space</returns>
+        public XbimPoint3D GetPointInverse(XbimPoint3D viewSpace)
+        {
+            var modelSpacePoint = viewSpace - _viewSpaceTranslation;
+            return modelSpacePoint;
+        }
+    }
 }

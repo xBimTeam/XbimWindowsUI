@@ -254,7 +254,7 @@ namespace XbimXplorer.Commands
 				}
 
                 // this is just for demonstration purpose
-                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|fullcolor|reset|hide|show|blink|stop)) *(?<obj>\w+|#\d+)?$",
+                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|fullcolor|transparent|reset|hide|show|blink|stop)) *(?<obj>\w+|#\d+)?$",
                    RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -660,10 +660,28 @@ namespace XbimXplorer.Commands
         private void ProcessTextOverlay(Match mdbclosed)
 		{
             var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
+            var cmd = mdbclosed.Groups["cmd"].Value.ToLowerInvariant();
             if (mode == "add")
             {
-                Regex r = new Regex(@"(?<x>[\d\.]+) (?<y>[\d\.]+) (?<z>[\d\.]+)");
-                TextOverlay t = toStyle.CreateText($"Some text #{toList.Count + 1}", new XbimPoint3D(0.27, -0.34, toList.Count));
+                // eg "to add -1.74793892733902 -0.018920300897088 0"
+                
+                Regex r = new Regex(@"(?<x>[-\d\.]+) (?<y>[-\d\.]+) (?<z>[-\d\.]+)");
+                var comm = r.Match(cmd);
+                var pnt = new XbimPoint3D(0.27, -0.34, toList.Count);
+                TextOverlay t = null;
+                if (comm.Success)
+                {
+                    if (
+                        double.TryParse(comm.Groups["x"].Value, out var text_x)
+                        && double.TryParse(comm.Groups["y"].Value, out var text_y)
+                        && double.TryParse(comm.Groups["z"].Value, out var text_z)
+                        )
+					{
+                        pnt = new XbimPoint3D(text_x, text_y, text_z);
+                    }
+                }
+                
+                t = toStyle.CreateText($"Some text #{toList.Count + 1}", pnt);
                 toList.Add(t);
                 _parentWindow.DrawingControl.AddTextOverlay(t);
             }
@@ -714,6 +732,10 @@ namespace XbimXplorer.Commands
                     else if (mode == "fullcolor")
                     {
                         ils.SetColor(t, Colors.Red, false);
+                    }
+                    else if (mode == "transparent")
+                    {
+                        ils.SetColor(t, new IndividualElementStyler.ColorState(Color.FromArgb(128, 255, 0, 0)));
                     }
                     else if (mode == "reset")
                     {
