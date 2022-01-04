@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using HelixToolkit.Wpf;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -228,8 +229,8 @@ namespace Xbim.Presentation.LayerStyling
 			{
 				var materialsByStyleId = new Dictionary<int, WpfMaterial>();
 				var repeatedShapeGeometries = new Dictionary<int, MeshGeometry3D>();
-				var tmpOpaquesGroup = new Model3DGroup();
-				var tmpTransparentsGroup = new Model3DGroup();
+				var tmpOpaquesGroup = new List<Model3D>();
+				var tmpTransparentsGroup = new List<Model3D>();
 
 				//get a list of all the unique style ids then build their style 
 				var sstyleIds = geomReader.StyleIds;
@@ -238,6 +239,21 @@ namespace Xbim.Presentation.LayerStyling
 					var wpfMaterial = GetWpfMaterialFromStyle(model, styleId);
 					materialsByStyleId.Add(styleId, wpfMaterial);
 				}
+				
+				//// prepare a transparent one for debug purposes, give it label 1 and 2 (low risk of clash)
+				//// this might later be used in the loop to assing arbitrary styles by entityLabel
+				//try
+				//{
+				//	var wpfTransp = GetWpfMaterialByType(model, "IFCWINDOW");
+				//	materialsByStyleId.Add(1, wpfTransp);
+				//	var wpfTransp2 = GetWpfMaterialByType(model, "IFCWINDOW");
+				//	materialsByStyleId.Add(2, wpfTransp2);
+				//}
+				//catch (Exception)
+				//{
+
+				//}
+				
 
 				// we are using an empty parameter so that we get all instance back, we will hide later.
 				var shapeInstances = GetShapeInstancesToRender(geomReader, new HashSet<short>());
@@ -269,6 +285,16 @@ namespace Xbim.Presentation.LayerStyling
 					var styleId = shapeInstance.StyleLabel > 0
 						? shapeInstance.StyleLabel
 						: shapeInstance.IfcTypeId * -1;
+
+					//// Keep for debug purposes, arbitrarily assing any style by entityLabel
+					//if (shapeInstance.IfcProductLabel == 152)
+					//{
+					//	styleId = 1;
+					//}
+					//else
+					//{
+					//	styleId = 2;
+					//}
 
 					// if the style was not prepared, it means it was not defined for this entity
 					// so we create one material from the type and add it to the dictionary to keep track of it
@@ -329,15 +355,21 @@ namespace Xbim.Presentation.LayerStyling
 				}
 
 				// now move from the tmp to the final collection
-				if (tmpOpaquesGroup.Children.Any())
+				if (tmpOpaquesGroup.Any())
 				{
-					var mv = new ModelVisual3D { Content = tmpOpaquesGroup };
-					destinationOpaques.Children.Add(mv);
+					foreach (var item in tmpOpaquesGroup)
+					{
+						var mv = new ModelVisual3D() { Content = item };
+						destinationOpaques.Children.Add(mv);
+					}
 				}
-				if (tmpTransparentsGroup.Children.Any())
+				if (tmpTransparentsGroup.Any())
 				{
-					var mv = new ModelVisual3D { Content = tmpTransparentsGroup };
-					destinationTransparents.Children.Add(mv);
+					foreach (var item in tmpTransparentsGroup)
+					{
+						var mv = new ModelVisual3D() { Content = item };
+						destinationTransparents.Children.Add(mv);
+					}
 				}
 			}
 			Logger.LogDebug("Time to load visual components: {0:F3} seconds", timer.Elapsed.TotalSeconds);
@@ -357,9 +389,9 @@ namespace Xbim.Presentation.LayerStyling
 
 
 		protected static WpfMeshGeometry3D GetNewMeshWithStyle(
-			WpfMaterial wpfMaterial, 
-			Model3DGroup tmpTransparentsGroup,
-			Model3DGroup tmpOpaquesGroup,
+			WpfMaterial wpfMaterial,
+			List<Model3D> tmpTransparentsGroup,
+			List<Model3D> tmpOpaquesGroup,
 			bool isHidden
 			)
 		{
@@ -370,16 +402,17 @@ namespace Xbim.Presentation.LayerStyling
 			if (!isHidden)
 			{
 				if (wpfMaterial.IsTransparent)
-					tmpTransparentsGroup.Children.Add(mg);
+				{
+					tmpTransparentsGroup.Add(mg.WpfModel);
+				}
 				else
-					tmpOpaquesGroup.Children.Add(mg);
+					tmpOpaquesGroup.Add(mg);
 			}
 			return mg;
 		}
 
 		protected WpfMaterial GetWpfMaterialFromStyle(IModel model, int styleId)
 		{
-
 			var sStyle = model.Instances[styleId] as IIfcSurfaceStyle;
 			if (sStyle == null)
 				return null;
@@ -402,6 +435,15 @@ namespace Xbim.Presentation.LayerStyling
 		protected WpfMaterial GetWpfMaterialByType(IModel model, short typeid)
 		{
 			var prodType = model.Metadata.ExpressType(typeid);
+			var v = _colourMap[prodType.Name];
+			var texture = XbimTexture.Create(v);
+			var material2 = new WpfMaterial();
+			material2.CreateMaterial(texture);
+			return material2;
+		}
+		protected WpfMaterial GetWpfMaterialByType(IModel model, string type)
+		{
+			var prodType = model.Metadata.ExpressType(type.ToUpperInvariant());
 			var v = _colourMap[prodType.Name];
 			var texture = XbimTexture.Create(v);
 			var material2 = new WpfMaterial();
@@ -475,23 +517,21 @@ namespace Xbim.Presentation.LayerStyling
 			}
 		}
 
+		// todo: 2021: need to remove all references to Model3DGroup
+
 		private void Remove(ModelVisual3D bucket, WpfMeshGeometry3D item)
 		{
-			foreach (var mv in bucket.Children.OfType<ModelVisual3D>())
+			var rem = bucket.Children.OfType<ModelVisual3D>().FirstOrDefault(x => x.Content == item.WpfModel);
+			if (rem != null)
 			{
-				var g = mv.Content as Model3DGroup;
-				if (g == null)
-					continue;
-				var removed = g.Children.Remove(item);
-				Debug.WriteLine($"Removed: {removed}");
+				bucket.Children.Remove(rem);
 			}
 		}
 
 		private void Restore(ModelVisual3D bucket, WpfMeshGeometry3D item)
 		{
-			var dest = bucket.Children.OfType<ModelVisual3D>().FirstOrDefault();
-			var cont = dest.Content as Model3DGroup;
-			cont.Children.Add(item);
+			var t = new ModelVisual3D() { Content = item};
+			bucket.Children.Add(t);
 		}
 
 		public void SetAnimation(IPersistEntity ent, ColorState state1, ColorState state2, int BaseTimerMultiplier = 1)
@@ -707,7 +747,7 @@ namespace Xbim.Presentation.LayerStyling
 			foreach (var item in dic)
 			{
 				var styleId = item.Key;
-				WpfMaterial material = null;
+				WpfMaterial material;
 				if (styleId < 0)
 					material = GetWpfMaterialByType(model, (short)-styleId);				
 				else

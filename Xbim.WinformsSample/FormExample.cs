@@ -22,7 +22,7 @@ namespace Xbim.WinformsSample
         {
             InitializeComponent();
             Logger = logger ?? XbimLogging.CreateLogger<FormExample>();
-            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
+            //IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
             _wpfControl = new WinformsAccessibleControl();
             _wpfControl.SelectionChanged += _wpfControl_SelectionChanged;
            

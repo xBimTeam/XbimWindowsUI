@@ -35,6 +35,7 @@ using XbimXplorer.PluginSystem;
 using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
 using Xbim.Presentation.Overlay;
+using HelixToolkit.Wpf;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -922,11 +923,16 @@ namespace XbimXplorer.Commands
 				{
 					ReportAdd(item);
 				}
-				Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
+				//Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
 				Report("TransparentsVisual3D", _parentWindow.DrawingControl.TransparentsVisual3D);
-				Report("Selection", _parentWindow.DrawingControl.HighlightedVisual, true);
-
-			}
+				//Report("Selection", _parentWindow.DrawingControl.HighlightedVisual);
+    
+    //            ReportAdd("=== ---");
+    //            ReportVisual(_parentWindow.DrawingControl.OpaquesVisual3D);
+    //            ReportVisual(_parentWindow.DrawingControl.TransparentsVisual3D);
+    //            ReportVisual(_parentWindow.DrawingControl.HighlightedVisual);
+    
+            }
 			else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
 			{
 				foreach (var item in _parentWindow.DrawingControl.LayersTree())
@@ -1654,29 +1660,81 @@ namespace XbimXplorer.Commands
 
         private void Report(string title, ModelVisual3D visualElement, bool triangulation = false)
         {
-            ReportAdd(title, Brushes.Blue);
+            ReportAdd($"{title} - {visualElement.GetType().Name}", Brushes.Blue);
             if (visualElement.Content != null)
             {
+                ReportAdd("Content:");
                 var as3D = visualElement.Content as GeometryModel3D;
                 Report(as3D, 1, triangulation);
             }
+            if (!visualElement.Children.Any())
+                return;
+            ReportAdd($"Children: {visualElement.Children.GetType().Name}");
             foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
             {
-                Report(visualElementChild);
+                Report(visualElementChild, 1);
             }
         }
 
-        private void Report(ModelVisual3D mv3d, int indent = 0)
+        private void ReportVisual(ModelVisual3D visualElement, int indent = 0)
         {
             var ind = new string('\t', indent);
-            ReportAdd($"{ind}{mv3d.GetType().Name} isSealed:{mv3d.IsSealed} children: {mv3d.Children.Count}"
-            );
-            foreach (var child in mv3d.Children)
+            ReportAdd($"{ind}ModelVisual3D: {visualElement.GetType().Name}", Brushes.Blue);
+            if (visualElement.Content != null)
             {
-                // Report(child, indent + 1);
+                ReportAdd($"{ind}Cont: {visualElement.Content.GetType().Name}", Brushes.Black);
+                ReportVisual(visualElement.Content, indent + 1);
             }
-            if (mv3d.Content is Model3DGroup)
-                Report((Model3DGroup)mv3d.Content, indent + 1);
+            else
+                ReportAdd($"{ind}Cont: null", Brushes.Black);
+            if (!visualElement.Children.Any()
+                )
+			{
+                ReportAdd($"{ind}Children: None", Brushes.Black);
+                return;
+            }
+            {
+                ReportAdd($"{ind}Children: {visualElement.Children.GetType().Name}", Brushes.Black);
+                foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
+                {
+                    ReportVisual(visualElementChild, indent + 1);
+                }
+            }
+        }
+
+		private void ReportVisual(Model3D content, int indent)
+		{
+            var ind = new string('\t', indent);
+            ReportAdd($"{ind}Model3D: {content.GetType().Name}", Brushes.Blue);
+            ReportAdd($"{ind}todo: no info");
+        }
+
+		private void Report(ModelVisual3D mv3d, int indent = 0)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd($"{ind}ModelVisual3D: {mv3d.GetType().Name} isSealed:{mv3d.IsSealed} children: {mv3d.Children.Count}"
+            );
+            if (mv3d.Content is Model3DGroup m3d)
+            {
+                ReportAdd($"{ind}Content Model3DGroup:");
+                Report(m3d, indent + 1);
+            }
+            else if (mv3d.Content is GeometryModel3D gm3d)
+            {
+                ReportAdd($"{ind}Content GeometryModel3D:");
+                Report(gm3d, indent + 1);
+            }
+            var children = mv3d.Children.OfType<ModelVisual3D>().ToList();
+            if (!children.Any())
+            {
+                ReportAdd($"{ind}no children.");
+                return;
+            }
+            ReportAdd($"{ind}Children: {mv3d.Children.GetType().Name}");
+            foreach (var child in children)
+            {
+                Report(child, indent + 1);
+            }
         }
 
         private void Report(Model3DGroup content, int indent)
@@ -1684,19 +1742,18 @@ namespace XbimXplorer.Commands
             var ind = new string('\t', indent);
             ReportAdd($"{ind}{content.GetType().Name} isSealed:{content.IsSealed} children: {content.Children.Count}"
             );
+            ReportAdd($"{ind}Does not have content property.");
+            ReportAdd($"{ind}Children: {content.Children.GetType().Name}");
             foreach (var child in content.Children.OfType<GeometryModel3D>())
             {
                 Report(child, indent + 1);
             }
         }
 
-        private void Report(GeometryModel3D content, int indent, bool triangulation = false)
+        private void Report(GeometryModel3D gm3d, int indent, bool triangulation = false)
         {
-            var mRep = content.Material.GetType().Name;
-            var mat = content.Material as DiffuseMaterial;
-
-            
-
+            var mRep = gm3d.Material.GetType().Name;
+            var mat = gm3d.Material as DiffuseMaterial;
             Brush b = null;
             if (mat != null)
             {
@@ -1705,10 +1762,10 @@ namespace XbimXplorer.Commands
             }
             
             var ind = new string('\t', indent);
-            var msg = $"{ind}{content.GetType().Name} isSealed:{content.IsSealed} Material: {mRep}";
+            var msg = $"{ind}{gm3d.GetType().Name} isSealed:{gm3d.IsSealed} Material: {mRep}";
             var rb = new TextHighliter();
             var txt = new List<string>() {msg};
-            var bs = new List<Brush>() { Brushes.Black};
+            var bs = new List<Brush>() { Brushes.Orange};
             
             if (b != null)
             {
@@ -1717,9 +1774,9 @@ namespace XbimXplorer.Commands
             }
             rb.AppendSpans(txt.ToArray(), bs.ToArray());
             ReportAdd(rb);
-            if (content.Geometry is MeshGeometry3D)
-                Report(content.Geometry as MeshGeometry3D, indent + 1, triangulation);
-
+            ReportAdd($"{ind}Geometry: {gm3d.Geometry.GetType().Name}");
+            if (gm3d.Geometry is MeshGeometry3D mg3d)
+                Report(mg3d, indent + 1, triangulation);
         }
 
         private void Report(MeshGeometry3D content, int indent, bool triangulation = false)

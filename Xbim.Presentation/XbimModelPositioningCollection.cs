@@ -146,6 +146,8 @@ namespace Xbim.Presentation
             return viewSpace;
         }
 
+        // dc3d.ModelPositions.GetPointInverse();
+
         /// <summary>
         /// Returns the inverse transformed coordinates for the current positioning
         /// </summary>

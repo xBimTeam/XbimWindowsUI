@@ -42,7 +42,7 @@ namespace Xbim.Presentation
 	[TemplatePart(Name = TemplateOpaques, Type = typeof(ModelVisual3D))]
 	[TemplatePart(Name = TemplateHighlighted, Type = typeof(ObservableMeshVisual3D))]
 	[TemplatePart(Name = TemplateCuttingGroupT, Type = typeof(CuttingPlaneGroup))]
-	[TemplatePart(Name = TemplateTransparents, Type = typeof(ModelVisual3D))]
+	[TemplatePart(Name = TemplateTransparents, Type = typeof(SortingVisual3D))]
 	[TemplatePart(Name = TemplateExtras, Type = typeof(ModelVisual3D))]
 	[TemplatePart(Name = TemplateOverlays, Type = typeof(ModelVisual3D))]
 	[TemplatePart(Name = TemplateGridLines, Type = typeof(GridLinesVisual3D))]
@@ -67,14 +67,14 @@ namespace Xbim.Presentation
 		protected ModelVisual3D Opaques;
 		protected ObservableMeshVisual3D Highlighted;
 		protected CuttingPlaneGroup CuttingGroupT;
-		protected ModelVisual3D Transparents;
-		protected ModelVisual3D Extras;
+		protected SortingVisual3D Transparents;
+				protected ModelVisual3D Extras;
 		protected ModelVisual3D Overlays;
 		protected GridLinesVisual3D GridLines;
 
 		public ModelVisual3D OpaquesVisual3D => Opaques;
 
-		public ModelVisual3D TransparentsVisual3D => Transparents;
+		public SortingVisual3D TransparentsVisual3D => Transparents;
 
 		public ObservableMeshVisual3D HighlightedVisual => Highlighted;
 
@@ -102,7 +102,7 @@ namespace Xbim.Presentation
 			Opaques = (ModelVisual3D)GetTemplateChild(TemplateOpaques);
 			Highlighted = (ObservableMeshVisual3D)GetTemplateChild(TemplateHighlighted);
 			CuttingGroupT = (CuttingPlaneGroup)GetTemplateChild(TemplateCuttingGroupT);
-			Transparents = (ModelVisual3D)GetTemplateChild(TemplateTransparents);
+			Transparents = (SortingVisual3D)GetTemplateChild(TemplateTransparents);
 			Extras = (ModelVisual3D)GetTemplateChild(TemplateExtras);
 			Overlays = (ModelVisual3D)GetTemplateChild(TemplateOverlays);
 			GridLines = (GridLinesVisual3D)GetTemplateChild(TemplateGridLines);
