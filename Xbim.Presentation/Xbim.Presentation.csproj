@@ -12,6 +12,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>5.1.0.0</Version>
     <PackageIcon>XbimIcon.png</PackageIcon>
+    <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -41,7 +42,7 @@
     <Resource Include="assets\*.*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HelixToolkit.Wpf" Version="2.14.0" />
+    <PackageReference Include="HelixToolkit.Wpf" Version="2.20.2" />
     <PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
     <PackageReference Include="Xbim.Geometry" Version="5.1.430" />
   </ItemGroup>
