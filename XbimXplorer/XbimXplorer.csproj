@@ -62,7 +62,7 @@
 		<PackageReference Include="Serilog.Extensions.Logging" Version="2.0.4" />
 		<PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
 		<PackageReference Include="Xbim.Geometry" Version="5.1.430" />
-		<PackageReference Include="Xbim.IO.Esent" Version="5.1.334-develop" />
+		<PackageReference Include="Xbim.IO.Esent" Version="5.1.340-develop" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Microsoft.CSharp" />
