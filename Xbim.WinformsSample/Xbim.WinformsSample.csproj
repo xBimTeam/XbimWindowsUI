@@ -50,15 +50,15 @@
 		<PackageReference Include="System.Security.Permissions" Version="4.5.0" />
 		<PackageReference Include="System.Security.Principal.Windows" Version="4.5.1" />
 		<PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-		<PackageReference Include="Xbim.Common" Version="5.1.331-develop" />
+		<PackageReference Include="Xbim.Common" Version="5.1.340-develop" />
 		<PackageReference Include="Xbim.Geometry" Version="5.1.430" />
-		<PackageReference Include="Xbim.Ifc" Version="5.1.331-develop" />
-		<PackageReference Include="Xbim.Ifc2x3" Version="5.1.331-develop" />
-		<PackageReference Include="Xbim.Ifc4" Version="5.1.331-develop" />
-		<PackageReference Include="Xbim.IO.Esent" Version="5.1.331-develop" />
-		<PackageReference Include="Xbim.IO.MemoryModel" Version="5.1.331-develop" />
+		<PackageReference Include="Xbim.Ifc" Version="5.1.340-develop" />
+		<PackageReference Include="Xbim.Ifc2x3" Version="5.1.340-develop" />
+		<PackageReference Include="Xbim.Ifc4" Version="5.1.340-develop" />
+		<PackageReference Include="Xbim.IO.Esent" Version="5.1.340-develop" />
+		<PackageReference Include="Xbim.IO.MemoryModel" Version="5.1.340-develop" />
 	
-		<PackageReference Include="Xbim.Tessellator" Version="5.1.331-develop" />
+		<PackageReference Include="Xbim.Tessellator" Version="5.1.340-develop" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />
