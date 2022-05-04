@@ -210,6 +210,7 @@ namespace Xbim.BCF
         /// Serializes current VisualizationInfo object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+		/// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -260,6 +261,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an VisualizationInfo object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output VisualizationInfo object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -475,6 +477,7 @@ namespace Xbim.BCF
         /// Serializes current Component object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -525,6 +528,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an Component object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output Component object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -647,6 +651,7 @@ namespace Xbim.BCF
         /// <summary>
         /// Serializes current ClippingPlane object into an XML document
         /// </summary>
+        /// <param name="encoding">Encoding provider</param>
         /// <returns>string XML value</returns>
         public virtual string Serialize(System.Text.Encoding encoding)
         {
@@ -731,6 +736,7 @@ namespace Xbim.BCF
         /// Serializes current ClippingPlane object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -781,6 +787,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an ClippingPlane object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output ClippingPlane object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -991,13 +998,14 @@ namespace Xbim.BCF
             }
         }
 
-        /// <summary>
-        /// Serializes current Point object into file
-        /// </summary>
-        /// <param name="fileName">full path of outupt xml file</param>
-        /// <param name="exception">output Exception value if failed</param>
-        /// <returns>true if can serialize and save into file; otherwise, false</returns>
-        public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
+		/// <summary>
+		/// Serializes current Point object into file
+		/// </summary>
+		/// <param name="fileName">full path of outupt xml file</param>
+		/// <param name="encoding">Encoding provider</param>
+		/// <param name="exception">output Exception value if failed</param>
+		/// <returns>true if can serialize and save into file; otherwise, false</returns>
+		public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
         {
             exception = null;
             try
@@ -1045,6 +1053,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an Point object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding"></param>
         /// <param name="obj">Output Point object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -1259,6 +1268,7 @@ namespace Xbim.BCF
         /// Serializes current Direction object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+		/// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -1309,6 +1319,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an Direction object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output Direction object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -1515,6 +1526,7 @@ namespace Xbim.BCF
         /// Serializes current Line object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -1565,6 +1577,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an Line object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output Line object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -1800,6 +1813,7 @@ namespace Xbim.BCF
         /// Serializes current PerspectiveCamera object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -1850,6 +1864,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an PerspectiveCamera object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output PerspectiveCamera object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
@@ -2085,6 +2100,7 @@ namespace Xbim.BCF
         /// Serializes current OrthogonalCamera object into file
         /// </summary>
         /// <param name="fileName">full path of outupt xml file</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="exception">output Exception value if failed</param>
         /// <returns>true if can serialize and save into file; otherwise, false</returns>
         public virtual bool SaveToFile(string fileName, System.Text.Encoding encoding, out System.Exception exception)
@@ -2135,6 +2151,7 @@ namespace Xbim.BCF
         /// Deserializes xml markup from file into an OrthogonalCamera object
         /// </summary>
         /// <param name="fileName">string xml file to load and deserialize</param>
+        /// <param name="encoding">Encoding provider</param>
         /// <param name="obj">Output OrthogonalCamera object</param>
         /// <param name="exception">output Exception value if deserialize failed</param>
         /// <returns>true if this XmlSerializer can deserialize the object; otherwise, false</returns>
