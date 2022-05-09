@@ -21,7 +21,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="XplorerPlugin.Bcf\bin\Release\DotNetZip.dll"              target="lib\net45\" />
-    <file src="XplorerPlugin.Bcf\bin\Release\XplorerPlugin.Bcf.exe"      target="lib\net45\" />
+    <file src="XplorerPlugin.Bcf\bin\Release\net472\DotNetZip.dll"              target="lib\net45\" />
+    <file src="XplorerPlugin.Bcf\bin\Release\net472\XplorerPlugin.Bcf.exe"      target="lib\net45\" />
   </files>
 </package>

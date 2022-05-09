@@ -39,7 +39,6 @@
 		<PackageReference Include="Microsoft.Extensions.Options" Version="2.1.1" />
 		<PackageReference Include="Microsoft.Extensions.Primitives" Version="2.1.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-		<PackageReference Include="PropertyTools.Wpf" Version="2015.1.66" />
 		<PackageReference Include="System.Buffers" Version="4.5.1" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
@@ -50,15 +49,15 @@
 		<PackageReference Include="System.Security.Permissions" Version="4.5.0" />
 		<PackageReference Include="System.Security.Principal.Windows" Version="4.5.1" />
 		<PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-		<PackageReference Include="Xbim.Common" Version="5.1.334-develop" />
-		<PackageReference Include="Xbim.Geometry" Version="5.1.430" />
-		<PackageReference Include="Xbim.Ifc" Version="5.1.334-develop" />
-		<PackageReference Include="Xbim.Ifc2x3" Version="5.1.334-develop" />
-		<PackageReference Include="Xbim.Ifc4" Version="5.1.334-develop" />
-		<PackageReference Include="Xbim.IO.Esent" Version="5.1.334-develop" />
-		<PackageReference Include="Xbim.IO.MemoryModel" Version="5.1.334-develop" />
+		<PackageReference Include="Xbim.Common" Version="5.1.341" />
+		<PackageReference Include="Xbim.Geometry" Version="5.1.437" />
+		<PackageReference Include="Xbim.Ifc" Version="5.1.341" />
+		<PackageReference Include="Xbim.Ifc2x3" Version="5.1.341" />
+		<PackageReference Include="Xbim.Ifc4" Version="5.1.341" />
+		<PackageReference Include="Xbim.IO.Esent" Version="5.1.341" />
+		<PackageReference Include="Xbim.IO.MemoryModel" Version="5.1.341" />
 	
-		<PackageReference Include="Xbim.Tessellator" Version="5.1.334-develop" />
+		<PackageReference Include="Xbim.Tessellator" Version="5.1.341" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />
