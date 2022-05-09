@@ -421,6 +421,15 @@ namespace Xbim.Presentation
             {
                 AddProperty(item, pSet.Name);
             }
+            foreach (var item in pSet.HasProperties.OfType<IIfcPropertyReferenceValue>()) // handle IfcPropertyReferenceValue
+            {
+                switch (item.PropertyReference.GetType().Name)
+                {
+                    case "IfcIrregularTimeSeries":
+                        AddProperty((IIfcIrregularTimeSeries)item.PropertyReference, pSet.Name);
+                        break;
+                }
+            }
         }
 
         private void AddProperty(IIfcPropertyEnumeratedValue item, string groupName)
@@ -454,6 +463,19 @@ namespace Xbim.Presentation
                 Name = item.Name,
                 Value = val
             });
+        }
+        private void AddProperty(IIfcIrregularTimeSeries item, string groupName)
+        {
+            foreach (var value in item.Values)
+            {
+                _properties.Add(new PropertyItem
+                {
+                    IfcLabel = value.EntityLabel,
+                    PropertySetName = groupName + " / " + item.Name,
+                    Name = value.TimeStamp,
+                    Value = string.Join(", ",value.ListValues)
+                }); 
+            }
         }
 
         private void FillMaterialData()
