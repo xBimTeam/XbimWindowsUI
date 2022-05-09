@@ -41,13 +41,17 @@ namespace Xbim.Presentation.LayerStyling
         /// <param name="isolateInstances">List of instances to be isolated</param>
         /// <param name="hideInstances">List of instances to be hidden</param>
         /// <param name="excludeTypes">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
+        /// <param name="selectContexts">Selected Contexts</param>
         /// <returns></returns>
-        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform, 
-            ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null, List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null)
-        {
+        public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform,
+			ModelVisual3D opaqueShapes, ModelVisual3D transparentShapes, List<IPersistEntity> isolateInstances = null,
+			List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null,
+			List<IIfcGeometricRepresentationContext> selectContexts = null)
+		{
             var excludedTypes = model.DefaultExclusions(excludeTypes);
             var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
             var hiddenInstances = hideInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
+            var selectedContexts = selectContexts?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 
             var scene = new XbimScene<WpfMeshGeometry3D, WpfMaterial>(model);
             var timer = new Stopwatch();
@@ -81,12 +85,10 @@ namespace Xbim.Presentation.LayerStyling
                     }
                     var prog = 0;
                     var lastProgress = 0;
-                    
+
                     // !typeof (IfcFeatureElement).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId)) /*&&
                     // !typeof(IfcSpace).IsAssignableFrom(IfcMetaData.GetType(s.IfcTypeId))*/);
-                    foreach (var shapeInstance in shapeInstances
-                        .Where(s => null == onlyInstances || onlyInstances.Count == 0 || onlyInstances.Keys.Contains(s.IfcProductLabel))
-                        .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel)))
+                    foreach (var shapeInstance in shapeInstances.FilterShapes(onlyInstances, hiddenInstances, selectedContexts))
                     {
                         // logging 
                         var currentProgress = 100 * prog++ / tot;

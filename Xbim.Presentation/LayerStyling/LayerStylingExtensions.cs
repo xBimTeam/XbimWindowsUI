@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xbim.Common;
+using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
 using Xbim.Ifc4.Interfaces;
 
@@ -37,6 +38,14 @@ namespace Xbim.Presentation.LayerStyling
                 }
             }
             return excludedTypes;
+        }
+
+        public static IEnumerable<XbimShapeInstance> FilterShapes(this IEnumerable<XbimShapeInstance> shapeInstances, Dictionary<int, IPersistEntity> onlyInstances, Dictionary<int, IPersistEntity> hiddenInstances, Dictionary<int, IIfcGeometricRepresentationContext> selectedContexts)
+        {
+            return shapeInstances
+                                    .Where(s => null == onlyInstances || onlyInstances.Count == 0 || onlyInstances.Keys.Contains(s.IfcProductLabel))
+                                    .Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel))
+                                    .Where(s => null == selectedContexts || selectedContexts.Count == 0 || selectedContexts.Keys.Contains(s.RepresentationContext));
         }
     }
 }

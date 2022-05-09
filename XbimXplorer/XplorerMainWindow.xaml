@@ -121,6 +121,7 @@
                 <MenuItem Header="Isolate selected objects" Click="IsolateSelected"/>
                 <MenuItem Header="Hide selected objects" Click="HideSelected"/>
                 <MenuItem Header="Show all objects" Click="RestoreView"/>
+                <MenuItem Header="Select visualization context" Click="SelectRepresentationContext"/>
                 <Separator Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" />
                 <MenuItem x:Name="DeveloperMenu" Header="_Developer windows" Visibility="{Binding DeveloperVisible, ElementName=MainWindow}" >
                     <MenuItem Header="IFC stripping" Click="OpenStrippingWindow">

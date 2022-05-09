@@ -195,10 +195,13 @@ namespace Xbim.Presentation.LayerStyling
 		/// <param name="isolateInstances">List of instances to be isolated</param>
 		/// <param name="hideInstances">List of instances to be hidden</param>
 		/// <param name="excludeTypes">List of type to exclude, by default excplict openings and spaces are excluded if exclude = null</param>
+		/// <param name="selectContexts">Context display selection</param>
 		/// <returns></returns>
 		public XbimScene<WpfMeshGeometry3D, WpfMaterial> BuildScene(IModel model, XbimMatrix3D modelTransform,
 			ModelVisual3D destinationOpaques, ModelVisual3D destinationTransparents, List<IPersistEntity> isolateInstances = null,
-			List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null)
+			List<IPersistEntity> hideInstances = null, List<Type> excludeTypes = null,
+			List<IIfcGeometricRepresentationContext> selectContexts = null
+			)
 		{
 			entityStates = new Dictionary<IPersistEntity, BlinkStates>();
 			typeStates = new Dictionary<Type, BlinkStates>();
@@ -210,6 +213,8 @@ namespace Xbim.Presentation.LayerStyling
 			var excludedTypes = model.DefaultExclusions(excludeTypes);
 			var onlyInstances = isolateInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
 			var hiddenInstances = hideInstances?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
+			var selectedContexts = selectContexts?.Where(i => i.Model == model).ToDictionary(i => i.EntityLabel);
+
 
 			if (meshesByEntity == null)
 				meshesByEntity = new Dictionary<IModel, Dictionary<int, Dictionary<int, WpfMeshGeometry3D>>>();
@@ -266,9 +271,7 @@ namespace Xbim.Presentation.LayerStyling
 				var prog = 0;
 				var lastProgress = 0;
 
-				foreach (var shapeInstance in shapeInstances
-					.Where(s => null == onlyInstances || onlyInstances.Count == 0 || onlyInstances.Keys.Contains(s.IfcProductLabel))
-					.Where(s => null == hiddenInstances || hiddenInstances.Count == 0 || !hiddenInstances.Keys.Contains(s.IfcProductLabel)))
+				foreach (var shapeInstance in shapeInstances.FilterShapes(onlyInstances, hiddenInstances, selectedContexts))
 				{
 					// we can identify what entity we are working with
 					var entLabel = shapeInstance.IfcProductLabel;

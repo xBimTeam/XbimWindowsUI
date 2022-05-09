@@ -1,0 +1,36 @@
+﻿<Window x:Class="XbimXplorer.Dialogs.RepresentationContextSelection"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xBimDialogs="clr-namespace:XbimXplorer.Dialogs"
+        mc:Ignorable="d"
+        Title="Representation Context Selection" Height="450" Width="800"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Close" Executed="AcknowledgeSelection"/>
+        <CommandBinding Command="ApplicationCommands.Stop" Executed="CancelSelection"/>
+    </Window.CommandBindings>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TreeView Grid.ColumnSpan="2" Grid.RowSpan="1" Grid.Row="0" Name="contextSelectionTreeView" ItemsSource="{Binding ContextItems}">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate  DataType="{x:Type xBimDialogs:ContextSelectionItem}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding IsChecked}"/>
+                        <TextBlock Text="{Binding Name}"/>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+        <Button Grid.Column="0" Grid.Row="2" Height="25" Width="80" HorizontalAlignment="Left" Margin="5" Command="ApplicationCommands.Stop">Cancel</Button>
+        <Button Grid.Column="1" Grid.Row="2" Height="25" Width="80" HorizontalAlignment="Right" Margin="5" Command="ApplicationCommands.Close">OK</Button>
+    </Grid>
+</Window>

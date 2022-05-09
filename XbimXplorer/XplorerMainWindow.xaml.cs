@@ -1102,7 +1102,35 @@ namespace XbimXplorer
         {
             DrawingControl.IsolateInstances = null;
             DrawingControl.HiddenInstances = null;
+            DrawingControl.SelectedContexts = null;
             DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
+        }
+
+        private void SelectRepresentationContext (object sender, RoutedEventArgs e)
+        {
+            RepresentationContextSelection w = new RepresentationContextSelection();
+            IEnumerable<IIfcGeometricRepresentationContext> availableContexts = this.Model.Instances.OfType<IIfcGeometricRepresentationContext>();
+            IEnumerable<IIfcGeometricRepresentationContext> availableParentContexts = availableContexts.Except(this.Model.Instances.OfType<IIfcGeometricRepresentationSubContext>());
+            w.SetContextItems(availableParentContexts);
+            if (w.ShowDialog() == true)
+            {
+                this.DrawingControl.SelectedContexts = new List<IIfcGeometricRepresentationContext>();
+                foreach (ContextSelectionItem parent in w.ContextItems)
+                {
+                    if (parent.IsChecked)
+                    {
+                        this.DrawingControl.SelectedContexts.Add(parent.RepresentationContext);
+                    }
+                    foreach (ContextSelectionItem child in parent.Children)
+                    {
+                        if (child.IsChecked)
+                        {
+                            this.DrawingControl.SelectedContexts.Add(child.RepresentationContext); 
+                        }
+                    }
+                }
+                this.DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
+            }
         }
 
         private void SelectionMode(object sender, RoutedEventArgs e)

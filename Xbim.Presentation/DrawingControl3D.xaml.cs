@@ -245,6 +245,8 @@ namespace Xbim.Presentation
 
 		public List<IPersistEntity> HiddenInstances = null;
 
+        public List<IIfcGeometricRepresentationContext> SelectedContexts = null;
+
 		private LinesVisual3D _userModeledDimLines;
 		private PointsVisual3D _userModeledDimPoints;
 		public PolylineGeomInfo UserModeledDimension = new PolylineGeomInfo();
@@ -1499,7 +1501,7 @@ namespace Xbim.Presentation
 			XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 			if (!Model.GeometryStore.IsEmpty)
 				scene = DefaultLayerStyler.BuildScene(model.ReferencingModel, ModelPositions[model.ReferencingModel].Transform, Opaques, Transparents,
-					IsolateInstances, HiddenInstances, ExcludedTypes);
+					IsolateInstances, HiddenInstances, ExcludedTypes, SelectedContexts);
 
 			if (scene != null && scene.Layers.Any())
 			{
@@ -1531,7 +1533,7 @@ namespace Xbim.Presentation
 
 			XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 			if (!mod.GeometryStore.IsEmpty)
-				scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes);
+                scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes, SelectedContexts);
 			if (scene != null && scene.Layers.Any())
 			{
 				Scenes.Add(scene);
