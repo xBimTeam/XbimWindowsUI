@@ -22,7 +22,7 @@ namespace Xbim.Presentation.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Xbim.Presentation.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Xbim.Presentation.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Xbim.Presentation.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Xbim.Presentation.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Materials.
         /// </summary>
-        internal static string Materials {
+        public static string Materials {
             get {
                 return ResourceManager.GetString("Materials", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Xbim.Presentation.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Object.
         /// </summary>
-        internal static string Object {
+        public static string Object {
             get {
                 return ResourceManager.GetString("Object", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Xbim.Presentation.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Properties.
         /// </summary>
-        internal static string Properties {
+        public static string Properties {
             get {
                 return ResourceManager.GetString("Properties", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Xbim.Presentation.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Quantities.
         /// </summary>
-        internal static string Quantities {
+        public static string Quantities {
             get {
                 return ResourceManager.GetString("Quantities", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Xbim.Presentation.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Type.
         /// </summary>
-        internal static string Type {
+        public static string Type {
             get {
                 return ResourceManager.GetString("Type", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Xbim.Presentation.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Verbose.
         /// </summary>
-        internal static string Verbose {
+        public static string Verbose {
             get {
                 return ResourceManager.GetString("Verbose", resourceCulture);
             }
