@@ -14,6 +14,6 @@
     </metadata>
     <files>
         <file src="XbimXplorer\xbim.ico" target="" />
-        <file src="Output\Release\net47\**\*.*" target="lib\net45\" exclude="**\*.pdb;**\*.nupkg;**\*.vshost.*" />
+        <file src="Output\Release\net472\**\*.*" target="lib\net45\" exclude="**\*.pdb;**\*.nupkg;**\*.vshost.*" />
     </files>
 </package>

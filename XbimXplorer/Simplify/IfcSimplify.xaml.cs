@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,10 +28,18 @@ namespace XbimXplorer.Simplify
         private Dictionary<int, string> _ifcLines = new Dictionary<int, string>();
         private Dictionary<int, string> _ifcContents = new Dictionary<int, string>();
         private Dictionary<int, string> _ifcType = new Dictionary<int, string>();
-        private List<int> _elementsToExport = new List<int>();
+        private List<int> _exportList = new List<int>();
         private Dictionary<string, int> _guids = new Dictionary<string, int>();
         private List<int> _relVoids = new List<int>();
         private List<int> _relProps = new List<int>();
+        private List<int> _relAggregates = new List<int>();
+        private List<int> _ifcelements = new List<int>(); // some viewers ignore elements if they are not connected to the project/site/storey
+        private List<int> _ifcSites = new List<int>();
+
+        private int _ownerhistoryEntityLabel = -1;
+        private int _projectEntityLabel = -1;
+        private int _mainPlacement = -1;
+
 
         private string _header;
         private string _footer;
@@ -52,10 +61,16 @@ namespace XbimXplorer.Simplify
             _guids = new Dictionary<string, int>();
             _ifcLines = new Dictionary<int, string>();
             _ifcContents = new Dictionary<int, string>();
-            _elementsToExport = new List<int>();
+            _exportList = new List<int>();
             _ifcType = new Dictionary<int, string>();
             _relVoids = new List<int>();
             _relProps = new List<int>();
+            _relAggregates = new List<int>();
+            _ifcelements = new List<int>();
+            _ifcSites = new List<int>();
+            _ownerhistoryEntityLabel = -1;
+            _projectEntityLabel = -1;
+            _mainPlacement = -1;
             _header = "";
             _footer = "";
 
@@ -78,7 +93,8 @@ namespace XbimXplorer.Simplify
                 "\\) *;" // the closing bracket escaped and the semicolon
                 );
 
-            var reGuid = new Regex(@"^ *'([^']*)' *,");
+            var reGuid = new Regex(@"^ *'([^']*)' *,", RegexOptions.Compiled);
+            var reMainPlacement = new Regex(@"IFCLOCALPLACEMENT[ \t\r\n]*\(\$", RegexOptions.Compiled);
 
             while ((readLine = fp.NextLine()) != null)
             {
@@ -98,28 +114,47 @@ namespace XbimXplorer.Simplify
                     var m = re.Match(lineBuffer);
                     if (!m.Success)
                         continue;
-                    var iId = Convert.ToInt32(m.Groups[1].ToString());
+                    var iEntityLabel = Convert.ToInt32(m.Groups[1].ToString());
                     var type = m.Groups[2].ToString().ToUpperInvariant();
 
                     var content = m.Groups[3].Value;
-                    _ifcLines.Add(iId, lineBuffer);
-                    _ifcContents.Add(iId, content);
-                    _ifcType.Add(iId, type);
+                    _ifcLines.Add(iEntityLabel, lineBuffer);
+                    _ifcContents.Add(iEntityLabel, content);
+                    _ifcType.Add(iEntityLabel, type);
                     if (type == "IFCRELVOIDSELEMENT")
-                        _relVoids.Add(iId);
-                    if (type == "IFCRELDEFINESBYPROPERTIES")
-                        _relProps.Add(iId);
+                        _relVoids.Add(iEntityLabel);
+                    else if (type == "IFCRELDEFINESBYPROPERTIES")
+                        _relProps.Add(iEntityLabel);
+                    else if (type == "IFCRELAGGREGATES")
+                        _relAggregates.Add(iEntityLabel);
 
                     var mGuid = reGuid.Match(content);
                     if (mGuid.Success)
                     {
                         var val = mGuid.Groups[1].Value;
                         if (!_guids.ContainsKey(val))
-                            _guids.Add(val, iId);
+                            _guids.Add(val, iEntityLabel);
                     }
-
                     if (type == "IFCPROJECT")
-                        requiredLines.Add(iId);
+                    {
+                        requiredLines.Add(iEntityLabel);
+                        _projectEntityLabel = iEntityLabel;
+                    }
+                    else if (type == "IFCSITES")
+                    {
+                        _ifcSites.Add(iEntityLabel);
+                    }
+                    else if (type == "IFCOWNERHISTORY")
+                    {
+                        _ownerhistoryEntityLabel = iEntityLabel;
+                    }
+                    else if (type == "IFCLOCALPLACEMENT" && _mainPlacement == -1)
+                    {
+                        if (reMainPlacement.IsMatch(lineBuffer))
+						{
+                            _mainPlacement = iEntityLabel;
+						}
+                    }
                     lineBuffer = "";
                 }
                 else
@@ -135,7 +170,6 @@ namespace XbimXplorer.Simplify
             GCommands.IsEnabled = true;
             CmdSave.IsEnabled = true;
 
-            
             foreach (var i in requiredLines)
             {
                 RecursiveAdd(i);
@@ -177,155 +211,153 @@ namespace XbimXplorer.Simplify
             InfoBlock.Text = _ifcLines.ContainsKey(ic) 
                 ? _ifcLines[ic] +
                     (
-                    _elementsToExport.Contains(ic) 
+                    _exportList.Contains(ic) 
                         ? " (already selected)"
                         : ""
                     )
                 : "Not found";
         }
 
-        private void RecursiveAdd(int ifcIndex, bool includeProperties = false)
-        {
-            HashSet<string> voidTypes = new HashSet<string>()
-            {
-                "IFCBEAM",
-                "IFCBEAMSTANDARDCASE",
-                "IFCBUILDINGELEMENTPROXY",
-                "IFCCHIMNEY",
-                "IFCCOLUMN",
-                "IFCCOLUMNSTANDARDCASE",
-                "IFCCOVERING",
-                "IFCCURTAINWALL",
-                "IFCDOOR",
-                "IFCDOORSTANDARDCASE",
-                "IFCFOOTING",
-                "IFCMEMBER",
-                "IFCMEMBERSTANDARDCASE",
-                "IFCPILE",
-                "IFCPLATE",
-                "IFCPLATESTANDARDCASE",
-                "IFCRAILING",
-                "IFCRAMP",
-                "IFCRAMPFLIGHT",
-                "IFCROOF",
-                "IFCSHADINGDEVICE",
-                "IFCSLAB",
-                "IFCSLABELEMENTEDCASE",
-                "IFCSLABSTANDARDCASE",
-                "IFCSTAIR",
-                "IFCSTAIRFLIGHT",
-                "IFCWALL",
-                "IFCWALLELEMENTEDCASE",
-                "IFCWALLSTANDARDCASE",
-                "IFCWINDOW",
-                "IFCWINDOWSTANDARDCASE",
-                "IFCCIVILELEMENT",
-                "IFCDISTRIBUTIONELEMENT",
-                "IFCDISTRIBUTIONCONTROLELEMENT",
-                "IFCACTUATOR",
-                "IFCALARM",
-                "IFCCONTROLLER",
-                "IFCFLOWINSTRUMENT",
-                "IFCPROTECTIVEDEVICETRIPPINGUNIT",
-                "IFCSENSOR",
-                "IFCUNITARYCONTROLELEMENT",
-                "IFCDISTRIBUTIONFLOWELEMENT",
-                "IFCDISTRIBUTIONCHAMBERELEMENT",
-                "IFCENERGYCONVERSIONDEVICE",
-                "IFCAIRTOAIRHEATRECOVERY",
-                "IFCBOILER",
-                "IFCBURNER",
-                "IFCCHILLER",
-                "IFCCOIL",
-                "IFCCONDENSER",
-                "IFCCOOLEDBEAM",
-                "IFCCOOLINGTOWER",
-                "IFCELECTRICGENERATOR",
-                "IFCELECTRICMOTOR",
-                "IFCENGINE",
-                "IFCEVAPORATIVECOOLER",
-                "IFCEVAPORATOR",
-                "IFCHEATEXCHANGER",
-                "IFCHUMIDIFIER",
-                "IFCMOTORCONNECTION",
-                "IFCSOLARDEVICE",
-                "IFCTRANSFORMER",
-                "IFCTUBEBUNDLE",
-                "IFCUNITARYEQUIPMENT",
-                "IFCFLOWCONTROLLER",
-                "IFCAIRTERMINALBOX",
-                "IFCDAMPER",
-                "IFCELECTRICDISTRIBUTIONBOARD",
-                "IFCELECTRICTIMECONTROL",
-                "IFCFLOWMETER",
-                "IFCPROTECTIVEDEVICE",
-                "IFCSWITCHINGDEVICE",
-                "IFCVALVE",
-                "IFCFLOWFITTING",
-                "IFCCABLECARRIERFITTING",
-                "IFCCABLEFITTING",
-                "IFCDUCTFITTING",
-                "IFCJUNCTIONBOX",
-                "IFCPIPEFITTING",
-                "IFCFLOWMOVINGDEVICE",
-                "IFCCOMPRESSOR",
-                "IFCFAN",
-                "IFCPUMP",
-                "IFCFLOWSEGMENT",
-                "IFCCABLECARRIERSEGMENT",
-                "IFCCABLESEGMENT",
-                "IFCDUCTSEGMENT",
-                "IFCPIPESEGMENT",
-                "IFCFLOWSTORAGEDEVICE",
-                "IFCELECTRICFLOWSTORAGEDEVICE",
-                "IFCTANK",
-                "IFCFLOWTERMINAL",
-                "IFCAIRTERMINAL",
-                "IFCAUDIOVISUALAPPLIANCE",
-                "IFCCOMMUNICATIONSAPPLIANCE",
-                "IFCELECTRICAPPLIANCE",
-                "IFCFIRESUPPRESSIONTERMINAL",
-                "IFCLAMP",
-                "IFCLIGHTFIXTURE",
-                "IFCMEDICALDEVICE",
-                "IFCOUTLET",
-                "IFCSANITARYTERMINAL",
-                "IFCSPACEHEATER",
-                "IFCSTACKTERMINAL",
-                "IFCWASTETERMINAL",
-                "IFCFLOWTREATMENTDEVICE",
-                "IFCDUCTSILENCER",
-                "IFCFILTER",
-                "IFCINTERCEPTOR",
-                "IFCELEMENTASSEMBLY",
-                "IFCBUILDINGELEMENTPART",
-                "IFCDISCRETEACCESSORY",
-                "IFCFASTENER",
-                "IFCMECHANICALFASTENER",
-                "IFCREINFORCINGBAR",
-                "IFCREINFORCINGMESH",
-                "IFCTENDON",
-                "IFCTENDONANCHOR",
-                "IFCVIBRATIONISOLATOR",
-                "IFCPROJECTIONELEMENT",
-                "IFCOPENINGELEMENT",
-                "IFCOPENINGSTANDARDCASE",
-                "IFCVOIDINGFEATURE",
-                "IFCSURFACEFEATURE",
-                "IFCFURNISHINGELEMENT",
-                "IFCFURNITURE",
-                "IFCSYSTEMFURNITUREELEMENT",
-                "IFCGEOGRAPHICELEMENT",
-                "IFCTRANSPORTELEMENT",
-                "IFCVIRTUALELEMENT"
+        HashSet<string> ifcElementConcreteClasses = new HashSet<string>() {
+            "IFCBEAM",
+            "IFCBEAMSTANDARDCASE",
+            "IFCBUILDINGELEMENTPROXY",
+            "IFCCHIMNEY",
+            "IFCCOLUMN",
+            "IFCCOLUMNSTANDARDCASE",
+            "IFCCOVERING",
+            "IFCCURTAINWALL",
+            "IFCDOOR",
+            "IFCDOORSTANDARDCASE",
+            "IFCFOOTING",
+            "IFCMEMBER",
+            "IFCMEMBERSTANDARDCASE",
+            "IFCPILE",
+            "IFCPLATE",
+            "IFCPLATESTANDARDCASE",
+            "IFCRAILING",
+            "IFCRAMP",
+            "IFCRAMPFLIGHT",
+            "IFCROOF",
+            "IFCSHADINGDEVICE",
+            "IFCSLAB",
+            "IFCSLABELEMENTEDCASE",
+            "IFCSLABSTANDARDCASE",
+            "IFCSTAIR",
+            "IFCSTAIRFLIGHT",
+            "IFCWALL",
+            "IFCWALLELEMENTEDCASE",
+            "IFCWALLSTANDARDCASE",
+            "IFCWINDOW",
+            "IFCWINDOWSTANDARDCASE",
+            "IFCCIVILELEMENT",
+            "IFCDISTRIBUTIONELEMENT",
+            "IFCDISTRIBUTIONCONTROLELEMENT",
+            "IFCACTUATOR",
+            "IFCALARM",
+            "IFCCONTROLLER",
+            "IFCFLOWINSTRUMENT",
+            "IFCPROTECTIVEDEVICETRIPPINGUNIT",
+            "IFCSENSOR",
+            "IFCUNITARYCONTROLELEMENT",
+            "IFCDISTRIBUTIONFLOWELEMENT",
+            "IFCDISTRIBUTIONCHAMBERELEMENT",
+            "IFCENERGYCONVERSIONDEVICE",
+            "IFCAIRTOAIRHEATRECOVERY",
+            "IFCBOILER",
+            "IFCBURNER",
+            "IFCCHILLER",
+            "IFCCOIL",
+            "IFCCONDENSER",
+            "IFCCOOLEDBEAM",
+            "IFCCOOLINGTOWER",
+            "IFCELECTRICGENERATOR",
+            "IFCELECTRICMOTOR",
+            "IFCENGINE",
+            "IFCEVAPORATIVECOOLER",
+            "IFCEVAPORATOR",
+            "IFCHEATEXCHANGER",
+            "IFCHUMIDIFIER",
+            "IFCMOTORCONNECTION",
+            "IFCSOLARDEVICE",
+            "IFCTRANSFORMER",
+            "IFCTUBEBUNDLE",
+            "IFCUNITARYEQUIPMENT",
+            "IFCFLOWCONTROLLER",
+            "IFCAIRTERMINALBOX",
+            "IFCDAMPER",
+            "IFCELECTRICDISTRIBUTIONBOARD",
+            "IFCELECTRICTIMECONTROL",
+            "IFCFLOWMETER",
+            "IFCPROTECTIVEDEVICE",
+            "IFCSWITCHINGDEVICE",
+            "IFCVALVE",
+            "IFCFLOWFITTING",
+            "IFCCABLECARRIERFITTING",
+            "IFCCABLEFITTING",
+            "IFCDUCTFITTING",
+            "IFCJUNCTIONBOX",
+            "IFCPIPEFITTING",
+            "IFCFLOWMOVINGDEVICE",
+            "IFCCOMPRESSOR",
+            "IFCFAN",
+            "IFCPUMP",
+            "IFCFLOWSEGMENT",
+            "IFCCABLECARRIERSEGMENT",
+            "IFCCABLESEGMENT",
+            "IFCDUCTSEGMENT",
+            "IFCPIPESEGMENT",
+            "IFCFLOWSTORAGEDEVICE",
+            "IFCELECTRICFLOWSTORAGEDEVICE",
+            "IFCTANK",
+            "IFCFLOWTERMINAL",
+            "IFCAIRTERMINAL",
+            "IFCAUDIOVISUALAPPLIANCE",
+            "IFCCOMMUNICATIONSAPPLIANCE",
+            "IFCELECTRICAPPLIANCE",
+            "IFCFIRESUPPRESSIONTERMINAL",
+            "IFCLAMP",
+            "IFCLIGHTFIXTURE",
+            "IFCMEDICALDEVICE",
+            "IFCOUTLET",
+            "IFCSANITARYTERMINAL",
+            "IFCSPACEHEATER",
+            "IFCSTACKTERMINAL",
+            "IFCWASTETERMINAL",
+            "IFCFLOWTREATMENTDEVICE",
+            "IFCDUCTSILENCER",
+            "IFCFILTER",
+            "IFCINTERCEPTOR",
+            "IFCELEMENTASSEMBLY",
+            "IFCBUILDINGELEMENTPART",
+            "IFCDISCRETEACCESSORY",
+            "IFCFASTENER",
+            "IFCMECHANICALFASTENER",
+            "IFCREINFORCINGBAR",
+            "IFCREINFORCINGMESH",
+            "IFCTENDON",
+            "IFCTENDONANCHOR",
+            "IFCVIBRATIONISOLATOR",
+            "IFCPROJECTIONELEMENT",
+            // "IFCOPENINGELEMENT", we don't treat openings like others.
+            "IFCOPENINGSTANDARDCASE",
+            "IFCVOIDINGFEATURE",
+            "IFCSURFACEFEATURE",
+            "IFCFURNISHINGELEMENT",
+            "IFCFURNITURE",
+            "IFCSYSTEMFURNITUREELEMENT",
+            "IFCGEOGRAPHICELEMENT",
+            "IFCTRANSPORTELEMENT",
+            "IFCVIRTUALELEMENT"
             };
 
-            if (_elementsToExport.Contains(ifcIndex))
+        private void RecursiveAdd(int ifcIndex, bool includeProperties = false)
+        {
+            if (_exportList.Contains(ifcIndex))
                 return; // been exported already;
 
-            _elementsToExport.Add(ifcIndex);
-
-            System.Diagnostics.Debug.WriteLine($"Exporting {ifcIndex} {_ifcType[ifcIndex]} ({_elementsToExport.Count})");
+            _exportList.Add(ifcIndex);
+            // Debug.WriteLine($"Exporting {ifcIndex} {_ifcType[ifcIndex]} ({_exportList.Count})");
 
             var re = new Regex(
                 "#(\\d+)" + // hash and integer index
@@ -347,15 +379,15 @@ namespace XbimXplorer.Simplify
                 // ignored
             }
 
+            var tp = _ifcType[ifcIndex];
             // if approprite add voids
             //
-            if (PreserveVoids.IsChecked.HasValue && PreserveVoids.IsChecked.Value)
+            if (ifcElementConcreteClasses.Contains(tp))
             {
-                var tp = _ifcType[ifcIndex];
-                if (voidTypes.Contains(tp)) 
+                if (PreserveVoids.IsChecked.HasValue && PreserveVoids.IsChecked.Value)
                 {
                     var str = $@"#{ifcIndex} *, *#(\d+) *";
-                    Regex re2 = new Regex(str);
+                    Regex re2 = new Regex(str, RegexOptions.Compiled);
                     foreach (var relVoid in _relVoids)
                     {
                         var reltext = _ifcContents[relVoid];
@@ -368,20 +400,39 @@ namespace XbimXplorer.Simplify
                         }
                     }
                 }
+                _ifcelements.Add(ifcIndex);
+                // more element specific behaviours would go here.
             }
+
             // if approprite add properties
             //
             if (includeProperties)
             {
+                var str = $@"#{ifcIndex}\b";
+                Regex re2 = new Regex(str, RegexOptions.Compiled);
                 foreach (var relProp in _relProps)
                 {
-                    var str = $@"#{ifcIndex}\b";
-                    Regex re2 = new Regex(str);
                     var reltext = _ifcContents[relProp];
                     var m = re2.Match(reltext);
                     if (m.Success)
                     {
                         RecursiveAdd(relProp);
+                    }
+                }
+            }
+            // if approprite add aggregates
+            //
+            if (PreserveAggs.IsChecked.HasValue && PreserveAggs.IsChecked.Value)
+            {
+                var str = $@"[, \t]#{ifcIndex}[, \t]";
+                Regex re2 = new Regex(str, RegexOptions.Compiled);
+                foreach (var relAggregate in _relAggregates)
+                {
+                    var reltext = _ifcContents[relAggregate];
+                    var m = re2.Match(reltext);
+                    if (m.Success)
+                    {
+                        RecursiveAdd(relAggregate);
                     }
                 }
             }
@@ -398,10 +449,10 @@ namespace XbimXplorer.Simplify
 
         private void UpdateExportList()
         {
-            _elementsToExport.Sort();
+            _exportList.Sort();
             var sb = new StringBuilder();
-            ElementCount.Text = "Element selected: " + _elementsToExport.Count;
-            foreach (var i in _elementsToExport)
+            ElementCount.Text = "Element selected: " + _exportList.Count;
+            foreach (var i in _exportList)
             {
                 try
                 {
@@ -421,9 +472,34 @@ namespace XbimXplorer.Simplify
             var tex = t.CreateText();
 
             tex.Write(_header);
-            foreach (var i in _elementsToExport)
+            foreach (var i in _exportList)
             {
                 tex.WriteLine(_ifcLines[i]);
+            }
+
+            // now export containement
+            var max = _exportList.Max();
+            if (ExportContainment.IsChecked.Value)
+            {
+                var newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                // we need to ensure that the site is exported.
+                var exportedSite = _exportList.Intersect(_ifcSites).FirstOrDefault();
+                if (exportedSite == 0)
+				{
+                    exportedSite = ++max;
+                    newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                    tex.WriteLine($"#{exportedSite}= IFCSITE('{newid.Value}',#{_ownerhistoryEntityLabel},'XbimCreated','Created with the stripping method of Xbim Simplify','',#{_mainPlacement},$,$,.ELEMENT.,$,$,0.,$,$);");                   
+                }
+
+                newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                tex.WriteLine($"#{++max}= IFCRELAGGREGATES('{newid.Value}',#{_ownerhistoryEntityLabel},$,$,#{_projectEntityLabel},(#{exportedSite}));");
+
+
+                foreach (var element in _ifcelements)
+                {
+                    newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                    tex.WriteLine($"#{++max}= IFCRELCONTAINEDINSPATIALSTRUCTURE('{newid.Value}',#{_ownerhistoryEntityLabel},$,$,(#{element}),#{exportedSite});");
+                }
             }
             tex.Write(_footer);
             tex.Close();
@@ -490,7 +566,7 @@ namespace XbimXplorer.Simplify
 
                 var iLab = Convert.ToInt32(m.Groups[1].Value);
 
-                if (!_elementsToExport.Contains(iLab))
+                if (!_exportList.Contains(iLab))
                 {
                     RecursiveAdd(iLab);
                 }

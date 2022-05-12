@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Media.Media3D;
 using Xbim.Common;
 using Xbim.Common.Geometry;
 
@@ -79,7 +81,7 @@ namespace Xbim.Presentation
             get
             {
                 return (ModelSpaceBounds.IsEmpty)
-                    ? new XbimRect3D(0, 0, 0, 10, 10, 5)
+                    ? new XbimRect3D(0, 0, 0, 50, 50, 5) // bigger intial box to fit empty grid
                     : ModelSpaceBounds.Transform(XbimMatrix3D.CreateTranslation(_viewSpaceTranslation));
             }
         }
@@ -131,6 +133,30 @@ namespace Xbim.Presentation
             sb.AppendLine($"View space bounds: {ViewSpaceBounds}");
             sb.AppendLine($"{_viewSpaceTranslation}");
             return sb.ToString();
+        }
+
+        /// <summary>
+		/// Returns the transformed coordinates for the current positioning
+		/// </summary>
+		/// <param name="modelSpacePoint">The point in model space.</param>
+		/// <returns>the point in view space.</returns>
+		public XbimPoint3D GetPoint(XbimPoint3D modelSpacePoint)
+		{
+            var viewSpace = modelSpacePoint + _viewSpaceTranslation;
+            return viewSpace;
+        }
+
+        // dc3d.ModelPositions.GetPointInverse();
+
+        /// <summary>
+        /// Returns the inverse transformed coordinates for the current positioning
+        /// </summary>
+        /// <param name="viewSpace">the point in view space</param>
+        /// <returns>the point in model space</returns>
+        public XbimPoint3D GetPointInverse(XbimPoint3D viewSpace)
+        {
+            var modelSpacePoint = viewSpace - _viewSpaceTranslation;
+            return modelSpacePoint;
         }
     }
 }

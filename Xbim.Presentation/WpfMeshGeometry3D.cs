@@ -111,6 +111,31 @@ namespace Xbim.Presentation
             return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, wcsAdjust);
         }
 
+
+        internal static WpfMeshGeometry3D GetRepresentationGeometry2(Material mat, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust, XbimShapeGeometry shapegeom, IIfcProduct contextualProduct)
+        {
+            var placementTree = new XbimPlacementTree(selModel, wcsAdjust);
+            var trsf = placementTree[contextualProduct.ObjectPlacement.EntityLabel];
+            var tgt = new WpfMeshGeometry3D(mat, mat);
+            tgt.BeginUpdate();
+            if (shapegeom.Format == XbimGeometryType.PolyhedronBinary)
+            {
+                // Debug.WriteLine($"adding {shapegeom.ShapeLabel} at {DateTime.Now.ToLongTimeString()}");
+                var transform = trsf * modelTransform;
+                tgt.Add(
+                    ((IXbimShapeGeometryData)shapegeom).ShapeData,
+                    contextualProduct.ExpressType.TypeId, // shapeInstance.IfcTypeId,
+                    contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
+                    -1, // shapeInstance.InstanceLabel,
+                    transform,
+                    (short)contextualProduct.Model.UserDefinedId
+                );
+
+            }
+            tgt.EndUpdate();
+            return tgt;
+        }
+
         // attempting to load the shapeGeometry from the database; 
         // 
         internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust)
@@ -133,7 +158,7 @@ namespace Xbim.Presentation
                         var transform = trsf * modelTransform;
                         tgt.Add(
                             shapegeom.ShapeData,
-                            453, // shapeInstance.IfcTypeId,
+                            contextualProduct.ExpressType.TypeId, // shapeInstance.IfcTypeId,
                             contextualProduct.EntityLabel, // shapeInstance.IfcProductLabel,
                             -1, // shapeInstance.InstanceLabel,
                             transform,

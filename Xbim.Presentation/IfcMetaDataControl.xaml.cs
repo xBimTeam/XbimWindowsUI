@@ -555,18 +555,34 @@ namespace Xbim.Presentation
 
         private void ReportProp(IPersistEntity entity, ExpressMetaProperty prop, bool verbose)
         {
-            var propVal = prop.PropertyInfo.GetValue(entity, null);
-            if (propVal == null)
+            object propVal = null;
+            try
             {
-                if (!verbose)
-                    return;
-                propVal = "<null>";
+                propVal = prop.PropertyInfo.GetValue(entity, null);
+                if (propVal == null)
+                {
+                    if (!verbose)
+                        return;
+                    propVal = "<null>";
+                }
+            }
+            catch (Exception ex)
+            {
+                var tmpVal = "Error:";
+                while (ex != null)
+                {
+                    tmpVal += " " + ex.Message;
+                    ex = ex.InnerException;
+                }
+                if (prop.EntityAttribute.IsEnumerable)
+                    propVal = new[] { tmpVal };
+                else
+                    propVal = tmpVal;
             }
             
             if (prop.EntityAttribute.IsEnumerable)
             {
                 var propCollection = propVal as System.Collections.IEnumerable;
-
                 if (propCollection != null)
                 {
                     var propVals = propCollection.Cast<object>().ToArray();
@@ -844,5 +860,21 @@ namespace Xbim.Presentation
         }
 
         private readonly HistoryCollection<IPersistEntity> _history = new HistoryCollection<IPersistEntity>(20);
+
+        /// <summary>
+        /// Event for clicking on external hyperlink
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenExternalLink(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+        {
+            string path = e.Parameter as string;
+            if (path == null)
+                return;
+            System.Diagnostics.Process uriApp = new System.Diagnostics.Process();
+            uriApp.StartInfo.FileName = path;
+            uriApp.Start();
+        }
+        
     }
 }

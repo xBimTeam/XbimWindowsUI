@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
 using Xbim.Common;
@@ -339,10 +340,17 @@ namespace XbimXplorer.Commands
                 sb.Append($"{obj.GetType().Name} not implemented in IIfcGeometricRepresentationItem.", Brushes.Red);
         }
 
+        private static void Report(IIfcFacetedBrep obj, TextHighliter sb)
+        {
+            Report(obj.Outer, sb);
+        }
+        
         private static void Report(IIfcSolidModel obj, TextHighliter sb)
         {
             if (obj is IIfcSweptDiskSolid swept)
                 Report(swept, sb);
+            if (obj is IIfcFacetedBrep brep)
+                Report(brep, sb);
             else
                 sb.Append($"{obj.GetType().Name} not implemented in IIfcSolidModel.", Brushes.Red);
         }
@@ -399,5 +407,58 @@ namespace XbimXplorer.Commands
                 sb.Append($"", Brushes.Black);
             }
         }
-    }
+
+		internal static TextHighliter ReportAsObj(IIfcClosedShell ics)
+		{
+            var sb = new TextHighliter();
+            ReportAsObj(ics, sb);
+            return sb;
+		}
+
+		private static void ReportAsObj(IIfcClosedShell ics, TextHighliter sb)
+		{
+            List<int> vertices = new List<int>(); // entitylabel of the vertex
+            List<int> indices = new List<int>();
+            foreach (var face in ics.CfsFaces)
+            {
+                ReportAsObj(face, sb, vertices, indices);
+            }
+			foreach (var vert in vertices)
+			{
+                var v = ics.Model.Instances[vert] as IIfcCartesianPoint;
+                sb.Append($"v {v.X} {v.Y} {v.Z}", Brushes.Black);
+			}
+            for (int i = 0; i < indices.Count; i += 3)
+            {
+                sb.Append($"f {indices[i]+1} {indices[i + 1]+1} {indices[i + 2]+1}", Brushes.Black);
+            }
+        }
+
+		private static void ReportAsObj(IIfcFace face, TextHighliter sb, List<int> vertices, List<int> indices)
+		{
+			foreach (var bound in face.Bounds)
+			{
+                ReportAsObj(bound, sb, vertices, indices);
+            }
+		}
+
+		private static void ReportAsObj(IIfcFaceBound bound, TextHighliter sb, List<int> vertices, List<int> indices)
+		{
+            if (bound.Bound is IIfcPolyLoop pl)
+            {
+                foreach (var pt in pl.Polygon)
+                {
+                    if (vertices.Contains(pt.EntityLabel))
+					{
+                        indices.Add(vertices.IndexOf(pt.EntityLabel));
+					}
+                    else
+					{
+                        vertices.Add(pt.EntityLabel);
+                        indices.Add(vertices.Count - 1);
+					}
+                }
+            }
+		}
+	}
 }

@@ -49,7 +49,7 @@ namespace Xbim.Presentation.ModelGeomInfo
             if (_geomPoints.Count == 1)
             {
                 var p = _geomPoints[0].ModelPoint;
-                return $"Selected point coords: {p.X:0.##}, {p.Y:0.##}, {p.Z:0.##})";
+                return $"Selected point coords: {p.X}, {p.Y:0.##}, {p.Z:0.##}";
             }
             else
             {
@@ -85,16 +85,14 @@ namespace Xbim.Presentation.ModelGeomInfo
                 return double.NaN;
 
             var normal = Normal() * -1;
-            var firstSegment = FirstSegment();
+            var firstSegment = FirstVector();
             var up = XbimVector3D.CrossProduct(normal, firstSegment);
-            
-            var campos = new XbimVector3D(
+            var orig = new XbimVector3D(
                 _geomPoints[0].Point.X,
                 _geomPoints[0].Point.Y,
                 _geomPoints[0].Point.Z
-                ); 
-            var target = campos + normal;
-            var m = XbimMatrix3D.CreateLookAt(campos, target, up);
+                );
+            var m = XbimMatrix3D.CreateLookAt(orig, orig + normal, up);
 
 
             var point = new XbimPoint3D[Count()];
@@ -123,7 +121,7 @@ namespace Xbim.Presentation.ModelGeomInfo
             return area;
         }
 
-        private XbimVector3D FirstSegment()
+        private XbimVector3D FirstVector()
         {
             var ret = _geomPoints[1].Point - _geomPoints[0].Point;
             return new XbimVector3D(ret.X, ret.Y, ret.Z);

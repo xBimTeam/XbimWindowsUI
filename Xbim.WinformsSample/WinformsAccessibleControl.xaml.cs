@@ -33,16 +33,21 @@ namespace Xbim.WinformsSample
             get { return ModelProvider.ObjectInstance as IfcStore; }
         }
 
-        public IPersistEntity SelectedElement
+        public IPersistEntity SelectedElement {
+            get => DrawingControl.SelectedEntity;
+            set => DrawingControl.SelectedEntity = value;
+        } 
+        
+        public Presentation.DrawingControl3D.SelectionBehaviours SelectionBehaviour
         {
-            get
-            {
-                return DrawingControl.SelectedEntity;
-            }
-            set
-            {
-                DrawingControl.SelectedEntity = value;
-            }
+            get => DrawingControl.SelectionBehaviour;
+            set => DrawingControl.SelectionBehaviour = value;
+        }
+
+        public Presentation.EntitySelection Selection
+        {
+            get => DrawingControl.Selection;
+            set => DrawingControl.Selection = value;
         }
 
         public delegate void SelectionChangedHandler(object sender, System.Windows.Controls.SelectionChangedEventArgs e);

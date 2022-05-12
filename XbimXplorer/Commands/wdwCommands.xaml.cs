@@ -34,6 +34,8 @@ using System.CodeDom;
 using XbimXplorer.PluginSystem;
 using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
+using Xbim.Presentation.Overlay;
+using HelixToolkit.Wpf;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -147,17 +149,17 @@ namespace XbimXplorer.Commands
                     int iCnt;
                     if (!Int32.TryParse(mdbclosed.Groups["count"].Value, out iCnt))
                         iCnt = 1;
-                    var msg = (string.IsNullOrEmpty(mdbclosed.Groups["message"].Value)) 
+                    var msg = (string.IsNullOrEmpty(mdbclosed.Groups["message"].Value))
                         ? "Message"
                         : mdbclosed.Groups["message"].Value;
 
                     for (int iLoop = 0; iLoop < iCnt; iLoop++)
                     {
-                        Logger.LogInformation(iLoop+1 + " " + msg);
+                        Logger.LogInformation(iLoop + 1 + " " + msg);
                     }
                     continue;
                 }
-                
+
                 mdbclosed = Regex.Match(cmd, @"^IfcZip (?<source>[^/]+) *(?<subFolders>/s)?$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -174,7 +176,7 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                
+
                 mdbclosed = Regex.Match(cmd, @"^xplorer$", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
@@ -247,148 +249,43 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^(IfcSchema|is) (?<mode>(list|count|short|full) )*(?<type>\w+)[ ]*",
                     RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
+				{
+					ProcessSchemaCommand(mdbclosed);
+					continue;
+				}
+
+                // this is just for demonstration purpose
+                mdbclosed = Regex.Match(cmd, @"^(IndividualLayerStyler|ils) (?<mode>(set|color|fullcolor|transparent|reset|hide|show|blink|stop)) *(?<obj>\w+|#\d+)?$",
+                   RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
                 {
-                    var typeString = mdbclosed.Groups["type"].Value;
-                    var mode = mdbclosed.Groups["mode"].Value;
+                    ProcessILSCommand(mdbclosed);
+                    continue;
+                }
 
-                    if (typeString == "/")
-                    {
-                        // this is a magic case handled by the matchingType
-                    }
-                    else if (typeString == PrepareRegex(typeString))
-                    // there's not a regex expression, we will prepare one assuming the search for a bare name.
-                    {
-                        typeString = @".*\." + typeString + "$";
-                        // any character repeated then a dot then the name and the end of line
-                    }
-                    else
-                        typeString = PrepareRegex(typeString);
+                // this is just for demonstration purpose
+                mdbclosed = Regex.Match(cmd, @"^(TextOverlay|to) (?<mode>(add|remove|replace)) *(?<cmd>.*)",
+                   RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ProcessTextOverlay(mdbclosed);
+                    continue;
+                }
 
-                    var typeList = MatchingTypes(typeString);
-
-
-                    if (mode.ToLower() == "list ")
-                    {
-                        foreach (var item in typeList)
-                            ReportAdd(item);
-                    }
-                    else if (mode.ToLower() == "count ")
-                    {
-                        ReportAdd("count: " + typeList.Count());
-                    }
-                    else
-                    {
-                        // report
-                        var beVerbose = 1;
-                        if (mode.ToLower() == "short ")
-                            beVerbose = 0;
-                        if (mode.ToLower() == "full ")
-                            beVerbose = 2;
-                        foreach (var item in typeList)
-                        {
-                            ReportAdd(ReportType(item, beVerbose));
-                        }
-                    }
+                // this is just for demonstration purpose
+                mdbclosed = Regex.Match(cmd, @"^(ImageOverlay|io) (?<mode>(add|remove|move)) *(?<cmd>.?)",
+                   RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ProcessImageOverlay(mdbclosed);
                     continue;
                 }
 
                 mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    var commandString = mdbclosed.Groups["command"].Value;
-                    var pluginName = mdbclosed.Groups["pluginName"].Value;
-                    if (commandString.ToLower() == "refresh")
-                    {
-                        _parentWindow?.RefreshPlugins();
-                        continue;
-                    }
-                    else if (commandString.ToLower() == "folder")
-                    {
-                        // open folder
-                        var dir = PluginManagement.GetPluginsDirectory();
-                        ReportAdd($"Plugins folder is: {dir.FullName}");
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
-                        {
-                            FileName = dir.FullName,
-                            UseShellExecute = true,
-                            Verb = "open"
-                        });
-                        continue;
-                    }
-                    else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
-                    {
-                        var pm = new PluginManagement();
-                        var plugin = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).FirstOrDefault(x => x.PluginId == pluginName);
-                        if (plugin == null)
-                        {
-                            ReportAdd("Plugin not found.", Brushes.Red);
-                            continue;
-                        }
-                        
-                        // test for the right command string
-                        if (plugin.InstalledVersion != "" 
-                            && commandString.ToLower() == "install")
-                        {
-                            ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);
-                            continue;
-                        }
-
-                        // try installing
-                        ReportAdd("Plugin found; installing...", Brushes.Blue);
-                        var extracted = plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
-                        if (!extracted)
-                        {
-                            ReportAdd("Plugin extraction failed.", Brushes.Red);
-                        }
-                        if (plugin.Config.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
-                        {
-                            plugin.ToggleEnabled();
-                        }
-
-                        // try loading
-                        var loaded = plugin.Load();
-                        if (loaded)
-                            ReportAdd("Installed and loaded.", Brushes.Blue);
-                        else
-                            ReportAdd("Plugin installed, but a restart is required.", Brushes.Red);
-                        continue;
-                    }
-                    else if (commandString.ToLower() == "load")
-                    {
-                        if (Directory.Exists(pluginName))
-                        {
-                            var pluginDir = new DirectoryInfo(pluginName);
-                            (_parentWindow as XplorerMainWindow)?.LoadPlugin(pluginDir, true);
-                        }
-                        else
-                        {
-                            ReportAdd("Plugin not found.", Brushes.Red);
-                        }
-                        continue;
-                    }
-                    else if (commandString.ToLower() == "list")
-                    {
-                        PluginManagement pm = new PluginManagement();
-                        var plugins = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).ToList();
-                        if (plugins.Any())
-                        {
-                            ReportAdd("Beta versions in the development channel:");
-                            foreach (var plugin in plugins)
-                            {
-                                ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
-                            }
-                        }
-                        plugins = pm.GetPlugins(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion).ToList();
-                        if (plugins.Any())
-                        {
-                            ReportAdd("Versions in the stable channel:");
-                            foreach (var plugin in plugins)
-                            {
-                                ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
-                            }
-                        }
-                        continue;
-                    }
+                    PluginCommand(mdbclosed);
+                    continue;
                 }
 
                 mdbclosed = Regex.Match(cmd, @"^(convert) *(?<folderName>.+)?", RegexOptions.IgnoreCase);
@@ -400,6 +297,12 @@ namespace XbimXplorer.Commands
                         continue;
                     }
                     ConvertFolder(folderName);
+                    continue;
+                }
+                mdbclosed = Regex.Match(cmd, @"^(PropertyInfo|pi) *(?<propName>.+)$", RegexOptions.IgnoreCase);
+                if (mdbclosed.Success)
+                {
+                    ProcessPropertyCommand(mdbclosed);
                     continue;
                 }
 
@@ -428,197 +331,60 @@ namespace XbimXplorer.Commands
                     ReportAdd(ReportEntity(v, recursion));
                     continue;
                 }
-
-                m = Regex.Match(cmd, @"^(TypeReport|tr)$", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^(boolreport|br)\b *(?<entities>([\d,]+|[^ ]+)) ?$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    if (ModelIsUnavailable) continue;
-
-                    ReportAdd("========== TypeReport for " + Model.FileName, Brushes.Blue);
-                    ReportAdd("");
-                    // very low efficiency, just to have it quick and dirty.
-                    var td = new Dictionary<ExpressType, int>();
-
-                    foreach (var modelInstance in Model.Instances)
-                    {
-                        var t = modelInstance.ExpressType;
-                        if (td.ContainsKey(t))
-                        {
-                            td[t] += 1;
-                        }
-                        else
-                        {
-                            td.Add(t, 1);
-                        }
-                    }
-
-                    var keys = td.Keys.ToList();
-                    keys.Sort( // sort inverted
-                            (x1, x2) => td[x2].CompareTo(td[x1])
-                        );
-
-                    foreach (var key in keys)
-                    {
-                        var b = Brushes.Black;
-                        if (typeof(IIfcElement).IsAssignableFrom(key.Type))
-                            b = Brushes.Blue;
-                        else if (typeof(IIfcProduct).IsAssignableFrom(key.Type))
-                            b = Brushes.BlueViolet;
-                        else if (typeof(IIfcRepresentationItem).IsAssignableFrom(key.Type))
-                            b = Brushes.ForestGreen;
-                        else if (typeof(IIfcRelationship).IsAssignableFrom(key.Type))
-                            b = Brushes.DarkOrange;
-                        
-                        ReportAdd($"{td[key]}\t\t{key.Name}", b);
-                    }
-                    continue;
-                }
-
-                m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    if (ModelIsUnavailable) continue;
-
-                    if (Model.Header == null)
-                    {
-                        ReportAdd("Model header is not defined.", Brushes.Red);
-                    }
-                    else
-                    {
-                        ReportAdd("FileDescription:");
-                        foreach (var item in Model.Header.FileDescription.Description)
-                            ReportAdd($"- Description: {item}");
-                        ReportAdd($"- ImplementationLevel: {Model.Header.FileDescription.ImplementationLevel}");
-                        ReportAdd($"- EntityCount: {Model.Header.FileDescription.EntityCount}");
-
-                        ReportAdd("FileName:");
-                        ReportAdd($"- Name: {Model.Header.FileName.Name}");
-                        ReportAdd($"- TimeStamp: {Model.Header.FileName.TimeStamp}");
-                        foreach (var item in Model.Header.FileName.Organization)
-                            ReportAdd($"- Organization: {item}");
-                        ReportAdd($"- OriginatingSystem: {Model.Header.FileName.OriginatingSystem}");
-                        ReportAdd($"- PreprocessorVersion: {Model.Header.FileName.PreprocessorVersion}");
-                        foreach (var item in Model.Header.FileName.AuthorName)
-                            ReportAdd($"- AuthorName: {item}");
-                        
-                        ReportAdd($"- AuthorizationName: {Model.Header.FileName.AuthorizationName}");
-                        foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
-                            ReportAdd($"- AuthorizationMailingAddress: {item}");
-
-                        ReportAdd("FileSchema:");
-                        foreach (var item in Model.Header.FileSchema.Schemas)
-                            ReportAdd($"- Schema: {item}");
-                    }
-
-                    ReportAdd($"Modelfactors:");
-                    ReportAdd($"- OneMeter: {Model.ModelFactors.OneMetre}");
-                    
-                    continue;
-                }
-
-                // SelectionHighlighting [WholeMesh|Normals]
-                m = Regex.Match(cmd, @"^(SelectionHighlighting|sh) (?<mode>(wholemesh|normals|wireframe))+",
-                    RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    if (ModelIsUnavailable) continue;
-
-                    var mode = m.Groups["mode"].Value.ToLowerInvariant();
-                    if (mode == "normals")
-                    {
-                        ReportAdd("Selection visual style set to 'Normals'");
-                        _parentWindow.DrawingControl.SelectionHighlightMode =
-                            DrawingControl3D.SelectionHighlightModes.Normals;
-                    }
-                    else if (mode == "wholemesh")
-                    {
-                        ReportAdd("Selection visual style set to 'WholeMesh'");
-                        _parentWindow.DrawingControl.SelectionHighlightMode =
-                            DrawingControl3D.SelectionHighlightModes.WholeMesh;
-                    }
-                    else if (mode == "wireframe")
-                    {
-                        ReportAdd("Selection visual style set to 'WireFrame'");
-                        _parentWindow.DrawingControl.SelectionHighlightMode =
-                            DrawingControl3D.SelectionHighlightModes.WireFrame;
-                    }
-                    continue;
-                }
-
-                // we intend to offer estraction of breps here.
-                m = Regex.Match(cmd, @"^(brep|br\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    FileInfo fi = new FileInfo(Model.FileName);
-                    var dirName = fi.DirectoryName;
-                    XbimPlacementTree pt = new XbimPlacementTree(Model, App.ContextWcsAdjustment);
-                    // add "DBRep_DrawableShape" as first line
                     var start = m.Groups["entities"].Value;
                     IEnumerable<int> labels = ToIntarray(start, ',');
                     if (labels.Any())
                     {
                         foreach (int label in labels)
                         {
-                            bool firstWrite = true;
-                            string prevSol = "";
-                            var entity = Model.Instances[label];
-                            if (entity == null)
+                            ReportAdd($"Reporting boolean composition for #[{label}]");
+                            var ent = Model.Instances[label] as IIfcBooleanResult;
+                            if (ent is null)
                                 continue;
-
-                            var entities = new List<IPersistEntity>() { entity };
-                            // todo: what to do with subtractionElements?
-                            XbimMatrix3D trsf = XbimMatrix3D.Identity;
-                            if (entity is IIfcProduct)
-                            {
-                                var prod = (IIfcProduct)entity;
-                                trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
-                                entities.Clear();
-                                entities.AddRange(prod.Representation?.Representations.SelectMany(x=>x.Items));
-                            }
-                            else if (entity is IIfcRelVoidsElement)
-                            {
-                                var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
-                                trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
-                                entities.Clear();
-                                entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
-                            }
-                            foreach (var solEntity in entities)
-                            {
-                                var sols = GetSolids(solEntity);
-                                foreach (var item in sols)
-                                {
-                                    int iCnt = 0;
-                                    foreach (var solid in item.Item2)
-                                    {
-                                        if (solid != null && solid.IsValid)
-                                        {
-                                            var trsfSolid = (IXbimSolid)solid.Transform(trsf);
-                                            var thisSol = trsfSolid.ToBRep;
-                                            if (thisSol == prevSol)
-                                                continue;
-                                            var fileName = $"{label}.{item.Item1}.{iCnt++}.brep";
-                                            if (firstWrite)
-                                            {
-                                                fileName = $"{label}.brep";
-                                                firstWrite = false;
-                                            }
-                                            FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
-                                            using (var tw = fBrep.CreateText())
-                                            {
-                                                tw.WriteLine("DBRep_DrawableShape");
-                                                tw.WriteLine(thisSol);
-                                            }
-                                            ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
-                                            prevSol = thisSol;
-                                        }
-                                    }
-                                }
-                            }                           
+                            ReportAdd(ReportBoolean(ent, 0));
                         }
                     }
                     continue;
                 }
-                m = Regex.Match(cmd, @"^(opacity|op) *(?<opac>[\d\.]+)", RegexOptions.IgnoreCase);
+                m = Regex.Match(cmd, @"^(TypeReport|tr)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+				{
+					if (ModelIsUnavailable)
+						continue;
+					ProcessModelTypesCommand();
+					continue;
+				}
+
+				m = Regex.Match(cmd, @"^(Header|he)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+				{
+					if (ModelIsUnavailable) continue;
+					ProcessHeaderCommand();
+
+					continue;
+				}
+
+				// SelectionHighlighting [WholeMesh|Normals]
+				m = Regex.Match(cmd, @"^(SelectionHighlighting|sh) (?<mode>(wholemesh|normals|wireframe))+",
+                    RegexOptions.IgnoreCase);
+                if (m.Success)
+				{
+					if (ModelIsUnavailable) continue;
+					ProcessSelectionHighlightingCommand(m);
+					continue;
+				}
+
+
+				m = Regex.Match(cmd, @"^(brep) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
+                if (m.Success) // we intend to offer extraction of breps here.
+                {
+					ProcessBrepCommand(m);
+					continue;
+				}
+				m = Regex.Match(cmd, @"^(opacity|op) *(?<opac>[\d\.]+)", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
@@ -634,81 +400,52 @@ namespace XbimXplorer.Commands
                     }
                     continue;
                 }
-                m = Regex.Match(cmd, @"^(reload|re\b) *(?<entities>([\d,]+|[^ ]+))", RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    // todo: restore function
-                    //var start = m.Groups["entities"].Value;
-                    //IEnumerable<int> labels = ToIntarray(start, ',');
-                    //if (labels.Any())
-                    //{
-                    //    _parentWindow.DrawingControl.LoadGeometry(Model, labels);
-                    //}
-                    //else
-                    //{
-                    //    _parentWindow.DrawingControl.LoadGeometry(Model);
-                    //}
-                    continue;
-                }
 
                 m = Regex.Match(cmd,
-                    @"^(GeometryEngine|ge) " +
-                    @"(top (?<top>\d+) )*" +
-                    // @"(?<mode>(count|list|typelist|short|full) )*" +
-                    @"(?<tt>(transverse|tt) )*" +
-                    @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
+                    @"^(mesh) " +
+                    @"(?<format>(obj|stl)) *" +
                     @"(?<start>([\d,-]+|[^ ]+)) *" +
-                    @"(?<props>.*)" +
                     "",
                     RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    if (ModelIsUnavailable) continue;
                     var labels = GetSelection(m).ToArray();
-                    if (labels.Any())
+                    int startIndex = 1;
+                    foreach (var label in labels)
                     {
-                        foreach (var label in labels)
+                        var entity = Model.Instances[label];
+                        if (m.Groups["format"].Value.ToLowerInvariant() == "obj")
                         {
-                            var entity = Model.Instances[label];
-                            if (entity == null)
-                            {
-                                ReportAdd($"=== Entity {label} not found in model.", Brushes.Red);
-                                continue;
-                            }
-                            ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
-                            ReportAdd($"=== Geometry functions", Brushes.Blue);
-
-                            var sols = GetSolids(entity);
-                            foreach (var item in sols)
-                            {
-                                ReportAdd($"- {item.Item1}");
-                                foreach (var solid in item.Item2)
-                                {
-                                    if (solid != null)
-                                    {
-                                        if (solid.IsValid)
-                                        {
-                                            ReportAdd($"  Ok, returned {solid.GetType().Name} - Volume: {solid.Volume}", Brushes.Green);
-                                        }
-                                        else
-                                            ReportAdd($"  Err, returned {solid.GetType().Name} (not valid)", Brushes.Red);
-                                    }
-                                    else
-                                    {
-                                        // probably an error
-                                    }
-                                }
-                            }
-
-                            ReportAdd($"=== Autocad views", Brushes.Blue);
-                            var ra = GeometryView.ReportAcadScript(entity);
-                            ReportAdd(ra);
+                            startIndex = ReportAsObj(entity, startIndex);
+                        }
+                        else
+                        {
+                            ReportAdd($"=== Entity {m.Groups["format"].Value.ToLowerInvariant()} not implemented.", Brushes.Red);
                         }
                     }
                     continue;
                 }
 
+
+
                 m = Regex.Match(cmd,
+                @"^(GeometryEngine|ge) " +
+                @"(top (?<top>\d+) )*" +
+                // @"(?<mode>(count|list|typelist|short|full) )*" +
+                @"(?<tt>(transverse|tt) )*" +
+                @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
+                @"(?<start>([\d,-]+|[^ ]+)) *" +
+                @"(?<props>.*)" +
+                "",
+                RegexOptions.IgnoreCase);
+                if (m.Success)
+				{
+					if (ModelIsUnavailable) continue;
+					ProcessGeometryEngineCommand(m);
+					continue;
+				}
+
+				m = Regex.Match(cmd,
                     @"^(?<command>select|se|validate|va) " +
                     @"(top (?<top>\d+) )*" +
                     @"(?<mode>(count|list|typelist|short|full) )*" +
@@ -716,98 +453,19 @@ namespace XbimXplorer.Commands
                     @"(?<ri>(representationitems|ri|surfacesolid|ss|wire|wi) )*" +
                     @"(?<hi>(highlight|hi) )*" +
                     @"(?<svt>(showvaluetype|svt) )*" +
-                    @"(?<start>([\d,-]+|[^ ]+)) *" +
+                    @"(?<start>([\da-zA-Z$_,-]+|[^ ]+)) *" +
                     @"(?<props>.*)" +
                     "",
                     RegexOptions.IgnoreCase);
                 if (m.Success)
-                {
-                    if (ModelIsUnavailable) continue;
-                    var command = m.Groups["command"].Value.ToLowerInvariant();
-                    var highlight = false;
-                    var highlightT = m.Groups["hi"].Value;
-                    if (highlightT != "")
-                        highlight = true;
+				{
+					if (ModelIsUnavailable) 
+                        continue;
+					ProcessSelectCommand(m);
+					continue;
+				}
 
-                    var mode = m.Groups["mode"].Value;
-                    var svt = m.Groups["svt"].Value;
-
-                    var ret = GetSelection(m).ToArray();
-
-                    if (command == "va" || command == "validate")
-                    {
-                        // validation report
-
-                        var validator = new Validator()
-                        {
-                            CreateEntityHierarchy = true,
-                            ValidateLevel = ValidationFlags.All
-                        };
-                        var insts = ret.Select(el => Model.Instances[el]);
-                        var validInstances = insts.Where(x => x != null).ToList();
-
-                        ReportAdd($"Validating {validInstances.Count()} model instances.");
-                        var valresults = validator.Validate(validInstances);
-
-                        var issues = 0;
-                        foreach (var validationResult in new IfcValidationReporter(valresults))
-                        {
-                            ReportAdd(validationResult);
-                            issues++;
-                        }
-                        if (issues == 0)
-                            ReportAdd($"No issues found.\r\n{DateTime.Now.ToLongTimeString()}.");
-                    }
-                    else
-                    {
-                        // property repor
-                        switch (mode.ToLower())
-                        {
-                            case "count ":
-                                ReportAdd($"Count: {ret.Count()}");
-                                break;
-                            case "list ":
-                                foreach (var item in ret)
-                                {
-                                    ReportAdd(item.ToString(CultureInfo.InvariantCulture));
-                                }
-                                break;
-                            case "typelist ":
-                                foreach (var item in ret)
-                                {
-                                    ReportAdd(item + "\t" + Model.Instances[item].ExpressType.Name);
-                                }
-                                break;
-                            default:
-                                var beVerbose = false;
-                                if (mode.ToLower() == "short ")
-                                    beVerbose = false;
-                                if (mode.ToLower() == "full ")
-                                    beVerbose = true;
-                                var svtB = (svt != "");
-                                foreach (var item in ret)
-                                {
-                                    ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
-                                }
-                                break;
-                        }
-                    }
-                    if (highlight) // set selection in Xplorer 
-                    {
-                        var s = new EntitySelection();
-                        foreach (var item in ret)
-                        {
-                            s.Add(Model.Instances[item]);
-                        }
-                        var sw = new Stopwatch();
-                        sw.Start();
-                        _parentWindow.DrawingControl.Selection = s;
-                        Debug.WriteLine(sw.ElapsedMilliseconds);
-                    }
-                    continue;
-                }
-
-                m = Regex.Match(cmd, @"^(ObjectPlacement|OP) " +
+				m = Regex.Match(cmd, @"^(ObjectPlacement|OP) " +
                                      @"(?<EntityId>\d+)"
                                      , RegexOptions.IgnoreCase);
                 if (m.Success)
@@ -833,10 +491,10 @@ namespace XbimXplorer.Commands
                 {
                     if (ModelIsUnavailable) continue;
                     var entityIds = m.Groups["EntityIds"].Value;
-                    var v = entityIds.Split(new[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
+                    var v = entityIds.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                     var sb = new TextHighliter();
-                    
+
                     foreach (var entityIdString in v)
                     {
                         var entityId = Convert.ToInt32(entityIdString);
@@ -847,72 +505,28 @@ namespace XbimXplorer.Commands
                             continue;
                         }
                         ReportTransformGraph(sb, ent as IIfcProduct, 0);
-                    }  
+                    }
                     ReportAdd(sb);
                     continue;
                 }
-                
+
                 m = Regex.Match(cmd, @"^region ?(?<mode>list|set|add|\?)? *(?<RegionName>.+)*$", RegexOptions.IgnoreCase);
                 if (m.Success)
-                {
-                    if (ModelIsUnavailable) continue;
-                    var mode = m.Groups["mode"].Value;
-                    var rName = m.Groups["RegionName"].Value;
-                    if (string.IsNullOrWhiteSpace(mode))
-                    {
-                        ReportAdd($"Region syntax is: ^region ?(?<mode>list|set|add|\\?)? *(?<RegionName>.+)*$");
-                        continue;
-                    }
-                    if (mode == "?" || mode == "list")
-                    {
-                        using (var reader = Model.GeometryStore.BeginRead())
-                        {
-                            var allRegCollections = reader.ContextRegions;
-                            ReportAdd($"Region Collections count: {allRegCollections.Count}");
-                            foreach (var regionCollection in allRegCollections)
-                            {
-                                ReportAdd($"Region Collection (#{regionCollection.ContextLabel}) count: {regionCollection.Count}");
-                                foreach (var r in regionCollection)
-                                {
-                                    ReportAdd($"Region\t'{r.Name}'\t{r.Population}\t{r.Size}\t{r.Centre}");
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        bool setOk = true;
-                        var add = (mode == "add");
-                        if (add && rName == "*")
-                        {
-                            using (var reader = Model.GeometryStore.BeginRead())
-                            {
-                                var allRegCollections = reader.ContextRegions;
-                                foreach (var regionCollection in allRegCollections)
-                                {
-                                    foreach (var r in regionCollection)
-                                    {
-                                        setOk &= _parentWindow.DrawingControl.SetRegion(r.Name, add);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                            setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
-                        if (setOk)
-                        {
-                            ReportAdd("Region set.");
-                            ReportAdd(_parentWindow.DrawingControl.ModelPositions.Report());
-                        }
-                        else
-                        {
-                            ReportAdd($"Region \"{rName}\"not found.");
-                        }
-                    }
-                    continue;
-                }
+				{
+					if (ModelIsUnavailable)
+						continue;
+					var mode = m.Groups["mode"].Value;
+					var rName = m.Groups["RegionName"].Value;
+					if (string.IsNullOrWhiteSpace(mode))
+					{
+						ReportAdd($"Region syntax is: ^region ?(?<mode>list|set|add|\\?)? *(?<RegionName>.+)*$");
+						continue;
+					}
+					ProcessRegionCommand(mode, rName);
+					continue;
+				}
 
-                m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
+				m = Regex.Match(cmd, @"^clip off$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
                     if (ModelIsUnavailable) continue;
@@ -947,169 +561,25 @@ namespace XbimXplorer.Commands
                                      ")", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    double px = 0, py = 0, pz = 0;
-                    double nx = 0, ny = 0, nz = -1;
-
-                    if (m.Groups["elev"].Value != string.Empty)
-                    {
-                        pz = Convert.ToDouble(m.Groups["elev"].Value);
-                    }
-                    else if (m.Groups["StoreyName"].Value != string.Empty)
-                    {
-                        if (ModelIsUnavailable) continue;
-                        var msg = "";
-                        var storName = m.Groups["StoreyName"].Value;
-                        var storey =
-                            Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
-                        if (storey != null)
-                        {
-                            var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
-                            var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
-                            var off = trsf.OffsetZ;
-                            var pt = new XbimPoint3D(0, 0, off);
-
-                            var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
-                           
-                            var transformed = mcp.Transform(pt);
-                            msg = $"Clip 1m above storey elevation {pt.Z} (View space height: {transformed.Z + 1})";
-                            pz = transformed.Z + 1;
-                            
-                        }
-                        if (msg == "")
-                        {
-                            ReportAdd($"Something wrong with storey name: '{storName}'");
-                            ReportAdd("Names that should work are: ");
-                            var strs = Model.Instances.OfType<IIfcBuildingStorey>();
-                            foreach (var str in strs)
-                            {
-                                ReportAdd($" - '{str.Name}'");
-                            }
-                            continue;
-                        }
-                        ReportAdd(msg);
-                    }
-                    else
-                    {
-                        px = Convert.ToDouble(m.Groups["px"].Value);
-                        py = Convert.ToDouble(m.Groups["py"].Value);
-                        pz = Convert.ToDouble(m.Groups["pz"].Value);
-                        nx = Convert.ToDouble(m.Groups["nx"].Value);
-                        ny = Convert.ToDouble(m.Groups["ny"].Value);
-                        nz = Convert.ToDouble(m.Groups["nz"].Value);
-                    }
-
-                    _parentWindow.DrawingControl.ClearCutPlane();
-                    _parentWindow.DrawingControl.SetCutPlane(
-                        px, py, pz,
-                        nx, ny, nz
-                        );
-
-                    ReportAdd("Clip command sent");
-                    _parentWindow.Activate();
+                    ProcessClipCommand(m);
                     continue;
                 }
-                
+
                 // todo: layers are gone; needs cleanup
                 //
                 m = Regex.Match(cmd, @"^Visual (?<action>list|tree|on|off|mode)( (?<Name>[^ ]+))*",
                     RegexOptions.IgnoreCase);
                 if (m.Success)
-                {
-                    if (ModelIsUnavailable) continue;
-                    var parName = m.Groups["Name"].Value;
-                    if (m.Groups["action"].Value.ToLowerInvariant() == "list")
-                    {
-                        foreach (var item in _parentWindow.DrawingControl.ListItems(parName))
-                        {
-                            ReportAdd(item);
-                        }
-                        Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
-                        Report("TransparentsVisual3D", _parentWindow.DrawingControl.TransparentsVisual3D);
-                        Report("Selection", _parentWindow.DrawingControl.HighlightedVisual, true);
-
-                    }
-                    else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
-                    {
-                        foreach (var item in _parentWindow.DrawingControl.LayersTree())
-                        {
-                            ReportAdd(item);
-                        }
-                    }
-                    else if (m.Groups["action"].Value.ToLowerInvariant() == "mode")
-                    {
-                        // todo: restore
-
-                        //parName = parName.ToLowerInvariant();
-                        //var sb = new StringBuilder();
-
-                        //// foreach model
-                        //if (_parentWindow.DrawingControl.LayerStylerForceVersion1 || Model.GeometrySupportLevel == 1)
-                        //    ReportAdd(string.Format(@"Current mode is {0}",
-                        //        _parentWindow.DrawingControl.LayerStyler.GetType())
-                        //        , Brushes.Green);
-                        //else if (Model.GeometrySupportLevel == 2)
-                        //    ReportAdd(string.Format(@"Current mode is {0}",
-                        //        _parentWindow.DrawingControl.GeomSupport2LayerStyler.GetType()), Brushes.Green);
-                        //else
-                        //    ReportAdd(@"Visual mode not enabled on GeometrySupportLevel 0", Brushes.Red);
-                        
-
-                        //bool stylerSet = false;
-
-                        //var v1 = TypesImplementingInterface(typeof (ILayerStyler));
-                        //foreach (var instance in v1.Where(IsRealClass))
-                        //{
-                        //    if (instance.Name.ToLowerInvariant() == parName ||
-                        //        instance.FullName.ToLowerInvariant() == parName)
-                        //    {
-                        //        _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
-                        //        _parentWindow.DrawingControl.LayerStyler =
-                        //            (ILayerStyler) Activator.CreateInstance(instance);
-                        //        _parentWindow.DrawingControl.FederationLayerStyler =
-                        //            (ILayerStyler)Activator.CreateInstance(instance);
-
-
-                        //        _parentWindow.DrawingControl.ReloadModel(
-                        //            options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
-                        //            );
-                        //        ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
-                        //        stylerSet = true;
-                        //        continue;
-                        //    }
-                        //    sb.AppendLine(" - " + instance.FullName);
-                        //}
-                        //var v2 = TypesImplementingInterface(typeof(ILayerStylerV2));
-                        //foreach (var instance in v2.Where(IsRealClass))
-                        //{
-                        //    if (instance.Name.ToLowerInvariant() == parName ||
-                        //        instance.FullName.ToLowerInvariant() == parName)
-                        //    {
-                        //        _parentWindow.DrawingControl.LayerStylerForceVersion1 = false;
-                        //        _parentWindow.DrawingControl.GeomSupport2LayerStyler =
-                        //            (ILayerStylerV2) Activator.CreateInstance(instance);
-                        //        _parentWindow.DrawingControl.ReloadModel(
-                        //            options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
-                        //            );
-                        //        ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
-                        //        stylerSet = true;
-                        //        continue;
-                        //    }
-                        //    sb.AppendLine(" - " + instance.FullName);
-                        //}
-                        //if (!stylerSet)
-                        //    ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb));
-                    }
-                    else
-                    {
-                        var bVis = m.Groups["action"].Value.ToLowerInvariant() == "on";
-                        _parentWindow.DrawingControl.SetVisibility(parName, bVis);
-                    }
-                    continue;
-                }
+				{
+					if (ModelIsUnavailable) continue;
+					ProcessVisualCommand(m);
+					continue;
+				}
                 m = Regex.Match(cmd, @"^test$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    if (ModelIsUnavailable) continue;
+                    if (ModelIsUnavailable) 
+                        continue;
                     _parentWindow.DrawingControl.DefaultLayerStyler = new BoundingBoxStyler(this.Logger);
                     _parentWindow.DrawingControl.ReloadModel();
                     //continue;
@@ -1142,6 +612,973 @@ namespace XbimXplorer.Commands
             }
         }
 
+
+
+
+        private void ProcessImageOverlay(Match mdbclosed)
+        {
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
+            if (mode == "add")
+            {
+                var mr =
+                    (ioList.Count % 2 == 0)
+                    ? ImageOverlay.ModelRelation.AlwaysVisible
+                    : ImageOverlay.ModelRelation.HidesBehindModel;
+                Regex r = new Regex(@"(?<x>[\d\.]+) (?<y>[\d\.]+) (?<z>[\d\.]+)");
+                ImageOverlay t = new ImageOverlay(
+                    @"C:\Data\Dev\XbimPrivate\Arcinfo\VisualDemo\VisualDemo\Image.png",
+                    new XbimPoint3D(0.27, -0.34, ioList.Count),
+                    mr
+                    );
+                ioList.Add(t);
+                _parentWindow.DrawingControl.AddImageOverlay(t);
+            }
+            else if (mode == "remove")
+            {
+                var last = ioList.LastOrDefault();
+                if (last != null)
+                {
+                    if (_parentWindow.DrawingControl.RemoveImageOverlay(last))
+                        ioList.Remove(last);
+                }
+            }
+            else if (mode == "move")
+            {
+                var last = ioList.LastOrDefault();
+                if (last != null)
+                {
+                    var lp = last.Position + new XbimVector3D(1, 0, 0);
+                    last.UpdatePosition(_parentWindow.DrawingControl.ModelPositions, lp);
+                }
+            }
+        }
+
+
+        private TextOverlayStyle toStyle = new TextOverlayStyle();
+        private List<TextOverlay> toList = new List<TextOverlay>();
+        private List<ImageOverlay> ioList = new List<ImageOverlay>();
+
+        private void ProcessTextOverlay(Match mdbclosed)
+		{
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant();
+            var cmd = mdbclosed.Groups["cmd"].Value.ToLowerInvariant();
+            if (mode == "add")
+            {
+                // eg "to add -1.74793892733902 -0.018920300897088 0"
+                
+                Regex r = new Regex(@"(?<x>[-\d\.]+) (?<y>[-\d\.]+) (?<z>[-\d\.]+)");
+                var comm = r.Match(cmd);
+                var pnt = new XbimPoint3D(0.27, -0.34, toList.Count);
+                TextOverlay t = null;
+                if (comm.Success)
+                {
+                    if (
+                        double.TryParse(comm.Groups["x"].Value, out var text_x)
+                        && double.TryParse(comm.Groups["y"].Value, out var text_y)
+                        && double.TryParse(comm.Groups["z"].Value, out var text_z)
+                        )
+					{
+                        pnt = new XbimPoint3D(text_x, text_y, text_z);
+                    }
+                }
+                
+                t = toStyle.CreateText($"Some text #{toList.Count + 1}", pnt);
+                toList.Add(t);
+                _parentWindow.DrawingControl.AddTextOverlay(t);
+            }
+            else if (mode == "remove")
+			{
+                var last = toList.LastOrDefault();
+                if (last != null)
+                {
+                    if (_parentWindow.DrawingControl.RemoveTextOverlay(last))
+                        toList.Remove(last);
+                }
+            }
+            else if (mode == "replace")
+            {
+                var last = toList.LastOrDefault();
+                if (last != null)
+                {
+                    last.UpdateText("Updated");
+                }
+            }
+        }
+
+		private void ProcessILSCommand(Match mdbclosed)
+		{
+            var mode = mdbclosed.Groups["mode"].Value.ToLowerInvariant(); // set|color|reset|hide|show|blink|stop
+            if (mode == "set")
+			{
+                _parentWindow.DrawingControl.DefaultLayerStyler = new IndividualElementStyler();
+                _parentWindow.DrawingControl.ReloadModel();
+            }
+            else if (_parentWindow.DrawingControl.DefaultLayerStyler is IndividualElementStyler ils)
+            {
+                var obj = mdbclosed.Groups["obj"].Value.ToLowerInvariant();
+                if (obj.StartsWith("#") && Int32.TryParse(obj.Substring(1), out var el))
+				{
+                    IPersistEntity t = Model.Instances[el];
+                    if (t == null)
+                        return;
+                    if (t is IIfcProduct ip)
+                        ReportAdd($"=== IndividualElementStyler command on #{t.EntityLabel}, {t.GetType()}: {ip.Name}", Brushes.Black);
+                    else
+                        ReportAdd($"=== IndividualElementStyler command on #{t.EntityLabel} {t.GetType()}.", Brushes.Black);
+
+                    if (mode == "color")
+                    {
+                        ils.SetColor(t, Colors.Red, true);
+                    }
+                    else if (mode == "fullcolor")
+                    {
+                        ils.SetColor(t, Colors.Red, false);
+                    }
+                    else if (mode == "transparent")
+                    {
+                        ils.SetColor(t, new IndividualElementStyler.ColorState(Color.FromArgb(128, 255, 0, 0)));
+                    }
+                    else if (mode == "reset")
+                    {
+                        ils.ResetColor(t);
+                    }
+                    else if (mode == "hide")
+                    {
+                        ils.Hide(t);
+                    }
+                    else if (mode == "show")
+                    {
+                        ils.Show(t);
+                    }
+                    else if (mode == "blink")
+                    {
+                        ils.SetAnimation(t, Colors.Yellow, Colors.Green); // todo: set multiplier in the call
+                        ils.SetAnimationTime(2000);
+                    }
+                    else if (mode == "stop")
+                    {
+                        ils.RemoveAnimation(t);
+                    }
+                }
+                else
+				{
+                    if (!obj.StartsWith("ifc"))
+                        obj = "ifc" + obj;
+                    var et = Model.Metadata.ExpressType(obj.ToUpperInvariant());
+                    if (et == null)
+                        return;
+                    var t = et.Type;
+                    if (mode == "color")
+                    {
+                        ils.SetColor(t, Colors.Red, true);
+                    }
+                    else if (mode == "reset")
+                    {
+                        ils.ResetColor(t);
+                    }
+                    else if (mode == "hide")
+                    {
+                        ils.Hide(t);
+                    }
+                    else if (mode == "show")
+                    {
+                        ils.Show(t);
+                    }
+                    else if (mode == "blink")
+                    {
+                        ils.SetAnimation(t, Colors.Yellow, Colors.Green);
+                        ils.SetAnimationTime(2000);
+                    }
+                    else if (mode == "stop")
+                    {
+                        ils.RemoveAnimation(t);
+                    }
+                }
+            }
+            else
+			{
+                ReportAdd($"=== Layerstyler is not set IndividualElementStyler.", Brushes.Red);
+                ReportAdd($"Run 'ils set' command first.", Brushes.Black);
+            }
+        }
+
+        private void ProcessGeometryEngineCommand(Match m)
+		{
+			var labels = GetSelection(m).ToArray();
+			if (labels.Any())
+			{
+				var engine = new XbimGeometryEngine();
+				foreach (var label in labels)
+				{
+					var entity = Model.Instances[label];
+					if (entity == null)
+					{
+						ReportAdd($"=== Entity {label} not found in model.", Brushes.Red);
+						continue;
+					}
+					ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
+
+					ReportAdd($"=== Autocad views", Brushes.Blue);
+                    // var ra = GeometryView.ReportAcadScript(entity);
+                    // ReportAdd(ra);
+                    if (entity is IIfcClosedShell ics)
+					{
+                       var r2 = GeometryView.ReportAsObj(ics);
+                        ReportAdd(r2);
+                    }
+
+                    ReportAdd($"=== Geometry Engine Functions - Solids", Brushes.Blue);
+                    var methodsAndSolids = GetSolidsByAvailableMethods(entity, engine);
+                    foreach (var methodAndSolids in methodsAndSolids)
+                    {
+                        ReportAdd($"- {methodAndSolids.methodName}");
+                        foreach (var solid in methodAndSolids.solids)
+                        {
+                            if (solid != null)
+                            {
+                                if (solid.IsValid)
+                                {
+                                    ReportAdd($"  Ok, returned {solid.GetType().Name} - Volume: {solid.Volume}", Brushes.Green);
+                                    var shape = engine.CreateShapeGeometry(solid, entity.Model.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, null);
+                                }
+                                else
+                                    ReportAdd($"  Err, returned {solid.GetType().Name} (not valid)", Brushes.Red);
+                            }
+                            else
+                            {
+                                // probably an error
+                            }
+                        }
+                    }
+				}
+			}
+		}
+
+		private void ProcessHeaderCommand()
+		{
+			if (Model.Header == null)
+			{
+				ReportAdd("Model header is not defined.", Brushes.Red);
+			}
+			else
+			{
+				ReportAdd("FileDescription:");
+				foreach (var item in Model.Header.FileDescription.Description)
+					ReportAdd($"- Description: {item}");
+				ReportAdd($"- ImplementationLevel: {Model.Header.FileDescription.ImplementationLevel}");
+				ReportAdd($"- EntityCount: {Model.Header.FileDescription.EntityCount}");
+
+				ReportAdd("FileName:");
+				ReportAdd($"- Name: {Model.Header.FileName.Name}");
+				ReportAdd($"- TimeStamp: {Model.Header.FileName.TimeStamp}");
+				foreach (var item in Model.Header.FileName.Organization)
+					ReportAdd($"- Organization: {item}");
+				ReportAdd($"- OriginatingSystem: {Model.Header.FileName.OriginatingSystem}");
+				ReportAdd($"- PreprocessorVersion: {Model.Header.FileName.PreprocessorVersion}");
+				foreach (var item in Model.Header.FileName.AuthorName)
+					ReportAdd($"- AuthorName: {item}");
+
+				ReportAdd($"- AuthorizationName: {Model.Header.FileName.AuthorizationName}");
+				foreach (var item in Model.Header.FileName.AuthorizationMailingAddress)
+					ReportAdd($"- AuthorizationMailingAddress: {item}");
+
+				ReportAdd("FileSchema:");
+				foreach (var item in Model.Header.FileSchema.Schemas)
+					ReportAdd($"- Schema: {item}");
+			}
+
+			ReportAdd($"Modelfactors:");
+			ReportAdd($"- OneMeter: {Model.ModelFactors.OneMetre}");
+		}
+
+		private void ProcessSelectionHighlightingCommand(Match m)
+		{
+			var mode = m.Groups["mode"].Value.ToLowerInvariant();
+			if (mode == "normals")
+			{
+				ReportAdd("Selection visual style set to 'Normals'");
+				_parentWindow.DrawingControl.SelectionHighlightMode =
+					DrawingControl3D.SelectionHighlightModes.Normals;
+			}
+			else if (mode == "wholemesh")
+			{
+				ReportAdd("Selection visual style set to 'WholeMesh'");
+				_parentWindow.DrawingControl.SelectionHighlightMode =
+					DrawingControl3D.SelectionHighlightModes.WholeMesh;
+			}
+			else if (mode == "wireframe")
+			{
+				ReportAdd("Selection visual style set to 'WireFrame'");
+				_parentWindow.DrawingControl.SelectionHighlightMode =
+					DrawingControl3D.SelectionHighlightModes.WireFrame;
+			}
+		}
+
+		private void ProcessVisualCommand(Match m)
+		{
+			var parName = m.Groups["Name"].Value;
+			if (m.Groups["action"].Value.ToLowerInvariant() == "list")
+			{
+				foreach (var item in _parentWindow.DrawingControl.ListItems(parName))
+				{
+					ReportAdd(item);
+				}
+				//Report("OpaquesVisual3D", _parentWindow.DrawingControl.OpaquesVisual3D);
+				Report("TransparentsVisual3D", _parentWindow.DrawingControl.TransparentsVisual3D);
+				//Report("Selection", _parentWindow.DrawingControl.HighlightedVisual);
+    
+    //            ReportAdd("=== ---");
+    //            ReportVisual(_parentWindow.DrawingControl.OpaquesVisual3D);
+    //            ReportVisual(_parentWindow.DrawingControl.TransparentsVisual3D);
+    //            ReportVisual(_parentWindow.DrawingControl.HighlightedVisual);
+    
+            }
+			else if (m.Groups["action"].Value.ToLowerInvariant() == "tree")
+			{
+				foreach (var item in _parentWindow.DrawingControl.LayersTree())
+				{
+					ReportAdd(item);
+				}
+			}
+			else if (m.Groups["action"].Value.ToLowerInvariant() == "mode")
+			{
+				// todo: restore
+
+				//parName = parName.ToLowerInvariant();
+				//var sb = new StringBuilder();
+
+				//// foreach model
+				//if (_parentWindow.DrawingControl.LayerStylerForceVersion1 || Model.GeometrySupportLevel == 1)
+				//    ReportAdd(string.Format(@"Current mode is {0}",
+				//        _parentWindow.DrawingControl.LayerStyler.GetType())
+				//        , Brushes.Green);
+				//else if (Model.GeometrySupportLevel == 2)
+				//    ReportAdd(string.Format(@"Current mode is {0}",
+				//        _parentWindow.DrawingControl.GeomSupport2LayerStyler.GetType()), Brushes.Green);
+				//else
+				//    ReportAdd(@"Visual mode not enabled on GeometrySupportLevel 0", Brushes.Red);
+
+
+				//bool stylerSet = false;
+
+				//var v1 = TypesImplementingInterface(typeof (ILayerStyler));
+				//foreach (var instance in v1.Where(IsRealClass))
+				//{
+				//    if (instance.Name.ToLowerInvariant() == parName ||
+				//        instance.FullName.ToLowerInvariant() == parName)
+				//    {
+				//        _parentWindow.DrawingControl.LayerStylerForceVersion1 = true;
+				//        _parentWindow.DrawingControl.LayerStyler =
+				//            (ILayerStyler) Activator.CreateInstance(instance);
+				//        _parentWindow.DrawingControl.FederationLayerStyler =
+				//            (ILayerStyler)Activator.CreateInstance(instance);
+
+
+				//        _parentWindow.DrawingControl.ReloadModel(
+				//            options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
+				//            );
+				//        ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
+				//        stylerSet = true;
+				//        continue;
+				//    }
+				//    sb.AppendLine(" - " + instance.FullName);
+				//}
+				//var v2 = TypesImplementingInterface(typeof(ILayerStylerV2));
+				//foreach (var instance in v2.Where(IsRealClass))
+				//{
+				//    if (instance.Name.ToLowerInvariant() == parName ||
+				//        instance.FullName.ToLowerInvariant() == parName)
+				//    {
+				//        _parentWindow.DrawingControl.LayerStylerForceVersion1 = false;
+				//        _parentWindow.DrawingControl.GeomSupport2LayerStyler =
+				//            (ILayerStylerV2) Activator.CreateInstance(instance);
+				//        _parentWindow.DrawingControl.ReloadModel(
+				//            options: DrawingControl3D.ModelRefreshOptions.ViewPreserveAll
+				//            );
+				//        ReportAdd("Visual mode set to " + instance.FullName + ".", Brushes.Orange);
+				//        stylerSet = true;
+				//        continue;
+				//    }
+				//    sb.AppendLine(" - " + instance.FullName);
+				//}
+				//if (!stylerSet)
+				//    ReportAdd(string.Format("Nothing done; valid modes are:\r\n{0}", sb));
+			}
+			else
+			{
+				var bVis = m.Groups["action"].Value.ToLowerInvariant() == "on";
+				_parentWindow.DrawingControl.SetVisibility(parName, bVis);
+			}
+		}
+
+		private void ProcessBrepCommand(Match m)
+		{
+			FileInfo fi = new FileInfo(Model.FileName);
+			var dirName = fi.DirectoryName;
+			XbimPlacementTree pt = new XbimPlacementTree(Model, App.ContextWcsAdjustment);
+			// add "DBRep_DrawableShape" as first line
+			var start = m.Groups["entities"].Value;
+			IEnumerable<int> labels = ToIntarray(start, ',');
+			if (labels.Any())
+			{
+				foreach (int label in labels)
+				{
+					bool firstWrite = true;
+					string prevSol = "";
+					var entity = Model.Instances[label];
+					if (entity == null)
+						continue;
+
+					var entities = new List<IPersistEntity>() { entity };
+					// todo: what to do with subtractionElements?
+					XbimMatrix3D trsf = XbimMatrix3D.Identity;
+					if (entity is IIfcProduct)
+					{
+						var prod = (IIfcProduct)entity;
+						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						entities.Clear();
+						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
+					}
+					else if (entity is IIfcRelVoidsElement)
+					{
+						var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
+						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						entities.Clear();
+						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
+					}
+					var engine = new XbimGeometryEngine();
+					var ifcFile = ((IfcStore)Model).FileName;
+					foreach (var solEntity in entities)
+					{
+						if (solEntity is IIfcGeometricRepresentationItem geomRep)
+						{
+							try
+							{
+								var created = engine.Create(geomRep, null);
+								var brep = engine.ToBrep(created);
+								var brepFileName = Path.ChangeExtension(ifcFile, $".{solEntity.EntityLabel}.v50.brep");
+								using (var tw = File.CreateText(brepFileName))
+								{
+									tw.WriteLine("DBRep_DrawableShape");
+									tw.WriteLine(brep);
+								}
+								ReportAdd($"Brep saved to '{brepFileName}'");
+							}
+							catch (Exception ex)
+							{
+								Logger.LogError(ex, $"Error writing brep {solEntity.EntityLabel}.");
+							}
+						}
+						else
+						{
+							var namesAndSolids = GetSolidsByAvailableMethods(solEntity, engine);
+							foreach (var nameAndSolids in namesAndSolids)
+							{
+								int iCnt = 0;
+								foreach (var solid in nameAndSolids.solids)
+								{
+									if (solid != null && solid.IsValid)
+									{
+										var trsfSolid = (IXbimSolid)solid.Transform(trsf);
+										var thisSol = trsfSolid.ToBRep;
+										if (thisSol == prevSol)
+											continue;
+										var fileName = $"{label}.{nameAndSolids.methodName}.{iCnt++}.brep";
+										if (firstWrite)
+										{
+											fileName = $"{label}.brep";
+											firstWrite = false;
+										}
+										FileInfo fBrep = new FileInfo(Path.Combine(dirName, fileName));
+										using (var tw = fBrep.CreateText())
+										{
+											tw.WriteLine("DBRep_DrawableShape");
+											tw.WriteLine(thisSol);
+										}
+										ReportAdd($"=== {fBrep.FullName} written", Brushes.Blue);
+										prevSol = thisSol;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		private void PluginCommand(Match mdbclosed)
+		{
+            var commandString = mdbclosed.Groups["command"].Value;
+            var pluginName = mdbclosed.Groups["pluginName"].Value;
+            if (commandString.ToLower() == "refresh")
+            {
+                _parentWindow?.RefreshPlugins();
+                return;
+            }
+            else if (commandString.ToLower() == "folder")
+            {
+                // open folder
+                var dir = PluginManagement.GetPluginsDirectory();
+                ReportAdd($"Plugins folder is: {dir.FullName}");
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = dir.FullName,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+                return;
+            }
+            else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
+            {
+                var pm = new PluginManagement();
+                var plugin = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).FirstOrDefault(x => x.PluginId == pluginName);
+                if (plugin == null)
+                {
+                    ReportAdd("Plugin not found.", Brushes.Red);
+                    return;
+                }
+
+                // test for the right command string
+                if (plugin.InstalledVersion != ""
+                    && commandString.ToLower() == "install")
+                {
+                    ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);
+                    return;
+                }
+
+                // try installing
+                ReportAdd("Plugin found; installing...", Brushes.Blue);
+                var extracted = plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                if (!extracted)
+                {
+                    ReportAdd("Plugin extraction failed.", Brushes.Red);
+                }
+                if (plugin.Config.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
+                {
+                    plugin.ToggleEnabled();
+                }
+
+                // try loading
+                var loaded = plugin.Load();
+                if (loaded)
+                    ReportAdd("Installed and loaded.", Brushes.Blue);
+                else
+                    ReportAdd("Plugin installed, but a restart is required.", Brushes.Red);
+                return;
+            }
+            else if (commandString.ToLower() == "load")
+            {
+                if (Directory.Exists(pluginName))
+                {
+                    var pluginDir = new DirectoryInfo(pluginName);
+                    (_parentWindow as XplorerMainWindow)?.LoadPlugin(pluginDir, true);
+                }
+                else
+                {
+                    ReportAdd("Plugin not found.", Brushes.Red);
+                }
+                return;
+            }
+            else if (commandString.ToLower() == "list")
+            {
+                PluginManagement pm = new PluginManagement();
+                var plugins = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).ToList();
+                if (plugins.Any())
+                {
+                    ReportAdd("Beta versions in the development channel:");
+                    foreach (var plugin in plugins)
+                    {
+                        ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
+                    }
+                }
+                plugins = pm.GetPlugins(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion).ToList();
+                if (plugins.Any())
+                {
+                    ReportAdd("Versions in the stable channel:");
+                    foreach (var plugin in plugins)
+                    {
+                        ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
+                    }
+                }
+                return;
+            }
+        }
+
+		private void ProcessModelTypesCommand()
+		{
+			ReportAdd("========== TypeReport for " + Model.FileName, Brushes.Blue);
+			ReportAdd("");
+			// very low efficiency, just to have it quick and dirty.
+			var typeAndCount = new Dictionary<ExpressType, int>();
+
+			foreach (var modelInstance in Model.Instances)
+			{
+				var t = modelInstance.ExpressType;
+				if (typeAndCount.ContainsKey(t))
+				{
+					typeAndCount[t] += 1;
+				}
+				else
+				{
+					typeAndCount.Add(t, 1);
+				}
+			}
+
+			var keys = typeAndCount.Keys.ToList();
+			keys.Sort( // sort inverted
+					(x1, x2) => typeAndCount[x2].CompareTo(typeAndCount[x1])
+				);
+
+			foreach (var key in keys)
+			{
+				var b = Brushes.Black;
+				if (typeof(IIfcElement).IsAssignableFrom(key.Type))
+					b = Brushes.Blue;
+				else if (typeof(IIfcProduct).IsAssignableFrom(key.Type))
+					b = Brushes.BlueViolet;
+				else if (typeof(IIfcRepresentationItem).IsAssignableFrom(key.Type))
+					b = Brushes.ForestGreen;
+				else if (typeof(IIfcRelationship).IsAssignableFrom(key.Type))
+					b = Brushes.DarkOrange;
+
+				ReportAdd($"{typeAndCount[key]}\t\t{key.Name}", b);
+			}
+		}
+
+		private void ProcessSelectCommand(Match m)
+		{
+			var command = m.Groups["command"].Value.ToLowerInvariant();
+			var highlight = false;
+			var highlightT = m.Groups["hi"].Value;
+			if (highlightT != "")
+				highlight = true;
+
+			var mode = m.Groups["mode"].Value;
+			var svt = m.Groups["svt"].Value;
+
+			var ret = GetSelection(m).ToArray();
+
+			if (command == "va" || command == "validate")
+			{
+				// validation report
+
+				var validator = new Validator()
+				{
+					CreateEntityHierarchy = true,
+					ValidateLevel = ValidationFlags.All
+				};
+				var insts = ret.Select(el => Model.Instances[el]);
+				var validInstances = insts.Where(x => x != null).ToList();
+
+				ReportAdd($"Validating {validInstances.Count()} model instances.");
+				var valresults = validator.Validate(validInstances);
+
+				var issues = 0;
+				foreach (var validationResult in new IfcValidationReporter(valresults))
+				{
+					ReportAdd(validationResult);
+					issues++;
+				}
+				if (issues == 0)
+					ReportAdd($"No issues found.\r\n{DateTime.Now.ToLongTimeString()}.");
+			}
+			else
+			{
+				// property repor
+				switch (mode.ToLower())
+				{
+					case "count ":
+						ReportAdd($"Count: {ret.Count()}");
+						break;
+					case "list ":
+						foreach (var item in ret)
+						{
+							ReportAdd(item.ToString(CultureInfo.InvariantCulture));
+						}
+						break;
+					case "typelist ":
+						foreach (var item in ret)
+						{
+							ReportAdd(item + "\t" + Model.Instances[item].ExpressType.Name);
+						}
+						break;
+					default:
+						var beVerbose = false;
+						if (mode.ToLower() == "short ")
+							beVerbose = false;
+						if (mode.ToLower() == "full ")
+							beVerbose = true;
+						var svtB = (svt != "");
+						foreach (var item in ret)
+						{
+							ReportAdd(ReportEntity(item, 0, verbose: beVerbose, showValueType: svtB));
+						}
+						break;
+				}
+			}
+			if (highlight) // set selection in Xplorer 
+			{
+				var s = new EntitySelection();
+				foreach (var item in ret)
+				{
+					s.Add(Model.Instances[item]);
+				}
+				var sw = new Stopwatch();
+				sw.Start();
+				_parentWindow.DrawingControl.Selection = s;
+				Debug.WriteLine(sw.ElapsedMilliseconds);
+			}
+		}
+
+		private void ProcessClipCommand(Match m)
+		{
+            double px = 0, py = 0, pz = 0;
+            double nx = 0, ny = 0, nz = -1;
+
+            if (m.Groups["elev"].Value != string.Empty)
+            {
+                pz = Convert.ToDouble(m.Groups["elev"].Value);
+            }
+            else if (m.Groups["StoreyName"].Value != string.Empty)
+            {
+                if (ModelIsUnavailable) 
+                    return;
+                var msg = "";
+                var storName = m.Groups["StoreyName"].Value;
+                var storey =
+                    Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
+                if (storey != null)
+                {
+                    var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
+                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
+                    var off = trsf.OffsetZ;
+                    var pt = new XbimPoint3D(0, 0, off);
+
+                    var mcp = XbimMatrix3D.Copy(_parentWindow.DrawingControl.ModelPositions[storey.Model].Transform);
+
+                    var transformed = mcp.Transform(pt);
+                    msg = $"Clip 1m above storey elevation {pt.Z} (View space height: {transformed.Z + 1})";
+                    pz = transformed.Z + 1;
+
+                }
+                if (msg == "")
+                {
+                    ReportAdd($"Something wrong with storey name: '{storName}'");
+                    ReportAdd("Names that should work are: ");
+                    var strs = Model.Instances.OfType<IIfcBuildingStorey>();
+                    foreach (var str in strs)
+                    {
+                        ReportAdd($" - '{str.Name}'");
+                    }
+                    return;
+                }
+                ReportAdd(msg);
+            }
+            else
+            {
+                px = Convert.ToDouble(m.Groups["px"].Value);
+                py = Convert.ToDouble(m.Groups["py"].Value);
+                pz = Convert.ToDouble(m.Groups["pz"].Value);
+                nx = Convert.ToDouble(m.Groups["nx"].Value);
+                ny = Convert.ToDouble(m.Groups["ny"].Value);
+                nz = Convert.ToDouble(m.Groups["nz"].Value);
+            }
+
+            _parentWindow.DrawingControl.ClearCutPlane();
+            _parentWindow.DrawingControl.SetCutPlane(
+                px, py, pz,
+                nx, ny, nz
+                );
+
+            ReportAdd("Clip command sent");
+            _parentWindow.Activate();
+        }
+
+		private void ProcessRegionCommand(string mode, string rName)
+		{
+			if (mode == "?" || mode == "list")
+			{
+				using (var reader = Model.GeometryStore.BeginRead())
+				{
+					var allRegCollections = reader.ContextRegions;
+					ReportAdd($"Region Collections count: {allRegCollections.Count}");
+					foreach (var regionCollection in allRegCollections)
+					{
+						ReportAdd($"Region Collection (#{regionCollection.ContextLabel}) count: {regionCollection.Count}");
+						foreach (var r in regionCollection)
+						{
+							ReportAdd($"Region\t'{r.Name}'\t{r.Population}\t{r.Size}\t{r.Centre}");
+						}
+					}
+				}
+			}
+			else
+			{
+				bool setOk = true;
+				var add = (mode == "add");
+				if (add && rName == "*")
+				{
+					using (var reader = Model.GeometryStore.BeginRead())
+					{
+						var allRegCollections = reader.ContextRegions;
+						foreach (var regionCollection in allRegCollections)
+						{
+							foreach (var r in regionCollection)
+							{
+								setOk &= _parentWindow.DrawingControl.SetRegion(r.Name, add);
+							}
+						}
+					}
+				}
+				else
+					setOk = _parentWindow.DrawingControl.SetRegion(rName, add);
+				if (setOk)
+				{
+					ReportAdd("Region set.");
+					ReportAdd(_parentWindow.DrawingControl.ModelPositions.Report());
+				}
+				else
+				{
+					ReportAdd($"Region \"{rName}\"not found.");
+				}
+			}
+		}
+
+		private void ProcessSchemaCommand(Match mdbclosed)
+		{
+			var typeString = mdbclosed.Groups["type"].Value;
+			var mode = mdbclosed.Groups["mode"].Value;
+
+			if (typeString == "/")
+			{
+				// this is a magic case handled by the matchingType
+			}
+			else if (typeString == PrepareRegex(typeString))
+			// there's not a regex expression, we will prepare one assuming the search for a bare name.
+			{
+				typeString = @".*\." + typeString + "$";
+				// any character repeated then a dot then the name and the end of line
+			}
+			else
+				typeString = PrepareRegex(typeString);
+
+			var typeList = MatchingTypes(typeString);
+
+
+			if (mode.ToLower() == "list ")
+			{
+				foreach (var item in typeList)
+					ReportAdd(item);
+			}
+			else if (mode.ToLower() == "count ")
+			{
+				ReportAdd("count: " + typeList.Count());
+			}
+			else
+			{
+				// report
+				var beVerbose = 1;
+				if (mode.ToLower() == "short ")
+					beVerbose = 0;
+				if (mode.ToLower() == "full ")
+					beVerbose = 2;
+				foreach (var item in typeList)
+				{
+					ReportAdd(ReportType(item, beVerbose));
+				}
+			}
+		}
+
+		private void ProcessPropertyCommand(Match m)
+		{
+            var propSearch = m.Groups["propName"].Value.ToLowerInvariant();
+            
+
+            ReportAdd($"Searching property: {propSearch}", Brushes.Black);
+            var schemas = new[] { "Ifc2x3", "Ifc4" };
+			foreach (var schema in schemas)
+			{
+                var ot = SchemaMetadatas[schema.ToLowerInvariant()].Types();
+                foreach (var objectType in ot)
+                {
+                    foreach (var prop in objectType.Properties.Values)
+                    {
+                        if (prop.Name.ToLowerInvariant() == propSearch)
+                        {
+                            // we skip it if the parent already has it.
+                            if (objectType.SuperType != null && objectType.SuperType.Properties.Values.Any(x => x.Name.ToLowerInvariant() == propSearch))
+                                continue;
+                            if (true)
+                            {
+                                ReportAdd($"- {objectType.Type.FullName}", Brushes.Black);
+                            }
+                            else
+                            {
+
+                                // this can be used to create property extraction from multiple types.
+
+     //                           var v = $@"				case ""{objectType.Type.FullName}"":
+					//return (({objectType.Type.FullName})item).PredefinedType.ToString();";
+     //                           ReportAdd(v, Brushes.Black);
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+		private TextHighliter ReportBoolean(IIfcBooleanResult ent, int v)
+		{
+            var sb = new TextHighliter();
+            string ind = new string(' ', v);
+            ind = ind.Replace(" ", "  ");
+            sb.Append($"{ind}{ent.FirstOperand.GetType().Name} [#{ent.FirstOperand.EntityLabel}]",
+                        Brushes.Blue
+                        );
+            if (ent.FirstOperand is IIfcBooleanResult br1)
+                sb.Append(ReportBoolean(br1, v + 1));
+
+            sb.Append($"{ind}{ent.Operator}", Brushes.Black);
+
+            sb.Append($"{ind}{ent.SecondOperand.GetType().Name} [#{ent.SecondOperand.EntityLabel}]",
+                        Brushes.Blue
+                        );
+            if (ent.SecondOperand is IIfcBooleanResult br2)
+                sb.Append(ReportBoolean(br2, v + 1));
+            return sb;
+        }
+
+		private int ReportAsObj(IPersistEntity entity, int startIndex = 1)
+        {
+            // dirty (but quick) export of mesh to obj
+            //
+            var dummyMaterial = new WpfMaterial(new XbimColour("dummy", 1, 1, 1, 1));
+            ReportAdd($"# ##########################################");
+            ReportAdd($"# start obj format for entity {entity.EntityLabel}");
+            ReportAdd($"o Entity{entity.EntityLabel}");
+            var geom = WpfMeshGeometry3D.GetGeometry(entity, XbimMatrix3D.Identity, dummyMaterial);
+            ReportAdd($"# ##### start positions");
+            foreach (var pos in geom.Positions)
+            {
+                ReportAdd($"v {pos.X} {pos.Y} {pos.Z}");
+            }
+            ReportAdd($"# ##### start indices");
+            int facesCount = geom.TriangleIndices.Count / 3;
+            int face = 0;
+            while (face < facesCount)
+            {
+                int iStart = face++ * 3;
+                int i1 = geom.TriangleIndices[iStart++] + startIndex;
+                int i2 = geom.TriangleIndices[iStart++] + startIndex;
+                int i3 = geom.TriangleIndices[iStart++] + startIndex;
+                ReportAdd($"f {i1} {i2} {i3}");
+            }
+            ReportAdd($"# end obj format for entity {entity.EntityLabel}");
+            ReportAdd($"# ##########################################");
+            return startIndex + geom.Positions.Count();
+        }
+
         private void ConvertFolder(string folderName)
         {
             DirectoryInfo d = new DirectoryInfo(folderName);
@@ -1167,15 +1604,14 @@ namespace XbimXplorer.Commands
             Execute();
         }
 
-        private IEnumerable<Tuple<string, List<IXbimSolid>>> GetSolids(IPersistEntity entity)
+        private IEnumerable<(string methodName, List<IXbimSolid> solids)> GetSolidsByAvailableMethods(IPersistEntity entity, XbimGeometryEngine engine)
         {
             // todo: cache methods by type
-            var engine = new XbimGeometryEngine();
             var methods = typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
             foreach (var methodInfo in methods)
             {
                 var pars = methodInfo.GetParameters().ToArray();
-                if (pars.Length != 1) // only consider functinons with a single parameter
+                if (pars.Length != 2) // only consider functinons with a single parameter, and the logger
                     continue;
                 if (methodInfo.ReturnParameter.ParameterType == typeof(bool))
                     continue; // excludes the equal function
@@ -1186,71 +1622,119 @@ namespace XbimXplorer.Commands
                 if (!firstParam.ParameterType.IsInstanceOfType(entity))
                     continue;
                 var functionShort = $"{methodInfo.Name}({firstParam.ParameterType.Name.Replace("IIfc", "Ifc")})";
-                
-                var getSolidRet = new Tuple<string, List<IXbimSolid>>( 
-                    functionShort, new List<IXbimSolid>()
-                    );
-
+                var vals = new List<IXbimSolid>();
                 try
                 {
-                    var ret = methodInfo.Invoke(engine, new object[] { entity });
+                    var ret = methodInfo.Invoke(engine, new object[] { entity, null});
                     if (ret != null)
                     {
                         var sol = ret as IXbimSolid;
                         var solset = ret as IXbimSolidSet;
                         if (sol != null)
                         {
-                            getSolidRet.Item2.Add(sol);
+                            vals.Add(sol);
                         }
                         else if (solset != null)
                         {
                             foreach (var subSol in solset)
                             {
-                                getSolidRet.Item2.Add(subSol);
+                                vals.Add(subSol);
                                 // ReportAdd($"    [{iCnt++}]: {subSol.GetType().Name} - Volume: {subSol.Volume}", Brushes.Green);
                             }
                         }
                     }
                     else
                     {
-                        getSolidRet.Item2.Add(null);
+                        vals.Add(null);
                     }
                 }
                 catch (Exception ex)
                 {
-                    getSolidRet.Item2.Add(null);
+                    vals.Add(null);
                     var msg = $"  Failed on {functionShort} for #{entity.EntityLabel}. {ex.Message}";
                     ReportAdd(msg, Brushes.Red);
                 }
-                yield return getSolidRet;
+                yield return (functionShort, vals);
             }
         }
 
         private void Report(string title, ModelVisual3D visualElement, bool triangulation = false)
         {
-            ReportAdd(title, Brushes.Blue);
+            ReportAdd($"{title} - {visualElement.GetType().Name}", Brushes.Blue);
             if (visualElement.Content != null)
             {
+                ReportAdd("Content:");
                 var as3D = visualElement.Content as GeometryModel3D;
                 Report(as3D, 1, triangulation);
             }
+            if (!visualElement.Children.Any())
+                return;
+            ReportAdd($"Children: {visualElement.Children.GetType().Name}");
             foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
             {
-                Report(visualElementChild);
+                Report(visualElementChild, 1);
             }
         }
 
-        private void Report(ModelVisual3D mv3d, int indent = 0)
+        private void ReportVisual(ModelVisual3D visualElement, int indent = 0)
         {
             var ind = new string('\t', indent);
-            ReportAdd($"{ind}{mv3d.GetType().Name} isSealed:{mv3d.IsSealed} children: {mv3d.Children.Count}"
-            );
-            foreach (var child in mv3d.Children)
+            ReportAdd($"{ind}ModelVisual3D: {visualElement.GetType().Name}", Brushes.Blue);
+            if (visualElement.Content != null)
             {
-                // Report(child, indent + 1);
+                ReportAdd($"{ind}Cont: {visualElement.Content.GetType().Name}", Brushes.Black);
+                ReportVisual(visualElement.Content, indent + 1);
             }
-            if (mv3d.Content is Model3DGroup)
-                Report((Model3DGroup)mv3d.Content, indent + 1);
+            else
+                ReportAdd($"{ind}Cont: null", Brushes.Black);
+            if (!visualElement.Children.Any()
+                )
+			{
+                ReportAdd($"{ind}Children: None", Brushes.Black);
+                return;
+            }
+            {
+                ReportAdd($"{ind}Children: {visualElement.Children.GetType().Name}", Brushes.Black);
+                foreach (var visualElementChild in visualElement.Children.OfType<ModelVisual3D>())
+                {
+                    ReportVisual(visualElementChild, indent + 1);
+                }
+            }
+        }
+
+		private void ReportVisual(Model3D content, int indent)
+		{
+            var ind = new string('\t', indent);
+            ReportAdd($"{ind}Model3D: {content.GetType().Name}", Brushes.Blue);
+            ReportAdd($"{ind}todo: no info");
+        }
+
+		private void Report(ModelVisual3D mv3d, int indent = 0)
+        {
+            var ind = new string('\t', indent);
+            ReportAdd($"{ind}ModelVisual3D: {mv3d.GetType().Name} isSealed:{mv3d.IsSealed} children: {mv3d.Children.Count}"
+            );
+            if (mv3d.Content is Model3DGroup m3d)
+            {
+                ReportAdd($"{ind}Content Model3DGroup:");
+                Report(m3d, indent + 1);
+            }
+            else if (mv3d.Content is GeometryModel3D gm3d)
+            {
+                ReportAdd($"{ind}Content GeometryModel3D:");
+                Report(gm3d, indent + 1);
+            }
+            var children = mv3d.Children.OfType<ModelVisual3D>().ToList();
+            if (!children.Any())
+            {
+                ReportAdd($"{ind}no children.");
+                return;
+            }
+            ReportAdd($"{ind}Children: {mv3d.Children.GetType().Name}");
+            foreach (var child in children)
+            {
+                Report(child, indent + 1);
+            }
         }
 
         private void Report(Model3DGroup content, int indent)
@@ -1258,16 +1742,18 @@ namespace XbimXplorer.Commands
             var ind = new string('\t', indent);
             ReportAdd($"{ind}{content.GetType().Name} isSealed:{content.IsSealed} children: {content.Children.Count}"
             );
+            ReportAdd($"{ind}Does not have content property.");
+            ReportAdd($"{ind}Children: {content.Children.GetType().Name}");
             foreach (var child in content.Children.OfType<GeometryModel3D>())
             {
                 Report(child, indent + 1);
             }
         }
 
-        private void Report(GeometryModel3D content, int indent, bool triangulation = false)
+        private void Report(GeometryModel3D gm3d, int indent, bool triangulation = false)
         {
-            var mRep = content.Material.GetType().Name;
-            var mat = content.Material as DiffuseMaterial;
+            var mRep = gm3d.Material.GetType().Name;
+            var mat = gm3d.Material as DiffuseMaterial;
             Brush b = null;
             if (mat != null)
             {
@@ -1276,10 +1762,10 @@ namespace XbimXplorer.Commands
             }
             
             var ind = new string('\t', indent);
-            var msg = $"{ind}{content.GetType().Name} isSealed:{content.IsSealed} Material: {mRep}";
+            var msg = $"{ind}{gm3d.GetType().Name} isSealed:{gm3d.IsSealed} Material: {mRep}";
             var rb = new TextHighliter();
             var txt = new List<string>() {msg};
-            var bs = new List<Brush>() { Brushes.Black};
+            var bs = new List<Brush>() { Brushes.Orange};
             
             if (b != null)
             {
@@ -1288,9 +1774,9 @@ namespace XbimXplorer.Commands
             }
             rb.AppendSpans(txt.ToArray(), bs.ToArray());
             ReportAdd(rb);
-            if (content.Geometry is MeshGeometry3D)
-                Report(content.Geometry as MeshGeometry3D, indent + 1, triangulation);
-
+            ReportAdd($"{ind}Geometry: {gm3d.Geometry.GetType().Name}");
+            if (gm3d.Geometry is MeshGeometry3D mg3d)
+                Report(mg3d, indent + 1, triangulation);
         }
 
         private void Report(MeshGeometry3D content, int indent, bool triangulation = false)
@@ -1677,6 +2163,13 @@ namespace XbimXplorer.Commands
             TxtOut.Document.Blocks.Add(newP);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value">12-32 -> range; #12 = 12; 
+        /// </param>
+        /// <param name="sep"></param>
+        /// <returns></returns>
         private int[] ToIntarray(string value, char sep)
         {
             var sa = value.Split(new[] {sep}, StringSplitOptions.RemoveEmptyEntries);
@@ -1702,17 +2195,33 @@ namespace XbimXplorer.Commands
                 {
                     int j;
                     var thisText = sa[i];
-                    if (thisText.StartsWith("#"))
-                        thisText = thisText.Substring(1);
-                    if (int.TryParse(thisText, out j))
+                    if (IsGuid(thisText))
                     {
-                        ia.Add(j);
+                        var t = _parentWindow.Model.Instances.OfType<IIfcRoot>().Where(x => x.GlobalId == thisText).FirstOrDefault();
+                        if (t!= null)
+                        {
+                            ia.Add(t.EntityLabel);
+                        }
+                    }
+                    else
+                    {
+                        if (thisText.StartsWith("#"))
+                            thisText = thisText.Substring(1);
+                        if (int.TryParse(thisText, out j))
+                        {
+                            ia.Add(j);
+                        }
                     }
                 }
             }
             return ia.ToArray();
         }
-        
+
+        private bool IsGuid(string thisText)
+        {
+            return thisText.Length == 22;
+        }
+
         private void DisplayHelp()
         {
             var t = new TextHighliter();
@@ -2029,8 +2538,6 @@ namespace XbimXplorer.Commands
 
                 
                 sb.AppendFormat(indentationHeader + "=== {1}.{0} is an Express Select type", type, schema);
-                
-                
                 var selectSubTypes = ifcModule2.GetTypes().Where(
                     t => t.GetInterfaces().Contains(selectType)
                     ).ToList();
@@ -2094,7 +2601,7 @@ namespace XbimXplorer.Commands
                 // just list the names first
                 foreach (var item in selectSubTypes)
                 {
-                    sb.Append(ReportType(item.FullName, 0, indentationHeader + "  "));
+                    sb.Append(indentationHeader + "  " + item.FullName, Brushes.Black);
                 }
                 // only report subitmes in higher verbosity
                 if (beVerbose > 1)
@@ -2127,12 +2634,15 @@ namespace XbimXplorer.Commands
         private TextHighliter ReportEntity(int entityLabel, int recursiveDepth = 0, int indentationLevel = 0,
             bool verbose = false, bool showValueType = false)
         {
+            
             // Debug.WriteLine("EL: " + EntityLabel.ToString());
             var sb = new TextHighliter();
             var indentationHeader = new string('\t', indentationLevel);
             try
             {
                 var entity = Model.Instances[entityLabel];
+                if (entity is IIfcPoint)
+                    return sb;
                 if (entity != null)
                 {
                     var ifcType = Model.Metadata.ExpressType(entity);

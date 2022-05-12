@@ -223,7 +223,7 @@ namespace Xbim.Presentation.LayerStyling
             Model3DGroup tmpOpaquesGroup)
         {
             var mg = new WpfMeshGeometry3D(wpfMaterial, wpfMaterial);
-            
+            // set the tag of the child of mg to mg, so that it can be identified on click
             mg.WpfModel.SetValue(FrameworkElement.TagProperty, mg);
             mg.BeginUpdate();
             if (wpfMaterial.IsTransparent)
@@ -262,10 +262,15 @@ namespace Xbim.Presentation.LayerStyling
             return material2;
         }
 
-
         public void SetFederationEnvironment(IReferencedModel refModel)
         {
             
+        }
+
+
+        public void Clear()
+        {
+            // nothing to do for clearing this style
         }
     }
 }

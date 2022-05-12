@@ -40,6 +40,7 @@
                             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                             <ModelVisual3D x:Name="Opaques" />
                         </helixToolkit:CuttingPlaneGroup>
+                        <helixToolkit:GridLinesVisual3D x:Name="GridLines" Width="100" Length="100" MinorDistance="10" MajorDistance="25" Thickness="0.25"/>
 
                         <extensions:ObservableMeshVisual3D x:Name="Highlighted" EdgeDiameter="0"  VertexRadius="0" />
 
@@ -47,14 +48,17 @@
                             <helixToolkit:CuttingPlaneGroup.CuttingPlanes>
                                 <helixToolkit:Plane3D Normal="0,0,1" Position="0,0,0"/>
                             </helixToolkit:CuttingPlaneGroup.CuttingPlanes>
-                            <ModelVisual3D x:Name="Transparents" />
+                            <helixToolkit:SortingVisual3D x:Name="Transparents"  Method="BoundingBoxCorners">
+                                <helixToolkit:RectangleVisual3D Origin="0,0,0" Normal="1,0,0" LengthDirection="0,1,0" Fill="#80FF0000"/>
+                            </helixToolkit:SortingVisual3D>
                         </helixToolkit:CuttingPlaneGroup>
 
                         <ModelVisual3D x:Name="Extras" />
+                        <ModelVisual3D x:Name="Overlays" />
 
                         <helixToolkit:DefaultLights ShowLights="False" />
                         <!-- You can also add elements here in the xaml -->
-                        <helixToolkit:GridLinesVisual3D x:Name="GridLines" Width="100" Length="100" MinorDistance="10" MajorDistance="25" Thickness="0.25"/>
+                        
 
 
                     </helixToolkit:HelixViewport3D>

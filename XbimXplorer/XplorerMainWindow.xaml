@@ -102,11 +102,14 @@
                     <MenuItem Header="Styler _Configuration" Click="ConfigureStyler" />
                     <MenuItem Header="IfcSpaces only" Click="StylerIfcSpacesOnly" />
                     <MenuItem Header="Display bounding corners" Click="SetStylerBoundCorners" />
+                    <MenuItem Header="Set Random Styler (slow)" Click="SetRandomStyler" />
                 </MenuItem>
-                <MenuItem Header="Selection view _mode">
+                <MenuItem Header="Selection">
                     <MenuItem x:Name="WholeMesh" Header="Whole mesh" Click="SelectionMode" IsChecked="True" />
                     <MenuItem x:Name="Normals" Header="Normals" Click="SelectionMode" />
                     <MenuItem x:Name="WireFrame" Header="WireFrame" Click="SelectionMode" />
+					<Separator Visibility="Visible"/>
+					<MenuItem x:Name="SelectionColorCycleMenu" Header="Cycle color" Click="SelectionColorCycle" />
                 </MenuItem>
                 <MenuItem Header="_Zoom">
                     <MenuItem Header="Zoom _Extents" Click="MenuItem_ZoomExtents"/>
@@ -207,6 +210,7 @@
                                    Focusable="True" 
                                    Width="Auto" 
                                    Height="Auto" 
+
                                    MouseDoubleClick="SpatialControl_MouseDoubleClick"
                                    WcsAdjusted="{x:Static local:App.ContextWcsAdjustment}"
                                    >
