@@ -8,7 +8,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <Version>5.1.0.0</Version>
+    <Version>6.0.0.0</Version>
     <Copyright>Copyright © XBIM Ltd</Copyright>
     <Company>Xbim Ltd.</Company>
     <Authors>Steve Lockley, Martin Cerny and XBIMTeam Contributors</Authors>
@@ -17,7 +17,7 @@
     <PackageProjectUrl>https://github.com/xBimTeam/XbimWindowsUI</PackageProjectUrl>
     <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
     <PackageReleaseNotes>
-      Now built on XBIM v5. Migrated from log4net to Microsoft.Extensions.Logging.
+      Now built on XBIM v6 to support netCore and IFC4x3
     </PackageReleaseNotes>
     <PackageTags>BIM, IFC, IfcXml, IfcZip, Ifc4, COBie, BuildingSmart</PackageTags>
     <RepositoryUrl>https://github.com/xBimTeam/XbimWindowsUI/tree/master</RepositoryUrl>

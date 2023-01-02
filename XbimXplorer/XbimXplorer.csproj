@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
 		<TargetFrameworks>net6.0-windows</TargetFrameworks>
 		<RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
 		<OutputType>WinExe</OutputType>
@@ -13,20 +12,13 @@
 		<ApplicationIcon />
     <UseWPF>true</UseWPF>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-windows|AnyCPU'">
 		<OutputPath>..\Output\Debug\</OutputPath>
-		<PlatformTarget>x86</PlatformTarget>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net472|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-windows|AnyCPU'">
 		<OutputPath>..\Output\Release</OutputPath>
 	</PropertyGroup>
 	<ItemGroup>
-		<!-- App.xaml -->
-		<!--<ApplicationDefinition Include="App.xaml">
-			<SubType>Designer</SubType>
-			<Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-		</ApplicationDefinition>-->
-   
 		<EmbeddedResource Update="Properties\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" />
 		<Compile Update="Properties\Resources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Resources.resx" />
 		<Compile Update="Properties\Settings.Designer.cs">
@@ -40,9 +32,7 @@
 			<Generator>SettingsSingleFileGenerator</Generator>
 			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
 		</None>
-		<None Update="Settings.settings" LastGenOutput="Settings.Designer.cs" Generator="SettingsSingleFileGenerator" />
-		<!--<Page Include="**\*.xaml" SubType="Designer" Generator="MSBuild:UpdateDesignTimeXaml" Exclude="App.xaml" />
-		<Compile Update="**\*.xaml.cs" SubType="Designer" DependentUpon="%(Filename)" />-->
+		
 		<Resource Include="assets\*.*" />
 		<Resource Include="Commands\console.bmp" />
 		<Resource Include="**\*.png" />
@@ -57,33 +47,17 @@
 		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
-		<!--
-    <PackageReference Include="AvalonDock" Version="2.0.2000" />
-		<PackageReference Include="HelixToolkit.Wpf" Version="2.14.0" />
-		<PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
-		<PackageReference Include="Xbim.Geometry" Version="5.1.445" />
-		<PackageReference Include="Nuget.Core" Version="2.14.0" />
-		<PackageReference Include="Xbim.IO.Esent" Version="5.9.375-develop" />
-    -->
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
 		<PackageReference Include="DotNetZip" Version="1.16.0" />
 		<PackageReference Include="Dirkster.AvalonDock" Version="4.71.1" />
-		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.103" />
 		<PackageReference Include="HelixToolkit.Core.Wpf" Version="2.23.0" />
 		<PackageReference Include="NuGet.Protocol" Version="6.4.0" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
-    <PackageReference Include="Xbim.IO.Esent" Version="5.9.375-develop" />
-	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="Properties\" />
+		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Xbim.IO.Esent" Version="5.9.376-develop" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />
   </ItemGroup>
-  <!--<ItemGroup>
-    <Page Update="Dialogs\RepresentationContextSelection.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-	</ItemGroup>-->
+ 
 </Project>
