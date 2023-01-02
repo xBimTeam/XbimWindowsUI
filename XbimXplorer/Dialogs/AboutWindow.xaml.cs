@@ -9,11 +9,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using Xbim.Common;
 using Xbim.Ifc;
-using Xbim.Ifc4.GeometricModelResource;
-using Xbim.Ifc4.GeometryResource;
-using Xbim.Ifc4.Kernel;
-using Xbim.Ifc4.UtilityResource;
-using Xbim.Presentation.Extensions;
+using Xbim.Ifc4.Interfaces;
+
 
 
 namespace XbimXplorer.Dialogs
@@ -125,19 +122,19 @@ namespace XbimXplorer.Dialogs
                     }
                     sb.AppendLine();
                     sb.AppendLine("Model information:");
-                    var ohs = Model.Instances.OfType<IfcOwnerHistory>().FirstOrDefault();
+                    var ohs = Model.Instances.OfType<IIfcOwnerHistory>().FirstOrDefault();
                     sb.AppendFormat("Entities count: {0}\r\n", Model.Instances.Count);
                     sb.AppendFormat("Schema: {0}\r\n", Model.Header.FileSchema.Schemas.FirstOrDefault());
                     sb.AppendFormat("Description: {0}\r\n", Model.Header.FileDescription.Description.FirstOrDefault());
                     sb.AppendFormat("ImplementationLevel: {0}\r\n", Model.Header.FileDescription.ImplementationLevel);
-                    sb.AppendFormat("IfcProduct count: {0}\r\n", Model.Instances.CountOf<IfcProduct>());
-                    sb.AppendFormat("IfcSolidModel count: {0}\r\n", Model.Instances.CountOf<IfcSolidModel>());
-                    sb.AppendFormat("IfcMappedItem count: {0}\r\n", Model.Instances.CountOf<IfcMappedItem>());
-                    sb.AppendFormat("IfcBooleanResult count: {0}\r\n", Model.Instances.CountOf<IfcBooleanResult>());
+                    sb.AppendFormat("IfcProduct count: {0}\r\n", Model.Instances.CountOf<IIfcProduct>());
+                    sb.AppendFormat("IfcSolidModel count: {0}\r\n", Model.Instances.CountOf<IIfcSolidModel>());
+                    sb.AppendFormat("IfcMappedItem count: {0}\r\n", Model.Instances.CountOf<IIfcMappedItem>());
+                    sb.AppendFormat("IfcBooleanResult count: {0}\r\n", Model.Instances.CountOf<IIfcBooleanResult>());
                     sb.AppendFormat("BReps count: {0}\r\n", 
-                        Model.Instances.CountOf<IfcFaceBasedSurfaceModel>() + 
-                        Model.Instances.CountOf<IfcShellBasedSurfaceModel>() + 
-                        Model.Instances.CountOf<IfcManifoldSolidBrep>() 
+                        Model.Instances.CountOf<IIfcFaceBasedSurfaceModel>() + 
+                        Model.Instances.CountOf<IIfcShellBasedSurfaceModel>() + 
+                        Model.Instances.CountOf<IIfcManifoldSolidBrep>() 
                         );
                     sb.AppendFormat("Application: {0}\r\n",
                             ohs != null 
