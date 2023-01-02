@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:Xbim.Presentation" 
-                    xmlns:helixToolkit="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
+                    xmlns:helixToolkit="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Core.Wpf"
                     xmlns:extensions="clr-namespace:Xbim.Presentation.Extensions">
     <Style x:Key="{x:Type local:DrawingControl3D}" TargetType="{x:Type local:DrawingControl3D}">
         <Setter Property="Template">

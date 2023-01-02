@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NuGet;
+using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -63,7 +64,7 @@ namespace XbimXplorer.PluginSystem
 
         internal static ManifestMetadata GetManifestMetadata(DirectoryInfo path)
         {
-            var tmp = new ManifestMetadata() { Id = path.Name, Version = "<undetermined>" };
+            var tmp = new ManifestMetadata() { Id = path.Name, Version = new NuGet.Versioning.NuGetVersion("0.0.0") };
             var file = path.GetFiles("*.manifest").FirstOrDefault();
             if (file == null)
             {
@@ -88,6 +89,7 @@ namespace XbimXplorer.PluginSystem
 
         internal IEnumerable<PluginInformation> GetPlugins(PluginChannelOption option, string winUiNugetVersion)
         {
+#if nuge
             RefreshLocalPlugins();
             var repo = PackageRepositoryFactory.Default.CreateRepository(SelectedRepoUrl);
             var allowDevelop = option != PluginChannelOption.LatestStable;
@@ -134,6 +136,8 @@ namespace XbimXplorer.PluginSystem
                 }
                 yield return pv;
             }
+#endif
+            return Enumerable.Empty<PluginInformation>();
         }
 
         public static string GetEntryFile(DirectoryInfo dir, string filename = null)

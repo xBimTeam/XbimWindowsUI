@@ -5,7 +5,7 @@
         xmlns:local="clr-namespace:XbimXplorer"
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
         xmlns:etb="clr-namespace:XbimXplorer.EditableTextBlock"
-    xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+        xmlns:avalonDock="https://github.com/Dirkster99/AvalonDock"
     xmlns:viewModels="clr-namespace:Xbim.Ifc.ViewModels;assembly=Xbim.Ifc"
     Title="Xbim Xplorer" Height="600" Width="800" 
     x:Name="MainWindow"

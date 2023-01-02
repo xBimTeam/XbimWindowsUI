@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
-using NuGet;
 using System;
 using System.IO;
 using System.Windows;
+using NuGet.Packaging;
+using NuGet.Versioning;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -14,11 +15,11 @@ namespace XbimXplorer.PluginSystem
 
         internal PluginConfiguration Config { get; set; }
         
-        public string AvailableVersion => _onlinePackage?.Version.ToString() ?? "";
-        public string InstalledVersion => _diskManifest?.Version ?? "";
+        public NuGetVersion AvailableVersion => _onlinePackage?.Version;
+        public NuGetVersion InstalledVersion => _diskManifest?.Version;
         public string LoadedVersion => MainWindow?.GetLoadedVersion(PluginId) ?? "";
 
-        private IPackage _onlinePackage;
+        private IPackageMetadata _onlinePackage;
         private ManifestMetadata _diskManifest;
         private DirectoryInfo _directory;
         
@@ -32,7 +33,7 @@ namespace XbimXplorer.PluginSystem
             SetDirectoryInfo(directoryInfo);
         }
 
-        public PluginInformation(IPackage p)
+        public PluginInformation(IPackageMetadata p)
         {
             SetPackage(p);
         }
@@ -63,7 +64,7 @@ namespace XbimXplorer.PluginSystem
             SetDirectoryInfo(_directory);
         }
 
-        public void SetPackage(IPackage package)
+        public void SetPackage(IPackageMetadata package)
         {
             _onlinePackage = package;
             if (string.IsNullOrEmpty(PluginId))
@@ -116,6 +117,7 @@ namespace XbimXplorer.PluginSystem
 
             // now extract files
             // 
+#if Nuget
             foreach (var file in _onlinePackage.GetLibFiles())
             {
                 var destname = Path.Combine(subdir.FullName, file.EffectivePath);
@@ -162,6 +164,7 @@ namespace XbimXplorer.PluginSystem
                 Logger.LogError(0, ex, "Error trying to create manifest file for: {packageName}", packageName);
                 return false;
             }
+#endif
             return true;
         }
 

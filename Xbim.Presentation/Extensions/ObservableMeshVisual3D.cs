@@ -1,6 +1,6 @@
-﻿using System.ComponentModel;
+﻿using HelixToolkit.Wpf;
+using System.ComponentModel;
 using System.Windows.Media.Media3D;
-using HelixToolkit.Wpf;
 using Xbim.Presentation.Extensions.Utility;
 
 namespace Xbim.Presentation.Extensions

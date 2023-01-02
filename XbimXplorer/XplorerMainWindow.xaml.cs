@@ -48,7 +48,9 @@ using Xbim.IO;
 using Xbim.Geometry.Engine.Interop;
 using System.Windows.Media;
 
+
 #endregion
+
 
 namespace XbimXplorer
 {
@@ -57,6 +59,7 @@ namespace XbimXplorer
     /// </summary>
     public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
+
         private BackgroundWorker _loadFileBackgroundWorker;
         /// <summary>
         /// Used for the creation of a new federation file
@@ -247,21 +250,24 @@ namespace XbimXplorer
 
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var model = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
-            ModelProvider.ObjectInstance = model;
-            ModelProvider.Refresh();
 
-            
+            // TODO: re-enable after sorting timing/sequencing issue - with DrawingCtrl.OnApplyTemplate()
+            //var model = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
+            //ModelProvider.ObjectInstance = model;
+            //ModelProvider.Refresh();
+
+
 
             TestCRedist();
         }
 
         private void TestCRedist()
         {
-            if (Xbim.ModelGeometry.XbimEnvironment.RedistInstalled())
-                return;
-            Logger.LogError("Requisite C++ environment missing, download and install from {VCPath}", 
-                Xbim.ModelGeometry.XbimEnvironment.RedistDownloadPath());
+            // TODO: Fixup
+            //if (Xbim.ModelGeometry.XbimEnvironment.RedistInstalled())
+            //    return;
+            //Logger.LogError("Requisite C++ environment missing, download and install from {VCPath}", 
+            //    Xbim.ModelGeometry.XbimEnvironment.RedistDownloadPath());
         }
 
         private void XplorerMainWindow_Closed(object sender, EventArgs e)

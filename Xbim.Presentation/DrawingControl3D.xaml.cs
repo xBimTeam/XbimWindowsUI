@@ -1363,10 +1363,14 @@ namespace Xbim.Presentation
 			Materials.Clear();
 			OriginalOpacities.Clear();
 
-			Opaques.Children.Clear();
-			Transparents.Children.Clear();
+			if(Opaques != null)
+				Opaques.Children.Clear();
+			if(Transparents != null)
+				Transparents.Children.Clear();
+			if(Extras != null)
 			Extras.Children.Clear();
-			Overlays.Children.Clear();
+			if(Overlays != null)
+				Overlays.Children.Clear();
 
 			if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelection))
 			{
