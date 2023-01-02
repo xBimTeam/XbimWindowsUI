@@ -1141,7 +1141,7 @@ namespace XbimXplorer.Commands
                 }
 
                 // test for the right command string
-                if (plugin.InstalledVersion != ""
+                if (plugin.InstalledVersion != null
                     && commandString.ToLower() == "install")
                 {
                     ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);

@@ -12,9 +12,11 @@ using NuGet;
 using Xbim.Presentation;
 using Xbim.Presentation.XplorerPluginSystem;
 using XbimXplorer.PluginSystem;
-using Xceed.Wpf.AvalonDock.Layout;
+
 using Image = System.Windows.Controls.Image;
 using Microsoft.Extensions.Logging;
+using AvalonDock.Layout;
+using NuGet.Packaging;
 
 namespace XbimXplorer
 {
@@ -526,7 +528,7 @@ namespace XbimXplorer
         public string GetLoadedVersion(string pluginId)
         {
             return _loadedPlugins.ContainsKey(pluginId) 
-                ? _loadedPlugins[pluginId].Version 
+                ? _loadedPlugins[pluginId].Version.ToString()
                 : null;
         }
     }

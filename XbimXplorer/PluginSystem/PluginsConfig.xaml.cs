@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using NuGet;
+using NuGet.Packaging;
 using Xbim.Presentation;
 
 namespace XbimXplorer.PluginSystem
@@ -111,11 +112,12 @@ namespace XbimXplorer.PluginSystem
                     var fInfo = new FileInfo(fname);
                     if (fInfo.Extension != ".nupkg")
                         continue;
-                    IPackage p = new ZipPackage(fInfo.FullName);
-                    var pi = new PluginInformation(p);
-                    pi.ExtractPlugin(
-                        PluginManagement.GetPluginsDirectory()
-                        );
+                    //IPackageMetadata p = new ZipPackage(fInfo.FullName);
+                    //var pi = new PluginInformation(p);
+                    //pi.ExtractPlugin(
+                    //    PluginManagement.GetPluginsDirectory()
+                    //    );
+                    throw new NotImplementedException("NUget needs sorting");
                 }
                 catch (Exception ex)
                 {

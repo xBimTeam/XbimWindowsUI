@@ -56,14 +56,14 @@ namespace XbimXplorer.Dialogs
 
             InternalGetDependentAssembliesRecursive(assembly);
 
-            // Only include assemblies that we wrote ourselves (ignore ones from GAC).
-            var keysToRemove = _dependentAssemblyList.Values.Where(
-                o => o.GlobalAssemblyCache == true).ToList();
+            //// Only include assemblies that we wrote ourselves (ignore ones from GAC).
+            //var keysToRemove = _dependentAssemblyList.Values.Where(
+            //    o => o.GlobalAssemblyCache == true).ToList();
 
-            foreach (var k in keysToRemove)
-            {
-                _dependentAssemblyList.Remove(k.FullName.MyToName());
-            }
+            //foreach (var k in keysToRemove)
+            //{
+            //    _dependentAssemblyList.Remove(k.FullName.MyToName());
+            //}
 
             return _dependentAssemblyList;
         }
@@ -102,7 +102,7 @@ namespace XbimXplorer.Dialogs
                 {
                     try
                     {
-                        var a = Assembly.ReflectionOnlyLoad(r.FullName);
+                        var a = Assembly.LoadFrom(r.FullName);
                         _dependentAssemblyList[a.FullName.MyToName()] = a;
                         InternalGetDependentAssembliesRecursive(a);
                     }
