@@ -49,8 +49,8 @@
 		<PackageReference Include="System.Security.Permissions" Version="4.5.0" />
 		<PackageReference Include="System.Security.Principal.Windows" Version="4.5.1" />
 		<PackageReference Include="System.Threading.Tasks" Version="4.3.0" />		
-		<PackageReference Include="Xbim.Geometry" Version="5.1.443-develop" />
-		<PackageReference Include="Xbim.IO.Esent" Version="5.1.350" />
+		<PackageReference Include="Xbim.Geometry" Version="5.1.445" />
+		<PackageReference Include="Xbim.IO.Esent" Version="5.9.375-develop" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />

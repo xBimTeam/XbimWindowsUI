@@ -747,6 +747,7 @@ namespace XbimXplorer
                 case ".ifczip":
                 case ".ifcxml":
                     // create temp file as a placeholder for the temporory xbim file                   
+                    // TODO: Will this work in IFC4x?
                     fedModel = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
                     using (var txn = fedModel.BeginTransaction())
                     {
@@ -1178,11 +1179,16 @@ namespace XbimXplorer
             var module4 = (typeof(Xbim.Ifc4.Kernel.IfcProduct)).Module;
             var meta4 = ExpressMetaData.GetMetadata(module4);
             var product4 = meta4.ExpressType("IFCPRODUCT");
-            
+
+            var module4x3 = (typeof(Xbim.Ifc4x3.Kernel.IfcProduct)).Module;
+            var meta4x3 = ExpressMetaData.GetMetadata(module4x3);
+            var product4x3 = meta4.ExpressType("IFCPRODUCT");
+
 
 
             var tpcoll = product2X3.NonAbstractSubTypes.Select(x => x.Type).ToList();
             tpcoll.AddRange(product4.NonAbstractSubTypes.Select(x => x.Type).ToList());
+            tpcoll.AddRange(product4x3.NonAbstractSubTypes.Select(x => x.Type).ToList());
             tpcoll.RemoveAll(x => x.Name == "IfcSpace");
 
             DrawingControl.ExcludedTypes = tpcoll;

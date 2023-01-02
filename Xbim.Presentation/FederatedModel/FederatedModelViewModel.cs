@@ -47,7 +47,12 @@ namespace Xbim.Presentation.FederatedModel
                         var x4 = project as Ifc4.Kernel.IfcProject;
                         x4.Name = value;
                     }
-                    
+                    else if (project is Ifc4x3.Kernel.IfcProject)
+                    {
+                        var x4 = project as Ifc4.Kernel.IfcProject;
+                        x4.Name = value;
+                    }
+
                     txn.Commit();
                 }
                 OnPropertyChanged("Project");

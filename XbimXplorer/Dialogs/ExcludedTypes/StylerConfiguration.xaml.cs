@@ -34,16 +34,22 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
             TypesTree.Items.Clear();
 
             // this is done through the metadata in order to ensure that class relationships are loaded
+            var module2X3 = (typeof(Xbim.Ifc2x3.Kernel.IfcProduct)).Module;
+            var meta2X3 = ExpressMetaData.GetMetadata(module2X3);
+            var product2X3 = meta2X3.ExpressType("IFCPRODUCT");
+            TypesTree.Items.Add(new ObjectViewModel() { Header = "Ifc2x3.IfcProduct", Tag = new ExpressTypeExpander(product2X3, Model), IsChecked = true });
+
             var module4 = (typeof(Xbim.Ifc4.Kernel.IfcProduct)).Module;
             var meta4 = ExpressMetaData.GetMetadata(module4);
             var product4 = meta4.ExpressType("IFCPRODUCT");
             TypesTree.Items.Add(new ObjectViewModel() { Header = "Ifc4.IfcProduct", Tag = new ExpressTypeExpander(product4, Model), IsChecked = true });
 
-            // this is done through the metadata in order to ensure that class relationships are loaded
-            var module2X3 = (typeof(Xbim.Ifc2x3.Kernel.IfcProduct)).Module;
-            var meta2X3 = ExpressMetaData.GetMetadata(module2X3);
-            var product2X3 = meta2X3.ExpressType("IFCPRODUCT"); 
-            TypesTree.Items.Add(new ObjectViewModel() { Header = "Ifc2x3.IfcProduct", Tag = new ExpressTypeExpander(product2X3, Model), IsChecked = true });
+            var module4x3 = (typeof(Xbim.Ifc4x3.Kernel.IfcProduct)).Module;
+            var meta4x3 = ExpressMetaData.GetMetadata(module4x3);
+            var product4x3 = meta4x3.ExpressType("IFCPRODUCT");
+            TypesTree.Items.Add(new ObjectViewModel() { Header = "Ifc4x3.IfcProduct", Tag = new ExpressTypeExpander(product4x3, Model), IsChecked = true });
+
+
         }
 
         public List<Type> ExcludedTypes
