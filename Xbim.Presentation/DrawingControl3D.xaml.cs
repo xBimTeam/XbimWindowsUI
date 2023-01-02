@@ -231,9 +231,12 @@ namespace Xbim.Presentation
 		{
 			typeof(Ifc2x3.ProductExtension.IfcSpace),
 			typeof(Ifc4.ProductExtension.IfcSpace),
-			typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
-			typeof(Ifc4.ProductExtension.IfcFeatureElement)
-		};
+            typeof(Ifc4x3.ProductExtension.IfcSpace),
+
+            typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
+			typeof(Ifc4.ProductExtension.IfcFeatureElement),
+            typeof(Ifc4x3.ProductExtension.IfcFeatureElement)
+        };
 
 		/// <summary>
 		/// The list of types that the engine will not consider in the generation of the scene, the exclusion code needs to be correctly implemented in the 

@@ -2049,6 +2049,7 @@ namespace XbimXplorer.Commands
         private void PopulateFilterTypes()
         {
             // todo: these lists needs to be revised
+            // TODO: Add Ifc4x3 once geometry ready
                      
             _surfaceOrSolidTypes = new List<Type>();
             _surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometryResource.IfcSurface)).NonAbstractSubTypes.Select(x => x.Type));
@@ -2324,6 +2325,8 @@ namespace XbimXplorer.Commands
                             t.Namespace.StartsWith("Xbim.Ifc2x3.")
                             ||
                             t.Namespace.StartsWith("Xbim.Ifc4.")
+                            ||
+                            t.Namespace.StartsWith("Xbim.Ifc4x3.")
                             ))
                     )
                 {
@@ -2382,7 +2385,8 @@ namespace XbimXplorer.Commands
         internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
         {
             {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
-            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)}
+            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)},
+            {"ifc4x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4x3.SharedBldgElements.IfcWall).Module)}
         };
 
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
@@ -2813,9 +2817,9 @@ namespace XbimXplorer.Commands
                 ? " [#" + propLabel + "]" 
                 : ""
                 );
-            if (pe as Xbim.Ifc4.Interfaces.IIfcCartesianPoint != null)
+            if (pe as IIfcCartesianPoint != null)
             {
-                var n = pe as Xbim.Ifc4.Interfaces.IIfcCartesianPoint;
+                var n = pe as IIfcCartesianPoint;
                 var vals = n.Coordinates.Select(x => x.Value);
                 ret += "\t" + string.Join("\t,\t", vals);
             }

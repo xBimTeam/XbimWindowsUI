@@ -481,7 +481,7 @@ namespace XbimXplorer.Simplify
             var max = _exportList.Max();
             if (ExportContainment.IsChecked.Value)
             {
-                var newid = new Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId();
+                Xbim.Ifc4.UtilityResource.IfcGloballyUniqueId newid;
                 // we need to ensure that the site is exported.
                 var exportedSite = _exportList.Intersect(_ifcSites).FirstOrDefault();
                 if (exportedSite == 0)
