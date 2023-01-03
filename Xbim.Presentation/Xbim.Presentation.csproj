@@ -12,12 +12,7 @@
     <Version>6.0.0.0-develop</Version>
     <PackageIcon>XbimIcon.png</PackageIcon>
     <UseWPF>true</UseWPF>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-windows|AnyCPU'">
-    <OutputPath>..\Output\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-windows|AnyCPU'">
-    <OutputPath>..\Output\Release</OutputPath>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\XbimIcon.png">

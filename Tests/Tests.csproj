@@ -4,6 +4,7 @@
     <TargetFrameworks>net6.0-windows</TargetFrameworks>
     <Title>Xbim Presentation Tests</Title>
     <Description>Unit Tests for Xbim.Presentation</Description>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />

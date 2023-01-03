@@ -64,12 +64,34 @@ namespace XbimXplorer.Dialogs
             }
         }
 
+        /// <summary>
+        /// The Process architecture we're running under. E.g. x86, x64, Arm64
+        /// </summary>
+        public string ProcessorArchitecture
+        {
+            get
+            {
+                return string.Format("Process: {0}", System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture);
+            }
+        }
+
+        /// <summary>
+        /// The .NET runtime architecture we're running under
+        /// </summary>
+        public string RuntimeArchitecture
+        {
+            get
+            {
+                return string.Format(".NET Runtime: {1} ({0})", typeof(string).Assembly.GetName().ProcessorArchitecture, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
+            }
+        }
+
         public string AssembliesInfo
         {
             get
             {
                 var sb = new StringBuilder();
-                sb.AppendFormat("Name\tAssembly version\tFile version:\r\n");
+                sb.AppendFormat($"{"Name",-32}{"Assembly version",16}{"File version",16}\r\n");
                 var baseAssembly = Assembly.GetEntryAssembly();
                 DocumentAssembly(baseAssembly, sb);
                 
@@ -103,7 +125,7 @@ namespace XbimXplorer.Dialogs
             var xa = new XbimAssemblyInfo(a);
             if (string.IsNullOrEmpty(a.Location))
                 xa.OverrideLocation = MainWindow.GetAssemblyLocation(a);
-            var assemblyDescription = $"{a.GetName().Name}\t{xa.AssemblyVersion}\t{xa.FileVersion}\r\n";
+            var assemblyDescription = $"{a.GetName().Name,-32}{xa.AssemblyVersion,16}{xa.FileVersion,16}{a.GetName().ProcessorArchitecture,6}\r\n";
             sb.Append(assemblyDescription);
         }
 

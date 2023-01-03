@@ -322,6 +322,8 @@ namespace XbimXplorer
                             {
                                 var sb = new StringBuilder();
                                 sb.AppendLine($"Error creating geometry context of '{selectedFilename}' {geomEx.StackTrace}.");
+                                var platform = typeof(XplorerMainWindow).Assembly.GetName().ProcessorArchitecture;
+                                var platform2 = typeof(Xbim3DModelContext).Assembly.GetName().ProcessorArchitecture;
                                 var newexception = new Exception(sb.ToString(), geomEx);
                                 Logger.LogError(0, newexception, "Error creating geometry context of {filename}", selectedFilename);
                             }
