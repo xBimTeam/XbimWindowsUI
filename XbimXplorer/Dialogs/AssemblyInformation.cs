@@ -2,9 +2,12 @@
 //
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
+using XbimXplorer.PluginSystem;
 
 namespace XbimXplorer.Dialogs
 {
@@ -54,7 +57,7 @@ namespace XbimXplorer.Dialogs
             _dependentAssemblyList = new Dictionary<string, Assembly>();
             _missingAssemblyList = new List<MissingAssembly>();
 
-            InternalGetDependentAssembliesRecursive(assembly);
+            InternalGetDependentAssemblies(assembly);
 
             //// Only include assemblies that we wrote ourselves (ignore ones from GAC).
             //var keysToRemove = _dependentAssemblyList.Values.Where(
@@ -75,21 +78,42 @@ namespace XbimXplorer.Dialogs
         {
             _dependentAssemblyList = new Dictionary<string, Assembly>();
             _missingAssemblyList = new List<MissingAssembly>();
-            InternalGetDependentAssembliesRecursive(assembly);
+            InternalGetDependentAssemblies(assembly);
 
             return _missingAssemblyList;
         }
 
+
+        private static void InternalGetDependentAssemblies(Assembly assembly)
+        {
+            var appDir = Path.GetDirectoryName(assembly.Location);
+            var pluginDir = PluginManagement.GetPluginsDirectory().FullName;
+            string[] runtimeAssemblies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
+            string[] appAssemblies = Directory.GetFiles(appDir, "*.dll");
+            //string[] plugins = Directory.GetFiles(pluginDir, "*.dll");
+            // Create the list of assembly paths consisting of runtime assemblies and the input file.
+            var paths = new List<string>(appAssemblies.Concat(runtimeAssemblies));
+
+            var resolver = new PathAssemblyResolver(paths);
+
+            // a netcore replacement for Assembly.ReflectionOnlyLoad
+            using (var mlc = new MetadataLoadContext(resolver))
+            {
+                InternalGetDependentAssembliesRecursive(assembly, mlc);
+            }
+        }
         /// <summary>
         ///     Intent: Internal recursive class to get all dependent assemblies, and all dependent assemblies of
         ///     dependent assemblies, etc.
         /// </summary>
-        private static void InternalGetDependentAssembliesRecursive(Assembly assembly)
+        private static void InternalGetDependentAssembliesRecursive(Assembly assembly, MetadataLoadContext context)
         {
-            // Load assemblies with newest versions first. Omitting the ordering results in false positives on
+           
+            //Load assemblies with newest versions first. Omitting the ordering results in false positives on
             // _missingAssemblyList.
             var referencedAssemblies = assembly.GetReferencedAssemblies()
                 .OrderByDescending(o => o.Version);
+
 
             foreach (var r in referencedAssemblies)
             {
@@ -102,16 +126,19 @@ namespace XbimXplorer.Dialogs
                 {
                     try
                     {
-                        var a = Assembly.LoadFrom(r.FullName);
+                        var a = context.LoadFromAssemblyName(r.FullName);
                         _dependentAssemblyList[a.FullName.MyToName()] = a;
-                        InternalGetDependentAssembliesRecursive(a);
+                        InternalGetDependentAssembliesRecursive(a, context);
                     }
-                    catch 
+                    catch
                     {
                         _missingAssemblyList.Add(new MissingAssembly(r.FullName.Split(',')[0], assembly.FullName.MyToName()));
                     }
                 }
+                
             }
+
+            
         }
 
         private static string MyToName(this string fullName)
