@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Isam.Esent.Interop;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -84,20 +85,22 @@ namespace XbimXplorer.LogViewer
         {
             if (Verbose.IsChecked != null && Verbose.IsChecked.Value)
             {
-                sb.AppendFormat("==== {0}\t{1}\t{2}\r\n{3}\r\n{4}\r\n{5}\r\n\r\n",
+                sb.AppendFormat("==== {0}\t{1}\t{2}\t{3}\t{4}\t{5}\r\n{6}\r\n\r\n",
                     eventViewModel.TimeStamp,
                     eventViewModel.ThreadId,
                     eventViewModel.Level,
                     eventViewModel.Logger,
+                    eventViewModel.EntityLabel,
                     eventViewModel.Message,
                     eventViewModel.ErrorMessage
                     );
             }
             else
             {
-                sb.AppendFormat("{0}\t{1}\t{2}\r\n",
+                sb.AppendFormat("{0}\t{1}\t{2}\t{3}\r\n",
                     eventViewModel.Level,
                     eventViewModel.Logger,
+                    eventViewModel.EntityLabel,
                     eventViewModel.Message
                     );
             }
@@ -161,22 +164,31 @@ namespace XbimXplorer.LogViewer
         private void AttemptOpenSelection(object sender, MouseButtonEventArgs e)
         {
             var first = View.SelectedItems.OfType<EventViewModel>().FirstOrDefault();
+            
             var msg = first?.Message;
+            var ent = first?.EntityLabel;
             if (string.IsNullOrEmpty(msg))
                 return;
-            var reEntityLabel = new Regex(@"#(\d+)");
-            var mEntityLabel = reEntityLabel.Match(msg);
-            if (mEntityLabel.Success)
-            {
-                int eLabel;
-                if (!int.TryParse(mEntityLabel.Groups[1].Value, out eLabel))
-                    return;
 
-                var ipers = _mw.Model.Instances[eLabel];
-                if (ipers == null)
-                    return;
-                _mw.SelectedItem = ipers;
+            if(ent.HasValue)
+            {
+                SelectItem(ent.Value);
             }
+            else
+            {
+                // Legacy method: extract from message
+                var reEntityLabel = new Regex(@"#(\d+)");
+                var mEntityLabel = reEntityLabel.Match(msg);
+                if (mEntityLabel.Success)
+                {
+                    int eLabel;
+                    if (!int.TryParse(mEntityLabel.Groups[1].Value, out eLabel))
+                        return;
+
+                    SelectItem(eLabel);
+                }
+            }
+            
 
             var reUrl = new Regex(@"(http([^ ]+))", RegexOptions.IgnoreCase);
             var mUrl = reUrl.Match(msg);
@@ -186,6 +198,14 @@ namespace XbimXplorer.LogViewer
                 var text = mUrl.Groups[1].Value;
                 System.Diagnostics.Process.Start(text);
             }
+        }
+
+        private void SelectItem(int entityLabel)
+        {
+            var ipers = _mw.Model.Instances[entityLabel];
+            if (ipers == null)
+                return;
+            _mw.SelectedItem = ipers;
         }
     }
 }

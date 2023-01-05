@@ -26,7 +26,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.3" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
     <PackageReference Include="Xbim.Essentials" Version="5.9.376-develop" />
-    <PackageReference Include="Xbim.Geometry" Version="6.1.552-netcore" />
+    <PackageReference Include="Xbim.Geometry" Version="6.1.558-netcore" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.de.resx">

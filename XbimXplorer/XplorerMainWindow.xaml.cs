@@ -283,6 +283,7 @@ namespace XbimXplorer
             var selectedFilename = args.Argument as string;
             try
             {
+                Logger.LogInformation("Opening model {file}", selectedFilename);
                 if (worker == null)
                     throw new Exception("Background thread could not be accessed");
                 _temporaryXbimFileName = Path.GetTempFileName();
@@ -307,7 +308,9 @@ namespace XbimXplorer
                         {
                             try
                             {
-                                var context = new Xbim3DModelContext(model);
+                                var contextLogger = LoggerFactory.CreateLogger<Xbim3DModelContext>();
+                                var context = new Xbim3DModelContext(model, engineVersion: Xbim.Geometry.Abstractions.XGeometryEngineVersion.V6,
+                                     logger: contextLogger, loggerFactory: LoggerFactory);
 
                                 if (!_multiThreading)
                                     context.MaxThreads = 1;
@@ -359,6 +362,7 @@ namespace XbimXplorer
                                 File.Delete(_temporaryXbimFileName); //tidy up;
                             _temporaryXbimFileName = null;
                             SetOpenedModelFileName(null);
+                            Logger.LogInformation("Cancelled opening model {file}", selectedFilename);
                         }
                         catch (Exception ex)
                         {
@@ -366,6 +370,7 @@ namespace XbimXplorer
                         }
                         return;
                     }
+                    Logger.LogInformation("Finished opening model {file}", selectedFilename);
                 }
                 else
                 {
