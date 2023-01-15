@@ -1,9 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
+using NuGet.Packaging;
+using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
-using NuGet.Packaging;
-using NuGet.Versioning;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -15,25 +19,26 @@ namespace XbimXplorer.PluginSystem
 
         internal PluginConfiguration Config { get; set; }
         
-        public NuGetVersion AvailableVersion => _onlinePackage?.Version;
+        public NuGetVersion AvailableVersion => _onlinePackage?.Identity.Version;
         public NuGetVersion InstalledVersion => _diskManifest?.Version;
         public string LoadedVersion => MainWindow?.GetLoadedVersion(PluginId) ?? "";
 
-        private IPackageMetadata _onlinePackage;
+        private IPackageSearchMetadata _onlinePackage;
         private ManifestMetadata _diskManifest;
         private DirectoryInfo _directory;
         
-        public PluginInformation(Microsoft.Extensions.Logging.ILogger logger = null)
+        public PluginInformation(PluginManagement manager)
         {
-            Logger = logger ?? XplorerMainWindow.LoggerFactory.CreateLogger<PluginInformation>();
-        }
+            Logger = XplorerMainWindow.LoggerFactory.CreateLogger<PluginInformation>();
+			Manager = manager;
+		}
 
-        public PluginInformation(DirectoryInfo directoryInfo)
+        public PluginInformation(DirectoryInfo directoryInfo, PluginManagement manager) : this(manager)
         {
             SetDirectoryInfo(directoryInfo);
         }
 
-        public PluginInformation(IPackageMetadata p)
+        public PluginInformation(IPackageSearchMetadata p, PluginManagement manager) : this(manager)
         {
             SetPackage(p);
         }
@@ -57,19 +62,21 @@ namespace XbimXplorer.PluginSystem
 
         public ManifestMetadata Manifest => _diskManifest;
 
-        internal void DeleteFromDisk()
+		public PluginManagement Manager { get; }
+
+		internal void DeleteFromDisk()
         {
             _directory.Delete(true);
             _directory = null;
             SetDirectoryInfo(_directory);
         }
 
-        public void SetPackage(IPackageMetadata package)
+        public void SetPackage(IPackageSearchMetadata package)
         {
             _onlinePackage = package;
             if (string.IsNullOrEmpty(PluginId))
             {
-                PluginId = package.Id;
+                PluginId = package.Identity.Id;
             }
         }
 
@@ -87,8 +94,11 @@ namespace XbimXplorer.PluginSystem
         /// </summary>
         /// <param name="pluginDirectory">Destination folder, a subdir will be created.</param>
         /// <returns>false on error</returns>
-        public bool ExtractPlugin(DirectoryInfo pluginDirectory)
+        public async Task<bool> ExtractPlugin(DirectoryInfo pluginDirectory)
         {
+            using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            var token = cts.Token;
+           
             // ensure top leved plugin directory exists
             try
             {
@@ -117,10 +127,18 @@ namespace XbimXplorer.PluginSystem
 
             // now extract files
             // 
-#if Nuget
-            foreach (var file in _onlinePackage.GetLibFiles())
+            using MemoryStream packageStream = new MemoryStream();
+            using var packageReader = await Manager.DownloadPluginAsync(_onlinePackage, packageStream, token);
+
+
+            var frameworkReference = (await packageReader.GetReferenceItemsAsync(token)).FirstOrDefault();
+
+            
+            foreach (var fileName in frameworkReference.Items)
             {
-                var destname = Path.Combine(subdir.FullName, file.EffectivePath);
+                // TODO: Currently we flatten lib files. If we want to multi-target we should preserve the lib folder structure for net48, net6 etc
+                var localPath = Path.GetFileName(fileName); 
+                var destname = Path.Combine(subdir.FullName, localPath);
                 try
                 {
                     if (File.Exists(destname))
@@ -136,8 +154,9 @@ namespace XbimXplorer.PluginSystem
                 {
                     using (var fileStream = File.Create(destname))
                     {
-                        file.GetStream().Seek(0, SeekOrigin.Begin);
-                        file.GetStream().CopyTo(fileStream);
+                        var contentStream = await packageReader.GetStreamAsync(fileName, token);
+                        
+                        contentStream.CopyTo(fileStream);
                     }
                 }
                 catch (Exception ex)
@@ -146,16 +165,21 @@ namespace XbimXplorer.PluginSystem
                     return false;
                 }
             }
+            
 
             // store manifest information to disk
             // 
-            var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Id}.manifest");
+            var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Identity.Id}.manifest");
             try
             {
-                if (!_onlinePackage.ExtractManifestFile(packageName))
+
+                var nuspecManifest = await packageReader.GetNuspecFileAsync(token);
+
+                using (var fileStream = File.Create(packageName))
                 {
-                    Logger.LogError("Error trying to create manifest file for {packageName}", packageName);
-                    return false;
+                    var contentStream = await packageReader.GetStreamAsync(nuspecManifest, token);
+
+                    contentStream.CopyTo(fileStream);
                 }
                 SetDirectoryInfo(subdir);
             }
@@ -164,7 +188,7 @@ namespace XbimXplorer.PluginSystem
                 Logger.LogError(0, ex, "Error trying to create manifest file for: {packageName}", packageName);
                 return false;
             }
-#endif
+
             return true;
         }
 

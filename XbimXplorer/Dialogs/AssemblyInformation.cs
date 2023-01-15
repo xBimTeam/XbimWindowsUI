@@ -59,14 +59,7 @@ namespace XbimXplorer.Dialogs
 
             InternalGetDependentAssemblies(assembly);
 
-            //// Only include assemblies that we wrote ourselves (ignore ones from GAC).
-            //var keysToRemove = _dependentAssemblyList.Values.Where(
-            //    o => o.GlobalAssemblyCache == true).ToList();
-
-            //foreach (var k in keysToRemove)
-            //{
-            //    _dependentAssemblyList.Remove(k.FullName.MyToName());
-            //}
+           // TOOD: We used to exclude assemblies in the GAC. That's a deprecated concept in netcore. Review?
 
             return _dependentAssemblyList;
         }
