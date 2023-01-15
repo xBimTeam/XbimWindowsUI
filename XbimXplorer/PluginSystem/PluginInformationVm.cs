@@ -86,12 +86,12 @@ namespace XbimXplorer.PluginSystem
 
         public string Startup => _model?.Config?.OnStartup.ToString();
 
-        public void ExtractPlugin(DirectoryInfo pluginsDirectory)
+        public async Task ExtractPlugin(DirectoryInfo pluginsDirectory)
         {
             if (_model == null)
                 return;
             
-            _model.ExtractPlugin(pluginsDirectory);
+            await _model.ExtractPlugin(pluginsDirectory);
             OnPropertyChanged("");
         }
 

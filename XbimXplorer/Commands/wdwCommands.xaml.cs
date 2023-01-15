@@ -36,6 +36,8 @@ using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
 using Xbim.Presentation.Overlay;
 using HelixToolkit.Wpf;
+using System.Threading.Tasks;
+using System.Threading;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -284,7 +286,7 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    PluginCommand(mdbclosed);
+                    _ = PluginCommand(mdbclosed);
                     continue;
                 }
 
@@ -1106,8 +1108,12 @@ namespace XbimXplorer.Commands
 			}
 		}
 
-		private void PluginCommand(Match mdbclosed)
+		private async Task PluginCommand(Match mdbclosed)
 		{
+            using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            var token = cts.Token;
+
+
             var commandString = mdbclosed.Groups["command"].Value;
             var pluginName = mdbclosed.Groups["pluginName"].Value;
             if (commandString.ToLower() == "refresh")
@@ -1131,7 +1137,7 @@ namespace XbimXplorer.Commands
             else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
             {
                 var pm = new PluginManagement();
-                var plugin = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).FirstOrDefault(x => x.PluginId == pluginName);
+                var plugin = await pm.GetPluginsAsync(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion, token).FirstOrDefaultAsync(x => x.PluginId == pluginName);
                 if (plugin == null)
                 {
                     ReportAdd("Plugin not found.", Brushes.Red);
@@ -1148,7 +1154,7 @@ namespace XbimXplorer.Commands
 
                 // try installing
                 ReportAdd("Plugin found; installing...", Brushes.Blue);
-                var extracted = plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                var extracted = await plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
                 if (!extracted)
                 {
                     ReportAdd("Plugin extraction failed.", Brushes.Red);
@@ -1182,7 +1188,7 @@ namespace XbimXplorer.Commands
             else if (commandString.ToLower() == "list")
             {
                 PluginManagement pm = new PluginManagement();
-                var plugins = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).ToList();
+                var plugins = await pm.GetPluginsAsync(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion, token).ToListAsync();
                 if (plugins.Any())
                 {
                     ReportAdd("Beta versions in the development channel:");
@@ -1191,7 +1197,7 @@ namespace XbimXplorer.Commands
                         ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
                     }
                 }
-                plugins = pm.GetPlugins(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion).ToList();
+                plugins = await pm.GetPluginsAsync(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion, token).ToListAsync();
                 if (plugins.Any())
                 {
                     ReportAdd("Versions in the stable channel:");

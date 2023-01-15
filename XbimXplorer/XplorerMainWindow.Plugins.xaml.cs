@@ -117,7 +117,7 @@ namespace XbimXplorer
                         reqFound = true;
                         break;
                     }
-                    if (currentDomainAssemblyName.Name.Equals(referencedRequirement.Name))
+                    if (currentDomainAssemblyName.Name.Equals(referencedRequirement.Name) && currentDomainAssemblyName.Name != "netstandard")
                     {
                         Logger.LogWarning($"Incompatible plugin components identified:" +
                                         "Plugin requires -> {required}. " +
