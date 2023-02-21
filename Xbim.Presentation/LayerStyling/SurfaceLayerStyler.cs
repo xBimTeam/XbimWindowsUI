@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using Xbim.Common;
+using Xbim.Common.Configuration;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Ifc;
@@ -26,7 +27,7 @@ namespace Xbim.Presentation.LayerStyling
 
         public SurfaceLayerStyler(ILogger logger = null)
         {
-            Logger = logger ?? XbimLogging.CreateLogger<SurfaceLayerStyler>();
+            Logger = logger ?? XbimServices.Current.CreateLogger<SurfaceLayerStyler>();
         }
 
         /// <summary>

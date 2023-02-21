@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using Xbim.Common;
+using Xbim.Common.Configuration;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
@@ -21,8 +22,7 @@ namespace Xbim.WinformsSample
         public FormExample(ILogger logger = null)
         {
             InitializeComponent();
-            Logger = logger ?? XbimLogging.CreateLogger<FormExample>();
-            //IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
+            Logger = logger ?? XbimServices.Current.CreateLogger<FormExample>();
             _wpfControl = new WinformsAccessibleControl();
             _wpfControl.SelectionChanged += _wpfControl_SelectionChanged;
            

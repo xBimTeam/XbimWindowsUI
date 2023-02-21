@@ -38,6 +38,7 @@ using Xbim.Presentation.Overlay;
 using HelixToolkit.Wpf;
 using System.Threading.Tasks;
 using System.Threading;
+using Xbim.Common.Configuration;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -809,7 +810,7 @@ namespace XbimXplorer.Commands
 			var labels = GetSelection(m).ToArray();
 			if (labels.Any())
 			{
-				var engine = new XbimGeometryEngine();
+				var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 				foreach (var label in labels)
 				{
 					var entity = Model.Instances[label];
@@ -1037,18 +1038,18 @@ namespace XbimXplorer.Commands
 					if (entity is IIfcProduct)
 					{
 						var prod = (IIfcProduct)entity;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory()));
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
 					else if (entity is IIfcRelVoidsElement)
 					{
 						var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory()));
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
-					var engine = new XbimGeometryEngine();
+					var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 					var ifcFile = ((IfcStore)Model).FileName;
 					foreach (var solEntity in entities)
 					{
@@ -1356,7 +1357,7 @@ namespace XbimXplorer.Commands
                 if (storey != null)
                 {
                     var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
-                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
+                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine(storey.Model, XbimServices.Current.GetLoggerFactory()));
                     var off = trsf.OffsetZ;
                     var pt = new XbimPoint3D(0, 0, off);
 
