@@ -17,6 +17,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using HelixToolkit.Wpf;
 using Xbim.Common;
+using Xbim.Common.Configuration;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
@@ -1162,7 +1163,7 @@ namespace Xbim.Presentation
 						var gri = newVal as IIfcGeometricRepresentationItem;
 						if (gri != null)
 						{
-							var engine = new XbimGeometryEngine();
+							var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 							var solid = engine.Create(gri, null);
 							if (solid != null)
 							{
