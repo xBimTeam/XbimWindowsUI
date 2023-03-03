@@ -26,9 +26,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
-    <PackageReference Include="Xbim.Essentials" Version="6.0.410-develop" />
-    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="6.1.652-netcore" />
-    <PackageReference Include="Xbim.ModelGeometry.Scene" Version="6.1.652-netcore" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.414-develop" />
+    <PackageReference Include="Xbim.Geometry.Engine.Interop" Version="6.1.663-netcore" />
+    <PackageReference Include="Xbim.ModelGeometry.Scene" Version="6.1.663-netcore" />
    
   </ItemGroup>
   <ItemGroup>
