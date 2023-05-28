@@ -819,11 +819,13 @@ namespace XbimXplorer.Commands
 					ReportAdd($"== Geometry report for {entity.GetType().Name} #{label}", Brushes.Blue);
 
 					ReportAdd($"=== Autocad views", Brushes.Blue);
-                    // var ra = GeometryView.ReportAcadScript(entity);
-                    // ReportAdd(ra);
+                    var ra = GeometryView.ReportAcadScript(entity);
+                    ReportAdd(ra);
+
                     if (entity is IIfcClosedShell ics)
 					{
-                       var r2 = GeometryView.ReportAsObj(ics);
+                        ReportAdd($"=== obj views", Brushes.Blue);
+                        var r2 = GeometryView.ReportAsObj(ics);
                         ReportAdd(r2);
                     }
 

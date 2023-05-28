@@ -317,6 +317,8 @@ namespace XbimXplorer.Commands
                 Report((IIfcSweptDiskSolid)obj, sb);
             else if (obj is IIfcProductDefinitionShape)
                 Report((IIfcProductDefinitionShape)obj, sb);
+            else if (obj is IIfcFace fc)
+                Report(fc, sb);
             else
             {
                 sb.Append($"No information for {obj.GetType()}", Brushes.Black);
@@ -417,19 +419,28 @@ namespace XbimXplorer.Commands
 
 		private static void ReportAsObj(IIfcClosedShell ics, TextHighliter sb)
 		{
-            List<int> vertices = new List<int>(); // entitylabel of the vertex
+            List<int> vertexLabels = new List<int>(); // entitylabel of the vertex
             List<int> indices = new List<int>();
             foreach (var face in ics.CfsFaces)
             {
-                ReportAsObj(face, sb, vertices, indices);
+                ReportAsObj(face, sb, vertexLabels, indices);
+                if (indices.Count %3 != 0)
+                {
+                    sb.Append($"Error in face #{face.EntityLabel}", Brushes.Red);
+                }
             }
-			foreach (var vert in vertices)
+			foreach (var vert in vertexLabels)
 			{
                 var v = ics.Model.Instances[vert] as IIfcCartesianPoint;
                 sb.Append($"v {v.X} {v.Y} {v.Z}", Brushes.Black);
 			}
             for (int i = 0; i < indices.Count; i += 3)
             {
+                if (i + 2 >= indices.Count)
+                {
+                    sb.Append($"Error in indices", Brushes.Red);
+                    continue;
+                }
                 sb.Append($"f {indices[i]+1} {indices[i + 1]+1} {indices[i + 2]+1}", Brushes.Black);
             }
         }
