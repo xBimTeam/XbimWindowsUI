@@ -664,11 +664,13 @@ namespace Xbim.Presentation
 				: (modelHit.Instances[frag.EntityLabel]);
 		}
 
-		#endregion
+		public event EventHandler<EventArgs> GeometryLoaded;
 
-		#region Dependency Properties
+        #endregion
 
-		public double ModelOpacity
+        #region Dependency Properties
+
+        public double ModelOpacity
 		{
 			get { return (double)GetValue(ModelOpacityProperty); }
 			set { SetValue(ModelOpacityProperty, value); }
@@ -1518,6 +1520,8 @@ namespace Xbim.Presentation
 			}
 
 			RecalculateView(options);
+
+			GeometryLoaded?.Invoke(this, EventArgs.Empty);
 		}
 
 		private void LoadReferencedModel(IReferencedModel refModel)
