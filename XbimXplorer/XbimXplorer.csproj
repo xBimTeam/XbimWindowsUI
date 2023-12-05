@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0-windows</TargetFrameworks>
-		<RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
+		<TargetFrameworks>net8.0-windows</TargetFrameworks>
+		<RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
 		<OutputType>WinExe</OutputType>
 		<Title>Xbim Xplorer</Title>
 		<Description>
@@ -59,10 +59,10 @@
 		<PackageReference Include="HelixToolkit.Core.Wpf" Version="2.24.0" />
 		<PackageReference Include="NuGet.Protocol" Version="6.8.0" />
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
-		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
 		<PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
-		<PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" />
+		<PackageReference Include="System.Reflection.MetadataLoadContext" Version="8.0.0" />
     <PackageReference Include="Xbim.IO.Esent" Version="6.0.436-develop" />
 	</ItemGroup>
 	<ItemGroup>

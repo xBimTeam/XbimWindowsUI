@@ -82,8 +82,15 @@ namespace XbimXplorer.Dialogs
         {
             get
             {
-                return string.Format(".NET Runtime: {1} ({0})", typeof(string).Assembly.GetName().ProcessorArchitecture, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
+                var architecture = GetArchitecture(Assembly.GetEntryAssembly());
+                return string.Format(".NET Runtime: {1} ({0})", architecture, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
             }
+        }
+
+        private ImageFileMachine GetArchitecture(Assembly assembly)
+        {
+            assembly.Modules.First().GetPEKind(out var pekind, out var machine);
+            return machine;
         }
 
         public string AssembliesInfo
@@ -125,7 +132,7 @@ namespace XbimXplorer.Dialogs
             var xa = new XbimAssemblyInfo(a);
             if (string.IsNullOrEmpty(a.Location))
                 xa.OverrideLocation = MainWindow.GetAssemblyLocation(a);
-            var assemblyDescription = $"{a.GetName().Name,-32}{xa.AssemblyVersion,16}{xa.FileVersion,16}{a.GetName().ProcessorArchitecture,6}\r\n";
+            var assemblyDescription = $"{a.GetName().Name,-32}{xa.AssemblyVersion,16}{xa.FileVersion,16}{GetArchitecture(a),6}\r\n";
             sb.Append(assemblyDescription);
         }
 

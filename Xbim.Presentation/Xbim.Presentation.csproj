@@ -23,8 +23,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.24.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.436-develop" />
     <PackageReference Include="Xbim.ModelGeometry.Scene" Version="6.1.739-netcore" />

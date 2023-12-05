@@ -330,12 +330,8 @@ namespace XbimXplorer
                             }
                             catch (Exception geomEx)
                             {
-                                var sb = new StringBuilder();
-                                sb.AppendLine($"Error creating geometry context of '{selectedFilename}' {geomEx.StackTrace}.");
-                                var platform = typeof(XplorerMainWindow).Assembly.GetName().ProcessorArchitecture;
-                                var platform2 = typeof(Xbim3DModelContext).Assembly.GetName().ProcessorArchitecture;
-                                var newexception = new Exception(sb.ToString(), geomEx);
-                                Logger.LogError(0, newexception, "Error creating geometry context of {filename}", selectedFilename);
+                                Logger.LogError(geomEx, "Error creating geometry context of {filename}", selectedFilename);
+                                throw;
                             }
                         }
                     }
@@ -387,10 +383,10 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "Error opening {filename}", selectedFilename);
                 var sb = new StringBuilder();
                 sb.AppendLine($"Error opening '{selectedFilename}' {ex.StackTrace}.");
                 var newexception = new Exception(sb.ToString(), ex);
-                Logger.LogError(0, ex, "Error opening {filename}", selectedFilename);
                 args.Result = newexception;
             }
         }
