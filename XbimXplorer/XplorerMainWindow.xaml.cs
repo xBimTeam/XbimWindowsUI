@@ -47,8 +47,11 @@ using Serilog.Events;
 using Xbim.IO;
 using Xbim.Geometry.Engine.Interop;
 using System.Windows.Media;
+using Xbim.Common.Configuration;
+
 
 #endregion
+
 
 namespace XbimXplorer
 {
@@ -57,6 +60,7 @@ namespace XbimXplorer
     /// </summary>
     public partial class XplorerMainWindow : IXbimXplorerPluginMasterWindow, INotifyPropertyChanged
     {
+
         private BackgroundWorker _loadFileBackgroundWorker;
         /// <summary>
         /// Used for the creation of a new federation file
@@ -116,9 +120,8 @@ namespace XbimXplorer
 
         public XplorerMainWindow(bool preventPluginLoad = false)
         {
-            // So we can use *.xbim files.
-            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
             
+
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
             LogSink.EventsLimit = 5000; // log event's minute
@@ -138,7 +141,14 @@ namespace XbimXplorer
                 .Enrich.FromLogContext()
                 .CreateLogger();
             // Set XBIM Essentials/Geometries's LoggerFactory - so Serilog drives everything.
-            XbimLogging.LoggerFactory = LoggerFactory;
+            
+            // So we can use *.xbim files in IfcStore
+            XbimServices.Current.ConfigureServices(s => s.AddXbimToolkit(opt => opt
+                .AddHeuristicModel()
+                .AddLoggerFactory(LoggerFactory)
+                .AddGeometryServices(builder => builder.SetVersion(Xbim.Geometry.Abstractions.XGeometryEngineVersion.V6))
+                )
+            );
 
             Logger = LoggerFactory.CreateLogger<XplorerMainWindow>();
 
@@ -247,21 +257,24 @@ namespace XbimXplorer
 
         void XplorerMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var model = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
-            ModelProvider.ObjectInstance = model;
-            ModelProvider.Refresh();
 
-            
+            // TODO: re-enable after sorting timing/sequencing issue - with DrawingCtrl.OnApplyTemplate()
+            //var model = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
+            //ModelProvider.ObjectInstance = model;
+            //ModelProvider.Refresh();
+
+
 
             TestCRedist();
         }
 
         private void TestCRedist()
         {
-            if (Xbim.ModelGeometry.XbimEnvironment.RedistInstalled())
-                return;
-            Logger.LogError("Requisite C++ environment missing, download and install from {VCPath}", 
-                Xbim.ModelGeometry.XbimEnvironment.RedistDownloadPath());
+            // TODO: Fixup
+            //if (Xbim.ModelGeometry.XbimEnvironment.RedistInstalled())
+            //    return;
+            //Logger.LogError("Requisite C++ environment missing, download and install from {VCPath}", 
+            //    Xbim.ModelGeometry.XbimEnvironment.RedistDownloadPath());
         }
 
         private void XplorerMainWindow_Closed(object sender, EventArgs e)
@@ -277,6 +290,7 @@ namespace XbimXplorer
             var selectedFilename = args.Argument as string;
             try
             {
+                Logger.LogInformation("Opening model {file}", selectedFilename);
                 if (worker == null)
                     throw new Exception("Background thread could not be accessed");
                 _temporaryXbimFileName = Path.GetTempFileName();
@@ -301,7 +315,9 @@ namespace XbimXplorer
                         {
                             try
                             {
-                                var context = new Xbim3DModelContext(model);
+                                var contextLogger = LoggerFactory.CreateLogger<Xbim3DModelContext>();
+                                var context = new Xbim3DModelContext(model, engineVersion: Xbim.Geometry.Abstractions.XGeometryEngineVersion.V6,
+                                     logger: contextLogger, loggerFactory: LoggerFactory);
 
                                 if (!_multiThreading)
                                     context.MaxThreads = 1;
@@ -314,10 +330,8 @@ namespace XbimXplorer
                             }
                             catch (Exception geomEx)
                             {
-                                var sb = new StringBuilder();
-                                sb.AppendLine($"Error creating geometry context of '{selectedFilename}' {geomEx.StackTrace}.");
-                                var newexception = new Exception(sb.ToString(), geomEx);
-                                Logger.LogError(0, newexception, "Error creating geometry context of {filename}", selectedFilename);
+                                Logger.LogError(geomEx, "Error creating geometry context of {filename}", selectedFilename);
+                                throw;
                             }
                         }
                     }
@@ -351,6 +365,7 @@ namespace XbimXplorer
                                 File.Delete(_temporaryXbimFileName); //tidy up;
                             _temporaryXbimFileName = null;
                             SetOpenedModelFileName(null);
+                            Logger.LogInformation("Cancelled opening model {file}", selectedFilename);
                         }
                         catch (Exception ex)
                         {
@@ -358,6 +373,7 @@ namespace XbimXplorer
                         }
                         return;
                     }
+                    Logger.LogInformation("Finished opening model {file}", selectedFilename);
                 }
                 else
                 {
@@ -367,10 +383,10 @@ namespace XbimXplorer
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "Error opening {filename}", selectedFilename);
                 var sb = new StringBuilder();
                 sb.AppendLine($"Error opening '{selectedFilename}' {ex.StackTrace}.");
                 var newexception = new Exception(sb.ToString(), ex);
-                Logger.LogError(0, ex, "Error opening {filename}", selectedFilename);
                 args.Result = newexception;
             }
         }
@@ -747,6 +763,7 @@ namespace XbimXplorer
                 case ".ifczip":
                 case ".ifcxml":
                     // create temp file as a placeholder for the temporory xbim file                   
+                    // TODO: Will this work in IFC4x?
                     fedModel = IfcStore.Create(null, XbimSchemaVersion.Ifc2X3, XbimStoreType.InMemoryModel);
                     using (var txn = fedModel.BeginTransaction())
                     {
@@ -1178,11 +1195,16 @@ namespace XbimXplorer
             var module4 = (typeof(Xbim.Ifc4.Kernel.IfcProduct)).Module;
             var meta4 = ExpressMetaData.GetMetadata(module4);
             var product4 = meta4.ExpressType("IFCPRODUCT");
-            
+
+            var module4x3 = (typeof(Xbim.Ifc4x3.Kernel.IfcProduct)).Module;
+            var meta4x3 = ExpressMetaData.GetMetadata(module4x3);
+            var product4x3 = meta4.ExpressType("IFCPRODUCT");
+
 
 
             var tpcoll = product2X3.NonAbstractSubTypes.Select(x => x.Type).ToList();
             tpcoll.AddRange(product4.NonAbstractSubTypes.Select(x => x.Type).ToList());
+            tpcoll.AddRange(product4x3.NonAbstractSubTypes.Select(x => x.Type).ToList());
             tpcoll.RemoveAll(x => x.Name == "IfcSpace");
 
             DrawingControl.ExcludedTypes = tpcoll;

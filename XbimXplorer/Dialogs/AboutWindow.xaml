@@ -26,6 +26,8 @@
                         </TextBlock>
                         <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding AppVersion}" />
                         <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding FileVersion}" />
+                        <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding ProcessorArchitecture}" />
+                        <TextBlock TextWrapping="Wrap" Margin="0,3" Text="{Binding RuntimeArchitecture}" />
                         <TextBlock Margin="0,3" >
                             <Hyperlink RequestNavigate="Link_RequestNavigate" NavigateUri="https://github.com/xbimteam">
 					            <TextBlock Text="https://github.com/xbimteam"/>
@@ -34,7 +36,7 @@
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="Assemblies"  GotFocus="LoadAssemblies" >
-                    <TextBox x:Name="AssembliesText" VerticalScrollBarVisibility="Auto" Margin="10" Text="" />
+                    <TextBox x:Name="AssembliesText" VerticalScrollBarVisibility="Auto" Margin="10" Text="" FontFamily="Consolas" FontSize="10" />
                 </TabItem>
                 <TabItem Header="Model">
                     <TextBox VerticalScrollBarVisibility="Auto" Margin="10" Text="{Binding ModelInfo, Mode=OneWay}" />

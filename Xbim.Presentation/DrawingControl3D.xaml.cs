@@ -17,6 +17,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using HelixToolkit.Wpf;
 using Xbim.Common;
+using Xbim.Common.Configuration;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
@@ -231,9 +232,12 @@ namespace Xbim.Presentation
 		{
 			typeof(Ifc2x3.ProductExtension.IfcSpace),
 			typeof(Ifc4.ProductExtension.IfcSpace),
-			typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
-			typeof(Ifc4.ProductExtension.IfcFeatureElement)
-		};
+            typeof(Ifc4x3.ProductExtension.IfcSpace),
+
+            typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
+			typeof(Ifc4.ProductExtension.IfcFeatureElement),
+            typeof(Ifc4x3.ProductExtension.IfcFeatureElement)
+        };
 
 		/// <summary>
 		/// The list of types that the engine will not consider in the generation of the scene, the exclusion code needs to be correctly implemented in the 
@@ -1159,7 +1163,7 @@ namespace Xbim.Presentation
 						var gri = newVal as IIfcGeometricRepresentationItem;
 						if (gri != null)
 						{
-							var engine = new XbimGeometryEngine();
+							var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 							var solid = engine.Create(gri, null);
 							if (solid != null)
 							{
@@ -1360,10 +1364,14 @@ namespace Xbim.Presentation
 			Materials.Clear();
 			OriginalOpacities.Clear();
 
-			Opaques.Children.Clear();
-			Transparents.Children.Clear();
+			if(Opaques != null)
+				Opaques.Children.Clear();
+			if(Transparents != null)
+				Transparents.Children.Clear();
+			if(Extras != null)
 			Extras.Children.Clear();
-			Overlays.Children.Clear();
+			if(Overlays != null)
+				Overlays.Children.Clear();
 
 			if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelection))
 			{

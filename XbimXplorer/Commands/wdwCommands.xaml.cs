@@ -36,6 +36,9 @@ using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
 using Xbim.Presentation.Overlay;
 using HelixToolkit.Wpf;
+using System.Threading.Tasks;
+using System.Threading;
+using Xbim.Common.Configuration;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -284,7 +287,7 @@ namespace XbimXplorer.Commands
                 mdbclosed = Regex.Match(cmd, @"^(plugin|plugins) ((?<command>install|refresh|load|list|folder|update) *)*(?<pluginName>[^ ]+)*[ ]*", RegexOptions.IgnoreCase);
                 if (mdbclosed.Success)
                 {
-                    PluginCommand(mdbclosed);
+                    _ = PluginCommand(mdbclosed);
                     continue;
                 }
 
@@ -807,7 +810,7 @@ namespace XbimXplorer.Commands
 			var labels = GetSelection(m).ToArray();
 			if (labels.Any())
 			{
-				var engine = new XbimGeometryEngine();
+				var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 				foreach (var label in labels)
 				{
 					var entity = Model.Instances[label];
@@ -1037,18 +1040,18 @@ namespace XbimXplorer.Commands
 					if (entity is IIfcProduct)
 					{
 						var prod = (IIfcProduct)entity;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory()));
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
 					else if (entity is IIfcRelVoidsElement)
 					{
 						var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory()));
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
-					var engine = new XbimGeometryEngine();
+					var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 					var ifcFile = ((IfcStore)Model).FileName;
 					foreach (var solEntity in entities)
 					{
@@ -1108,8 +1111,12 @@ namespace XbimXplorer.Commands
 			}
 		}
 
-		private void PluginCommand(Match mdbclosed)
+		private async Task PluginCommand(Match mdbclosed)
 		{
+            using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            var token = cts.Token;
+
+
             var commandString = mdbclosed.Groups["command"].Value;
             var pluginName = mdbclosed.Groups["pluginName"].Value;
             if (commandString.ToLower() == "refresh")
@@ -1133,7 +1140,7 @@ namespace XbimXplorer.Commands
             else if (commandString.ToLower() == "install" || commandString.ToLower() == "update")
             {
                 var pm = new PluginManagement();
-                var plugin = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).FirstOrDefault(x => x.PluginId == pluginName);
+                var plugin = await pm.GetPluginsAsync(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion, token).FirstOrDefaultAsync(x => x.PluginId == pluginName);
                 if (plugin == null)
                 {
                     ReportAdd("Plugin not found.", Brushes.Red);
@@ -1141,7 +1148,7 @@ namespace XbimXplorer.Commands
                 }
 
                 // test for the right command string
-                if (plugin.InstalledVersion != ""
+                if (plugin.InstalledVersion != null
                     && commandString.ToLower() == "install")
                 {
                     ReportAdd($"The plugin is already installed, use the 'plugin update {pluginName}' command instead.", Brushes.Red);
@@ -1150,7 +1157,7 @@ namespace XbimXplorer.Commands
 
                 // try installing
                 ReportAdd("Plugin found; installing...", Brushes.Blue);
-                var extracted = plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                var extracted = await plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
                 if (!extracted)
                 {
                     ReportAdd("Plugin extraction failed.", Brushes.Red);
@@ -1184,7 +1191,7 @@ namespace XbimXplorer.Commands
             else if (commandString.ToLower() == "list")
             {
                 PluginManagement pm = new PluginManagement();
-                var plugins = pm.GetPlugins(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion).ToList();
+                var plugins = await pm.GetPluginsAsync(PluginChannelOption.LatestIncludingDevelopment, PluginsConfig.NugetVersion, token).ToListAsync();
                 if (plugins.Any())
                 {
                     ReportAdd("Beta versions in the development channel:");
@@ -1193,7 +1200,7 @@ namespace XbimXplorer.Commands
                         ReportAdd($" - {plugin.PluginId} Available: {plugin.AvailableVersion} Installed: {plugin.InstalledVersion} Loaded: {plugin.LoadedVersion}");
                     }
                 }
-                plugins = pm.GetPlugins(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion).ToList();
+                plugins = await pm.GetPluginsAsync(PluginChannelOption.LatestStable, PluginsConfig.NugetVersion, token).ToListAsync();
                 if (plugins.Any())
                 {
                     ReportAdd("Versions in the stable channel:");
@@ -1352,7 +1359,7 @@ namespace XbimXplorer.Commands
                 if (storey != null)
                 {
                     var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
-                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
+                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine(storey.Model, XbimServices.Current.GetLoggerFactory()));
                     var off = trsf.OffsetZ;
                     var pt = new XbimPoint3D(0, 0, off);
 
@@ -2049,6 +2056,7 @@ namespace XbimXplorer.Commands
         private void PopulateFilterTypes()
         {
             // todo: these lists needs to be revised
+            // TODO: Add Ifc4x3 once geometry ready
                      
             _surfaceOrSolidTypes = new List<Type>();
             _surfaceOrSolidTypes.AddRange(SchemaMetadatas["ifc2x3"].ExpressType(typeof(Xbim.Ifc2x3.GeometryResource.IfcSurface)).NonAbstractSubTypes.Select(x => x.Type));
@@ -2324,6 +2332,8 @@ namespace XbimXplorer.Commands
                             t.Namespace.StartsWith("Xbim.Ifc2x3.")
                             ||
                             t.Namespace.StartsWith("Xbim.Ifc4.")
+                            ||
+                            t.Namespace.StartsWith("Xbim.Ifc4x3.")
                             ))
                     )
                 {
@@ -2382,7 +2392,8 @@ namespace XbimXplorer.Commands
         internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
         {
             {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
-            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)}
+            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)},
+            {"ifc4x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4x3.SharedBldgElements.IfcWall).Module)}
         };
 
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
@@ -2813,9 +2824,9 @@ namespace XbimXplorer.Commands
                 ? " [#" + propLabel + "]" 
                 : ""
                 );
-            if (pe as Xbim.Ifc2x3.Interfaces.IIfcCartesianPoint != null)
+            if (pe as IIfcCartesianPoint != null)
             {
-                var n = pe as Xbim.Ifc2x3.Interfaces.IIfcCartesianPoint;
+                var n = pe as IIfcCartesianPoint;
                 var vals = n.Coordinates.Select(x => x.Value);
                 ret += "\t" + string.Join("\t,\t", vals);
             }

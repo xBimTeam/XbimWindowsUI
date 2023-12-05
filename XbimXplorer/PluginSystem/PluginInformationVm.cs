@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using NuGet;
+using NuGet.Versioning;
 using XbimXplorer.Annotations;
 
 namespace XbimXplorer.PluginSystem
@@ -25,7 +26,7 @@ namespace XbimXplorer.PluginSystem
         {
             get
             {
-                if (string.IsNullOrEmpty(AvailableVersion))
+                if (AvailableVersion == null)
                     return false;
                 return AvailableVersion != InstalledVersion;
             }
@@ -40,7 +41,7 @@ namespace XbimXplorer.PluginSystem
                     return "Download";
 
                 // if can download and not installed 
-                if (string.IsNullOrWhiteSpace(InstalledVersion))
+                if (InstalledVersion == null)
                     return "Download";
 
                 // if installed
@@ -53,9 +54,9 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
-        public bool IsInstalled => !string.IsNullOrWhiteSpace(InstalledVersion);
+        public bool IsInstalled => (InstalledVersion!=null);
 
-        public bool IsInstalledAndNotLoaded => !string.IsNullOrWhiteSpace(InstalledVersion) && string.IsNullOrWhiteSpace(LoadedVersion);
+        public bool IsInstalledAndNotLoaded => (InstalledVersion!=null) && string.IsNullOrWhiteSpace(LoadedVersion);
 
         public string PluginId => _model?.PluginId;
 
@@ -77,20 +78,20 @@ namespace XbimXplorer.PluginSystem
             ? "Disable" 
             : "Enable";
 
-        public string AvailableVersion => _model?.AvailableVersion;
+        public NuGetVersion AvailableVersion => _model?.AvailableVersion;
 
-        public string InstalledVersion => _model?.InstalledVersion;
+        public NuGetVersion InstalledVersion => _model?.InstalledVersion;
 
         public string LoadedVersion => _model?.LoadedVersion;
 
         public string Startup => _model?.Config?.OnStartup.ToString();
 
-        public void ExtractPlugin(DirectoryInfo pluginsDirectory)
+        public async Task ExtractPlugin(DirectoryInfo pluginsDirectory)
         {
             if (_model == null)
                 return;
             
-            _model.ExtractPlugin(pluginsDirectory);
+            await _model.ExtractPlugin(pluginsDirectory);
             OnPropertyChanged("");
         }
 
@@ -98,7 +99,7 @@ namespace XbimXplorer.PluginSystem
         {
             get
             {
-                if (LoadedVersion != "" && InstalledVersion != LoadedVersion)
+                if (LoadedVersion != "" && InstalledVersion.ToString() != LoadedVersion)
                     return "Restart required.";
                 return "";
             }

@@ -1,67 +1,48 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-    <TargetFrameworks>net472</TargetFrameworks>
+    <TargetFrameworks>net6.0-windows</TargetFrameworks>
     <Title>Xbim.Presentation</Title>
     <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
     or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
     <PackageId>Xbim.WindowsUI</PackageId>
-    <PackageReleaseNotes>Now built on XBIM v5. Migrated from log4net to Microsoft.Extensions.Logging.</PackageReleaseNotes>
+    <PackageReleaseNotes>Now built on XBIM v6.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>5.1.0.0</Version>
+    <Version>6.0.0.0-develop</Version>
     <PackageIcon>XbimIcon.png</PackageIcon>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
-    <OutputPath>..\Output\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net472|AnyCPU'">
-    <OutputPath>..\Output\Release</OutputPath>
+    <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="Properties\Resources.de.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.de.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Settings.Designer.cs" AutoGen="True" DependentUpon="Settings.settings" />
-    <None Update="Settings.settings" LastGenOutput="Settings.Designer.cs" Generator="SettingsSingleFileGenerator" />
     <None Include="..\XbimIcon.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <Page Include="**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" Exclude="App.xaml" />
-    <Compile Update="**\*.xaml.cs" SubType="Designer" DependentUpon="%(Filename)" />
     <Resource Include="assets\*.*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HelixToolkit.Wpf" Version="2.14.0" />
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.24.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
-    <PackageReference Include="Xbim.Geometry" Version="5.1.443-develop" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xaml" />
-    <Reference Include="WindowsBase" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.436-develop" />
+    <PackageReference Include="Xbim.ModelGeometry.Scene" Version="6.1.739-netcore" />
+   
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.de.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.de.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

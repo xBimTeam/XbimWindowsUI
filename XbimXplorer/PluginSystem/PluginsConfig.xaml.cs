@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using NuGet;
+using NuGet.Packaging;
 using Xbim.Presentation;
 
 namespace XbimXplorer.PluginSystem
@@ -24,19 +27,20 @@ namespace XbimXplorer.PluginSystem
         {
             InitializeComponent();
             Logger = XplorerMainWindow.LoggerFactory.CreateLogger<PluginsConfig>();
-            RefreshPluginList();
+            _ =RefreshPluginList();
             _mainWindow = Application.Current.MainWindow as XplorerMainWindow;
             DataContext = this;
             SelectedPlugin = new PluginInformationVm(null);
         }
 
-        private void ShowRepository()
+        private async Task ShowRepository()
         {
             var plugins = new List<PluginInformationVm>();
             try
             {
                 var option = (PluginChannelOption)Enum.Parse(typeof(PluginChannelOption), DisplayOptionText);
-                foreach (var plugin in _xplorerPlugins.GetPlugins(option, NugetVersion))
+                using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                await foreach (var plugin in _xplorerPlugins.GetPluginsAsync(option, NugetVersion, cts.Token))
                 {
                     plugins.Add(new PluginInformationVm(plugin));
                 }
@@ -63,7 +67,7 @@ namespace XbimXplorer.PluginSystem
             }
         }
         
-        private void RefreshPluginList()
+        private async Task RefreshPluginList()
         {
             using (new WaitCursor())
             {
@@ -71,7 +75,7 @@ namespace XbimXplorer.PluginSystem
                     ShowDiskPlugins();
                 else
                 {
-                    ShowRepository();
+                    await ShowRepository();
                 }
                 SelectedPlugin = new PluginInformationVm(null);
             }
@@ -111,23 +115,24 @@ namespace XbimXplorer.PluginSystem
                     var fInfo = new FileInfo(fname);
                     if (fInfo.Extension != ".nupkg")
                         continue;
-                    IPackage p = new ZipPackage(fInfo.FullName);
-                    var pi = new PluginInformation(p);
-                    pi.ExtractPlugin(
-                        PluginManagement.GetPluginsDirectory()
-                        );
+                    //IPackageMetadata p = new ZipPackage(fInfo.FullName);
+                    //var pi = new PluginInformation(p);
+                    //pi.ExtractPlugin(
+                    //    PluginManagement.GetPluginsDirectory()
+                    //    );
+                    throw new NotImplementedException("NUget needs sorting");
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError(0, ex, "Error processing package file {filename}.", fname);
                 }
             }
-            RefreshPluginList();
+            _ =RefreshPluginList();
         }
 
         private void DisplayOption_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            RefreshPluginList();
+            _ = RefreshPluginList();
         }
     }
 }
