@@ -22,7 +22,7 @@
     <Resource Include="assets\*.*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.23.0" />
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.24.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />

@@ -440,9 +440,8 @@ namespace XbimXplorer.Simplify
 
         private void CmdAdd_Click(object sender, RoutedEventArgs e)
         {
-            var v = SelectedIfcIndex;
             TxtHandPicked.Text += SelectedIfcIndex + Environment.NewLine;
-            RecursiveAdd(SelectedIfcIndex);
+            RecursiveAdd(SelectedIfcIndex, PreserveProps.IsChecked == false);
 
             ConsiderManualSelection();
         }
