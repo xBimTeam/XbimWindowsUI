@@ -48,7 +48,6 @@ using Xbim.IO;
 using Xbim.Geometry.Engine.Interop;
 using System.Windows.Media;
 using Xbim.Common.Configuration;
-using Xbim.Geometry.Engine.Interop.Extensions;
 
 
 #endregion
