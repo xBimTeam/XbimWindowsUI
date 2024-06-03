@@ -47,6 +47,9 @@ using Serilog.Events;
 using Xbim.IO;
 using Xbim.Geometry.Engine.Interop;
 using System.Windows.Media;
+using Xbim.Common.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 
 #endregion
 
@@ -117,7 +120,7 @@ namespace XbimXplorer
         public XplorerMainWindow(bool preventPluginLoad = false)
         {
             // So we can use *.xbim files.
-            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
+            XbimServices.Current.ConfigureServices(s => s.AddXbimToolkit(opt => opt.AddHeuristicModel()));
             
             LogSink = new InMemoryLogSink { Tag = "MainWindow" };
             LogSink.Logged += LogEvent_Added;
@@ -138,7 +141,7 @@ namespace XbimXplorer
                 .Enrich.FromLogContext()
                 .CreateLogger();
             // Set XBIM Essentials/Geometries's LoggerFactory - so Serilog drives everything.
-            XbimLogging.LoggerFactory = LoggerFactory;
+            XbimServices.Current.ConfigureServices(s => s.AddSingleton(typeof(ILoggerFactory), LoggerFactory));
 
             Logger = LoggerFactory.CreateLogger<XplorerMainWindow>();
 
