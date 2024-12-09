@@ -1162,7 +1162,7 @@ namespace XbimXplorer.Commands
                 {
                     ReportAdd("Plugin extraction failed.", Brushes.Red);
                 }
-                if (plugin.Config.OnStartup == PluginConfiguration.StartupBehaviour.Disabled)
+                if (plugin.Config.OnStartup == PluginConfiguration.PluginFlag.Disabled)
                 {
                     plugin.ToggleEnabled();
                 }

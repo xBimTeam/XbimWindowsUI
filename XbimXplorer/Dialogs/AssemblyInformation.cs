@@ -17,13 +17,7 @@ namespace XbimXplorer.Dialogs
     /// </summary>
     internal static class GetReferencedAssemblies
     {
-        static void Demo()
-        {
-            var referencedAssemblies = Assembly.GetEntryAssembly().MyGetReferencedAssembliesRecursive();
-            var missingAssemblies = Assembly.GetEntryAssembly().MyGetMissingAssembliesRecursive();
-            // Can use this within a class.
-            //var referencedAssemblies = this.MyGetReferencedAssembliesRecursive();
-        }
+        
 
         public class MissingAssembly
         {
@@ -39,6 +33,20 @@ namespace XbimXplorer.Dialogs
 
         private static Dictionary<string, Assembly> _dependentAssemblyList;
         private static List<MissingAssembly> _missingAssemblyList;
+		private static MetadataLoadContext _assemblyLoadContext;
+
+
+		public static void Initialise(Assembly assembly)
+		{
+			_dependentAssemblyList = new Dictionary<string, Assembly>();
+			_missingAssemblyList = new List<MissingAssembly>();
+			if (_assemblyLoadContext != null)
+			{
+				_assemblyLoadContext.Dispose();
+			}
+			_assemblyLoadContext = CreateAssemblyLoadContext(assembly);
+
+		}
 
         /// <summary>
         ///     Intent: Get assemblies referenced by entry assembly. Not recursive.
@@ -54,10 +62,10 @@ namespace XbimXplorer.Dialogs
         /// </summary>
         public static Dictionary<string, Assembly> MyGetReferencedAssembliesRecursive(this Assembly assembly)
         {
-            _dependentAssemblyList = new Dictionary<string, Assembly>();
-            _missingAssemblyList = new List<MissingAssembly>();
-
-            InternalGetDependentAssemblies(assembly);
+            Initialise(assembly);
+			
+			InternalGetDependentAssembliesRecursive(assembly, _assemblyLoadContext);
+			
 
            // TOOD: We used to exclude assemblies in the GAC. That's a deprecated concept in netcore. Review?
 
@@ -69,37 +77,32 @@ namespace XbimXplorer.Dialogs
         /// </summary>
         public static List<MissingAssembly> MyGetMissingAssembliesRecursive(this Assembly assembly)
         {
-            _dependentAssemblyList = new Dictionary<string, Assembly>();
-            _missingAssemblyList = new List<MissingAssembly>();
-            InternalGetDependentAssemblies(assembly);
+			Initialise(assembly);
+			InternalGetDependentAssembliesRecursive(assembly, _assemblyLoadContext);
 
-            return _missingAssemblyList;
+			return _missingAssemblyList;
         }
 
+		private static MetadataLoadContext CreateAssemblyLoadContext(Assembly assembly)
+		{
+			var appDir = Path.GetDirectoryName(assembly.Location);
+			var pluginDir = PluginManagement.GetPluginsDirectory().FullName;
+			string[] runtimeAssemblies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
+			string[] appAssemblies = Directory.GetFiles(appDir, "*.dll");
+			// Create the list of assembly paths consisting of runtime assemblies and the input file.
+			var paths = new List<string>(appAssemblies.Concat(runtimeAssemblies));
 
-        private static void InternalGetDependentAssemblies(Assembly assembly)
-        {
-            var appDir = Path.GetDirectoryName(assembly.Location);
-            var pluginDir = PluginManagement.GetPluginsDirectory().FullName;
-            string[] runtimeAssemblies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
-            string[] appAssemblies = Directory.GetFiles(appDir, "*.dll");
-            //string[] plugins = Directory.GetFiles(pluginDir, "*.dll");
-            // Create the list of assembly paths consisting of runtime assemblies and the input file.
-            var paths = new List<string>(appAssemblies.Concat(runtimeAssemblies));
+			var resolver = new PathAssemblyResolver(paths);
+			// a netcore replacement for Assembly.ReflectionOnlyLoad
+			var mlc = new MetadataLoadContext(resolver);
+			return mlc;
+		}
 
-            var resolver = new PathAssemblyResolver(paths);
-
-            // a netcore replacement for Assembly.ReflectionOnlyLoad
-            using (var mlc = new MetadataLoadContext(resolver))
-            {
-                InternalGetDependentAssembliesRecursive(assembly, mlc);
-            }
-        }
-        /// <summary>
-        ///     Intent: Internal recursive class to get all dependent assemblies, and all dependent assemblies of
-        ///     dependent assemblies, etc.
-        /// </summary>
-        private static void InternalGetDependentAssembliesRecursive(Assembly assembly, MetadataLoadContext context)
+		/// <summary>
+		///     Intent: Internal recursive class to get all dependent assemblies, and all dependent assemblies of
+		///     dependent assemblies, etc.
+		/// </summary>
+		private static void InternalGetDependentAssembliesRecursive(Assembly assembly, MetadataLoadContext context)
         {
            
             //Load assemblies with newest versions first. Omitting the ordering results in false positives on

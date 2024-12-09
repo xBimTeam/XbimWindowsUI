@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
 namespace XbimXplorer.PluginSystem
 {
-    public class PluginConfiguration
+	public class PluginConfiguration
     {
-        public StartupBehaviour OnStartup = StartupBehaviour.Disabled;
+        public PluginFlag OnStartup = PluginFlag.Disabled;
+		public PluginFlag LoadingDiagnostics = PluginFlag.Disabled;
 
-        public enum StartupBehaviour
+		public enum PluginFlag
         {
             Enabled,
             Disabled            
@@ -56,9 +52,9 @@ namespace XbimXplorer.PluginSystem
 
         public void ToggleEnabled()
         {
-            OnStartup = (OnStartup == StartupBehaviour.Enabled)
-                ? StartupBehaviour.Disabled 
-                : StartupBehaviour.Enabled;
+            OnStartup = (OnStartup == PluginFlag.Enabled)
+                ? PluginFlag.Disabled 
+                : PluginFlag.Enabled;
         }
     }
 }

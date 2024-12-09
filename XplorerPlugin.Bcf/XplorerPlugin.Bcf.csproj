@@ -30,9 +30,6 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />
   </ItemGroup>
 </Project>

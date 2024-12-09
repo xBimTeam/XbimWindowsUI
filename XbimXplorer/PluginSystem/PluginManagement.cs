@@ -232,7 +232,7 @@ namespace XbimXplorer.PluginSystem
             return Path.Combine(dir.FullName, "PluginConfig.xml");
         }
 
-        public static void SetStartup(DirectoryInfo dir, PluginConfiguration.StartupBehaviour behaviour)
+        public static void SetStartup(DirectoryInfo dir, PluginConfiguration.PluginFlag behaviour)
         {
             var p = new PluginConfiguration {OnStartup = behaviour};
             p.WriteXml(GetStartupFileConfig(dir));

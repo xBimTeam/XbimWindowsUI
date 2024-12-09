@@ -55,7 +55,6 @@
 		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="DotNetZip" Version="1.16.0" />
 		<PackageReference Include="Dirkster.AvalonDock" Version="4.72.1" />
 		<PackageReference Include="HelixToolkit.Core.Wpf" Version="2.24.0" />
 		<PackageReference Include="NuGet.Protocol" Version="6.8.0" />

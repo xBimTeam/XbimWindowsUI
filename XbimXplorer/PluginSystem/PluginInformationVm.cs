@@ -74,7 +74,7 @@ namespace XbimXplorer.PluginSystem
             ? Visibility.Visible 
             : Visibility.Hidden;
 
-        public string EnableToggleCaption => _model?.Config?.OnStartup == PluginConfiguration.StartupBehaviour.Enabled 
+        public string EnableToggleCaption => _model?.Config?.OnStartup == PluginConfiguration.PluginFlag.Enabled 
             ? "Disable" 
             : "Enable";
 
