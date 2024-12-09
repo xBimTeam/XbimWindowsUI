@@ -247,7 +247,7 @@ namespace XbimXplorer
 
 		private void EvaluateXbimUiType(Type type, bool InsertAtTopOfMenu)
 		{
-			Logger.LogInformation(0, $"Evaluating UI for '{type.FullName}'.");
+			Logger.LogDebug(0, $"Evaluating UI for '{type.FullName}'.");
 			if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
 			{
 				return;
