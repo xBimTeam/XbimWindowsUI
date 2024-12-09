@@ -247,7 +247,6 @@ namespace XbimXplorer
 
 		private void EvaluateXbimUiType(Type type, bool InsertAtTopOfMenu)
 		{
-			Logger.LogDebug(0, $"Evaluating UI for '{type.FullName}'.");
 			if (!typeof(IXbimXplorerPluginWindow).IsAssignableFrom(type))
 			{
 				return;
@@ -271,7 +270,7 @@ namespace XbimXplorer
 			var att = type.GetUiAttribute();
 			if (string.IsNullOrEmpty(att?.MenuText))
 				return;
-			Logger.LogDebug($"Menu: {att.MenuText}");
+			Logger.LogDebug($"Adding Menu: {att.MenuText}");
 			var destMenu = PluginMenu;
 			var menuHeader = type.Name;
 			if (!string.IsNullOrEmpty(att.MenuText))
