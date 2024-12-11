@@ -55,8 +55,8 @@ namespace Xbim.Presentation.ModelGeomInfo
             {
                 var d = GetArea();
                 return !double.IsNaN(d)
-                    ? $"Lenght: {GetLenght():0.##}m Area: {d:0.##}sqm"
-                    : $"Lenght: {GetLenght():0.##}m";
+                    ? $"Length: {GetLength():0.##}m Area: {d:0.##}sqm"
+                    : $"Length: {GetLength():0.##}m";
             }
         }
 
@@ -65,7 +65,7 @@ namespace Xbim.Presentation.ModelGeomInfo
             _geomPoints = new List<PointGeomInfo>();
         }
 
-        public double GetLenght()
+        public double GetLength()
         {
             if (_geomPoints == null)
                 return 0;
