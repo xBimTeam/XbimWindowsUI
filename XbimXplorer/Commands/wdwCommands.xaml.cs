@@ -1020,7 +1020,8 @@ namespace XbimXplorer.Commands
 		{
 			FileInfo fi = new FileInfo(Model.FileName);
 			var dirName = fi.DirectoryName;
-			XbimPlacementTree pt = new XbimPlacementTree(Model, App.ContextWcsAdjustment);
+			var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
+			XbimPlacementTree pt = new XbimPlacementTree(Model, engine, App.ContextWcsAdjustment);
 			// add "DBRep_DrawableShape" as first line
 			var start = m.Groups["entities"].Value;
 			IEnumerable<int> labels = ToIntarray(start, ',');
@@ -1051,7 +1052,7 @@ namespace XbimXplorer.Commands
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
-					var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
+
 					var ifcFile = ((IfcStore)Model).FileName;
 					foreach (var solEntity in entities)
 					{
@@ -1358,7 +1359,8 @@ namespace XbimXplorer.Commands
                     Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
                 if (storey != null)
                 {
-                    var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
+					var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
+					var placementTree = new XbimPlacementTree(storey.Model, engine, App.ContextWcsAdjustment);
                     var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine(storey.Model, XbimServices.Current.GetLoggerFactory()));
                     var off = trsf.OffsetZ;
                     var pt = new XbimPoint3D(0, 0, off);
