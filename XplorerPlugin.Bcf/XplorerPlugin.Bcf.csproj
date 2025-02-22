@@ -44,7 +44,7 @@
     <ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DotNetZip" Version="1.13.3" />
+    <PackageReference Include="DotNetZip.Reduced" Version="1.9.1.8" />
     <PackageReference Include="HelixToolkit" Version="2.14.0" />
     <PackageReference Include="HelixToolkit.Wpf" Version="2.14.0" />
     <PackageReference Include="ManagedEsent" Version="1.9.4" />

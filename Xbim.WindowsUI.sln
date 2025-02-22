@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35806.99 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.Presentation", "Xbim.Presentation\Xbim.Presentation.csproj", "{89F98E53-DE4E-4427-8244-D5934AD08849}"
 EndProject
@@ -25,6 +25,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{645DE1B1-90B9-4B04-8F65-F6C81B046B23}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.WinformsSample", "Xbim.WinformsSample\Xbim.WinformsSample.csproj", "{6ED232C8-1056-4FB5-9B72-18D045DB833B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ITI", "ITI\ITI.csproj", "{4C08814C-7E3D-4BB7-BC86-5E76560AF6C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +54,10 @@ Global
 		{6ED232C8-1056-4FB5-9B72-18D045DB833B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6ED232C8-1056-4FB5-9B72-18D045DB833B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6ED232C8-1056-4FB5-9B72-18D045DB833B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C08814C-7E3D-4BB7-BC86-5E76560AF6C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C08814C-7E3D-4BB7-BC86-5E76560AF6C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C08814C-7E3D-4BB7-BC86-5E76560AF6C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C08814C-7E3D-4BB7-BC86-5E76560AF6C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
