@@ -212,7 +212,7 @@
                                    Height="Auto" 
 
                                    MouseDoubleClick="SpatialControl_MouseDoubleClick"
-                                   WcsAdjusted="{x:Static local:App.ContextWcsAdjustment}"
+                                   WcsAdjusted="{x:Static local:App.ContextWcsAdjustment}" Loaded="DrawingControl_Loaded"
                                    >
                                 <xbim:DrawingControl3D.Background>
                                     <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
