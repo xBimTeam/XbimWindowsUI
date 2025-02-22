@@ -3,35 +3,76 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xbim="clr-namespace:Xbim.Presentation;assembly=Xbim.Presentation"
         xmlns:local="clr-namespace:ITI"
-        
         Title="ITI XBIM Viewer" 
         Height="600" 
         Width="800"
         WindowStartupLocation="CenterScreen"
-        Icon="Images/favicon.png">
+        Icon="Images/favicon.png"
+        Background="#FFE0E0E0">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#FF0078D7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Image Grid.Row="0" 
-               Source="Images/favicon.png"
-            Width="50" 
-               Height="50" 
-               HorizontalAlignment="Left" 
-               VerticalAlignment="Top" 
-               Margin="10"/>
+        <Border Grid.Row="0" 
+                Background="#FF0078D7" 
+                Padding="10">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="Images/favicon.png"
+                       Width="50" 
+                       Height="50" 
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0">
+                    <Image.Effect>
+                        <DropShadowEffect ShadowDepth="2" 
+                                          Color="Black" 
+                                          Opacity="0.5"/>
+                    </Image.Effect>
+                </Image>
+                <TextBlock Text="ITI XBIM Viewer" 
+                           VerticalAlignment="Center"
+                           FontSize="20" 
+                           FontWeight="Bold" 
+                           Foreground="White"/>
+            </StackPanel>
+        </Border>
 
-            <Button Grid.Row="0" 
+        <Button Grid.Row="0" 
                 Content="Load IFC" 
                 Click="LoadIfc_Click" 
-                Margin="5" 
-                Padding="5" 
                 HorizontalAlignment="Right" 
-                VerticalAlignment="Top"/>
+                VerticalAlignment="Top"
+                Margin="10"/>
 
-            <xbim:DrawingControl3D 
+        <xbim:DrawingControl3D 
             x:Name="DrawingControl" 
             Grid.Row="1"
             Model="{Binding}" 
@@ -39,12 +80,12 @@
             Width="Auto" 
             Height="Auto"
             Loaded="DrawingControl_Loaded">
-                <xbim:DrawingControl3D.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                        <GradientStop Color="#FFB9B1B1" Offset="1"/>
-                        <GradientStop Color="#FFFAF8FF"/>
-                    </LinearGradientBrush>
-                </xbim:DrawingControl3D.Background>
-            </xbim:DrawingControl3D>
+            <xbim:DrawingControl3D.Background>
+                <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                    <GradientStop Color="#FFB9B1B1" Offset="1"/>
+                    <GradientStop Color="#FFFAF8FF"/>
+                </LinearGradientBrush>
+            </xbim:DrawingControl3D.Background>
+        </xbim:DrawingControl3D>
     </Grid>
 </Window>
