@@ -3,13 +3,31 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xbim="clr-namespace:Xbim.Presentation;assembly=Xbim.Presentation"
         xmlns:local="clr-namespace:ITI"
-        Title="ITI XBIM Viewer" Height="600" Width="800">
+        
+        Title="ITI XBIM Viewer" Height="600" Width="800"
+        Icon="Images/favicon.ico" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button Grid.Row="0" Content="Load IFC" Click="LoadIfc_Click" Margin="5" Padding="5"/>
+
+        <Image Grid.Row="0" 
+               Source="Images/favicon.png" 
+               Width="50" 
+               Height="50" 
+               HorizontalAlignment="Left" 
+               VerticalAlignment="Top" 
+               Margin="10"/>
+
+        <Button Grid.Row="0" 
+                Content="Load IFC" 
+                Click="LoadIfc_Click" 
+                Margin="5" 
+                Padding="5" 
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Top"/>
+
         <xbim:DrawingControl3D 
             x:Name="DrawingControl" 
             Grid.Row="1"
