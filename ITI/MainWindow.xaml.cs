@@ -40,7 +40,7 @@ namespace ITI
 
 			if (result == MessageBoxResult.Yes)
 			{
-				ifcFilePath = @"ITI\ITI_Ahmed_Ahmed_STR.ifc";
+				ifcFilePath = @"IFC File\ITI_Ahmed_Ahmed_STR.ifc";
 			}
 			else if (result == MessageBoxResult.No)
 			{

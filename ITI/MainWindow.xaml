@@ -4,8 +4,11 @@
         xmlns:xbim="clr-namespace:Xbim.Presentation;assembly=Xbim.Presentation"
         xmlns:local="clr-namespace:ITI"
         
-        Title="ITI XBIM Viewer" Height="600" Width="800"
-        Icon="Images/favicon.ico" WindowStartupLocation="CenterScreen">
+        Title="ITI XBIM Viewer" 
+        Height="600" 
+        Width="800"
+        WindowStartupLocation="CenterScreen"
+        Icon="Images/favicon.png">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -13,14 +16,14 @@
         </Grid.RowDefinitions>
 
         <Image Grid.Row="0" 
-               Source="Images/favicon.png" 
-               Width="50" 
+               Source="Images/favicon.png"
+            Width="50" 
                Height="50" 
                HorizontalAlignment="Left" 
                VerticalAlignment="Top" 
                Margin="10"/>
 
-        <Button Grid.Row="0" 
+            <Button Grid.Row="0" 
                 Content="Load IFC" 
                 Click="LoadIfc_Click" 
                 Margin="5" 
@@ -28,7 +31,7 @@
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top"/>
 
-        <xbim:DrawingControl3D 
+            <xbim:DrawingControl3D 
             x:Name="DrawingControl" 
             Grid.Row="1"
             Model="{Binding}" 
@@ -36,12 +39,12 @@
             Width="Auto" 
             Height="Auto"
             Loaded="DrawingControl_Loaded">
-            <xbim:DrawingControl3D.Background>
-                <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                    <GradientStop Color="#FFB9B1B1" Offset="1"/>
-                    <GradientStop Color="#FFFAF8FF"/>
-                </LinearGradientBrush>
-            </xbim:DrawingControl3D.Background>
-        </xbim:DrawingControl3D>
+                <xbim:DrawingControl3D.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                        <GradientStop Color="#FFB9B1B1" Offset="1"/>
+                        <GradientStop Color="#FFFAF8FF"/>
+                    </LinearGradientBrush>
+                </xbim:DrawingControl3D.Background>
+            </xbim:DrawingControl3D>
     </Grid>
 </Window>
