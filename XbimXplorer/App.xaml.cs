@@ -16,6 +16,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Xbim.Common.Configuration;
+using Xbim.Geometry.Abstractions;
 using Xbim.IO;
 using XbimXplorer.Properties;
 
@@ -24,7 +26,7 @@ using XbimXplorer.Properties;
 namespace XbimXplorer
 {
     /// <summary>
-    ///   Interaction logic for App.xaml
+    /// Interaction logic for App.xaml
     /// </summary>
     public partial class App
     {
@@ -42,8 +44,14 @@ namespace XbimXplorer
         /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs"/> that contains the event data.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
-            // evaluate special parameters before loading MainWindow
-            var blockPlugin = false;
+			XbimServices.Current.ConfigureServices(services => services
+							.AddXbimToolkit(opt => opt
+								// .AddLoggerFactory(_loggerFactory)
+								// .AddEsentModel()
+								.AddHeuristicModel()
+								.AddGeometryServices(builder => builder.Configure(c => c.GeometryEngineVersion = XGeometryEngineVersion.V6))));
+			// evaluate special parameters before loading MainWindow
+			var blockPlugin = false;
             foreach (var thisArg in e.Args)
             {
                 if (string.Compare("/noplugins", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
@@ -61,7 +69,7 @@ namespace XbimXplorer
                 Settings.Default.SettingsUpdateRequired = false;
                 Settings.Default.Save();
             }
-
+			// blockPlugin = true;
             var mainView = new XplorerMainWindow(blockPlugin);
             mainView.Show();
             mainView.DrawingControl.ViewHome();

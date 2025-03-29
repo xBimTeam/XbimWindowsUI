@@ -36,6 +36,9 @@ using Microsoft.Extensions.Logging;
 using Xbim.Common.ExpressValidation;
 using Xbim.Presentation.Overlay;
 using HelixToolkit.Wpf;
+using Xbim.Ifc4x3;
+using Xbim.Ifc4;
+using Xbim.Ifc2x3;
 
 // todo: see if gemini is a good candidate for a network based ui experience in xbim.
 // https://github.com/tgjones/gemini
@@ -807,7 +810,7 @@ namespace XbimXplorer.Commands
 			var labels = GetSelection(m).ToArray();
 			if (labels.Any())
 			{
-				var engine = new XbimGeometryEngine();
+				var engine = Infrastructure.GetGeometryEngine(Model);
 				foreach (var label in labels)
 				{
 					var entity = Model.Instances[label];
@@ -1016,8 +1019,11 @@ namespace XbimXplorer.Commands
 		private void ProcessBrepCommand(Match m)
 		{
 			FileInfo fi = new FileInfo(Model.FileName);
+
+			var engine = Infrastructure.GetGeometryEngine(Model);
+
 			var dirName = fi.DirectoryName;
-			XbimPlacementTree pt = new XbimPlacementTree(Model, App.ContextWcsAdjustment);
+			XbimPlacementTree pt = new XbimPlacementTree(Model, engine, App.ContextWcsAdjustment);
 			// add "DBRep_DrawableShape" as first line
 			var start = m.Groups["entities"].Value;
 			IEnumerable<int> labels = ToIntarray(start, ',');
@@ -1037,18 +1043,18 @@ namespace XbimXplorer.Commands
 					if (entity is IIfcProduct)
 					{
 						var prod = (IIfcProduct)entity;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						trsf = XbimPlacementTree.GetTransform(prod, pt, engine);
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
 					else if (entity is IIfcRelVoidsElement)
 					{
 						var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine());
+						trsf = XbimPlacementTree.GetTransform(prod, pt, engine);
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
-					var engine = new XbimGeometryEngine();
+					
 					var ifcFile = ((IfcStore)Model).FileName;
 					foreach (var solEntity in entities)
 					{
@@ -1345,14 +1351,15 @@ namespace XbimXplorer.Commands
             {
                 if (ModelIsUnavailable) 
                     return;
+				var engine = Infrastructure.GetGeometryEngine(Model);
                 var msg = "";
                 var storName = m.Groups["StoreyName"].Value;
                 var storey =
                     Model.Instances.OfType<IIfcBuildingStorey>().FirstOrDefault(x => x.Name == storName);
                 if (storey != null)
                 {
-                    var placementTree = new XbimPlacementTree(storey.Model, App.ContextWcsAdjustment);
-                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine());
+                    var placementTree = new XbimPlacementTree(storey.Model, engine, App.ContextWcsAdjustment);
+                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, engine);
                     var off = trsf.OffsetZ;
                     var pt = new XbimPoint3D(0, 0, off);
 
@@ -1606,7 +1613,7 @@ namespace XbimXplorer.Commands
             Execute();
         }
 
-        private IEnumerable<(string methodName, List<IXbimSolid> solids)> GetSolidsByAvailableMethods(IPersistEntity entity, XbimGeometryEngine engine)
+        private IEnumerable<(string methodName, List<IXbimSolid> solids)> GetSolidsByAvailableMethods(IPersistEntity entity, IXbimGeometryEngine engine)
         {
             // todo: cache methods by type
             var methods = typeof(XbimGeometryEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance);
@@ -2379,13 +2386,9 @@ namespace XbimXplorer.Commands
             }
         }
 
-        internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
-        {
-            {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
-            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)}
-        };
+		internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => Infrastructure.SchemaMetadatas;
 
-        private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
+		private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
         {
             Debug.WriteLine(type);
             var tarr = type.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries);

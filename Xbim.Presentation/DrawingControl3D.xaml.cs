@@ -854,8 +854,6 @@ namespace Xbim.Presentation
 			return false;
 		}
 
-		
-
 		public IfcStore Model
 		{
 			get { return (IfcStore)GetValue(ModelProperty); }
@@ -1140,8 +1138,10 @@ namespace Xbim.Presentation
 			{
 				_lastSelectedProduct = newVal as IIfcProduct;
 			}
-
+			if (Model is null)
+				return new WpfMeshGeometry3D();
 			WpfMeshGeometry3D m;
+			var engine = Infrastructure.GetGeometryEngine(Model);
 			if (newVal is IIfcRepresentationItem)
 			{
 				if (_lastSelectedProduct == null)
@@ -1153,18 +1153,17 @@ namespace Xbim.Presentation
 					var selModel = _lastSelectedProduct.Model;
 					var modelTransform = ModelPositions[selModel].Transform;
 
-					m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
+					m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted, engine);
 					if (m.PositionCount == 0)
 					{
 						var gri = newVal as IIfcGeometricRepresentationItem;
 						if (gri != null)
 						{
-							var engine = new XbimGeometryEngine();
 							var solid = engine.Create(gri, null);
 							if (solid != null)
 							{
 								var shape = engine.CreateShapeGeometry(solid, selModel.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, selModel.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary, null);
-								m = WpfMeshGeometry3D.GetRepresentationGeometry2(mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct);
+								m = WpfMeshGeometry3D.GetRepresentationGeometry2(mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct, engine);
 							}
 						}
 					}
@@ -1172,7 +1171,7 @@ namespace Xbim.Presentation
 			}
 			else if (newVal is IIfcShapeRepresentation)
 			{
-				m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)newVal, ModelPositions, mat, WcsAdjusted);
+				m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)newVal, ModelPositions, mat, WcsAdjusted, engine);
 			}
 			else if (newVal is IIfcRelVoidsElement)
 			{
@@ -1180,7 +1179,7 @@ namespace Xbim.Presentation
 				var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
 					.FirstOrDefault();
 				if (rep != null)
-					m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)rep, ModelPositions, mat, WcsAdjusted);
+					m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)rep, ModelPositions, mat, WcsAdjusted, engine);
 				else
 				{
 					m = new WpfMeshGeometry3D();

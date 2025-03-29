@@ -64,8 +64,7 @@
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="2.0.4" />
 		<PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
-		<PackageReference Include="Xbim.Geometry" Version="5.1.782-develop" />
-		<PackageReference Include="Xbim.IO.Esent" Version="6.0.484-develop" />
+		<PackageReference Include="Xbim.IO.Esent" Version="6.0.503-develop" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Microsoft.CSharp" />

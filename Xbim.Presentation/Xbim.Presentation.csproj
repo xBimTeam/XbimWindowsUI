@@ -11,6 +11,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageIcon>XbimIcon.png</PackageIcon>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472|AnyCPU'">
     <OutputPath>..\Output\Debug\</OutputPath>
@@ -42,7 +43,8 @@
   <ItemGroup>
     <PackageReference Include="HelixToolkit.Wpf" Version="2.14.0" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
-    <PackageReference Include="Xbim.Geometry" Version="5.1.782-develop" />
+    <PackageReference Include="Xbim.Geometry" Version="6.1.816-netcore" />
+    <PackageReference Include="Xbim.IO.Esent" Version="6.0.503-develop" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
