@@ -69,7 +69,7 @@ namespace Xbim.Presentation
 		protected ObservableMeshVisual3D Highlighted;
 		protected CuttingPlaneGroup CuttingGroupT;
 		protected SortingVisual3D Transparents;
-				protected ModelVisual3D Extras;
+		protected ModelVisual3D Extras;
 		protected ModelVisual3D Overlays;
 		protected GridLinesVisual3D GridLines;
 
@@ -232,12 +232,12 @@ namespace Xbim.Presentation
 		{
 			typeof(Ifc2x3.ProductExtension.IfcSpace),
 			typeof(Ifc4.ProductExtension.IfcSpace),
-            typeof(Ifc4x3.ProductExtension.IfcSpace),
+			typeof(Ifc4x3.ProductExtension.IfcSpace),
 
-            typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
+			typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
 			typeof(Ifc4.ProductExtension.IfcFeatureElement),
-            typeof(Ifc4x3.ProductExtension.IfcFeatureElement)
-        };
+			typeof(Ifc4x3.ProductExtension.IfcFeatureElement)
+		};
 
 		/// <summary>
 		/// The list of types that the engine will not consider in the generation of the scene, the exclusion code needs to be correctly implemented in the 
@@ -249,7 +249,7 @@ namespace Xbim.Presentation
 
 		public List<IPersistEntity> HiddenInstances = null;
 
-        public List<IIfcGeometricRepresentationContext> SelectedContexts = null;
+		public List<IIfcGeometricRepresentationContext> SelectedContexts = null;
 
 		private LinesVisual3D _userModeledDimLines;
 		private PointsVisual3D _userModeledDimPoints;
@@ -823,7 +823,7 @@ namespace Xbim.Presentation
 			return Overlays.Children.Remove(imageOverlay.GraphicsItem);
 		}
 
-		
+
 
 		public void AddTextOverlay(TextOverlay text)
 		{
@@ -858,7 +858,7 @@ namespace Xbim.Presentation
 			return false;
 		}
 
-		
+
 
 		public IfcStore Model
 		{
@@ -1144,7 +1144,7 @@ namespace Xbim.Presentation
 			{
 				_lastSelectedProduct = newVal as IIfcProduct;
 			}
-			if(newVal == null)
+			if (newVal == null)
 			{
 				return new WpfMeshGeometry3D();
 			}
@@ -1161,7 +1161,7 @@ namespace Xbim.Presentation
 					var selModel = _lastSelectedProduct.Model;
 					var modelTransform = ModelPositions[selModel].Transform;
 
-					
+
 					m = WpfMeshGeometry3D.GetRepresentationGeometry(engine, mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
 					if (m.PositionCount == 0)
 					{
@@ -1204,7 +1204,7 @@ namespace Xbim.Presentation
 				{
 					m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
 				}
-				
+
 			}
 			return m;
 		}
@@ -1365,13 +1365,13 @@ namespace Xbim.Presentation
 			Materials.Clear();
 			OriginalOpacities.Clear();
 
-			if(Opaques != null)
+			if (Opaques != null)
 				Opaques.Children.Clear();
-			if(Transparents != null)
+			if (Transparents != null)
 				Transparents.Children.Clear();
-			if(Extras != null)
-			Extras.Children.Clear();
-			if(Overlays != null)
+			if (Extras != null)
+				Extras.Children.Clear();
+			if (Overlays != null)
 				Overlays.Children.Clear();
 
 			if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelection))
@@ -1542,7 +1542,7 @@ namespace Xbim.Presentation
 
 			XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 			if (!mod.GeometryStore.IsEmpty)
-                scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes, SelectedContexts);
+				scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes, SelectedContexts);
 			if (scene != null && scene.Layers.Any())
 			{
 				Scenes.Add(scene);
@@ -1831,7 +1831,7 @@ namespace Xbim.Presentation
 
 		private readonly ModelVisual3D _octreeVisualization = new ModelVisual3D();
 		private bool _hasModelGrid;
-		
+
 
 		private void ShowOctree<T>(XbimOctree<T> octree, int specificLevel = -1, bool onlyWithContent = false)
 		{
