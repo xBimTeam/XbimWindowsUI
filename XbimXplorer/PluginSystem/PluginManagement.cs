@@ -148,8 +148,8 @@ namespace XbimXplorer.PluginSystem
             var tmpPackages = new List<IPackageSearchMetadata>();
 
             // Use any type in the schema
-			Module mod = typeof(Xbim.Ifc4.Kernel.IfcRoot).Module;
-			ExpressMetaData meta = ExpressMetaData.GetMetadata(mod);
+			var factory = new Xbim.Ifc4.EntityFactoryIfc4x1(); ;
+			ExpressMetaData meta = ExpressMetaData.GetMetadata(factory);
 
             // Find all sub types of IfcProduct. You will probably also want to do IfcTypeObjects as well
             var product = meta.ExpressType(typeof(Xbim.Ifc4.Kernel.IfcProduct));

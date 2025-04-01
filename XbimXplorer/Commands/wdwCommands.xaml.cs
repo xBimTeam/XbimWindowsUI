@@ -2393,9 +2393,9 @@ namespace XbimXplorer.Commands
 
         internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
         {
-            {"ifc2x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc2x3.SharedBldgElements.IfcWall).Module)},
-            {"ifc4", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.SharedBldgElements.IfcWall).Module)},
-            {"ifc4x3", ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4x3.SharedBldgElements.IfcWall).Module)}
+            {"ifc2x3", ExpressMetaData.GetMetadata(new Xbim.Ifc2x3.EntityFactoryIfc2x3())},
+            {"ifc4", ExpressMetaData.GetMetadata(new Xbim.Ifc4.EntityFactoryIfc4x1())},
+            {"ifc4x3", ExpressMetaData.GetMetadata(new Xbim.Ifc4x3.EntityFactoryIfc4x3Add2())}
         };
 
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")

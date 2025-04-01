@@ -178,11 +178,26 @@ namespace XbimXplorer
 
             // initialise the logging repository
             LoggedEvents = new ObservableCollection<EventViewModel>();
-            // any logging event required should happen after XplorerMainWindow_Loaded
+			// any logging event required should happen after XplorerMainWindow_Loaded
+
+			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
 
+		private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+		{
+			if(e.ExceptionObject is Exception ex)
+			{
 
-        public Visibility DeveloperVisible => Settings.Default.DeveloperMode 
+				Logger?.LogError(ex, "Unhandled Exception in AppDomain. Terminating: {isTerminal}", e.IsTerminating);
+			}
+			else
+			{
+				Logger?.LogError("Unhandled Error in AppDomain: {error}. Terminating: {isTerminal}",  e.ExceptionObject, e.IsTerminating);
+			}
+			
+		}
+
+		public Visibility DeveloperVisible => Settings.Default.DeveloperMode 
             ? Visibility.Visible 
             : Visibility.Collapsed;
 
@@ -1188,16 +1203,16 @@ namespace XbimXplorer
 
         private void StylerIfcSpacesOnly(object sender, RoutedEventArgs e)
         {
-            var module2X3 = (typeof(Xbim.Ifc2x3.Kernel.IfcProduct)).Module;
-            var meta2X3 = ExpressMetaData.GetMetadata(module2X3);
+			var factory2X3 = new Xbim.Ifc2x3.EntityFactoryIfc2x3();
+			var meta2X3 = ExpressMetaData.GetMetadata(factory2X3);
             var product2X3 = meta2X3.ExpressType("IFCPRODUCT");
 
-            var module4 = (typeof(Xbim.Ifc4.Kernel.IfcProduct)).Module;
-            var meta4 = ExpressMetaData.GetMetadata(module4);
+			var factory4 = new Xbim.Ifc4.EntityFactoryIfc4x1();
+			var meta4 = ExpressMetaData.GetMetadata(factory4);
             var product4 = meta4.ExpressType("IFCPRODUCT");
 
-            var module4x3 = (typeof(Xbim.Ifc4x3.Kernel.IfcProduct)).Module;
-            var meta4x3 = ExpressMetaData.GetMetadata(module4x3);
+			var factory4x3 = new Xbim.Ifc4x3.EntityFactoryIfc4x3Add2();
+			var meta4x3 = ExpressMetaData.GetMetadata(factory4x3);
             var product4x3 = meta4.ExpressType("IFCPRODUCT");
 
 
