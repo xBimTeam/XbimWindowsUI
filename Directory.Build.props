@@ -4,7 +4,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <GenerateDocumentationFile Condition=" '$(IsTestProject)' != 'true' ">true</GenerateDocumentationFile>
-    <NoWarn>CS1591;NU1603</NoWarn>
+    <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -17,14 +17,14 @@
     <PackageProjectUrl>https://github.com/xBimTeam/XbimWindowsUI</PackageProjectUrl>
     <PackageIconUrl>https://avatars1.githubusercontent.com/u/2284875?v=3&amp;amp;s=240</PackageIconUrl>
     <PackageReleaseNotes>
-      Now built on XBIM v6 to support netCore and IFC4x3
+      Now built on XBIM v6 to support .net core (.net8) and IFC4x3 schema and geometries
     </PackageReleaseNotes>
     <PackageTags>BIM, IFC, IfcXml, IfcZip, Ifc4, COBie, BuildingSmart</PackageTags>
     <RepositoryUrl>https://github.com/xBimTeam/XbimWindowsUI/tree/master</RepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\XbimOpenSourceKeyFile.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
