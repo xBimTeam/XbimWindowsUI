@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Title>Xbim.Presentation</Title>
     <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
     or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
@@ -21,9 +21,9 @@
     <Resource Include="assets\*.*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.25.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.3" />
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.508" />
     <PackageReference Include="Xbim.ModelGeometry.Scene" Version="6.1.816-netcore" />
