@@ -5,12 +5,17 @@ trigger:
     include:
     - master
     - develop
+    - feature/* 
   paths:
     exclude:
     - README.md
     - CHANGELOG.md
     - CONTRIBUTING.md
-    
+
+pr:
+- master
+- develop
+- feature/*
 pool:
   vmImage: 'windows-2019'
 
