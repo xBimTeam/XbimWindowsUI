@@ -134,7 +134,7 @@ steps:
   displayName: 'NuGet pack BCF_Plugin'
   inputs:
     command: pack
-    packagesToPack: 'XplorerPlugin.Bcf.plugin.nuspec'
+    packagesToPack: 'XplorerPlugin.Bcf.nuspec'
     configuration: $(BuildConfiguration)
     versioningScheme: byEnvVar
     versionEnvVar: packageversion
