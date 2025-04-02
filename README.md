@@ -19,10 +19,10 @@ that make up XbimXplorer. You can include this package in your own applications,
 
 ## Compilation
 
-**Visual Studio 2017 is recommended.**
-Prior versions of Visual Studio may work, but we'd recomments 2017 where possible.
-The [free VS 2017 Community Edition](https://visualstudio.microsoft.com/downloads/) will be fine. 
-All projects target .NET Framework 4.7
+**Visual Studio 2022 is recommended.**
+Prior versions of Visual Studio may work, are unsupported.
+The [free VS 2022 Community Edition](https://visualstudio.microsoft.com/downloads/) will be fine. 
+All projects target .NET 8 or above
 
 The XBIM toolkit uses the NuGet technology for the management of several packages.
 We have custom NuGet feeds for the *master* and *develop* branches of the solution, and use
