@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows</TargetFrameworks>
-    <!--<OutputType>WinExe</OutputType>
+    <!--<OutputType>WinExe</OutputType>-->
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -19,7 +19,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    -->
+    
     <UseWPF>true</UseWPF>
     <Title>xBIM BCF Plugin</Title>
     <Platforms>AnyCPU</Platforms>
@@ -44,5 +44,9 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\xbim-toolkit-icon.png" Pack="True" PackagePath="\" />
   </ItemGroup>
 </Project>

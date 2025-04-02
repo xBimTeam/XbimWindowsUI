@@ -24,6 +24,7 @@ namespace XbimXplorer.PluginSystem
         public string LoadedVersion => MainWindow?.GetLoadedVersion(PluginId) ?? "";
 
         private IPackageSearchMetadata _onlinePackage;
+		private PackageArchiveReader _localPackage;
         private ManifestMetadata _diskManifest;
         private DirectoryInfo _directory;
         
@@ -42,6 +43,11 @@ namespace XbimXplorer.PluginSystem
         {
             SetPackage(p);
         }
+
+		public PluginInformation(PackageArchiveReader reader, PluginManagement manager): this(manager)
+		{
+			SetPackage(reader);
+		}
 
         internal void SetDirectoryInfo(PluginInformation otherConfiguration)
         {
@@ -71,9 +77,20 @@ namespace XbimXplorer.PluginSystem
             SetDirectoryInfo(_directory);
         }
 
-        public void SetPackage(IPackageSearchMetadata package)
+		public void SetPackage(PackageArchiveReader reader)
+		{
+			_onlinePackage = null;
+			_localPackage = reader;
+			if (string.IsNullOrEmpty(PluginId))
+			{
+				PluginId = reader.GetIdentity().Id;
+			}
+		}
+
+		public void SetPackage(IPackageSearchMetadata package)
         {
             _onlinePackage = package;
+			_localPackage = null;
             if (string.IsNullOrEmpty(PluginId))
             {
                 PluginId = package.Identity.Id;
@@ -89,111 +106,139 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
+
+		public bool EnsurePluginDirectoryExists(DirectoryInfo pluginDirectory)
+		{
+			try
+			{
+				if (!pluginDirectory.Exists)
+					pluginDirectory.Create();
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(0, ex, "Could not create directory {directory}", pluginDirectory.FullName);
+				return false;
+			}
+
+			// ensure specific plugin directory exists
+			//
+			var subdir = GetPluginDirectory(pluginDirectory);
+			try
+			{
+				if (!subdir.Exists)
+					subdir.Create();
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(0, ex, "Could not create directory {directory}", subdir.FullName);
+				return false;
+			}
+
+			return true;
+		}
+
+		private DirectoryInfo GetPluginDirectory(DirectoryInfo pluginHome)
+		{
+			return new DirectoryInfo(Path.Combine(Path.Combine(pluginHome.FullName, PluginId)));
+		}
+
         /// <summary>
         /// Extract files and creates manifest
         /// </summary>
         /// <param name="pluginDirectory">Destination folder, a subdir will be created.</param>
         /// <returns>false on error</returns>
-        public async Task<bool> ExtractPlugin(DirectoryInfo pluginDirectory)
-        {
-            using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            var token = cts.Token;
-           
-            // ensure top leved plugin directory exists
-            try
-            {
-                if (!pluginDirectory.Exists)
-                    pluginDirectory.Create();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(0, ex, "Could not create directory {directory}", pluginDirectory.FullName);
-                return false;
-            }
+        public async Task<bool> ExtractPlugin(DirectoryInfo pluginDirectory = null)
+		{
+			pluginDirectory ??= PluginManagement.GetPluginsDirectory();
 
-            // ensure specific plugin directory exists
-            //
-            var subdir = new DirectoryInfo(Path.Combine(pluginDirectory.FullName, PluginId));
-            try
-            {
-                if (!subdir.Exists)
-                    subdir.Create();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(0, ex, "Could not create directory {directory}", subdir.FullName);
-                return false;
-            }
+			using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+			var token = cts.Token;
 
-            // now extract files
-            // 
-            using MemoryStream packageStream = new MemoryStream();
-            using var packageReader = await Manager.DownloadPluginAsync(_onlinePackage, packageStream, token);
+			// ensure top level plugin directory exists
+			if (EnsurePluginDirectoryExists(pluginDirectory) == false)
+				return false;
+
+			// now extract files
+			// 
+			var pluginDir = GetPluginDirectory(pluginDirectory);
+			if(_localPackage != null)
+			{
+				return await ExtractPackageContents(_localPackage, pluginDir, token);
+			}
+			else if (_onlinePackage != null)
+			{
+				using MemoryStream packageStream = new MemoryStream();
+				using var packageReader = await Manager.DownloadPluginAsync(_onlinePackage, packageStream, token);
+				return await ExtractPackageContents(packageReader, pluginDir, token);
+			}
+			else
+			{
+				throw new InvalidOperationException("Cannot extract Plugin: No package source was specified");
+			}
+		}
+
+		private async Task<bool> ExtractPackageContents(PackageArchiveReader packageReader, DirectoryInfo targetDir, CancellationToken token)
+		{
+			var frameworkReference = (await packageReader.GetReferenceItemsAsync(token)).FirstOrDefault();
+
+			foreach (var fileName in frameworkReference.Items)
+			{
+				// TODO: Currently we flatten lib files. If we want to multi-target we should preserve the lib folder structure for net48, net6 etc
+				var localPath = Path.GetFileName(fileName);
+				var destname = Path.Combine(targetDir.FullName, localPath);
+				try
+				{
+					if (File.Exists(destname))
+						File.Delete(destname);
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError(0, ex, "Error trying to delete: {destname}", destname);
+					return false;
+				}
+
+				try
+				{
+					using var fileStream = File.Create(destname);
+					var contentStream = await packageReader.GetStreamAsync(fileName, token);
+
+					contentStream.CopyTo(fileStream);
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError(0, ex, "Error trying to extract: {destname}", destname);
+					return false;
+				}
+			}
 
 
-            var frameworkReference = (await packageReader.GetReferenceItemsAsync(token)).FirstOrDefault();
+			// store manifest information to disk
+			// 
+			var packageName = Path.Combine(targetDir.FullName, $"{PluginId}.manifest");
+			try
+			{
 
-            
-            foreach (var fileName in frameworkReference.Items)
-            {
-                // TODO: Currently we flatten lib files. If we want to multi-target we should preserve the lib folder structure for net48, net6 etc
-                var localPath = Path.GetFileName(fileName); 
-                var destname = Path.Combine(subdir.FullName, localPath);
-                try
-                {
-                    if (File.Exists(destname))
-                        File.Delete(destname);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(0, ex, "Error trying to delete: {destname}", destname);
-                    return false;
-                }
+				var nuspecManifest = await packageReader.GetNuspecFileAsync(token);
 
-                try
-                {
-                    using (var fileStream = File.Create(destname))
-                    {
-                        var contentStream = await packageReader.GetStreamAsync(fileName, token);
-                        
-                        contentStream.CopyTo(fileStream);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(0, ex, "Error trying to extract: {destname}", destname);
-                    return false;
-                }
-            }
-            
+				using (var fileStream = File.Create(packageName))
+				{
+					var contentStream = await packageReader.GetStreamAsync(nuspecManifest, token);
 
-            // store manifest information to disk
-            // 
-            var packageName = Path.Combine(subdir.FullName, $"{_onlinePackage.Identity.Id}.manifest");
-            try
-            {
+					contentStream.CopyTo(fileStream);
+				}
+				SetDirectoryInfo(targetDir);
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(0, ex, "Error trying to create manifest file for: {packageName}", packageName);
+				return false;
+			}
 
-                var nuspecManifest = await packageReader.GetNuspecFileAsync(token);
+			return true;
+		}
 
-                using (var fileStream = File.Create(packageName))
-                {
-                    var contentStream = await packageReader.GetStreamAsync(nuspecManifest, token);
-
-                    contentStream.CopyTo(fileStream);
-                }
-                SetDirectoryInfo(subdir);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(0, ex, "Error trying to create manifest file for: {packageName}", packageName);
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <returns>True if plugin is completely loaded. False if not, for any reason.</returns>
-        public bool Load()
+		/// <returns>True if plugin is completely loaded. False if not, for any reason.</returns>
+		public bool Load()
         {
             return _directory != null && MainWindow.LoadPlugin(_directory, true);
         }

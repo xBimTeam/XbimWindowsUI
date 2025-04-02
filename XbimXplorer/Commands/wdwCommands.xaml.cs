@@ -1158,7 +1158,7 @@ namespace XbimXplorer.Commands
 
                 // try installing
                 ReportAdd("Plugin found; installing...", Brushes.Blue);
-                var extracted = await plugin.ExtractPlugin(PluginManagement.GetPluginsDirectory());
+                var extracted = await plugin.ExtractPlugin();
                 if (!extracted)
                 {
                     ReportAdd("Plugin extraction failed.", Brushes.Red);

@@ -147,31 +147,6 @@ namespace XbimXplorer.PluginSystem
 
             var tmpPackages = new List<IPackageSearchMetadata>();
 
-            // Use any type in the schema
-			var factory = new Xbim.Ifc4.EntityFactoryIfc4x1(); ;
-			ExpressMetaData meta = ExpressMetaData.GetMetadata(factory);
-
-            // Find all sub types of IfcProduct. You will probably also want to do IfcTypeObjects as well
-            var product = meta.ExpressType(typeof(Xbim.Ifc4.Kernel.IfcProduct));
-
-            foreach(var type in product.SubTypes)
-            {
-				ExpressMetaProperty predefinedProp = type.Properties.Values.FirstOrDefault(v => v.Name == nameof(IIfcDoor.PredefinedType));
-                if (predefinedProp != null)
-                {
-                    // It has a PredefinedType property - get the underlyng Type
-					Type enumType = predefinedProp.PropertyInfo.PropertyType;
-                    enumType = Nullable.GetUnderlyingType(enumType) ?? enumType;
-
-                    // Get the values
-					Array enumValues = Enum.GetValues(enumType);
-                    foreach (var predefinedValue in enumValues)
-                    {
-                        Console.WriteLine("{0}: {1}", type.Name, predefinedValue);
-                    }
-
-                }
-            }
 
             foreach (IPackageSearchMetadata package in results)
             {

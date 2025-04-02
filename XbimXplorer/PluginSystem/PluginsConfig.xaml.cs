@@ -100,7 +100,7 @@ namespace XbimXplorer.PluginSystem
             }
         }
 
-        private void PluginList_OnDrop(object sender, DragEventArgs e)
+        private async void PluginList_OnDrop(object sender, DragEventArgs e)
         {
             var d = e.Data.GetFormats();
             if (!d.Contains("FileNameW"))
@@ -115,13 +115,13 @@ namespace XbimXplorer.PluginSystem
                     var fInfo = new FileInfo(fname);
                     if (fInfo.Extension != ".nupkg")
                         continue;
-                    //IPackageMetadata p = new ZipPackage(fInfo.FullName);
-                    //var pi = new PluginInformation(p);
-                    //pi.ExtractPlugin(
-                    //    PluginManagement.GetPluginsDirectory()
-                    //    );
-                    throw new NotImplementedException("NUget needs sorting");
-                }
+
+					using var reader = new PackageArchiveReader(fInfo.FullName);
+					var plugin = new PluginInformation(reader, _xplorerPlugins);
+					
+
+					await plugin.ExtractPlugin();
+				}
                 catch (Exception ex)
                 {
                     Logger.LogError(0, ex, "Error processing package file {filename}.", fname);
