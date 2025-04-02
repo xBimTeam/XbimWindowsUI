@@ -15,8 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 		LICENCE.md = LICENCE.md
 		nuget.config = nuget.config
-		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
-		XplorerPlugin.Bcf.plugin.nuspec = XplorerPlugin.Bcf.plugin.nuspec
+		XplorerPlugin.Bcf.nuspec = XplorerPlugin.Bcf.nuspec
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XplorerPlugins", "XplorerPlugins", "{0A25F1E8-AAD2-4E93-B1AE-E50FCE26CB2C}"

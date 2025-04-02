@@ -1041,14 +1041,14 @@ namespace XbimXplorer.Commands
 					if (entity is IIfcProduct)
 					{
 						var prod = (IIfcProduct)entity;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory()));
+						trsf = XbimPlacementTree.GetTransform(prod, pt, engine);
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
 					else if (entity is IIfcRelVoidsElement)
 					{
 						var prod = ((IIfcRelVoidsElement)entity).RelatedOpeningElement;
-						trsf = XbimPlacementTree.GetTransform(prod, pt, new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory()));
+						trsf = XbimPlacementTree.GetTransform(prod, pt, engine);
 						entities.Clear();
 						entities.AddRange(prod.Representation?.Representations.SelectMany(x => x.Items));
 					}
@@ -1361,7 +1361,7 @@ namespace XbimXplorer.Commands
                 {
 					var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 					var placementTree = new XbimPlacementTree(storey.Model, engine, App.ContextWcsAdjustment);
-                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, new XbimGeometryEngine(storey.Model, XbimServices.Current.GetLoggerFactory()));
+                    var trsf = XbimPlacementTree.GetTransform(storey, placementTree, engine);
                     var off = trsf.OffsetZ;
                     var pt = new XbimPoint3D(0, 0, off);
 
@@ -2391,13 +2391,8 @@ namespace XbimXplorer.Commands
             }
         }
 
-        internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => new Dictionary<string, ExpressMetaData>
-        {
-            {"ifc2x3", ExpressMetaData.GetMetadata(new Xbim.Ifc2x3.EntityFactoryIfc2x3())},
-            {"ifc4", ExpressMetaData.GetMetadata(new Xbim.Ifc4.EntityFactoryIfc4x1())},
-            {"ifc4x3", ExpressMetaData.GetMetadata(new Xbim.Ifc4x3.EntityFactoryIfc4x3Add2())}
-        };
-
+		internal static Dictionary<string, ExpressMetaData> SchemaMetadatas => Infrastructure.SchemaMetadatas;
+        
         private TextHighliter ReportType(string type, int beVerbose, string indentationHeader = "")
         {
             Debug.WriteLine(type);

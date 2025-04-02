@@ -463,6 +463,8 @@ namespace XbimXplorer
 				{
 					try
 					{
+						AppDomain.CurrentDomain.AssemblyResolve += PluginAssemblyResolvingFunction;
+
 						instance = (IXbimXplorerPluginWindow)Activator.CreateInstance(tp);
 					}
 					catch (Exception ex)
@@ -470,6 +472,10 @@ namespace XbimXplorer
 						var msg = $"Error creating instance of type '{tp}'";
 						Logger.LogError(0, ex, "Error creating instance of type '{type}'", tp);
 						return null;
+					}
+					finally
+					{
+						AppDomain.CurrentDomain.AssemblyResolve -= PluginAssemblyResolvingFunction;
 					}
 				}
 				var menuWindow = ShowPluginWindow(instance, true);

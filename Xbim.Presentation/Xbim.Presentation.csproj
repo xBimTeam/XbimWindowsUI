@@ -3,8 +3,10 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Title>Xbim.Presentation</Title>
-    <Description>Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
-    or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.</Description>
+    <Description>
+      Xbim.WindowsUI is a library containing a set of Windows Forms and WPF controls that can be used to build Windows Xaml 
+      or forms-based applications, which can display the 3D geometry and semantic data in IFC building models.
+    </Description>
     <PackageId>Xbim.WindowsUI</PackageId>
     <PackageReleaseNotes>Now built on XBIM v6.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -27,7 +29,6 @@
     <PackageReference Include="PropertyTools.Wpf.DeploymentClone" Version="0.0.1" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.508" />
     <PackageReference Include="Xbim.ModelGeometry.Scene" Version="6.1.816-netcore" />
-   
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.de.resx">

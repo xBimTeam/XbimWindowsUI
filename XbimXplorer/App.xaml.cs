@@ -109,9 +109,12 @@ namespace XbimXplorer
                         mainView.LoadPlugin(di, true);
                         continue;
                     }
-                    Clipboard.SetText(pluginName);
-                    MessageBox.Show(pluginName + " not found. The full file name has been copied to clipboard.", "Plugin not found", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                    var t = MessageBox.Show(pluginName + " not found. Would you like the full plugin name copied to clipboard?", "Plugin not found", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
+					if (t == MessageBoxResult.Yes)
+					{
+						Clipboard.SetText(pluginName);
+					}
+				}
                 else if (string.Compare("/select", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     var selLabel = e.Args[++i];

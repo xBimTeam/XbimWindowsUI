@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "WithinXplorer": {
+      "commandName": "Executable",
+      "executablePath": "..\\..\\..\\..\\XbimXplorer\\bin\\Debug\\net8.0-windows\\XbimXplorer.exe",
+      "commandLineArgs": "/noplugins /plugin XplorerPlugin.Bcf.dll"
+    }
+  }
+}

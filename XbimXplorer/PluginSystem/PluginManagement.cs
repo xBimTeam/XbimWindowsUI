@@ -161,8 +161,7 @@ namespace XbimXplorer.PluginSystem
                 // check it is compatible
                 var sel = package.DependencySets.SelectMany(x => x.Packages.Where(y => y.Id.StartsWith("Xbim.WindowsUI"))).FirstOrDefault();
                 if (sel != null && sel.VersionRange.Satisfies(invokingVerion, VersionComparison.Version))
-                {
-                    
+                {  
                     tmpPackages.Add(package);
                 }
             }

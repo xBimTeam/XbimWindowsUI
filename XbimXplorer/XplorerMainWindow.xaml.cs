@@ -1203,26 +1203,10 @@ namespace XbimXplorer
 
 		private void StylerIfcSpacesOnly(object sender, RoutedEventArgs e)
 		{
-			var factory2X3 = new Xbim.Ifc2x3.EntityFactoryIfc2x3();
-			var meta2X3 = ExpressMetaData.GetMetadata(factory2X3);
-			var product2X3 = meta2X3.ExpressType("IFCPRODUCT");
-
-			var factory4 = new Xbim.Ifc4.EntityFactoryIfc4x1();
-			var meta4 = ExpressMetaData.GetMetadata(factory4);
-			var product4 = meta4.ExpressType("IFCPRODUCT");
-
-			var factory4x3 = new Xbim.Ifc4x3.EntityFactoryIfc4x3Add2();
-			var meta4x3 = ExpressMetaData.GetMetadata(factory4x3);
-			var product4x3 = meta4.ExpressType("IFCPRODUCT");
-
-
-
-			var tpcoll = product2X3.NonAbstractSubTypes.Select(x => x.Type).ToList();
-			tpcoll.AddRange(product4.NonAbstractSubTypes.Select(x => x.Type).ToList());
-			tpcoll.AddRange(product4x3.NonAbstractSubTypes.Select(x => x.Type).ToList());
-			tpcoll.RemoveAll(x => x.Name == "IfcSpace");
-
-			DrawingControl.ExcludedTypes = tpcoll;
+			var products = Infrastructure.SchemaMetadatas.Values.Select(x => x.ExpressType("IFCPRODUCT"));
+			var tempCollection = products.SelectMany(x => x.NonAbstractSubTypes).Select(x => x.Type).ToList(); // start from all products
+			tempCollection.RemoveAll(x => x.Name == "IfcSpace"); // but not spaces
+			DrawingControl.ExcludedTypes = tempCollection; // exclude all products except spaces
 			DrawingControl.ReloadModel(DrawingControl3D.ModelRefreshOptions.ViewPreserveCameraPosition);
 		}
 
@@ -1264,7 +1248,6 @@ namespace XbimXplorer
 			DrawingControl.DefaultLayerStyler = new RandomColorStyler(Logger);
 			ConnectStylerFeedBack();
 			DrawingControl.ReloadModel();
-
 		}
 
 		private void SelectionColorCycle(object sender, RoutedEventArgs e)
