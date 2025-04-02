@@ -29,6 +29,15 @@ namespace XbimXplorer.LogViewer
             }
         }
 
+        public int? EntityLabel
+        {
+            get
+            {
+                return loggingEvent.Properties.TryGetValue("entityLabel", out LogEventPropertyValue value)
+                    ? GetIntValue(value)
+                    : null;
+            }
+        }
         private string GetTextValue(LogEventPropertyValue value)
         {
             if (value is ScalarValue scalar)
