@@ -20,7 +20,7 @@ namespace XbimXplorer.Dialogs.ExcludedTypes
 
         IEnumerable<ObjectViewModel> ITreeElement.GetChildren()
         {
-            foreach (var child in ExpressType.SubTypes)
+            foreach (var child in ExpressType.SubTypes.OrderBy(e => e.Name))
             {
                 yield return new ObjectViewModel() { Tag = new ExpressTypeExpander(child, Model) };                
             }

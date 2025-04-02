@@ -17,6 +17,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using HelixToolkit.Wpf;
 using Xbim.Common;
+using Xbim.Common.Configuration;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
 using Xbim.Common.Metadata;
@@ -68,7 +69,7 @@ namespace Xbim.Presentation
 		protected ObservableMeshVisual3D Highlighted;
 		protected CuttingPlaneGroup CuttingGroupT;
 		protected SortingVisual3D Transparents;
-				protected ModelVisual3D Extras;
+		protected ModelVisual3D Extras;
 		protected ModelVisual3D Overlays;
 		protected GridLinesVisual3D GridLines;
 
@@ -231,8 +232,11 @@ namespace Xbim.Presentation
 		{
 			typeof(Ifc2x3.ProductExtension.IfcSpace),
 			typeof(Ifc4.ProductExtension.IfcSpace),
+			typeof(Ifc4x3.ProductExtension.IfcSpace),
+
 			typeof(Ifc2x3.ProductExtension.IfcFeatureElement),
-			typeof(Ifc4.ProductExtension.IfcFeatureElement)
+			typeof(Ifc4.ProductExtension.IfcFeatureElement),
+			typeof(Ifc4x3.ProductExtension.IfcFeatureElement)
 		};
 
 		/// <summary>
@@ -245,7 +249,7 @@ namespace Xbim.Presentation
 
 		public List<IPersistEntity> HiddenInstances = null;
 
-        public List<IIfcGeometricRepresentationContext> SelectedContexts = null;
+		public List<IIfcGeometricRepresentationContext> SelectedContexts = null;
 
 		private LinesVisual3D _userModeledDimLines;
 		private PointsVisual3D _userModeledDimPoints;
@@ -819,7 +823,7 @@ namespace Xbim.Presentation
 			return Overlays.Children.Remove(imageOverlay.GraphicsItem);
 		}
 
-		
+
 
 		public void AddTextOverlay(TextOverlay text)
 		{
@@ -854,7 +858,7 @@ namespace Xbim.Presentation
 			return false;
 		}
 
-		
+
 
 		public IfcStore Model
 		{
@@ -1140,7 +1144,11 @@ namespace Xbim.Presentation
 			{
 				_lastSelectedProduct = newVal as IIfcProduct;
 			}
-
+			if (newVal == null)
+			{
+				return new WpfMeshGeometry3D();
+			}
+			var engine = new XbimGeometryEngine(Model, XbimServices.Current.GetLoggerFactory());
 			WpfMeshGeometry3D m;
 			if (newVal is IIfcRepresentationItem)
 			{
@@ -1153,18 +1161,18 @@ namespace Xbim.Presentation
 					var selModel = _lastSelectedProduct.Model;
 					var modelTransform = ModelPositions[selModel].Transform;
 
-					m = WpfMeshGeometry3D.GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
+
+					m = WpfMeshGeometry3D.GetRepresentationGeometry(engine, mat, productContexts, representationLabels, selModel, modelTransform, WcsAdjusted);
 					if (m.PositionCount == 0)
 					{
 						var gri = newVal as IIfcGeometricRepresentationItem;
 						if (gri != null)
 						{
-							var engine = new XbimGeometryEngine();
 							var solid = engine.Create(gri, null);
 							if (solid != null)
 							{
 								var shape = engine.CreateShapeGeometry(solid, selModel.ModelFactors.Precision, Model.ModelFactors.OneMetre / 20, selModel.ModelFactors.DeflectionAngle, XbimGeometryType.PolyhedronBinary, null);
-								m = WpfMeshGeometry3D.GetRepresentationGeometry2(mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct);
+								m = WpfMeshGeometry3D.GetRepresentationGeometry2(engine, mat, representationLabels, selModel, modelTransform, WcsAdjusted, shape, _lastSelectedProduct);
 							}
 						}
 					}
@@ -1172,7 +1180,7 @@ namespace Xbim.Presentation
 			}
 			else if (newVal is IIfcShapeRepresentation)
 			{
-				m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)newVal, ModelPositions, mat, WcsAdjusted);
+				m = WpfMeshGeometry3D.GetGeometry(engine, (IIfcShapeRepresentation)newVal, ModelPositions, mat, WcsAdjusted);
 			}
 			else if (newVal is IIfcRelVoidsElement)
 			{
@@ -1180,7 +1188,7 @@ namespace Xbim.Presentation
 				var rep = vd.RelatedOpeningElement.Representation.Representations.OfType<IIfcShapeRepresentation>()
 					.FirstOrDefault();
 				if (rep != null)
-					m = WpfMeshGeometry3D.GetGeometry((IIfcShapeRepresentation)rep, ModelPositions, mat, WcsAdjusted);
+					m = WpfMeshGeometry3D.GetGeometry(engine, (IIfcShapeRepresentation)rep, ModelPositions, mat, WcsAdjusted);
 				else
 				{
 					m = new WpfMeshGeometry3D();
@@ -1192,14 +1200,11 @@ namespace Xbim.Presentation
 				{
 					m = WpfMeshGeometry3D.GetGeometry(Selection, ModelPositions, mat);
 				}
-				else if (newVal != null) // single element selection, requires the newval to get the model
+				else // single element selection, requires the newval to get the model
 				{
 					m = WpfMeshGeometry3D.GetGeometry(newVal, ModelPositions[newVal.Model].Transform, mat);
 				}
-				else // otherwise we create an empty mesh
-				{
-					m = new WpfMeshGeometry3D();
-				}
+
 			}
 			return m;
 		}
@@ -1360,10 +1365,14 @@ namespace Xbim.Presentation
 			Materials.Clear();
 			OriginalOpacities.Clear();
 
-			Opaques.Children.Clear();
-			Transparents.Children.Clear();
-			Extras.Children.Clear();
-			Overlays.Children.Clear();
+			if (Opaques != null)
+				Opaques.Children.Clear();
+			if (Transparents != null)
+				Transparents.Children.Clear();
+			if (Extras != null)
+				Extras.Children.Clear();
+			if (Overlays != null)
+				Overlays.Children.Clear();
 
 			if (!options.HasFlag(ModelRefreshOptions.ViewPreserveSelection))
 			{
@@ -1533,7 +1542,7 @@ namespace Xbim.Presentation
 
 			XbimScene<WpfMeshGeometry3D, WpfMaterial> scene = null;
 			if (!mod.GeometryStore.IsEmpty)
-                scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes, SelectedContexts);
+				scene = DefaultLayerStyler.BuildScene(refModel.Model, pos, Opaques, Transparents, IsolateInstances, HiddenInstances, ExcludedTypes, SelectedContexts);
 			if (scene != null && scene.Layers.Any())
 			{
 				Scenes.Add(scene);
@@ -1822,7 +1831,7 @@ namespace Xbim.Presentation
 
 		private readonly ModelVisual3D _octreeVisualization = new ModelVisual3D();
 		private bool _hasModelGrid;
-		
+
 
 		private void ShowOctree<T>(XbimOctree<T> octree, int specificLevel = -1, bool onlyWithContent = false)
 		{

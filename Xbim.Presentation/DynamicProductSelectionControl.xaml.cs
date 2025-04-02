@@ -199,7 +199,7 @@ public void Execute(IModel model)
             compilerParams.ReferencedAssemblies.Add("System.Xml.dll");
             compilerParams.ReferencedAssemblies.Add("System.Xml.Linq.dll");
             compilerParams.ReferencedAssemblies.Add("Xbim.Common.dll");
-            compilerParams.ReferencedAssemblies.Add("Xbim.Ifc2x3.dll");
+            compilerParams.ReferencedAssemblies.Add("Xbim.Ifc2x3.dll"); // TODO: handle newer schemas
             compilerParams.ReferencedAssemblies.Add("Xbim.IO.dll");
             compilerParams.ReferencedAssemblies.Add("Xbim.Ifc.Extensions.dll");
 

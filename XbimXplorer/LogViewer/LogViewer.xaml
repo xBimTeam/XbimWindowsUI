@@ -45,6 +45,7 @@
                 <GridView>
                     <GridViewColumn Header="Time" Width="50" DisplayMemberBinding="{Binding TimeStamp}" />
                     <GridViewColumn Header="Message" Width="200" DisplayMemberBinding="{Binding Message}" />
+                    <GridViewColumn Header="Entity #" Width="75" DisplayMemberBinding="{Binding EntityLabel}" />
                     <GridViewColumn Header="Level" Width="75" DisplayMemberBinding="{Binding Level}" />
                     <GridViewColumn Header="Logger" Width="200" DisplayMemberBinding="{Binding Logger}" />
                     <GridViewColumn Header="Thread" Width="60" DisplayMemberBinding="{Binding ThreadId}" />
