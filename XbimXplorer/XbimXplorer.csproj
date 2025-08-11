@@ -63,7 +63,7 @@
 		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 		<PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
 		<PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.3" />
-    <PackageReference Include="Xbim.IO.Esent" Version="6.0.508" />
+    <PackageReference Include="Xbim.IO.Esent" Version="6.0.549-develop" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Xbim.Presentation\Xbim.Presentation.csproj" />

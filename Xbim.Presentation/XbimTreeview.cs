@@ -301,16 +301,19 @@ namespace Xbim.Presentation
 
         protected void ViewSpatialStructure()
         {
-            var project = Model.Instances.OfType<IIfcProject>().FirstOrDefault();
-            if (project != null)
+			var projects = Model.Instances.OfType<IIfcProject>();
+            if (projects.Any())
             {
                 ChildrenPath="Children";
                 List<SpatialViewModel> svList = new List<SpatialViewModel>();
-                foreach (var item in project.SpatialStructuralElements)
-                {
-                    var sv = new SpatialViewModel(item, null);
-                    svList.Add(sv); 
-                }
+				foreach(var project in projects)
+				{
+					foreach (var item in project.SpatialStructuralElements)
+					{
+						var sv = new SpatialViewModel(item, null);
+						svList.Add(sv); 
+					}
+				}
                 
                 HierarchySource = svList;
                 foreach (var child in svList)
@@ -321,13 +324,16 @@ namespace Xbim.Presentation
         }
         private void ViewModel()
         {
-            var project = Model.Instances.OfType<IIfcProject>().FirstOrDefault();
-            if (project != null)
+			var projects = Model.Instances.OfType<IIfcProject>();
+            if (projects.Any())
             {
-                ChildrenPath ="Children";
-                ObservableCollection<XbimModelViewModel> svList = new ObservableCollection<XbimModelViewModel>();  
-                svList.Add(new XbimModelViewModel(project, null));
-                HierarchySource = svList;
+				ChildrenPath = "Children";
+				ObservableCollection<XbimModelViewModel> svList = new ObservableCollection<XbimModelViewModel>();
+				foreach (var project in projects)
+				{
+					svList.Add(new XbimModelViewModel(project, null));
+				}
+				HierarchySource = svList;
             }
         }
         private void LazyLoadAll(IXbimViewModel parent)

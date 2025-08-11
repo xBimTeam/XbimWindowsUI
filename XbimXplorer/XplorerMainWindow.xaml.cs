@@ -333,6 +333,9 @@ namespace XbimXplorer
 								var contextLogger = LoggerFactory.CreateLogger<Xbim3DModelContext>();
 								var context = new Xbim3DModelContext(model, engineVersion: Xbim.Geometry.Abstractions.XGeometryEngineVersion.V6,
 									 logger: contextLogger, loggerFactory: LoggerFactory);
+								// 
+								if(!context.BodyRepresentations.Contains("surface"))
+									context.BodyRepresentations.Add("surface");
 
 								if (!_multiThreading)
 									context.MaxThreads = 1;
