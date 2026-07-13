@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Title>Xbim Presentation Tests</Title>
     <Description>Unit Tests for Xbim.Presentation</Description>
     <Platforms>AnyCPU;x86</Platforms>

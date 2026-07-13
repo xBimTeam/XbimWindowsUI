@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0-windows</TargetFrameworks>
+		<TargetFrameworks>net10.0-windows</TargetFrameworks>
 		<RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
 		<OutputType>WinExe</OutputType>
 		<Title>Xbim Xplorer</Title>
@@ -57,7 +57,7 @@
 	<ItemGroup>
 		<PackageReference Include="Dirkster.AvalonDock" Version="4.74.1" />
 		<PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.3" />
-		<PackageReference Include="NuGet.Protocol" Version="6.13.2" />
+		<PackageReference Include="NuGet.Protocol" Version="7.6.0" />
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
