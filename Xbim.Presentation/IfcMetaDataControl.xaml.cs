@@ -32,7 +32,9 @@ namespace Xbim.Presentation
 
             public string Name { get; set; }
 
-            public int IfcLabel { get; set; }
+			public int SortOrder { get; set; } = 100;
+
+			public int IfcLabel { get; set; }
 
             public string IfcUri
             {
@@ -72,14 +74,17 @@ namespace Xbim.Presentation
             if (_objectGroups.GroupDescriptions != null)
             {
                 _objectGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
-                _objectGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+				_objectGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
+				_objectGroups.SortDescriptions.Add(new SortDescription("SortOrder", ListSortDirection.Ascending));
+				_objectGroups.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
             }
             _propertyGroups = new ListCollectionView(_properties);
             if (_propertyGroups.GroupDescriptions != null)
             {
                 _propertyGroups.GroupDescriptions.Add(new PropertyGroupDescription("PropertySetName"));
                 _propertyGroups.SortDescriptions.Add(new SortDescription("PropertySetName", ListSortDirection.Ascending));
-            }
+				_propertyGroups.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+			}
             _materialGroups = new ListCollectionView(_materials);
             _materialGroups.GroupDescriptions?.Add(new PropertyGroupDescription("PropertySetName"));
         }
@@ -221,7 +226,8 @@ namespace Xbim.Presentation
             var ifcType = typeEntity?.ExpressType;
             
             _typeProperties.Add(new PropertyItem {Name = "Type", Value = ifcType.Type.Name});
-            _typeProperties.Add(new PropertyItem {Name = "Ifc Label", Value = "#" + typeEntity.EntityLabel});
+			_typeProperties.Add(new PropertyItem { Name = "Predefined Type", Value = typeEntity.GetPredefinedTypeValue() });
+			_typeProperties.Add(new PropertyItem {Name = "Ifc Label", Value = "#" + typeEntity.EntityLabel});
 
             _typeProperties.Add(new PropertyItem {Name = "Name", Value = typeEntity.Name});
             _typeProperties.Add(new PropertyItem {Name = "Description", Value = typeEntity.Description});
@@ -421,6 +427,15 @@ namespace Xbim.Presentation
             {
                 AddProperty(item, pSet.Name);
             }
+            foreach (var item in pSet.HasProperties.OfType<IIfcPropertyReferenceValue>()) // handle IfcPropertyReferenceValue
+            {
+                switch (item.PropertyReference.GetType().Name)
+                {
+                    case "IfcIrregularTimeSeries":
+                        AddProperty((IIfcIrregularTimeSeries)item.PropertyReference, pSet.Name);
+                        break;
+                }
+            }
         }
 
         private void AddProperty(IIfcPropertyEnumeratedValue item, string groupName)
@@ -454,6 +469,19 @@ namespace Xbim.Presentation
                 Name = item.Name,
                 Value = val
             });
+        }
+        private void AddProperty(IIfcIrregularTimeSeries item, string groupName)
+        {
+            foreach (var value in item.Values)
+            {
+                _properties.Add(new PropertyItem
+                {
+                    IfcLabel = value.EntityLabel,
+                    PropertySetName = groupName + " / " + item.Name,
+                    Name = value.TimeStamp,
+                    Value = string.Join(", ",value.ListValues)
+                }); 
+            }
         }
 
         private void FillMaterialData()
@@ -553,7 +581,7 @@ namespace Xbim.Presentation
             }
         }
 
-        private void ReportProp(IPersistEntity entity, ExpressMetaProperty prop, bool verbose)
+        private void ReportProp(IPersistEntity entity, ExpressMetaProperty prop, bool verbose, int sortOrder)
         {
             object propVal = null;
             try
@@ -621,6 +649,7 @@ namespace Xbim.Presentation
             else
             {
                 var tmp = GetPropItem(propVal);
+				tmp.SortOrder = sortOrder;
                 tmp.Name = prop.PropertyInfo.Name;
                 tmp.PropertySetName = "General";
                 _objectProperties.Add(tmp);
@@ -691,6 +720,20 @@ namespace Xbim.Presentation
             return retItem;
         }
 
+		private static Dictionary<string, int> PreferedSortOrder = new Dictionary<string, int> { 
+			{ "Name", 2 },
+			{ "Description", 3 },
+			{ "PredefinedType", 4 },
+			{ "ObjectType", 5 },
+			{ "ElementType", 6 },
+			{ "Tag", 10 },
+			{ "OwnerHistory", 30 },
+			{ "ObjectPlacement", 32 },
+			{ "Representation", 31 },
+			{ "GlobalId", 60 },
+
+		};
+
         private void FillObjectData()
         {
             if (_objectProperties.Count > 0) 
@@ -698,36 +741,65 @@ namespace Xbim.Presentation
             if (_entity == null) 
                 return;
 
-            _objectProperties.Add(new PropertyItem { Name = "Ifc Label", Value = "#" + _entity.EntityLabel, PropertySetName = "General" });
+            _objectProperties.Add(new PropertyItem { Name = "IFC Label", Value = "#" + _entity.EntityLabel, PropertySetName = "General", SortOrder = 0 });
 
-            var ifcType = _entity.ExpressType;
-            _objectProperties.Add(new PropertyItem { Name = "Type", Value = ifcType.Type.Name, PropertySetName = "General" });
+            var ifcObjectType = _entity.ExpressType;
+            _objectProperties.Add(new PropertyItem { Name = "IFC Element", Value = ifcObjectType.Type.Name, PropertySetName = "General", SortOrder = 1 });
 
             var ifcObj = _entity as IIfcObject;
             var typeEntity = ifcObj?.IsTypedBy.FirstOrDefault()?.RelatingType;
             if (typeEntity != null)
             {
-                _objectProperties.Add(
+				var typeMetaData = typeEntity.ExpressType;
+				var pdt = typeEntity.GetPredefinedTypeValue();
+				var objPdt = ifcObj.GetPredefinedTypeValue();
+				
+				_objectProperties.Add(
+					new PropertyItem
+					{
+						Name = "IFC Element Type",
+						Value = typeMetaData.Type.Name,
+						PropertySetName = "General",
+						SortOrder = 20
+					}
+				);
+				if(string.IsNullOrEmpty(objPdt))
+				{
+					_objectProperties.Add(
+						new PropertyItem
+						{
+							Name = "Predefined Type",
+							Value = pdt,
+							PropertySetName = "General",
+							SortOrder = 21
+						}
+					);
+				}
+				
+				_objectProperties.Add(
                     new PropertyItem
                     {
-                        Name = "Defining Type",
+                        Name = "Type Name",
                         Value = typeEntity.Name,
                         PropertySetName = "General",
-                        IfcLabel = typeEntity.EntityLabel
+                        IfcLabel = typeEntity.EntityLabel,
+						SortOrder = 22
                     }
                 );
             }
 
-            var props = ifcType.Properties.Values;
+            var props = ifcObjectType.Properties.Values.OrderBy(v => PreferedSortOrder.TryGetValue(v.Name, out var sort) ? sort: 19);
             foreach (var prop in props)
             {
-                ReportProp(_entity, prop, ChkVerbose.IsChecked.HasValue && ChkVerbose.IsChecked.Value);
+				var order = PreferedSortOrder.TryGetValue(prop.Name, out var sort) ? sort : 19;
+
+				ReportProp(_entity, prop, ChkVerbose.IsChecked.HasValue && ChkVerbose.IsChecked.Value, order);
             }
-            var invs = ifcType.Inverses;
-            
-            foreach (var inverse in invs)
+            var invs = ifcObjectType.Inverses;
+			int i = 90;
+			foreach (var inverse in invs)
             {
-                ReportProp(_entity, inverse, false);
+                ReportProp(_entity, inverse, false, i++);
             }
             //// removed old ui
             //return;

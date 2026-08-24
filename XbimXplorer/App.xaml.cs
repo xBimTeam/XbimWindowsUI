@@ -28,13 +28,28 @@ namespace XbimXplorer
     /// </summary>
     public partial class App
     {
-        // todo: the whole concept of ContextWcsAdjustment need to be reviewed in the geometry engine.
 
-        /// <summary>
-        /// Todo, this feature has to do with the transformation of the model to 0,0,0 point of coordinate system
-        /// Its use has to be consistent across the call to the XbimPlacementTree class
-        /// </summary>
-        public static bool ContextWcsAdjustment = true;
+		public App()
+		{
+			this.Dispatcher.UnhandledException += Dispatcher_UnhandledException;
+		}
+
+		private void Dispatcher_UnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+		{
+			//string errorMessage = string.Format("An unhandled exception occurred: {0}", e.Exception.Message);
+			
+			//MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			Serilog.Log.Error(e.Exception, "Unhandled error");
+			e.Handled = true;
+		}
+
+		// todo: the whole concept of ContextWcsAdjustment need to be reviewed in the geometry engine.
+
+		/// <summary>
+		/// Todo, this feature has to do with the transformation of the model to 0,0,0 point of coordinate system
+		/// Its use has to be consistent across the call to the XbimPlacementTree class
+		/// </summary>
+		public static bool ContextWcsAdjustment = true;
 
         /// <summary>
         /// Raises the <see cref="E:System.Windows.Application.Startup"/> event.
@@ -94,9 +109,12 @@ namespace XbimXplorer
                         mainView.LoadPlugin(di, true);
                         continue;
                     }
-                    Clipboard.SetText(pluginName);
-                    MessageBox.Show(pluginName + " not found. The full file name has been copied to clipboard.", "Plugin not found", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                    var t = MessageBox.Show(pluginName + " not found. Would you like the full plugin name copied to clipboard?", "Plugin not found", MessageBoxButton.YesNoCancel, MessageBoxImage.Error);
+					if (t == MessageBoxResult.Yes)
+					{
+						Clipboard.SetText(pluginName);
+					}
+				}
                 else if (string.Compare("/select", thisArg, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     var selLabel = e.Args[++i];

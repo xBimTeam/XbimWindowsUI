@@ -127,7 +127,7 @@ namespace XbimXplorer.Dialogs
 
         private void ButtonReset_Click(object sender, RoutedEventArgs e)
         {
-            var retVal = MessageBox.Show("Are you sure you wish to reset all settings to defalut valuse?", "Reset settings", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            var retVal = MessageBox.Show("Are you sure you wish to reset all settings to default values?", "Reset settings", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
             if (retVal != MessageBoxResult.Yes) 
                 return;
             Settings.Default.Reset();

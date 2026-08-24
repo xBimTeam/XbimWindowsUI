@@ -1,10 +1,18 @@
 ﻿using Microsoft.Extensions.Logging;
-using NuGet;
+using NuGet.Packaging;
+using NuGet.Protocol;
+using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Xbim.Common.Metadata;
+using Xbim.Ifc4.Interfaces;
 
 namespace XbimXplorer.PluginSystem
 {
@@ -16,10 +24,12 @@ namespace XbimXplorer.PluginSystem
         AllCompatibleVersions
     }
 
-    internal class PluginManagement
+    public class PluginManagement
     {
         private readonly Dictionary<string, PluginInformation> _diskPlugins =
            new Dictionary<string, PluginInformation>();
+
+        private readonly SourceCacheContext _cache = new SourceCacheContext();
 
         public PluginManagement(Microsoft.Extensions.Logging.ILogger logger = null)
         {
@@ -44,7 +54,7 @@ namespace XbimXplorer.PluginSystem
             var dirs = PluginManagement.GetPluginDirectories();
             foreach (var directoryInfo in dirs)
             {
-                var pc = new PluginInformation(directoryInfo);
+                var pc = new PluginInformation(directoryInfo , this);
                 _diskPlugins.Add(pc.PluginId, pc);
             }
         }
@@ -63,7 +73,7 @@ namespace XbimXplorer.PluginSystem
 
         internal static ManifestMetadata GetManifestMetadata(DirectoryInfo path)
         {
-            var tmp = new ManifestMetadata() { Id = path.Name, Version = "<undetermined>" };
+            var tmp = new ManifestMetadata() { Id = path.Name, Version = new NuGet.Versioning.NuGetVersion("0.0.0") };
             var file = path.GetFiles("*.manifest").FirstOrDefault();
             if (file == null)
             {
@@ -86,60 +96,105 @@ namespace XbimXplorer.PluginSystem
 
         internal static string SelectedRepoUrl => "https://www.myget.org/F/xbim-plugins/api/v2";
 
-        internal IEnumerable<PluginInformation> GetPlugins(PluginChannelOption option, string winUiNugetVersion)
-        {
-            RefreshLocalPlugins();
-            var repo = PackageRepositoryFactory.Default.CreateRepository(SelectedRepoUrl);
-            var allowDevelop = option != PluginChannelOption.LatestStable;
-            var invokingVerion = new SemanticVersion(winUiNugetVersion);
 
-            var fnd = repo.Search("XplorerPlugin", allowDevelop);
-            var tmpPackages = new List<IPackage>();
-            foreach (var package in fnd)
+        internal async Task<PackageArchiveReader> DownloadPluginAsync(IPackageSearchMetadata package, Stream packageStream, CancellationToken? cancellationToken)
+        {
+            var ct = cancellationToken?? CancellationToken.None;
+
+            var logger = NuGet.Common.NullLogger.Instance;
+                        
+            SourceRepository repository = Repository.Factory.GetCoreV3(SelectedRepoUrl);
+
+            FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+         
+
+            await resource.CopyNupkgToStreamAsync(
+                package.Identity.Id,
+                package.Identity.Version,
+                packageStream,
+                _cache,
+                logger,
+                ct);
+
+            Console.WriteLine($"Downloaded package {package.Identity.Id} {package.Identity.Version}");
+
+            return new PackageArchiveReader(packageStream);
+
+        }
+
+        internal async IAsyncEnumerable<PluginInformation> GetPluginsAsync(PluginChannelOption option, string winUiNugetVersion, 
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var logger = NuGet.Common.NullLogger.Instance;
+            RefreshLocalPlugins();
+            var allowDevelop = option != PluginChannelOption.LatestStable;
+          
+
+            SourceRepository repository = Repository.Factory.GetCoreV3(SelectedRepoUrl);
+            PackageSearchResource resource = await repository.GetResourceAsync<PackageSearchResource>();
+            SearchFilter searchFilter = new SearchFilter(includePrerelease: allowDevelop);
+
+
+            var invokingVerion = new NuGetVersion(winUiNugetVersion);
+
+            IEnumerable<IPackageSearchMetadata> results = await resource.SearchAsync(
+                "XplorerPlugin",
+                searchFilter,
+                skip: 0,
+                take: 20,
+                logger,
+                cancellationToken);
+
+            var tmpPackages = new List<IPackageSearchMetadata>();
+
+
+            foreach (IPackageSearchMetadata package in results)
             {
+                Console.WriteLine($"Found package {package.Identity.Id} {package.Identity.Version}");
                 // drop develop if latest stable
-                System.Diagnostics.Debug.WriteLine($"Evaluating {package}");
-                if (option == PluginChannelOption.LatestStable && !string.IsNullOrEmpty(package.Version.SpecialVersion))
+                System.Diagnostics.Debug.WriteLine($"Evaluating {package.Identity}");
+                
+                if (option == PluginChannelOption.LatestStable && package.Identity.Version.IsPrerelease)
                 {
                     continue;
                 }
                 // check it is compatible
-                var sel = package.DependencySets.SelectMany(x => x.Dependencies.Where(y => y.Id.StartsWith("Xbim.WindowsUI"))).FirstOrDefault();
-                if (sel != null && sel.VersionSpec.Satisfies(invokingVerion))
-                {
+                var sel = package.DependencySets.SelectMany(x => x.Packages.Where(y => y.Id.StartsWith("Xbim.WindowsUI"))).FirstOrDefault();
+                if (sel != null && sel.VersionRange.Satisfies(invokingVerion, VersionComparison.Version))
+                {  
                     tmpPackages.Add(package);
                 }
             }
-
-            if (option == PluginChannelOption.LatestStable || option ==  PluginChannelOption.LatestIncludingDevelopment)
+            
+            if (option == PluginChannelOption.LatestStable || option == PluginChannelOption.LatestIncludingDevelopment)
             {
                 // only one per ID
-                var selPackages = new List<IPackage>();
-                var grouped = tmpPackages.GroupBy(x => x.Id);
+                var selPackages = new List<IPackageSearchMetadata>();
+                var grouped = tmpPackages.GroupBy(x => x.Identity.Id);
                 foreach (var element in grouped)
                 {
-                    var maxVersion = element.Max(x => x.Version);
-                    selPackages.Add(element.FirstOrDefault(x=>x.Version == maxVersion));
+                    var maxVersion = element.Max(x => x.Identity.Version);
+                    selPackages.Add(element.FirstOrDefault(x => x.Identity.Version == maxVersion));
                 }
                 tmpPackages = selPackages;
             }
-            
-            
+
             foreach (var package in tmpPackages)
             {
-                var pv = new PluginInformation(package);
-                if (_diskPlugins.ContainsKey(package.Id))
+                var pv = new PluginInformation(package, this);
+                if (_diskPlugins.ContainsKey(package.Identity.Id))
                 {
-                    pv.SetDirectoryInfo(_diskPlugins[package.Id]);
+                    pv.SetDirectoryInfo(_diskPlugins[package.Identity.Id]);
                 }
                 yield return pv;
             }
+
         }
 
         public static string GetEntryFile(DirectoryInfo dir, string filename = null)
         {
             var f = filename == null 
-                ? Path.Combine(dir.FullName, dir.Name + ".exe") 
+                ? Path.Combine(dir.FullName, dir.Name + ".dll") 
                 : Path.Combine(dir.FullName, filename);
             return f;
         }
@@ -151,7 +206,7 @@ namespace XbimXplorer.PluginSystem
             return Path.Combine(dir.FullName, "PluginConfig.xml");
         }
 
-        public static void SetStartup(DirectoryInfo dir, PluginConfiguration.StartupBehaviour behaviour)
+        public static void SetStartup(DirectoryInfo dir, PluginConfiguration.PluginFlag behaviour)
         {
             var p = new PluginConfiguration {OnStartup = behaviour};
             p.WriteXml(GetStartupFileConfig(dir));

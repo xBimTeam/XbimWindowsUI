@@ -129,7 +129,7 @@ namespace Xbim.Presentation.FederatedModel
             if (_xbimReferencedModel.Model.GeometryStore.IsEmpty)
             {
                 var m3D = new Xbim3DModelContext(_xbimReferencedModel.Model);
-                m3D.CreateContext(adjustWcs: adjustWcs);
+                m3D.CreateContext(null, adjustWcs: adjustWcs);
             }
             
             if (_xbimReferencedModel == null) 

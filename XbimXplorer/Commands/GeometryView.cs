@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
 using Xbim.Common;
+using Xbim.Common.Geometry;
+using Xbim.Ifc.Extensions;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4x3.GeometryResource;
+using Xbim.Ifc4x3.MeasureResource;
 
 namespace XbimXplorer.Commands
 {
@@ -51,9 +56,7 @@ namespace XbimXplorer.Commands
                     sb.Append($";open polyloop", Brushes.Black);
             }
             sb.Append($"", Brushes.Black);
-            sb.Append($"-HYPERLINK I O l  #{bound.EntityLabel}", Brushes.Black);
-            sb.Append($"", Brushes.Black);
-            sb.Append($"", Brushes.Black);
+			TagLastWithEntityLabel(sb, bound);
         }
 
         private static void Report(IIfcPolyLoop bound, TextHighliter sb)
@@ -74,9 +77,17 @@ namespace XbimXplorer.Commands
                     sb.Append($";open polyloop", Brushes.Black);
             }
             sb.Append($"", Brushes.Black);
-            sb.Append($"-HYPERLINK I O l  #{bound.EntityLabel}", Brushes.Black);
-            sb.Append($"", Brushes.Black);
-            sb.Append($"", Brushes.Black);
+			TagLastWithEntityLabel(sb, bound);
+        }
+
+		internal static void WritePointCoord(acadPoint pt, TextHighliter sb)
+		{
+			WritePointCoord(sb, pt.X, pt.Y, pt.Z);
+		}
+
+		private static void WritePointCoord(TextHighliter sb, XbimPoint3D trsfrmd)
+		{
+			WritePointCoord(sb, trsfrmd.X, trsfrmd.Y, trsfrmd.Z);
         }
 
         private static void WritePointCoord(TextHighliter sb, double x, double y, double z, bool relative = false)
@@ -181,10 +192,20 @@ namespace XbimXplorer.Commands
 
         private static void Report(IIfcCompositeCurve curve, TextHighliter sb)
         {
+			if (curve is Xbim.Ifc4x3.GeometryResource.IfcCompositeCurve v43)
+			{
+				foreach (var ifcCompositeCurveSegment in v43.Segments)
+				{
+					Report(ifcCompositeCurveSegment, sb);
+				}
+			}
+			else
+        {
             foreach (var ifcCompositeCurveSegment in curve.Segments)
             {
                 Report(ifcCompositeCurveSegment, sb);
             }
+        }
         }
 
         private static void Report(IIfcCompositeCurveSegment ifcCompositeCurveSegment, TextHighliter sb)
@@ -317,6 +338,8 @@ namespace XbimXplorer.Commands
                 Report((IIfcSweptDiskSolid)obj, sb);
             else if (obj is IIfcProductDefinitionShape)
                 Report((IIfcProductDefinitionShape)obj, sb);
+            else if (obj is IIfcFace fc)
+                Report(fc, sb);
             else
             {
                 sb.Append($"No information for {obj.GetType()}", Brushes.Black);
@@ -328,9 +351,320 @@ namespace XbimXplorer.Commands
             return sb;
         }
 
+		[DebuggerDisplay("{X} {Y} {Z}")]
+		internal class acadPoint
+		{
+			public acadPoint() { }
+			public acadPoint(double x, double y, double z)
+			{
+				X = x;
+				Y = y;
+				Z = z;
+			}
+
+			internal double X { get; set; } = 0;
+			internal double Y { get; set; } = 0;
+			internal double Z { get; set; } = 0;
+		}
+
+		private static void Report(Xbim.Ifc4x3.GeometryResource.IfcCurveSegment obj, TextHighliter sb)
+		{
+			
+			sb.Append($"; Segment of #{obj.ParentCurve.EntityLabel}={obj.ParentCurve.GetType().Name}.", Brushes.Red);
+			sb.Append($"; start #{obj.SegmentStart} len: {obj.SegmentLength}.", Brushes.Red);
+			if (obj.ParentCurve is IfcClothoid clot && obj.SegmentStart is IfcLengthMeasure lm && lm.Value is double strt && clot.ClothoidConstant.Value is double k)
+			{
+				if (k > 0)
+				{
+					if (strt < 0)
+						sb.Append("-COLOR RED", Brushes.Black);
+					else
+						sb.Append("-COLOR YELLOW", Brushes.Black);
+				}
+				else
+				{
+					if (strt < 0)
+						sb.Append("-COLOR CYAN", Brushes.Black);
+					else
+						sb.Append("-COLOR BLUE", Brushes.Black);
+				}
+
+			}
+			else
+				sb.Append("-COLOR BYLAYER", Brushes.Black);
+			var pts = GetPoints(obj).ToList();
+			if (pts.Any())
+			{
+				var m2 = obj.Placement.ToMatrix3D();
+				XbimMatrix3D mat = GetMatrix(obj.Placement, obj.ParentCurve is IfcClothoid);
+				var tfmd = pts.Select(pt => mat.Transform(new XbimPoint3D(pt.X, pt.Y, 0))).ToList();
+				
+				if (pts.Count == 1)
+				{
+					sb.Append("POINT", Brushes.Black);
+					WritePointCoord(sb, tfmd[0].X, tfmd[0].Y, double.NaN);
+				}
+				else
+				{
+					sb.Append("PLINE", Brushes.Black);
+					foreach (var trsfrmd in tfmd)
+					{
+						WritePointCoord(sb, trsfrmd.X, trsfrmd.Y, double.NaN);
+					}
+					// add delta from prev point
+					sb.Append("", Brushes.Black);
+				}
+				TagLastWithEntityLabel(sb, obj);
+			}
+			// sb.Append($"- start: {obj.SegmentStart.Value}, len: {obj.SegmentLength.Value}", Brushes.Red);
+			// sb.Append($"{obj.GetType().Name} not implemented in IIfcGeometricRepresentationItem.", Brushes.Red);
+		}
+
+		private static XbimMatrix3D GetMatrix(Xbim.Ifc4x3.GeometryResource.IfcPlacement placement, bool rot = false)
+		{
+			var trs = (placement.Location is IIfcCartesianPoint p)
+				? XbimMatrix3D.CreateTranslation(p.X, p.Y, 0)
+				: XbimMatrix3D.Identity;
+			if (placement is Xbim.Ifc4x3.GeometryResource.IfcAxis2Placement2D p2d)
+			{
+				var tp = new XbimPoint3D(p2d.RefDirection.X, p2d.RefDirection.Y, 0);
+				var mRot = XbimMatrix3D.CreateRotation(
+					new XbimPoint3D(1, 0, 0),
+					tp
+					);
+				trs = mRot * trs;
+			}
+
+			//var trs = (placement. is IIfcCartesianPoint p)
+			//	? XbimMatrix3D.CreateTranslation(p.X, p.Y, 0)
+			//	: XbimMatrix3D.Identity;
+
+
+			return trs;
+		}
+
+		private static object GetDistance(XbimPoint3D p1, XbimPoint3D p2)
+		{
+			return Math.Sqrt(
+				Math.Pow(p2.X - p1.X, 2) +
+				Math.Pow(p2.Y - p1.Y, 2) +
+				Math.Pow(p2.Z - p1.Z, 2)
+				);
+		}
+
+		private static IEnumerable<acadPoint> GetPoints(IfcCurveSegment obj)
+		{
+			if (obj.ParentCurve is Xbim.Ifc4x3.GeometryResource.IfcLine line)
+			{
+				var param1 = GetParam(obj.SegmentStart);
+				var p1 = PointOnLine(line, param1);
+				var param2 = GetParam(obj.SegmentLength);
+				var p2 = PointOnLine(line, param2);
+				// var dist = GetDistance(p1, p2);
+				yield return p1;
+				yield return p2;
+			}
+			else if (obj.ParentCurve is Xbim.Ifc4x3.GeometryResource.IfcCircle circle)
+			{
+				var start = GetParam(obj.SegmentStart);
+				var len = GetParam(obj.SegmentLength);
+				if (start != 0)
+				{ }
+				if (obj.SegmentLength is IfcParameterValue pv)
+				{
+					// ok
+				}
+				else if (obj.SegmentLength is IfcLengthMeasure lm)
+				{
+					len = lm / circle.Radius;
+				}
+				else
+				{
+					// unexpected
+				}
+				var mid = (start + len) / 2;
+
+				yield return PointOnCircle(circle, start);
+				yield return PointOnCircle(circle, mid);
+				yield return PointOnCircle(circle, len);
+			}
+			else if (obj.ParentCurve is Xbim.Ifc4x3.GeometryResource.IfcClothoid clothoid)
+			{
+				if (obj.SegmentLength is IfcLengthMeasure sl
+					&& obj.SegmentStart is IfcLengthMeasure st
+					&& sl.Value is double dLen
+					&& st.Value is double dStart
+					&& clothoid.ClothoidConstant.Value is double dCostant
+					)
+				{
+					GetPositionInfo(clothoid.Position, out var p, out var refDir);
+					var clotPoints = GetCoreClothoid(dCostant, dStart, dLen, .2);
+					var newPts = Fix(clotPoints, clothoid.Position);
+					foreach (var trsfrmd in newPts)
+					{
+						yield return trsfrmd;
+					}
+				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+				// yield return new acadPoint(0, 0, 0);
+			}
+			else
+			{
+
+			}
+
+			yield break;
+			
+		}
+
+		private static IEnumerable<acadPoint> Fix(IEnumerable<acadPoint> clotPoints, Xbim.Ifc4x3.GeometryResource.IfcAxis2Placement position)
+		{
+			// GetPositionInfo(clothoid.Position, out var p, out var refDir);
+			var m = position.ToMatrix3D();
+			foreach (var item in clotPoints)
+			{
+				var tsrf = m.Transform(new XbimPoint3D(item.X, item.Y, item.Z));
+				yield return new acadPoint(tsrf.X, tsrf.Y, tsrf.Z);
+			}
+		}
+
+		internal static IEnumerable<acadPoint> GetCoreClothoid(double constant, double dStart, double dLen, double stepSize)
+		{
+			var dEnd = dStart + dLen;
+			if (dStart != 0 && dEnd != 0)
+			{
+				return Enumerable.Empty<acadPoint>();
+			}
+
+			var N = (int)Math.Ceiling(dLen / stepSize);
+			var deltaS = dLen / N;
+			// determining direction
+			var lambda = (dStart != 0) ? -1 : 1;
+			double zedValue = 0;
+	
+			List<acadPoint> ret = new List<acadPoint>(N);
+			ret.Add(new acadPoint(0, 0, zedValue));
+			double prevS = 0;
+			var runX = 0.0;
+			var runY = 0.0;
+			for (int i = 0; i < N; i++)
+			{
+				var angle = lambda * (Math.Pow(prevS, 2)) / (2 * Math.Pow(constant, 2));
+				double dx = deltaS * Math.Cos(angle);
+				double dy = deltaS * Math.Sin(angle);
+				runX += dx;
+				runY += dy;
+				prevS += deltaS;
+				ret.Add(new acadPoint(runX, runY, zedValue));
+			}
+			if (constant < 0)
+			{
+				ret = ret.Select(x => new acadPoint(x.X, -x.Y, x.Z)).ToList();
+			}
+			if (lambda == -1)
+			{
+				ret = ret.Select(x => new acadPoint(-x.X, x.Y, x.Z)).ToList();
+				ret.Reverse();
+				var angle = lambda * (Math.Pow(prevS, 2)) / (2 * Math.Pow(constant, 2));
+				var mt = XbimMatrix3D.CreateTranslation(-ret[0].X, -ret[0].Y, 0);
+
+				var angDir = constant > 0
+					? new XbimPoint3D(Math.Cos(angle), -Math.Sin(angle), 0)
+					: new XbimPoint3D(Math.Cos(angle), Math.Sin(angle), 0);
+				var rot = XbimMatrix3D.CreateRotation(
+					angDir,
+					new XbimPoint3D(1,0,0)
+					);
+				var t = mt * rot;
+				ret = ret.Select(x => Trasform(x, t)).ToList();
+			}
+			
+			return ret;
+		}
+
+		private static acadPoint Trasform(acadPoint pt, XbimMatrix3D mt)
+		{
+			var t = new XbimPoint3D(pt.X, pt.Y, pt.Z);
+			var tmpP = mt.Transform(t);
+			return new acadPoint(tmpP.X, tmpP.Y, tmpP.Z);
+		}
+
+		private static double GetDistance(acadPoint p1, acadPoint p2)
+		{
+			if (!double.IsNaN(p2.Z) && double.IsNaN(p1.Z))
+				return Math.Sqrt(
+					Math.Pow(p2.X - p1.X, 2) +
+					Math.Pow(p2.Y - p1.Y, 2) +
+					Math.Pow(p2.Z - p1.Z, 2)
+					);
+			return Math.Sqrt(
+					Math.Pow(p2.X - p1.X, 2) +
+					Math.Pow(p2.Y - p1.Y, 2)
+					);
+		}
+
+		private static acadPoint PointOnCircle(Xbim.Ifc4x3.GeometryResource.IfcCircle circle, double start)
+		{
+			GetPositionInfo(circle.Position, out var p, out var refDir);
+			double radius = circle.Radius.Value is double d
+				? d
+				: 0;
+			var param = refDir + start;
+			
+			var D = new acadPoint(
+				p.X + radius * Math.Sin(param),
+				p.Y + radius - radius * Math.Cos(param),
+				double.NaN
+				);
+			return D;
+		}
+
+		private static void GetPositionInfo(Xbim.Ifc4x3.GeometryResource.IfcAxis2Placement pos, out XbimPoint3D p, out double refDir)
+		{
+			p = pos switch
+			{
+				IIfcAxis2Placement2D p2dLoc => new XbimPoint3D(p2dLoc.Location.X, p2dLoc.Location.Y, double.NaN),
+				_ => new XbimPoint3D()
+			};
+			if (pos is IIfcAxis2Placement2D p2d && p2d.RefDirection is IIfcDirection p2dRefDir)	
+				refDir = Math.Atan2(p2dRefDir.Y, p2dRefDir.X);
+			else
+				refDir = 0;
+		}
+
+		private static double GetParam(IfcCurveMeasureSelect segmentStart)
+		{
+			if (segmentStart.Value is double param)
+				return param;
+			return 0;
+		}
+
+		private static acadPoint PointOnLine(Xbim.Ifc4x3.GeometryResource.IfcLine line, double param)
+		{
+			var p = line.Pnt.XbimPoint3D();
+			XbimVector3D v = new XbimVector3D();
+			if (line.Dir is IIfcVector vtr)
+			{
+				v = new XbimVector3D(vtr.Orientation.X, vtr.Orientation.Y, vtr.Orientation.Z);
+				var t = p + (v * param);
+				return new acadPoint()
+				{
+					X = t.X,
+					Y = t.Y,
+					Z = t.Z,
+				};
+			}
+			return new acadPoint();
+		}
+
         private static void Report(IIfcGeometricRepresentationItem obj, TextHighliter sb)
         {
-            if (obj is IIfcCurve crv)
+			if (obj is Xbim.Ifc4x3.GeometryResource.IfcCurveSegment cs)
+				Report(cs, sb);
+			else if (obj is IIfcCurve crv)
                 Report(crv, sb);
             else if (obj is IIfcSolidModel solid)
                 Report(solid, sb);
@@ -402,10 +736,15 @@ namespace XbimXplorer.Commands
                     WritePointCoord(sb, pt);
                 }
                 sb.Append($"", Brushes.Black);
-                sb.Append($"-HYPERLINK I O l  #{face.EntityLabel}", Brushes.Black);
+				TagLastWithEntityLabel(sb, face);
+			}
+		}
+
+		private static void TagLastWithEntityLabel(TextHighliter sb, IPersistEntity entity)
+		{
+			sb.Append($"-HYPERLINK I O l  #{entity.EntityLabel}", Brushes.Black);
                 sb.Append($"", Brushes.Black);
                 sb.Append($"", Brushes.Black);
-            }
         }
 
 		internal static TextHighliter ReportAsObj(IIfcClosedShell ics)
@@ -417,19 +756,28 @@ namespace XbimXplorer.Commands
 
 		private static void ReportAsObj(IIfcClosedShell ics, TextHighliter sb)
 		{
-            List<int> vertices = new List<int>(); // entitylabel of the vertex
+            List<int> vertexLabels = new List<int>(); // entitylabel of the vertex
             List<int> indices = new List<int>();
             foreach (var face in ics.CfsFaces)
             {
-                ReportAsObj(face, sb, vertices, indices);
+                ReportAsObj(face, sb, vertexLabels, indices);
+                if (indices.Count %3 != 0)
+                {
+                    sb.Append($"Error in face #{face.EntityLabel}", Brushes.Red);
+                }
             }
-			foreach (var vert in vertices)
+			foreach (var vert in vertexLabels)
 			{
                 var v = ics.Model.Instances[vert] as IIfcCartesianPoint;
                 sb.Append($"v {v.X} {v.Y} {v.Z}", Brushes.Black);
 			}
             for (int i = 0; i < indices.Count; i += 3)
             {
+                if (i + 2 >= indices.Count)
+                {
+                    sb.Append($"Error in indices", Brushes.Red);
+                    continue;
+                }
                 sb.Append($"f {indices[i]+1} {indices[i + 1]+1} {indices[i + 2]+1}", Brushes.Black);
             }
         }

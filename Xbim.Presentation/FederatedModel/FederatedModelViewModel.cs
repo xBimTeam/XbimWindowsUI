@@ -36,18 +36,8 @@ namespace Xbim.Presentation.FederatedModel
                 using (var txn = _model.BeginTransaction())
                 {
                     var project = _model.Instances.FirstOrDefault<IIfcProject>();
+                    project.Name = value;
 
-                    if (project is Ifc2x3.Kernel.IfcProject)
-                    {
-                        var x3 = project as Ifc2x3.Kernel.IfcProject;
-                        x3.Name  = value;
-                    }
-                    else if (project is Ifc4.Kernel.IfcProject)
-                    {
-                        var x4 = project as Ifc4.Kernel.IfcProject;
-                        x4.Name = value;
-                    }
-                    
                     txn.Commit();
                 }
                 OnPropertyChanged("Project");

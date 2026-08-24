@@ -101,20 +101,20 @@ namespace Xbim.Presentation
 
         // attempting to load the shapeGeometry from the database; 
         // 
-        public static WpfMeshGeometry3D GetGeometry(IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat, bool wcsAdjust)
+        public static WpfMeshGeometry3D GetGeometry(IXbimGeometryEngine engine, IIfcShapeRepresentation rep, XbimModelPositioningCollection positions, Material mat, bool wcsAdjust)
         {
             var productContexts = rep.OfProductRepresentation?.OfType<IIfcProductDefinitionShape>().SelectMany(x => x.ShapeOfProduct);
             var representationLabels = rep.Items.Select(x => x.EntityLabel);
             var selModel = rep.Model;
             var modelTransform = positions[selModel].Transform;
 
-            return GetRepresentationGeometry(mat, productContexts, representationLabels, selModel, modelTransform, wcsAdjust);
+            return GetRepresentationGeometry(engine, mat, productContexts, representationLabels, selModel, modelTransform, wcsAdjust);
         }
 
 
-        internal static WpfMeshGeometry3D GetRepresentationGeometry2(Material mat, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust, XbimShapeGeometry shapegeom, IIfcProduct contextualProduct)
+        internal static WpfMeshGeometry3D GetRepresentationGeometry2(IXbimGeometryEngine engine, Material mat, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust, XbimShapeGeometry shapegeom, IIfcProduct contextualProduct)
         {
-            var placementTree = new XbimPlacementTree(selModel, wcsAdjust);
+            var placementTree = new XbimPlacementTree(selModel, engine, wcsAdjust);
             var trsf = placementTree[contextualProduct.ObjectPlacement.EntityLabel];
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
@@ -138,9 +138,9 @@ namespace Xbim.Presentation
 
         // attempting to load the shapeGeometry from the database; 
         // 
-        internal static WpfMeshGeometry3D GetRepresentationGeometry(Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust)
+        internal static WpfMeshGeometry3D GetRepresentationGeometry(IXbimGeometryEngine engine, Material mat, IEnumerable<IIfcProduct> productContexts, IEnumerable<int> representationLabels, IModel selModel, XbimMatrix3D modelTransform, bool wcsAdjust)
         {
-            var placementTree = new XbimPlacementTree(selModel, wcsAdjust);
+            var placementTree = new XbimPlacementTree(selModel, engine, wcsAdjust);
             var tgt = new WpfMeshGeometry3D(mat, mat);
             tgt.BeginUpdate();
             using (var geomstore = selModel.GeometryStore)

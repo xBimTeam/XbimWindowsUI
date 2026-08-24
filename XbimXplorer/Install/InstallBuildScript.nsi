@@ -54,7 +54,6 @@ Section "MainSection" SEC01
   SetOverwrite try
   File "..\..\bin\x86\Release\HelixToolkit.Wpf.dll"
   File "..\..\bin\x86\Release\ICSharpCode.SharpZipLib.dll"
-  File "..\..\bin\x86\Release\Ionic.Zip.dll"
   File "..\..\bin\x86\Release\log4net.dll"
   File "..\..\bin\x86\Release\PropertyTools.dll"
   File "..\..\bin\x86\Release\PropertyTools.Wpf.dll"
@@ -145,7 +144,6 @@ Section Uninstall
   Delete "$INSTDIR\PropertyTools.Wpf.dll"
   Delete "$INSTDIR\PropertyTools.dll"
   Delete "$INSTDIR\log4net.dll"
-  Delete "$INSTDIR\Ionic.Zip.dll"
   Delete "$INSTDIR\ICSharpCode.SharpZipLib.dll"
   Delete "$INSTDIR\HelixToolkit.Wpf.dll"
 

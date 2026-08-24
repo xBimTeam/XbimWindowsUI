@@ -5,21 +5,26 @@ trigger:
     include:
     - master
     - develop
+    - feature/* 
   paths:
     exclude:
     - README.md
     - CHANGELOG.md
     - CONTRIBUTING.md
-    
+
+pr:
+- master
+- develop
+- feature/*
 pool:
-  vmImage: 'windows-2019'
+  vmImage: 'windows-2022'
 
 variables:
   solution: '*.sln'
   BuildConfiguration: 'Release'
   BuildPlatform: 'Any CPU'
-  major: 5
-  minor: 1
+  major: 6
+  minor: 0
 
   # creates a named counter and seeds it at 100 and then assigns the value to a variable named buildNo.
   buildNo: $[counter('winversioncounter', 100)]
@@ -58,15 +63,15 @@ steps:
 
 - task: NuGetToolInstaller@0
 
-  displayName: 'Use NuGet 4.6.2'
+  displayName: 'Use NuGet'
   inputs:
-    versionSpec: '4.6.2'
+    versionSpec: '>6.8.0'
 
 
 # Version .NET Core project files
 # Description - Applies a version to a .NET Core assembly via the .csproj files based on the build number. 
 # Based on https://github.com/rfennell/AzurePipelines/wiki/Version-Assemblies-and-Packages-Tasks-YAML#versiondotnetcoreassembliestask
-- task: VersionDotNetCoreAssemblies@2
+- task: VersionDotNetCoreAssemblies@3
   displayName: 'Version *.csproj (netcore)'
   inputs: 
     Path: $(Build.SourcesDirectory)
@@ -79,7 +84,7 @@ steps:
 # Version 'classic' .NET Assemblies
 # Description - Applies a version to a .NET assembly via the assemblyinfo.cs or .vb files based on the build number.
 # For the Plugin project(s) which are ClickOnce
-- task: VersionAssemblies@2
+- task: VersionAssemblies@3
   displayName: 'Set AssemblyFileVersion in AssemblyInfo.cs - $(fileversion)'
   inputs: 
      Path: $(Build.SourcesDirectory)
@@ -129,7 +134,7 @@ steps:
   displayName: 'NuGet pack BCF_Plugin'
   inputs:
     command: pack
-    packagesToPack: 'XplorerPlugin.Bcf.plugin.nuspec'
+    packagesToPack: 'XplorerPlugin.Bcf.nuspec'
     configuration: $(BuildConfiguration)
     versioningScheme: byEnvVar
     versionEnvVar: packageversion

@@ -38,6 +38,8 @@ namespace XbimXplorer
 
         internal void LogEvent_Added(object sender, LogEventArgs e)
         {
+			if (Application.Current is null)
+				return;	// closing down
             foreach (var loggingEvent in e.LoggingEvents)
             {
                 var m = new EventViewModel(loggingEvent);
